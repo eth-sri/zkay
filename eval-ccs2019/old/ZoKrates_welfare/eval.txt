@@ -1,0 +1,24 @@
+Welfare
+-------------
+
+The welfare scenario works as follows:
+    1) A publicly verified authority posts a hash of the users data
+    2) The user can post a proof that the data belongs to him and request financial support
+
+1. Gas usage and cost
+---------------------
+
+The costs are computed as of July 9, 2018
+
+Step 1: Post Data
+    Gas used: 43512
+    Approx. gas cost: 0.0008267 ETH ($0.39268)
+
+Step 2: Request Financial Support
+    Gas used: 1695301
+    Approx. gas cost: 0.0322107 ETH ($15.30008)
+
+
+TOTAL gas used: 1738813
+TOTAL approx. gas cost: 0.033 ETH ($15.69276)
+

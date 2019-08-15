@@ -1,0 +1,23 @@
+// def enc(m,pk,r)
+// def dec(m,sk) -> These two functions would be needed
+
+// Dummy implementation of an encryption function; there is, at the moment, unfortunately not a
+// built-in way to leverage encryption; also: can randomness be modelled explicitly?
+def enc(m,pk,r):
+    return m + 1
+
+// Dummy implementation of the corresponding decryption function
+def dec(m,sk):
+    return m - 1
+
+def verifyReceive(oldBalanceEnc, newBalanceEnc, amountEnc, skReceiver):
+    claimedNewBalance = dec(newBalanceEnc, skReceiver)
+
+    amount = dec(amountEnc, skReceiver)
+    actualNewBalance = dec(oldBalanceEnc, skReceiver) + amount
+
+    result = if claimedNewBalance == actualNewBalance then 1 else 0 fi
+    return result
+
+def main(oldBalanceEnc, newBalanceEnc, amountEnc, private skReceiver):
+    return verifyReceive(oldBalanceEnc, newBalanceEnc, amountEnc, skReceiver)

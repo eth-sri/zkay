@@ -1,0 +1,22 @@
+// Dummy hash function, zokrates plans to introduce a hash function in the future
+def hash(income, assets, liabilities, socialSecurityNumber):
+    return income + assets + liabilities + socialSecurityNumber
+
+def checkWelfareEligibility(income, assets, liabilities, socialSecurityNumber, hashedTaxDeclaration):
+    // Checks that the private information matches the hashed tax declaration; this check ensures
+    // that no arbitrary information can be passed, such as, for example, a party with high income
+    // claiming to have a low income instead
+    result1 = if hash(income, assets, liabilities, socialSecurityNumber) == hashedTaxDeclaration then 1 else 0 fi
+
+    // This is the actual eligibility check; ideally we would take liabilities into account as well,
+    // but unfortunately, subtraction is not currently supported by ZoKrates
+    threshold = 50000 // some arbitrary threshold under which you are eligible for welfare
+    result2 = if income + assets < threshold then 1 else 0 fi
+
+    // If both checks hold, return "true"
+    totResult = result1 + result2
+    result = if totResult == 2 then 1 else 0 fi
+    return result
+
+def main(private income, private assets, private liabilities, private socialSecurityNumber, hashedTaxDeclaration):
+    return checkWelfareEligibility(income, assets, liabilities, socialSecurityNumber, hashedTaxDeclaration)

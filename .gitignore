@@ -1,0 +1,10 @@
+# Ignoring all build/ folders in truffle projects
+build/
+
+# Ignoring Python virtual environments
+.venv/
+
+# Misc
+.idea
+__pycache__
+

@@ -1,0 +1,127 @@
+def enc(m,pk,r):
+	return (m + 1)
+def dec(m,sk):
+	return (m - 1)
+def verfiySenderBalance(oldBalanceEnc,newBalanceEnc,skSender,amount):
+	dec_1_param_0 = oldBalanceEnc
+	dec_1_param_1 = skSender
+	oldBalance = (dec_1_param_0 - 1)
+	dec_2_param_0 = newBalanceEnc
+	dec_2_param_1 = skSender
+	claimedNewBalance = (dec_2_param_0 - 1)
+	sym_0 = ((claimedNewBalance + amount) - oldBalance)
+	# sym_1 = if sym_0 == 0 then 0 else 1 fi
+	# sym_2 = if sym_0 == 0 then 1 else (1 / sym_0) fi
+	sym_1 == (sym_0 * sym_2)
+	sym_3 = (1 - sym_1)
+	0 == (sym_3 * sym_0)
+	result = ((sym_3 * 1) + (sym_1 * 0))
+	return result
+def verifyEncryptedAmount(pkReceiver,amountEnc,randomness,amount):
+	enc_1_param_0 = amount
+	enc_1_param_1 = pkReceiver
+	enc_1_param_2 = randomness
+	amountEncShould = (enc_1_param_0 + 1)
+	sym_0 = (amountEncShould - amountEnc)
+	# sym_1 = if sym_0 == 0 then 0 else 1 fi
+	# sym_2 = if sym_0 == 0 then 1 else (1 / sym_0) fi
+	sym_1 == (sym_0 * sym_2)
+	sym_3 = (1 - sym_1)
+	0 == (sym_3 * sym_0)
+	result = ((sym_3 * 1) + (sym_1 * 0))
+	return result
+def verifySend(oldBalanceEnc,newBalanceEnc,pkReceiver,amountEnc,randomness,skSender,amount):
+	verfiySenderBalance_1_param_0 = oldBalanceEnc
+	verfiySenderBalance_1_param_1 = newBalanceEnc
+	verfiySenderBalance_1_param_2 = skSender
+	verfiySenderBalance_1_param_3 = amount
+	verfiySenderBalance_1_dec_1_param_0 = verfiySenderBalance_1_param_0
+	verfiySenderBalance_1_dec_1_param_1 = verfiySenderBalance_1_param_2
+	verfiySenderBalance_1_oldBalance = (verfiySenderBalance_1_dec_1_param_0 - 1)
+	verfiySenderBalance_1_dec_2_param_0 = verfiySenderBalance_1_param_1
+	verfiySenderBalance_1_dec_2_param_1 = verfiySenderBalance_1_param_2
+	verfiySenderBalance_1_claimedNewBalance = (verfiySenderBalance_1_dec_2_param_0 - 1)
+	verfiySenderBalance_1_sym_0 = ((verfiySenderBalance_1_claimedNewBalance + verfiySenderBalance_1_param_3) - verfiySenderBalance_1_oldBalance)
+	# verfiySenderBalance_1_sym_1 = if verfiySenderBalance_1_sym_0 == 0 then 0 else 1 fi
+	# verfiySenderBalance_1_sym_2 = if verfiySenderBalance_1_sym_0 == 0 then 1 else (1 / verfiySenderBalance_1_sym_0) fi
+	verfiySenderBalance_1_sym_1 == (verfiySenderBalance_1_sym_0 * verfiySenderBalance_1_sym_2)
+	verfiySenderBalance_1_sym_3 = (1 - verfiySenderBalance_1_sym_1)
+	0 == (verfiySenderBalance_1_sym_3 * verfiySenderBalance_1_sym_0)
+	verfiySenderBalance_1_result = ((verfiySenderBalance_1_sym_3 * 1) + (verfiySenderBalance_1_sym_1 * 0))
+	resultVerifySenderBalance = verfiySenderBalance_1_result
+	verifyEncryptedAmount_1_param_0 = pkReceiver
+	verifyEncryptedAmount_1_param_1 = amountEnc
+	verifyEncryptedAmount_1_param_2 = randomness
+	verifyEncryptedAmount_1_param_3 = amount
+	verifyEncryptedAmount_1_enc_1_param_0 = verifyEncryptedAmount_1_param_3
+	verifyEncryptedAmount_1_enc_1_param_1 = verifyEncryptedAmount_1_param_0
+	verifyEncryptedAmount_1_enc_1_param_2 = verifyEncryptedAmount_1_param_2
+	verifyEncryptedAmount_1_amountEncShould = (verifyEncryptedAmount_1_enc_1_param_0 + 1)
+	verifyEncryptedAmount_1_sym_0 = (verifyEncryptedAmount_1_amountEncShould - verifyEncryptedAmount_1_param_1)
+	# verifyEncryptedAmount_1_sym_1 = if verifyEncryptedAmount_1_sym_0 == 0 then 0 else 1 fi
+	# verifyEncryptedAmount_1_sym_2 = if verifyEncryptedAmount_1_sym_0 == 0 then 1 else (1 / verifyEncryptedAmount_1_sym_0) fi
+	verifyEncryptedAmount_1_sym_1 == (verifyEncryptedAmount_1_sym_0 * verifyEncryptedAmount_1_sym_2)
+	verifyEncryptedAmount_1_sym_3 = (1 - verifyEncryptedAmount_1_sym_1)
+	0 == (verifyEncryptedAmount_1_sym_3 * verifyEncryptedAmount_1_sym_0)
+	verifyEncryptedAmount_1_result = ((verifyEncryptedAmount_1_sym_3 * 1) + (verifyEncryptedAmount_1_sym_1 * 0))
+	resultVerifyEncryptedAmount = verifyEncryptedAmount_1_result
+	sym_0 = (resultVerifySenderBalance - resultVerifyEncryptedAmount)
+	# sym_1 = if sym_0 == 0 then 0 else 1 fi
+	# sym_2 = if sym_0 == 0 then 1 else (1 / sym_0) fi
+	sym_1 == (sym_0 * sym_2)
+	sym_3 = (1 - sym_1)
+	0 == (sym_3 * sym_0)
+	sym_4 = (sym_3 * resultVerifySenderBalance)
+	result = (sym_4 + (sym_1 * 0))
+	return result
+def main(oldBalanceEnc,newBalanceEnc,pkReceiver,amountEnc,private randomness,private skSender,private amount):
+	verifySend_1_param_0 = oldBalanceEnc
+	verifySend_1_param_1 = newBalanceEnc
+	verifySend_1_param_2 = pkReceiver
+	verifySend_1_param_3 = amountEnc
+	verifySend_1_param_4 = randomness
+	verifySend_1_param_5 = skSender
+	verifySend_1_param_6 = amount
+	verifySend_1_verfiySenderBalance_1_param_0 = verifySend_1_param_0
+	verifySend_1_verfiySenderBalance_1_param_1 = verifySend_1_param_1
+	verifySend_1_verfiySenderBalance_1_param_2 = verifySend_1_param_5
+	verifySend_1_verfiySenderBalance_1_param_3 = verifySend_1_param_6
+	verifySend_1_verfiySenderBalance_1_dec_1_param_0 = verifySend_1_verfiySenderBalance_1_param_0
+	verifySend_1_verfiySenderBalance_1_dec_1_param_1 = verifySend_1_verfiySenderBalance_1_param_2
+	verifySend_1_verfiySenderBalance_1_oldBalance = (verifySend_1_verfiySenderBalance_1_dec_1_param_0 - 1)
+	verifySend_1_verfiySenderBalance_1_dec_2_param_0 = verifySend_1_verfiySenderBalance_1_param_1
+	verifySend_1_verfiySenderBalance_1_dec_2_param_1 = verifySend_1_verfiySenderBalance_1_param_2
+	verifySend_1_verfiySenderBalance_1_claimedNewBalance = (verifySend_1_verfiySenderBalance_1_dec_2_param_0 - 1)
+	verifySend_1_verfiySenderBalance_1_sym_0 = ((verifySend_1_verfiySenderBalance_1_claimedNewBalance + verifySend_1_verfiySenderBalance_1_param_3) - verifySend_1_verfiySenderBalance_1_oldBalance)
+	# verifySend_1_verfiySenderBalance_1_sym_1 = if verifySend_1_verfiySenderBalance_1_sym_0 == 0 then 0 else 1 fi
+	# verifySend_1_verfiySenderBalance_1_sym_2 = if verifySend_1_verfiySenderBalance_1_sym_0 == 0 then 1 else (1 / verifySend_1_verfiySenderBalance_1_sym_0) fi
+	verifySend_1_verfiySenderBalance_1_sym_1 == (verifySend_1_verfiySenderBalance_1_sym_0 * verifySend_1_verfiySenderBalance_1_sym_2)
+	verifySend_1_verfiySenderBalance_1_sym_3 = (1 - verifySend_1_verfiySenderBalance_1_sym_1)
+	0 == (verifySend_1_verfiySenderBalance_1_sym_3 * verifySend_1_verfiySenderBalance_1_sym_0)
+	verifySend_1_verfiySenderBalance_1_result = ((verifySend_1_verfiySenderBalance_1_sym_3 * 1) + (verifySend_1_verfiySenderBalance_1_sym_1 * 0))
+	verifySend_1_resultVerifySenderBalance = verifySend_1_verfiySenderBalance_1_result
+	verifySend_1_verifyEncryptedAmount_1_param_0 = verifySend_1_param_2
+	verifySend_1_verifyEncryptedAmount_1_param_1 = verifySend_1_param_3
+	verifySend_1_verifyEncryptedAmount_1_param_2 = verifySend_1_param_4
+	verifySend_1_verifyEncryptedAmount_1_param_3 = verifySend_1_param_6
+	verifySend_1_verifyEncryptedAmount_1_enc_1_param_0 = verifySend_1_verifyEncryptedAmount_1_param_3
+	verifySend_1_verifyEncryptedAmount_1_enc_1_param_1 = verifySend_1_verifyEncryptedAmount_1_param_0
+	verifySend_1_verifyEncryptedAmount_1_enc_1_param_2 = verifySend_1_verifyEncryptedAmount_1_param_2
+	verifySend_1_verifyEncryptedAmount_1_amountEncShould = (verifySend_1_verifyEncryptedAmount_1_enc_1_param_0 + 1)
+	verifySend_1_verifyEncryptedAmount_1_sym_0 = (verifySend_1_verifyEncryptedAmount_1_amountEncShould - verifySend_1_verifyEncryptedAmount_1_param_1)
+	# verifySend_1_verifyEncryptedAmount_1_sym_1 = if verifySend_1_verifyEncryptedAmount_1_sym_0 == 0 then 0 else 1 fi
+	# verifySend_1_verifyEncryptedAmount_1_sym_2 = if verifySend_1_verifyEncryptedAmount_1_sym_0 == 0 then 1 else (1 / verifySend_1_verifyEncryptedAmount_1_sym_0) fi
+	verifySend_1_verifyEncryptedAmount_1_sym_1 == (verifySend_1_verifyEncryptedAmount_1_sym_0 * verifySend_1_verifyEncryptedAmount_1_sym_2)
+	verifySend_1_verifyEncryptedAmount_1_sym_3 = (1 - verifySend_1_verifyEncryptedAmount_1_sym_1)
+	0 == (verifySend_1_verifyEncryptedAmount_1_sym_3 * verifySend_1_verifyEncryptedAmount_1_sym_0)
+	verifySend_1_verifyEncryptedAmount_1_result = ((verifySend_1_verifyEncryptedAmount_1_sym_3 * 1) + (verifySend_1_verifyEncryptedAmount_1_sym_1 * 0))
+	verifySend_1_resultVerifyEncryptedAmount = verifySend_1_verifyEncryptedAmount_1_result
+	verifySend_1_sym_0 = (verifySend_1_resultVerifySenderBalance - verifySend_1_resultVerifyEncryptedAmount)
+	# verifySend_1_sym_1 = if verifySend_1_sym_0 == 0 then 0 else 1 fi
+	# verifySend_1_sym_2 = if verifySend_1_sym_0 == 0 then 1 else (1 / verifySend_1_sym_0) fi
+	verifySend_1_sym_1 == (verifySend_1_sym_0 * verifySend_1_sym_2)
+	verifySend_1_sym_3 = (1 - verifySend_1_sym_1)
+	0 == (verifySend_1_sym_3 * verifySend_1_sym_0)
+	verifySend_1_sym_4 = (verifySend_1_sym_3 * verifySend_1_resultVerifySenderBalance)
+	verifySend_1_result = (verifySend_1_sym_4 + (verifySend_1_sym_1 * 0))
+	return verifySend_1_result

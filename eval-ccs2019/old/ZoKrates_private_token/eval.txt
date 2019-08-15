@@ -1,0 +1,54 @@
+Private Token
+-------------
+
+The Private Token scenario works as follows:
+    1) User 1 registers (announcing public key; initializing balance to 0)
+    2) User 2 registers (announcing public key; initializing balance to 0)
+    3) User 1 buys 5 tokens
+    4) User 1 "secretly" sends 3 tokens to User 2
+    5) User 2 receives the 3 tokens from User 1
+
+1. Gas usage and cost
+---------------------
+
+The costs are computed as of June 14, 2018
+
+Step 1: Register User 1
+    Gas used: 82908
+    Approx. gas cost: 0.0005804 ETH ($0.28265)
+
+Step 2: Register User 2
+    Gas used: 82908
+    Approx. gas cost: 0.0005804 ETH ($0.28265)
+
+Step 3: Buying
+    Gas used: 1788851
+    Approx. gas cost: 0.012522 ETH ($6.09821)
+
+Step 4: Sending
+    Step 4.1: Depositing proof
+        Gas used: 448542
+        Approx. gas cost: 0.0031398 ETH ($1.52908)
+
+    Step 4.2: Sending the tokens
+        Gas used: 1824511
+        Approx. gas cost: 0.0127716 ETH ($6.21977)
+
+Step 5: Receiving
+    Step 5.1: Depositing proof
+        Gas used: 448377
+        Approx. gas cost: 0.0031386 ETH ($1.5285)
+
+    Step 5.2: Receiving the tokens
+        Gas used: 1729843
+        Approx. gas cost: 0.0121089 ETH ($5.89703)
+
+TOTAL gas used: 6405940
+TOTAL approx. gas cost: 0.0448416 ETH ($21.83786)
+
+Remarks:
+    - The intermediate steps in 4 and 5 are necessary to avoid the "stack too deep" exception
+
+    - In practice, with encryption available, the registration of users would be more expensive,
+    needing a verification contract for itself (a user registering has to proof that what he claims
+    to be a balance of 0 actually is a balance of 0)

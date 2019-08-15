@@ -1,0 +1,7 @@
+def main(m,mod):
+	sym_0 = m
+	sym_1 = mod
+	r = (sym_0 / sym_1)
+	sym_2 = (r * mod)
+	mred = (m - sym_2)
+	return mred

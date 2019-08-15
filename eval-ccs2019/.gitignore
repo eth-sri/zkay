@@ -1,0 +1,5 @@
+/examples/*/compiled
+/examples/*/truffle-app
+/examples/*/scenario
+*.csv
+*.pdf

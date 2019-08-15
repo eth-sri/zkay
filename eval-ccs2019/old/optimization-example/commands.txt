@@ -1,0 +1,10 @@
+cd truffle-app
+sudo truffle compile
+
+sudo truffle develop
+migrate
+exec my-test.js
+
+
+
+ganache-cli

@@ -1,0 +1,36 @@
+pragma solidity ^0.5.0;
+
+contract Token {
+    mapping (address!x => uint@x) balance;
+    mapping (address => mapping (address!x => uint@x)) pending;
+    mapping (address => mapping (address => bool)) is_pending;
+    mapping (address => bool) registered;
+
+    function register() public {
+        balance[me] = 0;
+        registered[me] = true;
+    }
+
+    function buy(uint amount) public payable {
+        require(registered[me]);
+        // amount must actually be computed based on the payed value
+        balance[me] = balance[me] + amount;
+    }
+
+    function send_tokens(uint@me v, address receiver) public {
+        require(registered[me] && registered[receiver]);
+        require(!is_pending[me][receiver]);
+        require(reveal(balance[me] > v, all));
+        balance[me] = balance[me] - v;
+        pending[me][receiver] = reveal(v, receiver);
+        is_pending[me][receiver] = true;
+    }
+
+    function receive_token(address sender) public {
+        require(registered[me] && registered[sender]);
+        require(is_pending[sender][me]);
+        balance[me] = balance[me] + pending[sender][me];
+        pending[sender][me] = 0;
+        is_pending[sender][me] = false;
+    }
+}

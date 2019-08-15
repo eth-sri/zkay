@@ -1,0 +1,7 @@
+def main():
+    count = 0
+    for i in 1..10 do
+        count = count + 1
+    endfor
+
+    return count

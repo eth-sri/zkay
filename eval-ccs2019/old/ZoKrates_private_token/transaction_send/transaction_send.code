@@ -1,0 +1,41 @@
+// def enc(m,pk,r)
+// def dec(m,sk) -> These two functions would be needed
+
+// Dummy implementation of an encryption function; there is, at the moment, unfortunately not a
+// built-in way to leverage encryption; also: can randomness be modelled explicitly?
+def enc(m,pk,r):
+    return m + 1
+
+// Dummy implementation of the corresponding decryption function
+def dec(m,sk):
+    return m - 1
+
+// Checks that there are enough funds available and that indeed the new balance of the sender
+// has been computed correctly
+def verfiySenderBalance(oldBalanceEnc, newBalanceEnc, skSender, amount):
+    oldBalance = dec(oldBalanceEnc, skSender)
+    claimedNewBalance = dec(newBalanceEnc, skSender)
+
+    // Check that the sender has computed his new balance correctly
+    // This checks implicitly as well that the sender has enough funds, i.e., amount <= oldBalance
+    // as claimedNewBalance >= 0 (uint)
+    result = if claimedNewBalance + amount == oldBalance then 1 else 0 fi
+    return result
+
+// Checks that indeed a number of 'amount' tokens are send to the receiver
+def verifyEncryptedAmount(pkReceiver, amountEnc, randomness, amount):
+    amountEncShould = enc(amount, pkReceiver, randomness)
+
+    result = if amountEncShould == amountEnc then 1 else 0 fi
+    return result
+
+def verifySend(oldBalanceEnc, newBalanceEnc, pkReceiver, amountEnc, randomness, skSender, amount):
+    resultVerifySenderBalance = verfiySenderBalance(oldBalanceEnc, newBalanceEnc, skSender, amount)
+    resultVerifyEncryptedAmount = verifyEncryptedAmount(pkReceiver, amountEnc, randomness, amount)
+
+    result = if resultVerifySenderBalance == resultVerifyEncryptedAmount then resultVerifySenderBalance else 0 fi
+    return result
+
+// There are no types; everything is an unsigned integer (<= big prime)
+def main(oldBalanceEnc, newBalanceEnc, pkReceiver, amountEnc, private randomness, private skSender, private amount):
+    return verifySend(oldBalanceEnc, newBalanceEnc, pkReceiver, amountEnc, randomness, skSender, amount)

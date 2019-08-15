@@ -1,0 +1,31 @@
+// pk = (3233,17) = (modulus,pk)
+// sk = (3233,413) = (modulus,sk)
+
+// Implementation of the textbook RSA encryption function with modulus 3233 and e = 17
+def enc(pt):
+    ct = pt
+
+    // Iteratively compute the ciphertext, where we use the fact that a % b = a - floor(a/b) * b
+    // Note that this will run 16 iterations of the loop
+    for i in 2..18 do
+        ct = ct * pt
+        r = ct / 3233
+        ct = ct - r * 3233
+    endfor 
+    return ct
+
+// Implementation of the textbook RSA decryption function with modulus 3233 and d = 413 (where we have 17 * 413 % phi(n) = 1)
+def dec(ct):
+    pt = ct
+
+    for i in 2..414 do
+        pt = pt * ct
+        r = pt / 3233
+        pt = pt - r * 3233
+    endfor
+    return pt
+
+def main(msg):
+    ct = enc(msg)
+    res = if ct == 3031 then 1 else 0 fi
+    return res

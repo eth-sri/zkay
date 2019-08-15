@@ -1,0 +1,10 @@
+// returns if the aggregated power consumption is correct or not
+
+def aggregatedPowerConsumption(data1, data2, data3, data4, data5, data6, data7, startTime, endTime, aPC):
+    totalPowerConsumption = data1 + data2 + data3 + data4 + data5 + data6 + data7
+
+    result = if totalPowerConsumption == aPC then 1 else 0 fi
+    return result
+
+def main(private data1, private data2, private data3, private data4, private data5, private data6, private data7, startTime, endTime, aPC):
+    return aggregatedPowerConsumption(data1, data2, data3, data4, data5, data6, data7, startTime, endTime, aPC)

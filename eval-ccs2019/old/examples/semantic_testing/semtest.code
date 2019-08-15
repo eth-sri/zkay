@@ -1,0 +1,4 @@
+def main(m, mod):
+    r = m / mod
+    mred = m - r * mod
+    return mred

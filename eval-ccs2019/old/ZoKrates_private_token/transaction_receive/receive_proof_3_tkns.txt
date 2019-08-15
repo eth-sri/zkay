@@ -1,0 +1,29 @@
+Generating proof...
+Using Witness: {"verifyReceive_1_dec_1_param_0": 4, "verifyReceive_1_result": 1, "verifyReceive_1_sym_3": 1, "newBalanceEnc": 4, "skReceiver": 432, "verifyReceive_1_dec_2_param_0": 4, "verifyReceive_1_dec_2_param_1": 432, "oldBalanceEnc": 1, "verifyReceive_1_dec_1_param_1": 432, "verifyReceive_1_param_1": 4, "~out_0": 1, "~one": 1, "verifyReceive_1_sym_2": 1, "verifyReceive_1_sym_1": 0, "verifyReceive_1_dec_3_param_1": 432, "verifyReceive_1_param_2": 4, "verifyReceive_1_sym_0": 0, "amountEnc": 4, "verifyReceive_1_claimedNewBalance": 3, "verifyReceive_1_amount": 3, "verifyReceive_1_actualNewBalance": 3, "verifyReceive_1_dec_3_param_0": 1, "verifyReceive_1_param_3": 432, "verifyReceive_1_param_0": 1}
+Public inputs: [1, 1, 4, 4, 1]
+Private inputs: [0, 1, 0, 1, 1]
+* Elements of w skipped: 1 (33.33%)
+* Elements of w processed with special addition: 2 (66.67%)
+* Elements of w remaining: 0 (0.00%)
+* Elements of w skipped: 1 (50.00%)
+* Elements of w processed with special addition: 1 (50.00%)
+* Elements of w remaining: 0 (0.00%)
+* Elements of w skipped: 1 (50.00%)
+* Elements of w processed with special addition: 1 (50.00%)
+* Elements of w remaining: 0 (0.00%)
+* Elements of w skipped: 2 (22.22%)
+* Elements of w processed with special addition: 5 (55.56%)
+* Elements of w remaining: 2 (22.22%)
+* G1 elements in proof: 7
+* G2 elements in proof: 1
+* Proof size in bits: 2294
+Proof:
+A = 0x7755195507b39c3a39d183f8130efafc42adc4a5f9f8ebcf3ee337e5ee89e56, 0x1913d749bc175c0477048328074d18b4650c038052e3c9e6de77f4ab138401e2
+A_p = 0x17ae04af320349f6ff87744914b4482ba07ca97dcd6e10883c3bec971149a1f5, 0x1cbc9bc178ebebf63e32b3c8674ea1d0f370483cb799df44bb78cc9d26df2fb5
+B = [0x251d5deaa111b4dffb9dcf95d6dc106634bc87b6cee641c09d56ddb5db2ddf59, 0x1800b30ae659487eb5ac90afbe855ab48ef31f7c802d53e2d457c1f79603c20d], [0xf2045fb0cf691966f55367dd1a2ae1c58b0b2145c4ebaa900ee3fd17a52aea8, 0x16328e19d6fd9271e46f26805eb21c080d17dbf27532f2757a93fbd49b74163b]
+B_p = 0x52fddf1c0600ad78a633fba4906807329a5792664e3abdd08f0bedccec4c77c, 0x2add69252b72f8c9db20ff0b57062f6e3d708eccba9895b4f8b2c971cda0438f
+C = 0x2b4250ae1eee4c0c92d9ac911f533c622b1c7ca908c8e956a0535a9c78327d30, 0x2c6b3a330a40d0b7fa6da823e292dea161f30b5512039a88b5375d3115329299
+C_p = 0x267854bdeb457b9d261fb27ded5cef28dc870541b5a1aafc00ae29ec2ca12030, 0x1fc8c873e7ab79cae99d38a708663d406d268e19d96f3446ea2b654e21d3fc4c
+H = 0x130fc5a602398f88da943690b4b04184687088691d0f0974a01d0b0db2cc3f96, 0x32db74cca10423b40f488a973a2466e151ba16838c509ba3cf0027eb21722f4
+K = 0x1126d123f1c62fa75d0060d274fe14a8ba4112f9e5be61043c899a9565ca313f, 0x17ae2d270d378b83f59e5a9e5c01d10d00e40886c2b1b7d28e5a8252a109cefd
+generate-proof successful: true
