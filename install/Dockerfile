@@ -1,6 +1,7 @@
 FROM debian:latest AS helper
 # Helper image to install
 # - zokrates
+# - cloc
 
 #######################
 # BASIC PREREQUISITES #
@@ -47,6 +48,17 @@ COPY scripts/install-zokrates.sh install-zokrates.sh
 RUN ./install-zokrates.sh
 
 
+################
+# INSTALL CLOC #
+################
+# To install on host:
+# - Install cloc (1.74)
+
+# -L: follow redirects
+RUN cd /scripts \
+	&& curl -L -o cloc.tar.gz https://github.com/AlDanial/cloc/releases/download/1.74/cloc-1.74.tar.gz \
+	&& tar -xzf cloc.tar.gz \
+	&& cp cloc*/cloc cloc
 
 
 FROM continuumio/miniconda3
@@ -92,8 +104,9 @@ ENV ZOKRATES_ROOT /zokrates
 ENV ZOKRATES_HOME $ZOKRATES_ROOT/zokrates_home
 
 # BPL
-ENV BPLDIR /bpl
-ENV PYTHONPATH $BPLDIR
+ENV BPLDIR /bpl-implementation
+ENV BPLSRC $BPLDIR/src
+ENV PYTHONPATH $BPLSRC
 
 ##########################
 # INSTALL SOLC & TRUFFLE #
@@ -139,3 +152,20 @@ RUN apt-get update \
 
 # copy relevant binaries
 COPY --from=helper /ZoKrates $ZOKRATES_ROOT
+
+###########
+# HELPERS #
+###########
+# Install helper tools needed for evaluation
+#
+# To install on host:
+# - Install git
+
+# cloc
+COPY --from=helper /scripts/cloc //usr/bin
+
+# git
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		git \
+	&& rm -rf /var/lib/apt/lists/*

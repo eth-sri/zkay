@@ -7,6 +7,7 @@
 
 # BPL
 unset BPLDIR
+unset BPLSRC
 unset PYTHONPATH
 
 

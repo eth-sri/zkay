@@ -8,13 +8,14 @@ The simplest way to run BPL is using docker. After installing docker, you may
 run the docker image by:
 
 ```bash
-/.../abc $ /.../bpl-docker.sh
-(base) root@ae09e165bd19:/abc_host$
+/path/to/bpl-implementation$ ./bpl-docker.sh
+(base) root@ae09e165bd19:/bpl-implementation_host$
 ```
 
-This command mounts `abc` (the current working directory) as `abc_host` within
-the docker image. This allows you to operate on files of the host, which is
-important when compiling BPL contracts.
+This command mounts directory `bpl-implementation` as `bpl-implementation_host`
+within the docker image. Alternatively, you can run `./bpl-docker.sh` from any
+other directory `d`, which is then mounted as `d_host`. This allows you to
+operate on files of the host, which is important when compiling BPL contracts.
 
 ### Directly On Host
 
@@ -28,9 +29,10 @@ To run unit tests, run (example using docker):
 
 ```bash
 # run docker container
-/path/to/repository/code $ ./bpl-docker.sh
+/path/to/bpl-implementation $ ./bpl-docker.sh
 # run tests within docker
-(base) root@ae09e165bd19:/code_host$  make test
+(base) root@ae09e165bd19:/bpl-implementation_host$ cd src
+(base) root@ae09e165bd19:/bpl-implementation_host$ make test
 ```
 
 ## Compile Contracts
@@ -40,7 +42,18 @@ directory:
 
 ```bash
 # run docker container
-/path/to/contract $ /path/to/bpl-docker.sh
+/path/to/contract$ /path/to/bpl-docker.sh
 # run compilation
-(base) root@ff2ddb8da49c:/contract_host# python /bpl/main.py test.bpl
+(base) root@ff2ddb8da49c:/contract_host$ python /bpl/main.py test.bpl
+```
+
+## Run Evaluation from CCS 2019
+
+To reproduce the evaluation results from the paper, run the following:
+
+```bash
+# run docker container
+/path/to/bpl-implementation/eval-ccs2019$ ../bpl-docker.sh
+# run evaluation
+(base) root@ff2ddb8da49c:/eval-ccs2019_host$ make eval
 ```

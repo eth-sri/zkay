@@ -6,12 +6,16 @@
 # Set environment variables necessary to run BPL
 
 
-# directory containing this script
+# Directory containing this script.
+#
+# When running `prepare-conda.sh`, this line is
+# automatically replaced by a hard-coded path
 BASEDIR=$(dirname "$(readlink -f "$0")")
 
 # BPL
 export BPLDIR="$BASEDIR/../.."
-export PYTHONPATH="$BPLDIR"
+export BPLSRC="$BPLDIR/src"
+export PYTHONPATH="$BPLSRC"
 
 
 # zokrates

@@ -22,7 +22,6 @@
 ############
 
 IMAGE=bpl
-CONTAINERNAME=bpl-container
 
 ###############
 # PREPARATION #
@@ -32,9 +31,6 @@ BASEDIR="$(dirname "$(readlink -f "$0")")"
 
 # create docker image (if it does not yet exist)
 make -C "$BASEDIR/install" image
-
-# remove existing container if one is there
-sudo "$BASEDIR/install/scripts/cleanup-container.sh"
 
 ##############
 # RUN DOCKER #
@@ -51,15 +47,14 @@ if [ $# -eq 0 ]; then
 	FLAGS="-v $DIR:$WORKDIR --workdir $WORKDIR"
 else
 	echo "Running in docker: $@"
-	FLAGS="--workdir /bpl"
+	FLAGS="--workdir /bpl-implementation"
 fi
 
 sudo docker run \
 	-it \
 	--rm \
-	-v "$BASEDIR":/bpl \
+	-v "$BASEDIR":/bpl-implementation \
 	$FLAGS \
-	--name $CONTAINERNAME \
 	$IMAGE \
 	"$@"
 
