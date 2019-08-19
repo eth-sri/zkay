@@ -44,7 +44,7 @@ directory:
 # run docker container
 /path/to/contract$ /path/to/bpl-docker.sh
 # run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python /bpl/main.py test.bpl
+(base) root@ff2ddb8da49c:/contract_host$ python /bpl-implementation/src/main.py test.bpl
 ```
 
 ## Run Evaluation from CCS 2019
