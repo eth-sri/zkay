@@ -15,6 +15,7 @@ from utils.timer import time_measure
 def parse_arguments():
 	# prepare parser
 	parser = argparse.ArgumentParser()
+	parser.add_argument('--type-check', action='store_true', help="Only type-check, do not compile.")
 	msg = 'The directory to output the compiled contract to. Default: Current directory'
 	parser.add_argument('--output', default=os.getcwd(), help=msg)
 	parser.add_argument(
@@ -73,6 +74,11 @@ if __name__ == '__main__':
 	log_file = my_logging.get_log_file(filename='compile', parent_dir=a.output, include_timestamp=False, label=None)
 	my_logging.prepare_logger(log_file)
 
-	# compile
-	with log_context('inputfile', os.path.basename(a.input)):
-		compile(a.input, a.output, a.count)
+	# only type-check
+	if a.type_check:
+		code = read_file(a.input)
+		ast = get_processed_ast(code)
+	else:
+		# compile
+		with log_context('inputfile', os.path.basename(a.input)):
+			compile(a.input, a.output, a.count)
