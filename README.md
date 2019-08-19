@@ -47,13 +47,21 @@ directory:
 (base) root@ff2ddb8da49c:/contract_host$ python /bpl-implementation/src/main.py test.bpl
 ```
 
+## Transform Scenario
+
+To specify a specific scenario (i.e., a sequence of transactions), see the
+example scenario in `./examples/exam/scenario.py`. To transform this scenario,
+run the `scenario.py` script. To transform the `exam` scenario example, run
+
+```bash
+./generate-scenario.sh ./examples/exam
+```
+
 ## Run Evaluation from CCS 2019
 
 To reproduce the evaluation results from the paper, run the following:
 
 ```bash
 # run docker container
-/path/to/bpl-implementation/eval-ccs2019$ ../bpl-docker.sh
-# run evaluation
-(base) root@ff2ddb8da49c:/eval-ccs2019_host$ make eval
+/path/to/bpl-implementation/eval-ccs2019$ ../bpl-eval-docker.sh
 ```

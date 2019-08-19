@@ -3,3 +3,6 @@
 /examples/*/scenario
 *.csv
 *.pdf
+
+# lines of code output
+/loc.txt
