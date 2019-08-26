@@ -37,7 +37,7 @@ To run unit tests, run (example using docker):
 
 ## Type-Check Contracts
 
-To only type-check a BPL file `test.bpl`:
+To type-check a BPL file `test.bpl` without compiling it, run:
 
 ```bash
 # run docker container
@@ -48,8 +48,7 @@ To only type-check a BPL file `test.bpl`:
 
 ## Compile Contracts
 
-To compile (and type-check) a BPL file `test.bpl` and place the output into the
-current working directory:
+To compile and type-check a BPL file `test.bpl`, run: 
 
 ```bash
 # run docker container
@@ -57,6 +56,8 @@ current working directory:
 # run compilation
 (base) root@ff2ddb8da49c:/contract_host$ python /bpl-implementation/src/main.py test.bpl
 ```
+
+The output is placed in the current working directory.
 
 ## Transform Scenario
 
