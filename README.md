@@ -19,8 +19,8 @@ operate on files of the host, which is important when compiling BPL contracts.
 
 ### Directly On Host
 
-Alternatively, you may install BPL on your host directly. To this end, following
-the instructions in the [Dockerfile](./install/Dockerfile), marked by: `To
+Alternatively, you may install BPL on your host directly. To this end, follow
+the instructions in the [Dockerfile](./install/Dockerfile) marked by `To
 install on host`.
 
 ## Unit Tests
@@ -37,7 +37,7 @@ To run unit tests, run (example using docker):
 
 ## Type-Check Contracts
 
-To only type-check a BPL file ``test.bpl:
+To only type-check a BPL file `test.bpl`:
 
 ```bash
 # run docker container
