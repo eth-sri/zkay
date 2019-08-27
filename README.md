@@ -66,9 +66,10 @@ Note that the compilation may take a couple of minutes.
 
 ## Transform Transactions
 
-To specify a specific scenario (i.e., a sequence of transactions), see the
-example scenario in `./examples/exam/scenario.py`. To transform this scenario,
-run the `scenario.py` script. To transform the `exam` scenario example, run
+To see how a sequence of transactions (i.e., a _scenario_) can be specified,
+see the example in `/path/to/eval-ccs-2019/examples/exam/scenario.py`. 
+To transform this scenario, run the `scenario.py` script. 
+To transform the `exam` scenario example, run
 
 ```bash
 # run docker container
