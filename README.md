@@ -95,5 +95,5 @@ To reproduce the evaluation results from the paper, run:
 /path/to/bpl-implementation/eval-ccs2019$ ./bpl-eval-docker.sh
 ```
 
-Note that running this command requires docker to be installed. Running the full
-evaluation may take several hours.
+Note that running this command may take several hours and requires docker
+to be installed.
