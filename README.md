@@ -63,9 +63,12 @@ To compile and type-check a BPL file `test.bpl` in `/path/to/contract`, run:
 (base) root@ff2ddb8da49c:/contract_host$ python3 /bpl-implementation/src/main.py test.bpl
 ```
 
-The output is placed in the current working directory and consists of the transformed BPL contract,
-the contracts for proof verification, and the proof circuits in ZoKrates' domain-specific language.
-Note that the compilation may take a couple of minutes.
+The output comprises the transformed BPL contract, the contracts for proof verification, 
+and the proof circuits in ZoKrates' domain-specific language. By default, it is placed
+in the current working directory. A different output directory can be specified using
+the `--output` command line argument.
+
+Note that the compilation *may take a couple of minutes*.
 
 ## Transform and Run Transactions
 
@@ -95,5 +98,5 @@ To reproduce the evaluation results from the paper, run:
 /path/to/bpl-implementation/eval-ccs2019$ ./bpl-eval-docker.sh
 ```
 
-Note that running this command may take several hours and requires docker
+Note that running this command *may take several hours* and requires docker
 to be installed.
