@@ -32,7 +32,7 @@ To run unit tests, run:
 
 ```bash
 # run docker container
-/path/to/bpl-implementation $ ./bpl-docker.sh
+/path/to/bpl-implementation$ ./bpl-docker.sh
 # run tests within docker
 (base) root@ae09e165bd19:/bpl-implementation_host$ cd src
 (base) root@ae09e165bd19:/bpl-implementation_host$ make test
@@ -40,7 +40,7 @@ To run unit tests, run:
 
 ## Type-Check Contracts
 
-To type-check a BPL file `test.bpl` without compiling it, run:
+To type-check a BPL file `test.bpl` in `/path/to/contract` without compiling it, run:
 
 ```bash
 # run docker container
@@ -51,7 +51,7 @@ To type-check a BPL file `test.bpl` without compiling it, run:
 
 ## Compile Contracts
 
-To compile and type-check a BPL file `test.bpl`, run: 
+To compile and type-check a BPL file `test.bpl` in `/path/to/contract`, run: 
 
 ```bash
 # run docker container
