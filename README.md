@@ -73,7 +73,7 @@ run the `scenario.py` script. To transform the `exam` scenario example, run
 ```bash
 # run docker container
 /path/to/eval-ccs-2019$ ../bpl-docker.sh
-# compile contract
+# compile contract (omit if already compiled)
 (base) root@ff2ddb8da49c:/eval-ccs-2019_host$ python3 "$BPLSRC/main.py" --output ./examples/exam/compiled ./examples/exam/exam.sol
 # run scenario
 (base) root@ff2ddb8da49c:/eval-ccs-2019_host$ ./generate-scenario.sh ./examples/exam
