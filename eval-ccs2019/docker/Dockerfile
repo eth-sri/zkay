@@ -1,5 +1,18 @@
 FROM bpl
 
+#######################
+# BASIC PREREQUISITES #
+#######################
+# Needed for download
+# To install on host:
+# - install packages listed below
+
+# -qq: quiet installation
+RUN apt-get update \
+	&& apt-get install -y \
+		curl \
+	&& rm -rf /var/lib/apt/lists/*
+
 
 ################
 # INSTALL CLOC #
