@@ -40,6 +40,7 @@ To run all unit tests of BPL, run:
 ```
 
 If all tests pass, your BPL installation is likely set up correctly.
+Note that running all unit tests *may take several hours*.
 
 ## Type-Check Contracts
 
