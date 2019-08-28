@@ -1,0 +1,6 @@
+{
+	"python.pythonPath": "/home/bichselb/miniconda3/bin/python",
+	"python.jediEnabled": false,
+	// important for imports
+	"python.envFile": "${workspaceFolder}/.vscode/.env"
+}
