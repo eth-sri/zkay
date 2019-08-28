@@ -1,5 +1,10 @@
 # BPL: Blockchain Privacy Language
 
+## Warning
+
+This is a prototype implementation not intended for use in production. In
+particular, it uses "dummy" encryption `Enc(v,R,k)=v+k`, which is **insecure**.
+
 ## Install
 
 ### Using Docker
