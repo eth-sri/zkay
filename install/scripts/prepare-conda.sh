@@ -63,6 +63,9 @@ npm install -q -g \
 	truffle@5.0.30 \
 	ganache-cli@6.5.1
 
+# list currently installed packages
+conda env export
+
 conda deactivate
 
 # nagivate back

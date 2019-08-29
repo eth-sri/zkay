@@ -16,3 +16,7 @@ dependencies:
   - pip:
     - antlr4-python3-runtime==4.7.2
     - py-solc==3.2.0
+    # optional, but needed when using web3
+    - web3==5.0.2
+    - eth-tester==0.2.0b2
+    - eth-bloom==1.0.3
