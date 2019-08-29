@@ -20,5 +20,9 @@ analyze:
 loc:
 	cloc --git --by-file --include-lang=Python --not-match-d='ZoKrates|generated' --fullpath $(BPLSRC) | tee ./loc.txt
 
+minimal:
+	./zokrates_minimal_cost/circuit/run.sh
+	./zokrates_minimal_cost/run/runner.sh
+
 # run all targets (full evaluation)
-eval: loc scenarios run-scenarios analyze
+eval: minimal loc scenarios run-scenarios analyze

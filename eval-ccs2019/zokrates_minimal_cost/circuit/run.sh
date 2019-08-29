@@ -10,6 +10,9 @@ cd "$BASEDIR"
 
 SCHEME=gm17
 
+# abort on first error
+set -e
+
 # compile
 $ZOKRATES_ROOT/zokrates compile -i minimal.code
 # perform the setup phase
