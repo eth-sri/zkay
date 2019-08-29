@@ -1,0 +1,4 @@
+# implementation of identity (simplest possible function)
+
+def main(private field a) -> (field):
+  return a == 0

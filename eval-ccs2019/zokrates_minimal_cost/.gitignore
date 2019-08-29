@@ -1,0 +1,9 @@
+out
+out.code
+proof.json
+proving.key
+verification.key
+/circuit/verifier.sol
+witness
+
+*.log
