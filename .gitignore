@@ -8,3 +8,5 @@ build/
 .idea
 __pycache__
 
+# ignore archive
+/bpl.zip
