@@ -7,7 +7,7 @@ unit-test:
 # test compiling & running an example contract
 example-contract:
 	# compile example contract
-	cd eval-ccs2019 && ../bpl-docker.sh python3 "../src/main.py" --output ./examples/exam/compiled ./examples/exam/exam.sol
+	./bpl-docker.sh python3 "./src/main.py" --output ./eval-ccs2019/examples/exam/compiled ./eval-ccs2019/examples/exam/exam.sol
 	# generate scenario for example contract
 	cd eval-ccs2019 && ../bpl-docker.sh ./generate-scenario.sh ./examples/exam
 	# run example scenario
