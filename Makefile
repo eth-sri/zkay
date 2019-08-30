@@ -9,9 +9,9 @@ example-contract:
 	# compile example contract
 	./bpl-docker.sh python3 "./src/main.py" --output ./eval-ccs2019/examples/exam/compiled ./eval-ccs2019/examples/exam/exam.sol
 	# generate scenario for example contract
-	cd eval-ccs2019 && ../bpl-docker.sh ./generate-scenario.sh ./examples/exam
+	./bpl-docker.sh ./eval-ccs2019/generate-scenario.sh ./eval-ccs2019/examples/exam
 	# run example scenario
-	cd eval-ccs2019 && ../bpl-docker.sh ./examples/exam/scenario/runner.sh
+	./bpl-docker.sh ./eval-ccs2019/examples/exam/scenario/runner.sh
 
 # run evaluation
 evalation:
