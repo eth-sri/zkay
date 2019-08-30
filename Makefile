@@ -2,7 +2,7 @@
 
 # run unit tests
 unit-test:
-	cd src && ../bpl-docker.sh make test
+	./bpl-docker.sh make -C src test
 
 # test compiling & running an example contract
 example-contract:
@@ -22,4 +22,5 @@ test: unit-test example-contract evalation
 
 # generate a zip file of this repository
 archive:
+	rm -f bpl.zip
 	git archive -o bpl.zip HEAD
