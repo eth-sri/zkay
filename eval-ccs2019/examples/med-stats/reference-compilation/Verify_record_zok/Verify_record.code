@@ -1,0 +1,46 @@
+
+def dec(field msg, field key) -> (field):
+	return msg - key
+
+def enc(field msg, field R, field key) -> (field):
+	// artificial constraints ensuring every variable is used
+	field impossible = if R == 0 && R == 1 then 1 else 0 fi
+	impossible == 0
+	return msg + key
+
+import "hashes/sha256/512bitPacked.code" as sha256packed
+
+def checkHash(field[12] inputs, field[2] expectedHash) -> (field):
+	field[2] hash = [0, inputs[0]]
+	for field i in 1..12 do
+		field[4] toHash = [hash[0], hash[1], 0, inputs[i]]
+		hash = sha256packed(toHash)
+	endfor
+	
+	hash[0] == expectedHash[0]
+	hash[1] == expectedHash[1]
+	return 1
+
+
+// genHelper0: bool@me r
+// genHelper0PK: bool@me r
+// genHelper1: r
+// genParam0: reveal(r, pat)
+// genParam0PK: reveal(r, pat)
+// genHelper2: count
+// genHelper4: r
+// genParam1: r ? reveal(1, me) : reveal(0, me)
+// genParam1PK: r ? reveal(1, me) : reveal(0, me)
+// genHelper3: (r ? reveal(1, me) : reveal(0, me))
+// genParam2: count + (r ? reveal(1, me) : reveal(0, me))
+// genParam2PK: count + (r ? reveal(1, me) : reveal(0, me))
+def main(private field genHelper0, private field genHelper0Value, private field genHelper0R, private field genHelper0PK, private field genHelper1, private field genHelper1SK, private field genParam0, private field genParam0R, private field genParam0PK, private field genHelper2, private field genHelper2SK, private field genHelper4, private field genHelper4SK, private field genParam1, private field genParam1R, private field genParam1PK, private field genHelper3, private field genHelper3SK, private field genParam2, private field genParam2R, private field genParam2PK, field inputHash0, field inputHash1) -> (field):
+	1 == checkHash([genHelper0, genHelper0PK, genHelper1, genParam0, genParam0PK, genHelper2, genHelper4, genParam1, genParam1PK, genHelper3, genParam2, genParam2PK], [inputHash0, inputHash1])
+	genHelper0 == enc(genHelper0Value, genHelper0R, genHelper0PK)
+	field genParam0Dec = dec(genHelper1, genHelper1SK)
+	genParam0 == enc(genParam0Dec, genParam0R, genParam0PK)
+	field genParam1Dec = if dec(genHelper4, genHelper4SK) == 1 then 1 else 0 fi
+	genParam1 == enc(genParam1Dec, genParam1R, genParam1PK)
+	field genParam2Dec = dec(genHelper2, genHelper2SK) + dec(genHelper3, genHelper3SK)
+	genParam2 == enc(genParam2Dec, genParam2R, genParam2PK)
+	return 1
