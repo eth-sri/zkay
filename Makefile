@@ -24,3 +24,7 @@ test: unit-test example-contract evalation
 archive:
 	rm -f bpl.zip
 	git archive -o bpl.zip HEAD
+
+# remove all gitignored files
+clean:
+	git clean -x -d -f
