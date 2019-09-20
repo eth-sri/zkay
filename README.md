@@ -17,11 +17,11 @@ The simplest way to run zkay is using docker. After installing docker, the docke
 as follows:
 
 ```bash
-/path/to/zkay-implementation$ ./zkay-docker.sh
-(base) root@ae09e165bd19:/zkay-implementation_host$
+/path/to/zkay$ ./zkay-docker.sh
+(base) root@ae09e165bd19:/zkay_host$
 ```
 
-This command mounts the directory `zkay-implementation` from your host as `/zkay-implementation_host`
+This command mounts the directory `zkay` from your host as `/zkay_host`
 within the docker container. You can run `zkay-docker.sh` also from any other directory `d` on your host.
 In this case, `d` is mounted as `/d_host` inside the container.
 This allows you to operate on files from your host machine.
@@ -42,10 +42,10 @@ To run all unit tests of zkay, run:
 
 ```bash
 # run docker container
-/path/to/zkay-implementation$ ./zkay-docker.sh
+/path/to/zkay$ ./zkay-docker.sh
 # run tests within docker
-(base) root@ae09e165bd19:/zkay-implementation_host$ cd src
-(base) root@ae09e165bd19:/zkay-implementation_host$ make test
+(base) root@ae09e165bd19:/zkay_host$ cd src
+(base) root@ae09e165bd19:/zkay_host$ make test
 ```
 
 If all tests pass, your zkay installation is likely set up correctly.
@@ -59,7 +59,7 @@ To type-check a zkay file `test.zkay` in `/path/to/contract` without compiling i
 # run docker container
 /path/to/contract$ /path/to/zkay-docker.sh
 # run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay-implementation/src/main.py test.zkay --type-check
+(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay/src/main.py test.zkay --type-check
 ```
 
 ## Compile Contracts
@@ -70,7 +70,7 @@ To compile and type-check a zkay file `test.zkay` in `/path/to/contract`, run:
 # run docker container
 /path/to/contract$ /path/to/zkay-docker.sh
 # run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay-implementation/src/main.py test.zkay
+(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay/src/main.py test.zkay
 ```
 
 The output comprises the transformed zkay contract, the contracts for proof verification, 
@@ -105,7 +105,7 @@ specification of the scenario ran by the above code.
 To reproduce the evaluation results from the paper, run:
 
 ```bash
-/path/to/zkay-implementation/eval-ccs2019$ ./zkay-eval-docker.sh
+/path/to/zkay/eval-ccs2019$ ./zkay-eval-docker.sh
 ```
 
 Note that running this command *may take several hours* and requires docker

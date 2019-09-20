@@ -38,8 +38,8 @@ make -C "$BASEDIR/docker" image
 sudo docker run \
 	-it \
 	--rm \
-	-v "$BASEDIR/..":/zkay-implementation \
-	--workdir /zkay-implementation/eval-ccs2019 \
+	-v "$BASEDIR/..":/zkay \
+	--workdir /zkay/eval-ccs2019 \
 	$IMAGE \
 	make eval
 

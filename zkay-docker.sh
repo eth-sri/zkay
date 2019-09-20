@@ -47,13 +47,13 @@ if [ $# -eq 0 ]; then
 	FLAGS="-v $DIR:$WORKDIR --workdir $WORKDIR"
 else
 	echo "Running in docker: $@"
-	FLAGS="--workdir /zkay-implementation"
+	FLAGS="--workdir /zkay"
 fi
 
 sudo docker run \
 	-it \
 	--rm \
-	-v "$BASEDIR":/zkay-implementation \
+	-v "$BASEDIR":/zkay \
 	$FLAGS \
 	$IMAGE \
 	"$@"
