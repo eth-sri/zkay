@@ -1,5 +1,5 @@
-from bpl_ast.ast import AST, Expression, Statement, FunctionDefinition, ConstructorDefinition
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.ast import AST, Expression, Statement, FunctionDefinition, ConstructorDefinition
+from zkay_ast.visitor.visitor import AstVisitor
 
 
 class ParentSetterVisitor(AstVisitor):

@@ -3,8 +3,8 @@
 # $ source ./prepare.sh
 
 # check if activated
-if [ -z "$BPLSRC" ]; then
-	echo "Please run \"conda activate bpl\" first." >&2
+if [ -z "$ZKAYSRC" ]; then
+	echo "Please run \"conda activate zkay\" first." >&2
 	exit 1
 fi
 

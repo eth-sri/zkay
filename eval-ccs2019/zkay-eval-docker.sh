@@ -11,13 +11,13 @@
 #########
 # USAGE #
 #########
-# $ ./bpl-eval-docker.sh
+# $ ./zkay-eval-docker.sh
 
 ############
 # SETTINGS #
 ############
 
-IMAGE=bpl-eval
+IMAGE=zkay-eval
 
 ###############
 # PREPARATION #
@@ -38,8 +38,8 @@ make -C "$BASEDIR/docker" image
 sudo docker run \
 	-it \
 	--rm \
-	-v "$BASEDIR/..":/bpl-implementation \
-	--workdir /bpl-implementation/eval-ccs2019 \
+	-v "$BASEDIR/..":/zkay-implementation \
+	--workdir /zkay-implementation/eval-ccs2019 \
 	$IMAGE \
 	make eval
 

@@ -12,7 +12,7 @@
 ############
 
 # name of docker image
-_IMAGE := bpl-eval
+_IMAGE := zkay-eval
 
 ############################
 # SPECIFIC DOCKER COMMANDS #

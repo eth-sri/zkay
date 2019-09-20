@@ -34,7 +34,7 @@ conda env create --force -f environment.yml
 #########################
 
 # activate (needed to load $CONDA_PREFIX)
-conda activate bpl
+conda activate zkay
 
 # set up conda to automatically set/unset environment variables
 ENVDIR=$CONDA_PREFIX/etc/conda
@@ -55,7 +55,7 @@ conda deactivate
 ################
 
 # needed to run npm
-conda activate bpl
+conda activate zkay
 
 # install npm packages
 npm install -q -g \

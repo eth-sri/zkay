@@ -1,7 +1,7 @@
 from parameterized import parameterized_class
 
-from bpl_ast.build_ast import build_ast
-from bpl_ast.visitor.deep_copy import deep_copy
+from zkay_ast.build_ast import build_ast
+from zkay_ast.visitor.deep_copy import deep_copy
 from examples.examples import all_examples
 from examples.test_examples import TestExamples
 

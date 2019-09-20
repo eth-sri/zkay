@@ -1,8 +1,8 @@
-from bpl_ast.analysis.alias_analysis import alias_analysis as a
-from bpl_ast.build_ast import build_ast
-from bpl_ast.pointers.parent_setter import set_parents
-from bpl_ast.pointers.symbol_table import link_identifiers as link
-from bpl_ast.visitor.return_checker import check_return as r
+from zkay_ast.analysis.alias_analysis import alias_analysis as a
+from zkay_ast.build_ast import build_ast
+from zkay_ast.pointers.parent_setter import set_parents
+from zkay_ast.pointers.symbol_table import link_identifiers as link
+from zkay_ast.visitor.return_checker import check_return as r
 from type_check.type_checker import type_check as t
 
 

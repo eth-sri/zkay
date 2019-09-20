@@ -3,11 +3,11 @@
 ###########
 # PURPOSE #
 ###########
-# Unset environment variables necessary to run BPL
+# Unset environment variables necessary to run zkay
 
-# BPL
-unset BPLDIR
-unset BPLSRC
+# zkay
+unset ZKAYDIR
+unset ZKAYSRC
 unset PYTHONPATH
 
 

@@ -11,7 +11,7 @@
 # Run this script by
 # $ sudo ./inspect-image.sh
 
-ID=$(docker images --filter=reference=bpl --format "{{.ID}}")
+ID=$(docker images --filter=reference=zkay --format "{{.ID}}")
 
 echo $ID
 docker history --format "table {{printf \"%.150s\" .CreatedBy}}\t{{.Size}}" --no-trunc $ID

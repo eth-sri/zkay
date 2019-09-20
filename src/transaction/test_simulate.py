@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 
-from bpl_ast.process_ast import get_processed_ast
+from zkay_ast.process_ast import get_processed_ast
 from examples.examples import addition, simple_storage
 from transaction.simulate import Simulator
 

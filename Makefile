@@ -2,28 +2,23 @@
 
 # run unit tests
 unit-test:
-	./bpl-docker.sh make -C src test
+	./zkay-docker.sh make -C src test
 
 # test compiling & running an example contract
 example-contract:
 	# compile example contract
-	./bpl-docker.sh python3 "./src/main.py" --output ./eval-ccs2019/examples/exam/compiled ./eval-ccs2019/examples/exam/exam.sol
+	./zkay-docker.sh python3 "./src/main.py" --output ./eval-ccs2019/examples/exam/compiled ./eval-ccs2019/examples/exam/exam.sol
 	# generate scenario for example contract
-	./bpl-docker.sh ./eval-ccs2019/generate-scenario.sh ./examples/exam
+	./zkay-docker.sh ./eval-ccs2019/generate-scenario.sh ./examples/exam
 	# run example scenario
-	./bpl-docker.sh ./eval-ccs2019/examples/exam/scenario/runner.sh
+	./zkay-docker.sh ./eval-ccs2019/examples/exam/scenario/runner.sh
 
 # run evaluation
 evalation:
-	./eval-ccs2019/bpl-eval-docker.sh
+	./eval-ccs2019/zkay-eval-docker.sh
 
 # test most important commands in repo
 test: unit-test example-contract evalation
-
-# generate a zip file of this repository
-archive:
-	rm -f bpl.zip
-	git archive -o bpl.zip HEAD
 
 # remove all gitignored files
 clean:

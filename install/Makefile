@@ -12,7 +12,7 @@
 ############
 
 # name of docker image
-_IMAGE := bpl
+_IMAGE := zkay
 
 ############################
 # SPECIFIC DOCKER COMMANDS #

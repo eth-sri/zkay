@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from bpl_ast.ast import BooleanLiteralExpr, RequireStatement, Identifier, IdentifierExpr, AssignmentStatement, \
+from zkay_ast.ast import BooleanLiteralExpr, RequireStatement, Identifier, IdentifierExpr, AssignmentStatement, \
 	BuiltinFunction, FunctionCallExpr, NumberLiteralExpr
 
 

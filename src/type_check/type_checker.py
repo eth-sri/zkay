@@ -1,12 +1,12 @@
 from typing import Union
 
-from bpl_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
+from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
 	AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
 	FunctionDefinition, StateVariableDeclaration, Mapping, \
 	AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
 	BuiltinFunction, VariableDeclarationStatement, RequireStatement
-from bpl_ast.visitor.deep_copy import deep_copy
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.visitor.deep_copy import deep_copy
+from zkay_ast.visitor.visitor import AstVisitor
 from type_check.contains_private import contains_private
 from type_check.final_checker import check_final
 from type_check.type_exceptions import TypeMismatchException, TypeException

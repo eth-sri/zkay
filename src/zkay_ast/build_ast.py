@@ -1,6 +1,6 @@
 from antlr4.Token import CommonToken
 
-from bpl_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
+from zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
 	BooleanLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, ReclassifyExpr, \
 	BuiltinFunction
 from type_check.type_exceptions import RequireException, ReclassifyException
@@ -8,7 +8,7 @@ from solidity_parser.emit import Emitter
 from solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
 from solidity_parser.generated.SolidityVisitor import SolidityVisitor
 from solidity_parser.parse import MyParser
-import bpl_ast.ast as ast
+import zkay_ast.ast as ast
 
 
 def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream) -> ast.AST:

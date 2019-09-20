@@ -3,7 +3,7 @@
 ###########
 # PURPOSE #
 ###########
-# Set environment variables necessary to run BPL
+# Set environment variables necessary to run zkay
 
 
 # Directory containing this script.
@@ -12,10 +12,10 @@
 # automatically replaced by a hard-coded path
 BASEDIR=$(dirname "$(readlink -f "$0")")
 
-# BPL
-export BPLDIR="$BASEDIR/../.."
-export BPLSRC="$BPLDIR/src"
-export PYTHONPATH="$BPLSRC"
+# zkay
+export ZKAYDIR="$BASEDIR/../.."
+export ZKAYSRC="$ZKAYDIR/src"
+export PYTHONPATH="$ZKAYSRC"
 
 
 # zokrates

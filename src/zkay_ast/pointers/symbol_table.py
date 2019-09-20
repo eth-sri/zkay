@@ -1,6 +1,6 @@
-from bpl_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
+from zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
 	SimpleStatement, IdentifierExpr, Block, Mapping
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.visitor.visitor import AstVisitor
 
 
 def fill_symbol_table(ast):

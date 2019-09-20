@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from bpl_ast.analysis.partition_state import PartitionState
+from zkay_ast.analysis.partition_state import PartitionState
 
 
 class TestPartitionState(TestCase):

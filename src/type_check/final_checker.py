@@ -1,8 +1,8 @@
 from typing import Set
 
-from bpl_ast.ast import StateVariableDeclaration, \
+from zkay_ast.ast import StateVariableDeclaration, \
 	AssignmentStatement, IdentifierExpr, ContractDefinition
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.visitor.visitor import AstVisitor
 from type_check.type_exceptions import TypeException
 
 

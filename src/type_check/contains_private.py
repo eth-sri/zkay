@@ -1,5 +1,5 @@
-from bpl_ast.ast import AnnotatedTypeName, AST
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.ast import AnnotatedTypeName, AST
+from zkay_ast.visitor.visitor import AstVisitor
 
 
 def contains_private(ast):

@@ -3,11 +3,11 @@ from unittest import TestCase
 
 from parameterized import parameterized_class
 
-from bpl_ast.analysis.alias_analysis import alias_analysis
-from bpl_ast.ast import Statement, CodeVisitor, AST
-from bpl_ast.build_ast import build_ast
-from bpl_ast.pointers.parent_setter import set_parents
-from bpl_ast.pointers.symbol_table import link_identifiers
+from zkay_ast.analysis.alias_analysis import alias_analysis
+from zkay_ast.ast import Statement, CodeVisitor, AST
+from zkay_ast.build_ast import build_ast
+from zkay_ast.pointers.parent_setter import set_parents
+from zkay_ast.pointers.symbol_table import link_identifiers
 from examples.examples import analysis, all_examples
 from examples.test_examples import TestExamples
 

@@ -1,6 +1,6 @@
 from parameterized import parameterized_class
 
-from bpl_ast.build_ast import build_ast
+from zkay_ast.build_ast import build_ast
 from examples.examples import all_examples
 from examples.test_examples import TestExamples
 from solidity_parser.emit import normalize_code

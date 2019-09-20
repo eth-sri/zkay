@@ -3,8 +3,8 @@ import textwrap
 from string import Formatter
 from typing import List, Dict, Union, Optional
 
-from bpl_ast.analysis.partition_state import PartitionState
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.analysis.partition_state import PartitionState
+from zkay_ast.visitor.visitor import AstVisitor
 
 
 class AST:

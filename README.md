@@ -1,4 +1,8 @@
-# BPL: Blockchain Privacy Language
+# zkay: A Blockchain Privacy Language
+
+zkay (pronounced as `[zi: keɪ]`) is a programming language which enables
+automatic compilation of intuitive data privacy specifications to NIZK-enabled
+private smart contracts.
 
 ## Warning
 
@@ -9,67 +13,67 @@ particular, it uses "dummy" encryption `Enc(v,R,k)=v+k`, which is **insecure**.
 
 ### Using Docker
 
-The simplest way to run BPL is using docker. After installing docker, the docker image can be run
+The simplest way to run zkay is using docker. After installing docker, the docker image can be run
 as follows:
 
 ```bash
-/path/to/bpl-implementation$ ./bpl-docker.sh
-(base) root@ae09e165bd19:/bpl-implementation_host$
+/path/to/zkay-implementation$ ./zkay-docker.sh
+(base) root@ae09e165bd19:/zkay-implementation_host$
 ```
 
-This command mounts the directory `bpl-implementation` from your host as `/bpl-implementation_host`
-within the docker container. You can run `bpl-docker.sh` also from any other directory `d` on your host.
-In this case, `d` is mounted as `/d_host` inside the container. 
+This command mounts the directory `zkay-implementation` from your host as `/zkay-implementation_host`
+within the docker container. You can run `zkay-docker.sh` also from any other directory `d` on your host.
+In this case, `d` is mounted as `/d_host` inside the container.
 This allows you to operate on files from your host machine.
 
 ### Directly On Host
 
-As an alternative to docker, you may install BPL on your host directly. To this end, follow
+As an alternative to docker, you may install zkay on your host directly. To this end, follow
 the instructions in the [Dockerfile](./install/Dockerfile) marked by `To install on host`.
 
-Below we show how to test your BPL installation, and how to type-check and
-compile BPL contracts from _within the docker container_. However, the
+Below we show how to test your zkay installation, and how to type-check and
+compile zkay contracts from _within the docker container_. However, the
 respective commands can similarly be _run directly on the host_ after having
-installed BPL properly.
+installed zkay properly.
 
 ## Unit Tests
 
-To run all unit tests of BPL, run:
+To run all unit tests of zkay, run:
 
 ```bash
 # run docker container
-/path/to/bpl-implementation$ ./bpl-docker.sh
+/path/to/zkay-implementation$ ./zkay-docker.sh
 # run tests within docker
-(base) root@ae09e165bd19:/bpl-implementation_host$ cd src
-(base) root@ae09e165bd19:/bpl-implementation_host$ make test
+(base) root@ae09e165bd19:/zkay-implementation_host$ cd src
+(base) root@ae09e165bd19:/zkay-implementation_host$ make test
 ```
 
-If all tests pass, your BPL installation is likely set up correctly.
+If all tests pass, your zkay installation is likely set up correctly.
 Note that running all unit tests *may take several hours*.
 
 ## Type-Check Contracts
 
-To type-check a BPL file `test.bpl` in `/path/to/contract` without compiling it, run:
+To type-check a zkay file `test.zkay` in `/path/to/contract` without compiling it, run:
 
 ```bash
 # run docker container
-/path/to/contract$ /path/to/bpl-docker.sh
+/path/to/contract$ /path/to/zkay-docker.sh
 # run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python3 /bpl-implementation/src/main.py test.bpl --type-check
+(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay-implementation/src/main.py test.zkay --type-check
 ```
 
 ## Compile Contracts
 
-To compile and type-check a BPL file `test.bpl` in `/path/to/contract`, run: 
+To compile and type-check a zkay file `test.zkay` in `/path/to/contract`, run:
 
 ```bash
 # run docker container
-/path/to/contract$ /path/to/bpl-docker.sh
+/path/to/contract$ /path/to/zkay-docker.sh
 # run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python3 /bpl-implementation/src/main.py test.bpl
+(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay-implementation/src/main.py test.zkay
 ```
 
-The output comprises the transformed BPL contract, the contracts for proof verification, 
+The output comprises the transformed zkay contract, the contracts for proof verification, 
 and the proof circuits in ZoKrates' domain-specific language. By default, it is placed
 in the current working directory. A different output directory can be specified using
 the `--output` command line argument.
@@ -83,9 +87,9 @@ example contract, run:
 
 ```bash
 # run docker container
-/path/to/eval-ccs-2019$ ../bpl-docker.sh
+/path/to/eval-ccs-2019$ ../zkay-docker.sh
 # compile contract (omit if already compiled)
-(base) root@ff2ddb8da49c:/eval-ccs-2019_host$ python3 "$BPLSRC/main.py" --output ./examples/exam/compiled ./examples/exam/exam.sol
+(base) root@ff2ddb8da49c:/eval-ccs-2019_host$ python3 "$ZKAYSRC/main.py" --output ./examples/exam/compiled ./examples/exam/exam.sol
 # transform scenario
 (base) root@ff2ddb8da49c:/eval-ccs-2019_host$ ./generate-scenario.sh ./examples/exam
 # run scenario
@@ -101,7 +105,7 @@ specification of the scenario ran by the above code.
 To reproduce the evaluation results from the paper, run:
 
 ```bash
-/path/to/bpl-implementation/eval-ccs2019$ ./bpl-eval-docker.sh
+/path/to/zkay-implementation/eval-ccs2019$ ./zkay-eval-docker.sh
 ```
 
 Note that running this command *may take several hours* and requires docker

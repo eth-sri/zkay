@@ -1,8 +1,8 @@
 from parameterized import parameterized_class
 
-from bpl_ast.analysis.side_effects import has_side_effects
+from zkay_ast.analysis.side_effects import has_side_effects
 from examples.examples import all_examples
-from bpl_ast.build_ast import build_ast
+from zkay_ast.build_ast import build_ast
 from examples.test_examples import TestExamples
 
 

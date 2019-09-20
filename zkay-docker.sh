@@ -12,16 +12,16 @@
 # USAGE #
 #########
 # To run docker interactively (mounts the current directory):
-# $ path/to/bpl-docker.sh
+# $ path/to/zkay-docker.sh
 #
 # To run a specific command withing docker (e.g.):
-# $ path/to/bpl-docker.sh make test
+# $ path/to/zkay-docker.sh make test
 
 ############
 # SETTINGS #
 ############
 
-IMAGE=bpl
+IMAGE=zkay
 
 ###############
 # PREPARATION #
@@ -47,13 +47,13 @@ if [ $# -eq 0 ]; then
 	FLAGS="-v $DIR:$WORKDIR --workdir $WORKDIR"
 else
 	echo "Running in docker: $@"
-	FLAGS="--workdir /bpl-implementation"
+	FLAGS="--workdir /zkay-implementation"
 fi
 
 sudo docker run \
 	-it \
 	--rm \
-	-v "$BASEDIR":/bpl-implementation \
+	-v "$BASEDIR":/zkay-implementation \
 	$FLAGS \
 	$IMAGE \
 	"$@"

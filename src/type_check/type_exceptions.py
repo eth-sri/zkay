@@ -1,4 +1,4 @@
-from bpl_ast.ast import AstException
+from zkay_ast.ast import AstException
 
 
 class TypeException(AstException):

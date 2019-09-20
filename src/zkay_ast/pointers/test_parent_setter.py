@@ -1,9 +1,9 @@
 from parameterized import parameterized_class
 
-from bpl_ast.ast import SourceUnit
-from bpl_ast.build_ast import build_ast
-from bpl_ast.pointers.parent_setter import set_parents
-from bpl_ast.visitor.visitor import AstVisitor
+from zkay_ast.ast import SourceUnit
+from zkay_ast.build_ast import build_ast
+from zkay_ast.pointers.parent_setter import set_parents
+from zkay_ast.visitor.visitor import AstVisitor
 from examples.examples import all_examples
 from examples.test_examples import TestExamples
 

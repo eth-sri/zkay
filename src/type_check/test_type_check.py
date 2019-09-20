@@ -2,7 +2,7 @@ import unittest
 
 from parameterized import parameterized_class
 
-from bpl_ast.process_ast import get_processed_ast
+from zkay_ast.process_ast import get_processed_ast
 from examples.examples import all_examples, type_error_examples, final_use_before_write
 from examples.test_examples import TestExamples
 from type_check.type_checker import type_check

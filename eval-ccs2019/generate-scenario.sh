@@ -23,4 +23,4 @@ BASEDIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 cd "$BASEDIR"
 
 
-PYTHONPATH="$BPLSRC:$BASEDIR" python3 "$1/scenario.py"
+PYTHONPATH="$ZKAYSRC:$BASEDIR" python3 "$1/scenario.py"

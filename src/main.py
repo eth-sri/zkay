@@ -2,8 +2,8 @@ import argparse
 import os
 import re
 import my_logging
-from bpl_ast.process_ast import get_processed_ast
-from bpl_ast.visitor.statement_counter import count_statements
+from zkay_ast.process_ast import get_processed_ast
+from zkay_ast.visitor.statement_counter import count_statements
 
 from compiler.privacy.compiler import compile_ast
 from compiler.solidity.compiler import compile_solidity

@@ -11,5 +11,5 @@ cd "$BASEDIR"
 	DIR="$(dirname "$SOL")"
 	TARGET="$DIR/compiled"
 	echo "Compiling $SOL to $TARGET"
-	python3 "$BPLSRC/main.py" --output "$TARGET" --count-statements "$SOL"
+	python3 "$ZKAYSRC/main.py" --output "$TARGET" --count-statements "$SOL"
 done

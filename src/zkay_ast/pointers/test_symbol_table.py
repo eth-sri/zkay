@@ -2,11 +2,11 @@ from unittest import TestCase
 
 from parameterized import parameterized_class
 
-from bpl_ast.ast import SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
+from zkay_ast.ast import SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
 	AssignmentStatement, Block
-from bpl_ast.build_ast import build_ast
-from bpl_ast.pointers.parent_setter import set_parents
-from bpl_ast.pointers.symbol_table import fill_symbol_table, link_identifiers
+from zkay_ast.build_ast import build_ast
+from zkay_ast.pointers.parent_setter import set_parents
+from zkay_ast.pointers.symbol_table import fill_symbol_table, link_identifiers
 from examples.examples import simple, simple_storage, all_examples
 from examples.test_examples import TestExamples
 

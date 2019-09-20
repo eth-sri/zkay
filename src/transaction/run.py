@@ -2,7 +2,7 @@ from typing import Dict, Union, List
 from random import randint
 
 import my_logging
-from bpl_ast.ast import ConstructorOrFunctionDefinition, TypeName, Expression, Parameter, SourceUnit, ConstructorDefinition
+from zkay_ast.ast import ConstructorOrFunctionDefinition, TypeName, Expression, Parameter, SourceUnit, ConstructorDefinition
 from compiler.privacy.compiler import compile_code, SolidityVisitor
 from compiler.privacy.proof_helper import FromZok, ParameterCheck, FromSolidity
 from compiler.zokrates.compiler import generate_proof

@@ -12,13 +12,13 @@ run-scenarios:
 	./run-all.sh
 
 analyze:
-	PYTHONPATH=$(BPLSRC):. python ./plot/analyze.py
+	PYTHONPATH=$(ZKAYSRC):. python ./plot/analyze.py
 	pdfcrop ./plot/MedStats_costs.pdf ./plot/MedStats_costs_cropped.pdf
 	pdfcrop ./plot/transaction_costs.pdf ./plot/transaction_costs_cropped.pdf
 
 # requires: sudo apt-get -y install cloc
 loc:
-	cloc --git --by-file --include-lang=Python --not-match-d='ZoKrates|generated' --fullpath $(BPLSRC) | tee ./loc.txt
+	cloc --git --by-file --include-lang=Python --not-match-d='ZoKrates|generated' --fullpath $(ZKAYSRC) | tee ./loc.txt
 
 minimal:
 	./zokrates_minimal_cost/run/runner.sh

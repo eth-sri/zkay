@@ -3,13 +3,13 @@ from typing import List, Dict, Optional
 import os
 import my_logging
 
-from bpl_ast.ast import AST, CodeVisitor, AnnotatedTypeName, MeExpr, ReclassifyExpr, \
+from zkay_ast.ast import AST, CodeVisitor, AnnotatedTypeName, MeExpr, ReclassifyExpr, \
 	FunctionDefinition, Parameter, RequireStatement, ExpressionStatement, SimpleStatement, \
 	AssignmentStatement, Expression, Identifier, IdentifierExpr, indent, ReturnStatement, Mapping, \
 	ConstructorDefinition, UserDefinedTypeName, ContractDefinition, StateVariableDeclaration, Block, \
 	VariableDeclaration, VariableDeclarationStatement, TypeName, FunctionCallExpr, BuiltinFunction, BooleanLiteralExpr, \
 	ConstructorOrFunctionDefinition
-from bpl_ast.process_ast import get_processed_ast
+from zkay_ast.process_ast import get_processed_ast
 from compiler.privacy.hash_function import hash_function
 from compiler.privacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
 from compiler.privacy.tags import tag, helper_tag, param_tag
