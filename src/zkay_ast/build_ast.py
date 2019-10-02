@@ -149,9 +149,9 @@ class BuildASTVisitor(SolidityVisitor):
 		return FunctionCallExpr(f, [expr])
 
 	def visitSignExpr(self, ctx: SolidityParser.SignExprContext):
-		f = BuiltinFunction('sign' + ctx.op.getText())
+		f = BuiltinFunction('sign' + ctx.op.text)
 		expr = self.visit(ctx.expr)
-		return FunctionCallExpr(f, expr)
+		return FunctionCallExpr(f, [expr])
 
 	def visitNotExpr(self, ctx: SolidityParser.NotExprContext):
 		f = BuiltinFunction('!')

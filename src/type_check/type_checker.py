@@ -76,6 +76,10 @@ class TypeCheckVisitor(AstVisitor):
 			parameter_types = 2*[t]
 			can_be_private = t == TypeName.uint_type() or t == TypeName.bool_type()
 
+		elif func.is_neg_sign():
+			if isinstance(ast.args[0], NumberLiteralExpr):
+				raise TypeException("Negative number currently not supported:", ast)
+
 		elif func.is_index():
 			return self.handle_index(ast)
 		elif func.is_parenthesis():
@@ -195,8 +199,8 @@ class TypeCheckVisitor(AstVisitor):
 		ast.annotated_type = AnnotatedTypeName.bool_all()
 
 	def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
-		if ast.value < 0:
-			raise TypeException("Negative number currently not supported:", ast)
+		# Number literal does not include sign
+		assert ast.value >= 0
 		ast.annotated_type = AnnotatedTypeName.uint_all()
 
 	def visitMeExpr(self, ast: MeExpr):

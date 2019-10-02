@@ -165,6 +165,9 @@ class BuiltinFunction(Expression):
 	def is_arithmetic(self):
 		return self.op in arithmetic
 
+	def is_neg_sign(self):
+		return self.op == 'sign-'
+
 	def is_comp(self):
 		return self.op in comp
 

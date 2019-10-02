@@ -13,8 +13,11 @@ from utils.helpers import read_file, prepend_to_lines, save_to_file, lines_of_co
 from utils.timer import time_measure
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
-# could also be a path
-zok_bin = os.path.join(os.environ['ZOKRATES_ROOT'], 'zokrates')
+
+zok_bin = 'zokrates'
+if 'ZOKRATES_ROOT' in os.environ:
+	# could also be a path
+	zok_bin = os.path.join(os.environ['ZOKRATES_ROOT'], 'zokrates')
 
 
 verify_libs_filename = 'verify_libs.sol'
