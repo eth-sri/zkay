@@ -2,6 +2,9 @@ import argparse
 import os
 import re
 import my_logging
+from pathlib import Path
+
+from utils.progress_printer import print_step
 from zkay_ast.process_ast import get_processed_ast
 from zkay_ast.visitor.statement_counter import count_statements
 
@@ -32,12 +35,7 @@ def parse_arguments():
 	return a
 
 
-def ensure_directory(d):
-	if not os.path.isdir(d):
-		os.mkdir(d)
-
-
-def compile(file_location, d, count, get_binaries=False):
+def compile(file_location: str, d, count, get_binaries=False):
 	code = read_file(file_location)
 
 	# log specific features of compiled program
@@ -57,7 +55,8 @@ def compile(file_location, d, count, get_binaries=False):
 
 		if get_binaries:
 			# compilation of the solidity code is not required
-			compile_solidity(d, code_file)
+			with print_step("Compiling"):
+				compile_solidity(d, code_file)
 
 	if count:
 		my_logging.data('nStatements', count_statements(ast))
@@ -67,18 +66,30 @@ if __name__ == '__main__':
 	# parse arguments
 	a = parse_arguments()
 
+	input_file = Path(a.input)
+	if not input_file.exists():
+		print(f'Error: input file \'{input_file}\' does not exist')
+		exit(1)
+
 	# create output directory
-	ensure_directory(a.output)
+	output_dir = Path(a.output)
+	if not output_dir.exists():
+		os.mkdir(output_dir)
+	elif not output_dir.is_dir():
+		print(f'Error: \'{output_dir}\' is not a directory')
+		exit(2)
 
 	# create log directory
-	log_file = my_logging.get_log_file(filename='compile', parent_dir=a.output, include_timestamp=False, label=None)
+	log_file = my_logging.get_log_file(filename='compile', parent_dir=str(output_dir), include_timestamp=False, label=None)
 	my_logging.prepare_logger(log_file)
 
 	# only type-check
+	print(f'Processing file {input_file.name}:')
+
 	if a.type_check:
-		code = read_file(a.input)
+		code = read_file(str(input_file))
 		ast = get_processed_ast(code)
 	else:
 		# compile
 		with log_context('inputfile', os.path.basename(a.input)):
-			compile(a.input, a.output, a.count)
+			compile(str(input_file), str(output_dir), a.count)

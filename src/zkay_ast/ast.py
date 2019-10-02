@@ -961,8 +961,8 @@ class CodeVisitor(AstVisitor):
 			ret += ' = ' + self.visit(ast.expr)
 		return ret + ';'
 
+	@staticmethod
 	def contract_definition_to_str(
-			self,
 			idf: Identifier,
 			state_vars: List[str],
 			constructors: List[str],
@@ -970,11 +970,11 @@ class CodeVisitor(AstVisitor):
 
 		i = str(idf)
 		state_vars = '\n'.join(state_vars)
-		constructors = '\n'.join(constructors)
-		functions = '\n'.join(functions)
-		body = '\n'.join([state_vars, constructors, functions])
+		constructors = '\n\n'.join(constructors)
+		functions = '\n\n'.join(functions)
+		body = '\n\n'.join([state_vars, constructors, functions])
 		body = indent(body)
-		return f"contract {i}{{\n{body}\n}}"
+		return f"contract {i} {{\n{body}\n}}"
 
 	def visitContractDefinition(self, ast: ContractDefinition):
 		state_vars = [self.visit(e) for e in ast.state_variable_declarations]

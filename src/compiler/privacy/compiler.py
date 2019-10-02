@@ -14,7 +14,7 @@ from compiler.privacy.hash_function import hash_function
 from compiler.privacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
 from compiler.privacy.tags import tag, helper_tag, param_tag
 from compiler.privacy.used_contract import UsedContract
-from compiler.zokrates.compiler import compile_zokrates, n_proof_arguments, get_work_dir
+from compiler.zokrates.compiler import compile_zokrates, n_proof_arguments, get_work_dir, get_zok_output_filename
 from my_logging.log_context import log_context
 from utils.helpers import save_to_file, prepend_to_lines, lines_of_code
 
@@ -30,20 +30,32 @@ def compile_ast(ast: AST, output_directory: str, output_file: Optional[str], sim
 	simulate (bool): Only simulate compilation to determine
 	                 how to translate transactions
 	"""
-	v = SolidityVisitor(output_directory, simulate)
-	s = v.visit(ast)
+	from utils.progress_printer import print_step
+	with print_step("Transpiling zkay to solidity"):
+		v = SolidityVisitor(output_directory, simulate)
+		s = v.visit(ast)
 
-	my_logging.data('newLoc', lines_of_code(s))
+		my_logging.data('newLoc', lines_of_code(s))
 
-	original_code = ast.code()
-	original_code = prepend_to_lines(original_code, '// ')
+		original_code = ast.code()
+		original_code = prepend_to_lines(original_code, '// ')
 
-	if simulate:
-		return ast, v
-	else:
-		filename = save_to_file(output_directory, output_file, original_code + '\n\n' + s)
-		copy(pki_contract_template, output_directory)
-		return filename
+		if simulate:
+			return ast, v
+		else:
+			filename = save_to_file(output_directory, output_file, original_code + '\n\n' + s)
+			copy(pki_contract_template, output_directory)
+
+	num_zok_proofs = len([k for k in v.function_helpers.values() if k.zok_code is not None])
+	idx = 1
+	for fct, fh in v.function_helpers.items():
+		if fh.zok_code is not None:
+			with print_step(f'Proof generation for \'{fct.name}\' [{idx}/{num_zok_proofs}] '):
+				_, d = compile_zokrates(fh.zok_code, v.output_directory, name=fh.verifier_contract_name)
+				fh.compiled_to_directory = d
+				idx += 1
+
+	return filename
 
 
 def compile_code(code: str, output_directory: str, output_file: Optional[str], simulate=False):
@@ -57,10 +69,10 @@ class FunctionHelper:
 	def __init__(self, v):
 		assert isinstance(v, SolidityVisitor)
 
-		self.return_variable: str = None
+		self.return_variable: Optional[str] = None
 
 		# directory holding zokrates information (especially keys)
-		self.compiled_to_directory: str = None
+		self.compiled_to_directory: Optional[str] = None
 
 		self.n_temporary_variables = 0
 		self.precomputed_parameters: List[Expression] = []
@@ -68,6 +80,9 @@ class FunctionHelper:
 		self.verifier_contract_parameters = []
 
 		self.zok = ZokratesVisitor(v, self)
+
+		self.zok_code: Optional[str] = None
+		self.verifier_contract_name: Optional[str] = None
 
 	def get_next_temporary_variable(self):
 		c = self.n_temporary_variables
@@ -121,16 +136,16 @@ class SolidityVisitor(CodeVisitor):
 		self.simulate = simulate
 
 		# synthesized code
-		self.pki_contract: UsedContract = None
+		self.pki_contract: Optional[UsedContract] = None
 		self.used_contracts: List[UsedContract] = []
 		self.new_state_variables: List[StateVariableDeclaration] = []
 
 		# per-function properties
 		self.function_helpers: Dict[ConstructorOrFunctionDefinition, FunctionHelper] = {}
-		self.function_helper: FunctionHelper = None
+		self.function_helper: Optional[FunctionHelper] = None
 
 		# per-statement properties
-		self.pre_simple_statement: List[str] = None
+		self.pre_simple_statement: Optional[List[str]] = None
 
 	def visitConstructorDefinition(self, ast: ConstructorDefinition):
 		return self.handle_function_definition(ast)
@@ -155,6 +170,8 @@ class SolidityVisitor(CodeVisitor):
 			for p in ast.parameters:
 				self.function_helper.zok.check_proper_encryption(p)
 			body = '\n'.join(self.pre_simple_statement)
+			if len(self.pre_simple_statement) > 0:
+				body += '\n'
 
 			# body
 			body += self.visit_list(ast.body.statements)
@@ -175,8 +192,10 @@ class SolidityVisitor(CodeVisitor):
 					self.function_helper.compiled_to_directory = get_work_dir(self.output_directory, verifier_contract_name)
 				else:
 					my_logging.data('zokratesLoc', lines_of_code(zok_code))
-					output_filename, d = compile_zokrates(zok_code, self.output_directory, name=verifier_contract_name)
-					self.function_helper.compiled_to_directory = d
+					self.function_helper.zok_code = zok_code
+					self.function_helper.verifier_contract_name = verifier_contract_name
+					output_filename = get_zok_output_filename(verifier_contract_name)
+					# Actual Zokrates compilation and proof generation is deferred until after solidity transformation
 
 				verifier_contract_variable = verifier_contract_name + '_var'
 				c = UsedContract(output_filename, verifier_contract_name, verifier_contract_variable)
@@ -190,8 +209,9 @@ class SolidityVisitor(CodeVisitor):
 				self.function_helper.proof_parameter = proof_param
 
 				zok_arguments = self.function_helper.get_zok_arguments()
+				body += "\n\n// Verify NIZK proof"
 				body += f'\nuint256[] memory {tag}inputs = new uint256[]({len(zok_arguments)});\n'
-				inputs = [f'{tag}inputs[{i}]={name};' for i, name in enumerate(zok_arguments)]
+				inputs = [f'{tag}inputs[{i}] = {name};' for i, name in enumerate(zok_arguments)]
 				body += '\n'.join(inputs)
 				body += f'\nuint128[2] memory {tag}Hash = get_hash({tag}inputs);'
 				body += f'\n{verifier_contract_variable}.check_verify({proof_name}, [{tag}Hash[0], {tag}Hash[1], uint(1)]);'
@@ -199,13 +219,18 @@ class SolidityVisitor(CodeVisitor):
 			body = self.function_helper.declare_temporary_variables(body)
 			body = self.function_helper.add_return_variable(body)
 
+			if self.function_helper.n_temporary_variables > 0 or self.function_helper.return_variable is not None:
+				body += '\n'
+
 			# handle constructors: add addresses of required contracts
 			if isinstance(ast, ConstructorDefinition):
+				if len(body) > 0:
+					body = '\n' + body
 				for c in self.used_contracts:
 					verifier_contract_parameter = c.state_variable_name + '_'
 					t = AnnotatedTypeName(UserDefinedTypeName([Identifier(c.contract_name)]), Expression.all_expr())
 					self.function_helper.verifier_contract_parameters += [f'{self.visit(t)} {verifier_contract_parameter}']
-					body = f'{c.state_variable_name} = {verifier_contract_parameter};' + body
+					body = f'{c.state_variable_name} = {verifier_contract_parameter};\n' + body
 					decl = StateVariableDeclaration(t, [], Identifier(c.state_variable_name), None)
 					self.new_state_variables += [decl]
 
@@ -299,8 +324,8 @@ class SolidityVisitor(CodeVisitor):
 			constructors = [self.visit(e) for e in constructor_definitions]
 
 			# state variables
-			decl = self.new_state_variables + ast.state_variable_declarations
-			state_vars = [self.visit(e) for e in decl]
+			state_vars = [self.visit(e) for e in self.new_state_variables] + [''] + \
+						 [self.visit(e) for e in ast.state_variable_declarations]
 
 			# imports
 			imported_filenames = [c.filename for c in self.used_contracts]

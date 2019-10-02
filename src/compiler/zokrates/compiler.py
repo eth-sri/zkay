@@ -33,6 +33,10 @@ def get_work_dir(output_directory: str, name: str):
 	return os.path.join(output_directory, name + '_zok')
 
 
+def get_zok_output_filename(verifier_name: str):
+	return f'{verifier_name}_verifier.sol'
+
+
 def compile_zokrates(code: str, output_directory: str, name='Verifier', scheme=default_proving_scheme):
 	try:
 		work_dir = get_work_dir(output_directory, name)
@@ -79,7 +83,7 @@ def compile_zokrates(code: str, output_directory: str, name='Verifier', scheme=d
 		my_logging.data('verifierLoc', lines_of_code(verifier_contract))
 
 		# save
-		output_filename = f'{name}_verifier.sol'
+		output_filename = get_zok_output_filename(name)
 		save_to_file(output_directory, output_filename, verifier_contract)
 
 		return output_filename, work_dir
