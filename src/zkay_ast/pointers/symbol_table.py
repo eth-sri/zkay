@@ -1,5 +1,6 @@
 from zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
 	SimpleStatement, IdentifierExpr, Block, Mapping
+from zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -78,7 +79,7 @@ class SymbolTableLinker(AstVisitor):
 				# found name
 				return ancestor.names[name]
 			ancestor = ancestor.parent
-		raise ValueError(f'Undefined identifier {name}')
+		raise UnknownIdentifierException(f'Undefined identifier {name}', ast)
 
 	def visitIdentifierExpr(self, ast: IdentifierExpr):
 		idf = self.find_identifier_declaration(ast, ast.idf.name)

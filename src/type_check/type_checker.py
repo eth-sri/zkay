@@ -78,7 +78,7 @@ class TypeCheckVisitor(AstVisitor):
 
 		elif func.is_neg_sign():
 			if isinstance(ast.args[0], NumberLiteralExpr):
-				raise TypeException("Negative number currently not supported:", ast)
+				raise TypeException("Negative number currently not supported", ast)
 
 		elif func.is_index():
 			return self.handle_index(ast)

@@ -26,6 +26,13 @@ class BuildASTVisitor(SolidityVisitor):
 	def __init__(self, tokens: CommonTokenStream):
 		self.emitter = Emitter(tokens)
 
+	def visit(self, tree):
+		sub_ast = super().visit(tree)
+		if isinstance(sub_ast, ast.AST):
+			sub_ast.line = tree.start.line
+			sub_ast.column = tree.start.column + 1
+		return sub_ast
+
 	def visitChildren(self, ctx: ParserRuleContext):
 		# determine corresponding class name
 		t = type(ctx).__name__
@@ -109,6 +116,9 @@ class BuildASTVisitor(SolidityVisitor):
 				if isinstance(e, ast.AssignmentExpr):
 					a = ast.AssignmentStatement(e.lhs, e.rhs)
 					statements[i] = a
+
+			statements[i].line = s.line
+			statements[i].column = s.column
 
 		return ast.Block(statements)
 

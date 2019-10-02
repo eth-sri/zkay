@@ -20,6 +20,9 @@ class AST:
 		# set later by symbol table
 		self.names: Dict[str, AST] = {}
 
+		self.line = -1
+		self.column = -1
+
 	def children(self) -> List:
 		ret = self.children_internal()
 		ret = [e for e in ret if e is not None]
@@ -752,7 +755,6 @@ class SourceUnit(AST):
 def indent(s: str):
 	return textwrap.indent(s, '\t')
 
-
 # EXCEPTIONS
 
 class AstException(Exception):
@@ -761,7 +763,28 @@ class AstException(Exception):
 	"""
 
 	def __init__(self, msg, ast):
-		super().__init__(f'{msg}, in: {str(ast)}')
+		# Get surrounding statement
+		stmt = ast
+		while stmt is not None and not isinstance(stmt, Statement):
+			stmt = stmt.parent
+
+		# Get surrounding function
+		fct = ast
+		while fct is not None and not isinstance(fct, ConstructorOrFunctionDefinition):
+			fct = fct.parent
+
+		# Print Location
+		error_msg = f'Line: {ast.line};{ast.column}'
+		if fct is not None:
+			error_msg += f', in {fct.name}'
+		error_msg += '\n'
+
+		if stmt is not None:
+			relpos = ast.column - stmt.column
+			error_msg += f'    {str(stmt)}\n'\
+						 f'----{"-" * (relpos - 1)}/'
+
+		super().__init__(f'\n{error_msg}\n{msg}')
 
 
 # CODE GENERATION

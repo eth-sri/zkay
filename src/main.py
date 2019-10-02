@@ -5,7 +5,7 @@ import my_logging
 from pathlib import Path
 
 from utils.progress_printer import print_step
-from zkay_ast.process_ast import get_processed_ast
+from zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException
 from zkay_ast.visitor.statement_counter import count_statements
 
 from compiler.privacy.compiler import compile_ast
@@ -50,7 +50,11 @@ def compile(file_location: str, d, count, get_binaries=False):
 	
 	# compile
 	with time_measure('compileFull'):
-		ast = get_processed_ast(code)
+		try:
+			ast = get_processed_ast(code)
+		except (TypeCheckException, PreprocessAstException):
+			return
+
 		code_file = compile_ast(ast, d, filename)
 
 		if get_binaries:
@@ -88,7 +92,11 @@ if __name__ == '__main__':
 
 	if a.type_check:
 		code = read_file(str(input_file))
-		ast = get_processed_ast(code)
+
+		try:
+			ast = get_processed_ast(code)
+		except (TypeCheckException, PreprocessAstException):
+			pass
 	else:
 		# compile
 		with log_context('inputfile', os.path.basename(a.input)):

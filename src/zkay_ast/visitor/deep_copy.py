@@ -34,23 +34,33 @@ class DeepCopyVisitor(AstVisitor):
 		for arg_name in args_names:
 			old_field = getattr(ast, arg_name)
 			new_fields[arg_name] = self.copy_field(old_field)
+
+		setting_later = [
+			# General fields
+			'line',
+			'column',
+
+			# Specialized fields
+			'parent',
+			'names',
+			'had_privacy_annotation',
+			'annotated_type',
+			'statement',
+			'before_analysis',
+			'after_analysis',
+			'target',
+			'instantiated_key',
+			'function',
+			'is_private',
+		]
 		for k in ast.__dict__.keys():
-			setting_later = [
-				'parent',
-				'names',
-				'had_privacy_annotation',
-				'annotated_type',
-				'statement',
-				'before_analysis',
-				'after_analysis',
-				'target',
-				'instantiated_key',
-				'function',
-				'is_private'
-			]
 			if k not in new_fields and k not in setting_later:
 				raise ValueError("Not copying", k)
-		return c(**new_fields)
+		ast_copy = c(**new_fields)
+		ast_copy.line = ast.line
+		ast_copy.column = ast.column
+		return ast_copy
+
 
 	def visitAnnotatedTypeName(self, ast):
 		ast_copy = self.visitChildren(ast)
