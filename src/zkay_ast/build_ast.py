@@ -18,7 +18,10 @@ def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonToken
 
 def build_ast(code):
 	p = MyParser(code)
-	return build_ast_from_parse_tree(p.tree, p.tokens)
+	full_ast = build_ast_from_parse_tree(p.tree, p.tokens)
+	assert isinstance(full_ast, ast.SourceUnit)
+	full_ast.original_code = str(code).splitlines()
+	return full_ast
 
 
 class BuildASTVisitor(SolidityVisitor):

@@ -4,8 +4,8 @@ import re
 import my_logging
 from pathlib import Path
 
-from utils.progress_printer import print_step
-from zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException
+from utils.progress_printer import print_step, TermColor, colored_print
+from zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception
 from zkay_ast.visitor.statement_counter import count_statements
 
 from compiler.privacy.compiler import compile_ast
@@ -52,8 +52,8 @@ def compile(file_location: str, d, count, get_binaries=False):
 	with time_measure('compileFull'):
 		try:
 			ast = get_processed_ast(code)
-		except (TypeCheckException, PreprocessAstException):
-			return
+		except (ParseExeception, PreprocessAstException, TypeCheckException):
+			exit(3)
 
 		code_file = compile_ast(ast, d, filename)
 
@@ -95,9 +95,12 @@ if __name__ == '__main__':
 
 		try:
 			ast = get_processed_ast(code)
-		except (TypeCheckException, PreprocessAstException):
-			pass
+		except (ParseExeception, PreprocessAstException, TypeCheckException):
+			exit(3)
 	else:
 		# compile
 		with log_context('inputfile', os.path.basename(a.input)):
 			compile(str(input_file), str(output_dir), a.count)
+
+	with colored_print(TermColor.OKGREEN):
+		print("Finished successfully")

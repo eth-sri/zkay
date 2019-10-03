@@ -739,6 +739,8 @@ class SourceUnit(AST):
 		self.pragma_directive = pragma_directive
 		self.contracts = contracts
 
+		self.original_code: List[str] = []
+
 	def children_internal(self):
 		return self.contracts
 
@@ -755,7 +757,31 @@ class SourceUnit(AST):
 def indent(s: str):
 	return textwrap.indent(s, '\t')
 
+
 # EXCEPTIONS
+
+
+def get_code_error_msg(line: int, column: int, fct: Optional[FunctionDefinition], stmt: Optional[Statement], code: List[str]):
+	assert line <= len(code)
+
+	# Print Location
+	error_msg = f'Line: {line};{column}'
+	if fct is not None:
+		error_msg += f', in {fct.name}'
+	error_msg += '\n'
+
+	start_line = line if stmt is None else stmt.line
+	for line in range(start_line, line + 1):
+		# replace tabs with 4 spaces for consistent output
+		orig_line: str = code[line - 1]
+		orig_line = orig_line.replace('\t', '    ')
+		error_msg += f'{orig_line}\n'
+
+	affected_line: str = code[line - 1]
+	loc_string = ''.join('----' if c == '\t' else '-' for c in affected_line[:column - 1])
+
+	return f'{error_msg}{loc_string}/'
+
 
 class AstException(Exception):
 	"""
@@ -769,20 +795,17 @@ class AstException(Exception):
 			stmt = stmt.parent
 
 		# Get surrounding function
-		fct = ast
+		fct = ast if stmt is None else stmt
 		while fct is not None and not isinstance(fct, ConstructorOrFunctionDefinition):
 			fct = fct.parent
 
-		# Print Location
-		error_msg = f'Line: {ast.line};{ast.column}'
-		if fct is not None:
-			error_msg += f', in {fct.name}'
-		error_msg += '\n'
+		root = ast if fct is None else fct
+		while root is not None and not isinstance(root, SourceUnit):
+			root = root.parent
 
-		if stmt is not None:
-			relpos = ast.column - stmt.column
-			error_msg += f'    {str(stmt)}\n'\
-						 f'----{"-" * (relpos - 1)}/'
+		assert root is not None
+
+		error_msg = get_code_error_msg(ast.line, ast.column, fct, stmt, root.original_code)
 
 		super().__init__(f'\n{error_msg}\n{msg}')
 

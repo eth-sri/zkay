@@ -1,4 +1,4 @@
-from utils.progress_printer import print_step
+from utils.progress_printer import print_step, colored_print, TermColor
 from zkay_ast.analysis.alias_analysis import alias_analysis as a
 from zkay_ast.build_ast import build_ast
 from zkay_ast.pointers.parent_setter import set_parents
@@ -8,6 +8,13 @@ from zkay_ast.visitor.return_checker import check_return as r
 from type_check.type_checker import type_check as t
 
 from type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
+
+
+class ParseExeception(Exception):
+	"""
+	Error during parsing"
+	"""
+	pass
 
 
 class PreprocessAstException(Exception):
@@ -26,7 +33,14 @@ class TypeCheckException(Exception):
 
 def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True):
 	with print_step("Parsing"):
-		ast = build_ast(code)
+		from solidity_parser.parse import SyntaxException
+		try:
+			ast = build_ast(code)
+		except SyntaxException as e:
+			with colored_print(TermColor.FAIL):
+				print("\n\nERROR: Syntax error")
+				print(f'{str(e)}\n')
+			raise ParseExeception()
 
 	process_ast(ast, parents, link_identifiers, check_return, alias_analysis, type_check)
 	return ast
@@ -40,8 +54,9 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
 			try:
 				link(ast)
 			except UnknownIdentifierException as e:
-				print("\n\nERROR: Preprocessing failed")
-				print(f'{str(e)}')
+				with colored_print(TermColor.FAIL):
+					print("\n\nERROR: Preprocessing failed")
+					print(f'{str(e)}\n')
 				raise PreprocessAstException()
 		if check_return:
 			r(ast)
@@ -52,6 +67,7 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
 			try:
 				t(ast)
 			except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as te:
-				print("\n\nERROR: Type check failed")
-				print(f'{str(te)}')
+				with colored_print(TermColor.FAIL):
+					print("\n\nERROR: Type check failed")
+					print(f'{str(te)}\n')
 				raise TypeCheckException()

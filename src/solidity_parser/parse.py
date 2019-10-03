@@ -5,6 +5,13 @@ from solidity_parser.generated.SolidityLexer import SolidityLexer
 from solidity_parser.generated.SolidityParser import SolidityParser
 
 
+class SyntaxException(Exception):
+	"""
+	Error during parsing"
+	"""
+	pass
+
+
 class MyErrorListener(ErrorListener):
 
 	def __init__(self, code):
@@ -12,9 +19,9 @@ class MyErrorListener(ErrorListener):
 		self.code = code
 
 	def syntaxError(self, recognizer, offending_symbol, line, column, msg, e):
-		code = f"===== START OF CODE =====\n{self.code}\n===== END OF CODE ====="
-		report = f"{msg} (Line {line}, Column {column}) for this code:\n\n{code}"
-		raise Exception(report)
+		from zkay_ast.ast import get_code_error_msg
+		report = f'{get_code_error_msg(line, column + 1, None, None, str(self.code).splitlines())}\n{msg}'
+		raise SyntaxException(report)
 
 
 class MyParser:
