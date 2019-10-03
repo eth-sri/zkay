@@ -42,7 +42,12 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
 				print(f'{str(e)}\n')
 			raise ParseExeception()
 
+	from compiler.solidity.fake_solidity_compiler import fake_solidity_code
+	fake_code = fake_solidity_code(str(code))
+	# TODO create json solc input, invoke solc, read and display errors from json solc output
+
 	process_ast(ast, parents, link_identifiers, check_return, alias_analysis, type_check)
+
 	return ast
 
 
