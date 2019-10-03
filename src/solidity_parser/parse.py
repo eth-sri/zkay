@@ -20,7 +20,7 @@ class MyErrorListener(ErrorListener):
 
 	def syntaxError(self, recognizer, offending_symbol, line, column, msg, e):
 		from zkay_ast.ast import get_code_error_msg
-		report = f'{get_code_error_msg(line, column + 1, None, None, str(self.code).splitlines())}\n{msg}'
+		report = f'{get_code_error_msg(line, column + 1, str(self.code).splitlines())}\n{msg}'
 		raise SyntaxException(report)
 
 

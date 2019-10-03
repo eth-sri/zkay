@@ -139,6 +139,7 @@ class BuildASTVisitor(SolidityVisitor):
 
 	# Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
 	def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):
+		# FIXME, breaks for floating point literals (e.g. 0.1)
 		v = int(ctx.getText())
 		return NumberLiteralExpr(v)
 

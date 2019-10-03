@@ -761,13 +761,17 @@ def indent(s: str):
 # EXCEPTIONS
 
 
-def get_code_error_msg(line: int, column: int, fct: Optional[FunctionDefinition], stmt: Optional[Statement], code: List[str]):
+def get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[ContractDefinition] = None,
+					   fct: Optional[FunctionDefinition] = None, stmt: Optional[Statement] = None):
 	assert line <= len(code)
 
 	# Print Location
 	error_msg = f'Line: {line};{column}'
 	if fct is not None:
-		error_msg += f', in {fct.name}'
+		assert ctr is not None
+		error_msg += f', in function \'{fct.name}\' of contract \'{ctr.idf.name}\''
+	elif ctr is not None:
+		error_msg += f', in contract \'{ctr.idf.name}\''
 	error_msg += '\n'
 
 	start_line = line if stmt is None else stmt.line
@@ -790,22 +794,34 @@ class AstException(Exception):
 
 	def __init__(self, msg, ast):
 		# Get surrounding statement
-		stmt = ast
-		while stmt is not None and not isinstance(stmt, Statement):
-			stmt = stmt.parent
+		if isinstance(ast, Expression):
+			stmt = ast.statement
+		elif isinstance(ast, Statement):
+			stmt = ast
+		else:
+			stmt = None
 
 		# Get surrounding function
-		fct = ast if stmt is None else stmt
-		while fct is not None and not isinstance(fct, ConstructorOrFunctionDefinition):
-			fct = fct.parent
+		if stmt is not None:
+			fct = stmt.function
+		elif isinstance(ast, ConstructorOrFunctionDefinition):
+			fct = ast
+		else:
+			fct = None
 
-		root = ast if fct is None else fct
+		# Get surrounding contract
+		ctr = ast if fct is None else fct
+		while ctr is not None and not isinstance(ctr, ContractDefinition):
+			ctr = ctr.parent
+
+		# Get source root
+		root = ast if ctr is None else ctr
 		while root is not None and not isinstance(root, SourceUnit):
 			root = root.parent
 
 		assert root is not None
 
-		error_msg = get_code_error_msg(ast.line, ast.column, fct, stmt, root.original_code)
+		error_msg = get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
 
 		super().__init__(f'\n{error_msg}\n{msg}')
 
