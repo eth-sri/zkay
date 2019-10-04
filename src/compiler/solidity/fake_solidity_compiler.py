@@ -4,8 +4,9 @@
 # TODO? currently text inside comments is also processed
 
 import re
+from typing import Optional
 
-me_decl = ' address private me = msg.sender;'
+ME_DECL = ' address private me = msg.sender;'
 
 # Whitespace
 WSPATTERN = r'[ \t\r\n\u000C]'
@@ -21,17 +22,18 @@ NONIDSTART = r'(?:[^\w]|^)'
 NONIDEND = r'(?:[^\w]|$)'
 
 # Regex to match contract declaration
-CONTRACTDEFPATTERN = re.compile(f'(?P<keep>{NONIDSTART}contract{WSPATTERN}*{IDPATTERN}{WSPATTERN}*{"{"}(?P<decl>[^\n]*))\n')
+CONTRACTDEFPATTERN = re.compile(f'(?P<keep1>{NONIDSTART}contract{WSPATTERN}*{IDPATTERN}{WSPATTERN}*{"{"}[^\\n]*?)'
+								f'(?<!{ME_DECL})(?P<repl>\\n)')
 
 # Regex to match annotated types
 ATYPEPATTERN = re.compile(f'(?P<keep1>{NONIDSTART}{TPATTERN}{WSPATTERN}*)' # match type
-						  f'(?P<repl>@{WSPATTERN}*{IDPATTERN})'             # match @owner
-						  f'(?P<keep2>{NONIDEND})')                         # match after owner
+						  f'(?P<repl>@{WSPATTERN}*{IDPATTERN})'            # match @owner
+						  f'(?P<keep2>{NONIDEND})')                        # match after owner
 
 # Regex to match 'final' keyword
 FINAL_PATTERN = re.compile(f'(?P<keep1>{NONIDSTART})' # match before all
-						f'(?P<repl>final)'           # match 'final'
-						f'(?P<keep2>{NONIDEND})')  # match after all
+						f'(?P<repl>final)'            # match 'final'
+						f'(?P<keep2>{NONIDEND})')     # match after all
 
 # Regex to match 'all' keyword
 ALLPATTERN = re.compile(f'(?P<keep1>{NONIDSTART})' # match before all
@@ -57,6 +59,19 @@ def create_surrogate_string(instr: str):
 	return ''.join(['\n' if e == '\n' else ' ' for e in instr])
 
 
+def replace_with_surrogate(code: str, search_pattern: re.Pattern, keep_end=True, surrogate_text: Optional[str]= None):
+	while True:
+		match = re.search(search_pattern, code)
+		if match is None:
+			return code
+
+		rep_pattern = r'\g<keep1>' + \
+					  (create_surrogate_string(match.groupdict()["repl"]) if surrogate_text is None else surrogate_text) + \
+					  (r'\g<keep2>' if keep_end else '')
+
+		code = re.sub(search_pattern, rep_pattern, code, count=1)
+
+
 def fake_solidity_code(zkay_code: str):
 	"""
 	Returns the solidity code to which the given zkay_code corresponds when dropping all privacy features,
@@ -66,28 +81,13 @@ def fake_solidity_code(zkay_code: str):
 	code = zkay_code
 
 	# Strip final
-	while True:
-		match = re.search(FINAL_PATTERN, code)
-		if match is None:
-			break
-		code = re.sub(FINAL_PATTERN, f'\\g<keep1>{create_surrogate_string(match.groupdict()["repl"])}\\g<keep2>',
-					  code, count=1)
+	code = replace_with_surrogate(code, FINAL_PATTERN)
 
 	# Strip ownership annotations
-	while True:
-		match = re.search(ATYPEPATTERN, code)
-		if match is None:
-			break
-		code = re.sub(ATYPEPATTERN, f'\\g<keep1>{create_surrogate_string(match.groupdict()["repl"])}\\g<keep2>',
-					  code, count=1)
+	code = replace_with_surrogate(code, ATYPEPATTERN)
 
 	# Strip map key tags
-	while True:
-		match = re.search(MAPPATTERN, code)
-		if match is None:
-			break
-		code = re.sub(MAPPATTERN, f'\\g<keep1>{create_surrogate_string(match.groupdict()["repl"])}\\g<keep2>',
-					  code, count=1)
+	code = replace_with_surrogate(code, MAPPATTERN)
 
 	# Strip reveal expressions
 	while True:
@@ -102,11 +102,6 @@ def fake_solidity_code(zkay_code: str):
 
 	# Inject me address declaration (should be okay for type checking, maybe not for program analysis)
 	# An alternative would be to replace me by msg.sender, but this would affect code length (error locations)
-	while True:
-		match = re.search(CONTRACTDEFPATTERN, code)
-		if match is None or ('decl' in match.groupdict().keys() and me_decl in match.groupdict()['decl']):
-			break
-		code = re.sub(CONTRACTDEFPATTERN, f'\\g<keep>{me_decl}\n',
-					  code, count=1)
+	code = replace_with_surrogate(code, CONTRACTDEFPATTERN, False, ME_DECL + '\n')
 
 	return code
