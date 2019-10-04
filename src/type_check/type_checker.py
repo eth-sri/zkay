@@ -4,7 +4,7 @@ from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
 	AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
 	FunctionDefinition, StateVariableDeclaration, Mapping, \
 	AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
-	BuiltinFunction, VariableDeclarationStatement, RequireStatement
+	BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccess, PayableAddress, AllExpr
 from zkay_ast.visitor.deep_copy import deep_copy
 from zkay_ast.visitor.visitor import AstVisitor
 from type_check.contains_private import contains_private
@@ -165,6 +165,17 @@ class TypeCheckVisitor(AstVisitor):
 	def visitFunctionCallExpr(self, ast: FunctionCallExpr):
 		if isinstance(ast.func, BuiltinFunction):
 			self.handle_builtin_function_call(ast, ast.func)
+		elif isinstance(ast.func, MemberAccess) and ast.func.expr.instanceof_data_type(PayableAddress()):
+			if ast.func.member.name != 'send' and ast.func.member.name != 'transfer':
+				raise TypeException('Currently only send and transfer are supported', ast)
+
+			for arg in ast.args:
+				if arg.annotated_type.privacy_annotation != AllExpr():
+					raise TypeException("Cannot have private arguments in send/transfer", arg)
+
+			if ast.func.member.name == 'send':
+				ast.annotated_type = AnnotatedTypeName.bool_all()
+
 		else:
 			raise TypeException('Function calls currently not supported', ast)
 

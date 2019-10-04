@@ -135,7 +135,8 @@ variableDeclaration
 // - arrays: allows fixed size (T[k]) and dynamic size (T[])
 typeName
   : elementaryTypeName
-  | mapping ;
+  | mapping
+  | payableAddress ; // NB: Add payable address again
 
 // REMOVED:
 // - string
@@ -150,6 +151,9 @@ elementaryTypeName
 
 mapping
   : 'mapping' '(' key_type=elementaryTypeName ( '!' key_label=identifier )? '=>' value_type=annotatedTypeName ')' ;
+
+payableAddress
+  : 'address' 'payable' ;
 
 // REMOVED (only allow default)
 // storage location
@@ -243,6 +247,7 @@ expression
   | AllKeyword # AllExpr
   | arr=expression '[' index=expression ']' # IndexExpr
   | func=expression '(' args=functionCallArguments ')' # FunctionCallExpr
+  | expr=expression '.' member=identifier # MemberAccess // NB: add member access again
   | '(' expr=expression ')' # ParenthesisExpr
   | op=('+' | '-') expr=expression # SignExpr
   | '!' expr=expression # NotExpr

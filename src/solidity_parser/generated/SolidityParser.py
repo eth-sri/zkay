@@ -1,4 +1,4 @@
-# Generated from Solidity.g4 by ANTLR 4.7.2
+# Generated from /home/nibau/msc-thesis/zkay/src/solidity_parser/Solidity.g4 by ANTLR 4.7.2
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -8,158 +8,163 @@ import sys
 
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3D")
-        buf.write("\u015b\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7")
+        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3E")
+        buf.write("\u0164\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7")
         buf.write("\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r\4\16")
         buf.write("\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4\23\t\23")
         buf.write("\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31")
         buf.write("\t\31\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36")
-        buf.write("\4\37\t\37\4 \t \4!\t!\4\"\t\"\4#\t#\4$\t$\4%\t%\3\2\3")
-        buf.write("\2\7\2M\n\2\f\2\16\2P\13\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3")
-        buf.write("\3\4\3\4\3\5\3\5\5\5]\n\5\3\6\3\6\5\6a\n\6\3\7\3\7\3\b")
-        buf.write("\5\bf\n\b\3\b\3\b\3\t\3\t\3\t\3\t\7\tn\n\t\f\t\16\tq\13")
-        buf.write("\t\3\t\3\t\3\n\3\n\3\n\5\nx\n\n\3\13\7\13{\n\13\f\13\16")
-        buf.write("\13~\13\13\3\13\3\13\7\13\u0082\n\13\f\13\16\13\u0085")
-        buf.write("\13\13\3\13\3\13\3\13\5\13\u008a\n\13\3\13\3\13\3\f\3")
-        buf.write("\f\3\f\3\f\3\f\3\r\3\r\3\r\3\r\3\r\5\r\u0098\n\r\3\r\3")
-        buf.write("\r\3\16\3\16\3\16\3\17\7\17\u00a0\n\17\f\17\16\17\u00a3")
-        buf.write("\13\17\3\20\3\20\5\20\u00a7\n\20\3\21\3\21\3\21\3\21\7")
-        buf.write("\21\u00ad\n\21\f\21\16\21\u00b0\13\21\5\21\u00b2\n\21")
-        buf.write("\3\21\3\21\3\22\5\22\u00b7\n\22\3\22\3\22\5\22\u00bb\n")
-        buf.write("\22\3\23\5\23\u00be\n\23\3\23\3\23\3\23\3\24\3\24\5\24")
-        buf.write("\u00c5\n\24\3\25\3\25\3\26\3\26\3\26\3\26\3\26\5\26\u00ce")
-        buf.write("\n\26\3\26\3\26\3\26\3\26\3\27\3\27\3\30\3\30\7\30\u00d8")
-        buf.write("\n\30\f\30\16\30\u00db\13\30\3\30\3\30\3\31\3\31\3\31")
-        buf.write("\3\31\3\31\5\31\u00e4\n\31\3\32\3\32\3\32\3\33\3\33\3")
-        buf.write("\33\3\33\3\33\3\33\3\33\5\33\u00f0\n\33\3\34\3\34\3\34")
-        buf.write("\3\34\3\34\3\34\3\35\3\35\5\35\u00fa\n\35\3\36\3\36\5")
-        buf.write("\36\u00fe\n\36\3\36\3\36\3\37\3\37\3\37\5\37\u0105\n\37")
-        buf.write("\3\37\3\37\3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \5")
-        buf.write(" \u0117\n \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3")
-        buf.write(" \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3 \3")
-        buf.write(" \3 \3 \3 \3 \3 \3 \3 \7 \u0141\n \f \16 \u0144\13 \3")
-        buf.write("!\3!\3!\7!\u0149\n!\f!\16!\u014c\13!\5!\u014e\n!\3\"\3")
-        buf.write("\"\3#\3#\3$\3$\3$\5$\u0157\n$\3%\3%\3%\2\3>&\2\4\6\b\n")
-        buf.write("\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<")
-        buf.write(">@BDFH\2\b\3\2\5\13\4\2\25\26--\3\2 !\3\2#%\3\2\7\n\3")
-        buf.write("\2&\'\2\u0168\2J\3\2\2\2\4S\3\2\2\2\6X\3\2\2\2\b\\\3\2")
-        buf.write("\2\2\n^\3\2\2\2\fb\3\2\2\2\16e\3\2\2\2\20i\3\2\2\2\22")
-        buf.write("w\3\2\2\2\24|\3\2\2\2\26\u008d\3\2\2\2\30\u0092\3\2\2")
-        buf.write("\2\32\u009b\3\2\2\2\34\u00a1\3\2\2\2\36\u00a6\3\2\2\2")
-        buf.write(" \u00a8\3\2\2\2\"\u00b6\3\2\2\2$\u00bd\3\2\2\2&\u00c4")
-        buf.write("\3\2\2\2(\u00c6\3\2\2\2*\u00c8\3\2\2\2,\u00d3\3\2\2\2")
-        buf.write(".\u00d5\3\2\2\2\60\u00e3\3\2\2\2\62\u00e5\3\2\2\2\64\u00e8")
-        buf.write("\3\2\2\2\66\u00f1\3\2\2\28\u00f9\3\2\2\2:\u00fb\3\2\2")
-        buf.write("\2<\u0101\3\2\2\2>\u0116\3\2\2\2@\u014d\3\2\2\2B\u014f")
-        buf.write("\3\2\2\2D\u0151\3\2\2\2F\u0153\3\2\2\2H\u0158\3\2\2\2")
-        buf.write("JN\5\4\3\2KM\5\20\t\2LK\3\2\2\2MP\3\2\2\2NL\3\2\2\2NO")
-        buf.write("\3\2\2\2OQ\3\2\2\2PN\3\2\2\2QR\7\2\2\3R\3\3\2\2\2ST\7")
-        buf.write("\3\2\2TU\5\6\4\2UV\5\b\5\2VW\7\4\2\2W\5\3\2\2\2XY\5H%")
-        buf.write("\2Y\7\3\2\2\2Z]\5\n\6\2[]\5> \2\\Z\3\2\2\2\\[\3\2\2\2")
-        buf.write("]\t\3\2\2\2^`\5\16\b\2_a\5\16\b\2`_\3\2\2\2`a\3\2\2\2")
-        buf.write("a\13\3\2\2\2bc\t\2\2\2c\r\3\2\2\2df\5\f\7\2ed\3\2\2\2")
-        buf.write("ef\3\2\2\2fg\3\2\2\2gh\7\60\2\2h\17\3\2\2\2ij\7\f\2\2")
-        buf.write("jk\5H%\2ko\7\r\2\2ln\5\22\n\2ml\3\2\2\2nq\3\2\2\2om\3")
-        buf.write("\2\2\2op\3\2\2\2pr\3\2\2\2qo\3\2\2\2rs\7\16\2\2s\21\3")
-        buf.write("\2\2\2tx\5\24\13\2ux\5\26\f\2vx\5\30\r\2wt\3\2\2\2wu\3")
-        buf.write("\2\2\2wv\3\2\2\2x\23\3\2\2\2y{\7@\2\2zy\3\2\2\2{~\3\2")
-        buf.write("\2\2|z\3\2\2\2|}\3\2\2\2}\177\3\2\2\2~|\3\2\2\2\177\u0083")
-        buf.write("\5F$\2\u0080\u0082\7\66\2\2\u0081\u0080\3\2\2\2\u0082")
-        buf.write("\u0085\3\2\2\2\u0083\u0081\3\2\2\2\u0083\u0084\3\2\2\2")
-        buf.write("\u0084\u0086\3\2\2\2\u0085\u0083\3\2\2\2\u0086\u0089\5")
-        buf.write("H%\2\u0087\u0088\7\13\2\2\u0088\u008a\5> \2\u0089\u0087")
-        buf.write("\3\2\2\2\u0089\u008a\3\2\2\2\u008a\u008b\3\2\2\2\u008b")
-        buf.write("\u008c\7\4\2\2\u008c\25\3\2\2\2\u008d\u008e\7\17\2\2\u008e")
-        buf.write("\u008f\5 \21\2\u008f\u0090\5\34\17\2\u0090\u0091\5.\30")
-        buf.write("\2\u0091\27\3\2\2\2\u0092\u0093\7\20\2\2\u0093\u0094\5")
-        buf.write("H%\2\u0094\u0095\5 \21\2\u0095\u0097\5\34\17\2\u0096\u0098")
-        buf.write("\5\32\16\2\u0097\u0096\3\2\2\2\u0097\u0098\3\2\2\2\u0098")
-        buf.write("\u0099\3\2\2\2\u0099\u009a\5.\30\2\u009a\31\3\2\2\2\u009b")
-        buf.write("\u009c\7\21\2\2\u009c\u009d\5 \21\2\u009d\33\3\2\2\2\u009e")
-        buf.write("\u00a0\5\36\20\2\u009f\u009e\3\2\2\2\u00a0\u00a3\3\2\2")
-        buf.write("\2\u00a1\u009f\3\2\2\2\u00a1\u00a2\3\2\2\2\u00a2\35\3")
-        buf.write("\2\2\2\u00a3\u00a1\3\2\2\2\u00a4\u00a7\5,\27\2\u00a5\u00a7")
-        buf.write("\7=\2\2\u00a6\u00a4\3\2\2\2\u00a6\u00a5\3\2\2\2\u00a7")
-        buf.write("\37\3\2\2\2\u00a8\u00b1\7\22\2\2\u00a9\u00ae\5\"\22\2")
-        buf.write("\u00aa\u00ab\7\23\2\2\u00ab\u00ad\5\"\22\2\u00ac\u00aa")
-        buf.write("\3\2\2\2\u00ad\u00b0\3\2\2\2\u00ae\u00ac\3\2\2\2\u00ae")
-        buf.write("\u00af\3\2\2\2\u00af\u00b2\3\2\2\2\u00b0\u00ae\3\2\2\2")
-        buf.write("\u00b1\u00a9\3\2\2\2\u00b1\u00b2\3\2\2\2\u00b2\u00b3\3")
-        buf.write("\2\2\2\u00b3\u00b4\7\24\2\2\u00b4!\3\2\2\2\u00b5\u00b7")
-        buf.write("\7@\2\2\u00b6\u00b5\3\2\2\2\u00b6\u00b7\3\2\2\2\u00b7")
-        buf.write("\u00b8\3\2\2\2\u00b8\u00ba\5F$\2\u00b9\u00bb\5H%\2\u00ba")
-        buf.write("\u00b9\3\2\2\2\u00ba\u00bb\3\2\2\2\u00bb#\3\2\2\2\u00bc")
-        buf.write("\u00be\7@\2\2\u00bd\u00bc\3\2\2\2\u00bd\u00be\3\2\2\2")
-        buf.write("\u00be\u00bf\3\2\2\2\u00bf\u00c0\5F$\2\u00c0\u00c1\5H")
-        buf.write("%\2\u00c1%\3\2\2\2\u00c2\u00c5\5(\25\2\u00c3\u00c5\5*")
-        buf.write("\26\2\u00c4\u00c2\3\2\2\2\u00c4\u00c3\3\2\2\2\u00c5\'")
-        buf.write("\3\2\2\2\u00c6\u00c7\t\3\2\2\u00c7)\3\2\2\2\u00c8\u00c9")
-        buf.write("\7\27\2\2\u00c9\u00ca\7\22\2\2\u00ca\u00cd\5(\25\2\u00cb")
-        buf.write("\u00cc\7\30\2\2\u00cc\u00ce\5H%\2\u00cd\u00cb\3\2\2\2")
-        buf.write("\u00cd\u00ce\3\2\2\2\u00ce\u00cf\3\2\2\2\u00cf\u00d0\7")
-        buf.write("\31\2\2\u00d0\u00d1\5F$\2\u00d1\u00d2\7\24\2\2\u00d2+")
-        buf.write("\3\2\2\2\u00d3\u00d4\7;\2\2\u00d4-\3\2\2\2\u00d5\u00d9")
-        buf.write("\7\r\2\2\u00d6\u00d8\5\60\31\2\u00d7\u00d6\3\2\2\2\u00d8")
-        buf.write("\u00db\3\2\2\2\u00d9\u00d7\3\2\2\2\u00d9\u00da\3\2\2\2")
-        buf.write("\u00da\u00dc\3\2\2\2\u00db\u00d9\3\2\2\2\u00dc\u00dd\7")
-        buf.write("\16\2\2\u00dd/\3\2\2\2\u00de\u00e4\5\64\33\2\u00df\u00e4")
-        buf.write("\5\66\34\2\u00e0\u00e4\5.\30\2\u00e1\u00e4\5:\36\2\u00e2")
-        buf.write("\u00e4\58\35\2\u00e3\u00de\3\2\2\2\u00e3\u00df\3\2\2\2")
-        buf.write("\u00e3\u00e0\3\2\2\2\u00e3\u00e1\3\2\2\2\u00e3\u00e2\3")
-        buf.write("\2\2\2\u00e4\61\3\2\2\2\u00e5\u00e6\5> \2\u00e6\u00e7")
-        buf.write("\7\4\2\2\u00e7\63\3\2\2\2\u00e8\u00e9\7\32\2\2\u00e9\u00ea")
-        buf.write("\7\22\2\2\u00ea\u00eb\5> \2\u00eb\u00ec\7\24\2\2\u00ec")
-        buf.write("\u00ef\5\60\31\2\u00ed\u00ee\7\33\2\2\u00ee\u00f0\5\60")
-        buf.write("\31\2\u00ef\u00ed\3\2\2\2\u00ef\u00f0\3\2\2\2\u00f0\65")
-        buf.write("\3\2\2\2\u00f1\u00f2\7\34\2\2\u00f2\u00f3\7\22\2\2\u00f3")
-        buf.write("\u00f4\5> \2\u00f4\u00f5\7\24\2\2\u00f5\u00f6\5\60\31")
-        buf.write("\2\u00f6\67\3\2\2\2\u00f7\u00fa\5<\37\2\u00f8\u00fa\5")
-        buf.write("\62\32\2\u00f9\u00f7\3\2\2\2\u00f9\u00f8\3\2\2\2\u00fa")
-        buf.write("9\3\2\2\2\u00fb\u00fd\7\35\2\2\u00fc\u00fe\5> \2\u00fd")
-        buf.write("\u00fc\3\2\2\2\u00fd\u00fe\3\2\2\2\u00fe\u00ff\3\2\2\2")
-        buf.write("\u00ff\u0100\7\4\2\2\u0100;\3\2\2\2\u0101\u0104\5$\23")
-        buf.write("\2\u0102\u0103\7\13\2\2\u0103\u0105\5> \2\u0104\u0102")
-        buf.write("\3\2\2\2\u0104\u0105\3\2\2\2\u0105\u0106\3\2\2\2\u0106")
-        buf.write("\u0107\7\4\2\2\u0107=\3\2\2\2\u0108\u0109\b \1\2\u0109")
-        buf.write("\u0117\7.\2\2\u010a\u0117\7/\2\2\u010b\u010c\7\22\2\2")
-        buf.write("\u010c\u010d\5> \2\u010d\u010e\7\24\2\2\u010e\u0117\3")
-        buf.write("\2\2\2\u010f\u0110\t\4\2\2\u0110\u0117\5> \20\u0111\u0112")
-        buf.write("\7\30\2\2\u0112\u0117\5> \17\u0113\u0117\7\61\2\2\u0114")
-        buf.write("\u0117\5D#\2\u0115\u0117\5H%\2\u0116\u0108\3\2\2\2\u0116")
-        buf.write("\u010a\3\2\2\2\u0116\u010b\3\2\2\2\u0116\u010f\3\2\2\2")
-        buf.write("\u0116\u0111\3\2\2\2\u0116\u0113\3\2\2\2\u0116\u0114\3")
-        buf.write("\2\2\2\u0116\u0115\3\2\2\2\u0117\u0142\3\2\2\2\u0118\u0119")
-        buf.write("\f\16\2\2\u0119\u011a\7\"\2\2\u011a\u0141\5> \17\u011b")
-        buf.write("\u011c\f\r\2\2\u011c\u011d\t\5\2\2\u011d\u0141\5> \16")
-        buf.write("\u011e\u011f\f\f\2\2\u011f\u0120\t\4\2\2\u0120\u0141\5")
-        buf.write("> \r\u0121\u0122\f\13\2\2\u0122\u0123\t\6\2\2\u0123\u0141")
-        buf.write("\5> \f\u0124\u0125\f\n\2\2\u0125\u0126\t\7\2\2\u0126\u0141")
-        buf.write("\5> \13\u0127\u0128\f\t\2\2\u0128\u0129\7(\2\2\u0129\u0141")
-        buf.write("\5> \n\u012a\u012b\f\b\2\2\u012b\u012c\7)\2\2\u012c\u0141")
-        buf.write("\5> \t\u012d\u012e\f\7\2\2\u012e\u012f\7*\2\2\u012f\u0130")
-        buf.write("\5> \2\u0130\u0131\7+\2\2\u0131\u0132\5> \b\u0132\u0141")
-        buf.write("\3\2\2\2\u0133\u0134\f\6\2\2\u0134\u0135\7\13\2\2\u0135")
-        buf.write("\u0141\5> \7\u0136\u0137\f\23\2\2\u0137\u0138\7\36\2\2")
-        buf.write("\u0138\u0139\5> \2\u0139\u013a\7\37\2\2\u013a\u0141\3")
-        buf.write("\2\2\2\u013b\u013c\f\22\2\2\u013c\u013d\7\22\2\2\u013d")
-        buf.write("\u013e\5@!\2\u013e\u013f\7\24\2\2\u013f\u0141\3\2\2\2")
-        buf.write("\u0140\u0118\3\2\2\2\u0140\u011b\3\2\2\2\u0140\u011e\3")
-        buf.write("\2\2\2\u0140\u0121\3\2\2\2\u0140\u0124\3\2\2\2\u0140\u0127")
-        buf.write("\3\2\2\2\u0140\u012a\3\2\2\2\u0140\u012d\3\2\2\2\u0140")
-        buf.write("\u0133\3\2\2\2\u0140\u0136\3\2\2\2\u0140\u013b\3\2\2\2")
-        buf.write("\u0141\u0144\3\2\2\2\u0142\u0140\3\2\2\2\u0142\u0143\3")
-        buf.write("\2\2\2\u0143?\3\2\2\2\u0144\u0142\3\2\2\2\u0145\u014a")
-        buf.write("\5> \2\u0146\u0147\7\23\2\2\u0147\u0149\5> \2\u0148\u0146")
-        buf.write("\3\2\2\2\u0149\u014c\3\2\2\2\u014a\u0148\3\2\2\2\u014a")
-        buf.write("\u014b\3\2\2\2\u014b\u014e\3\2\2\2\u014c\u014a\3\2\2\2")
-        buf.write("\u014d\u0145\3\2\2\2\u014d\u014e\3\2\2\2\u014eA\3\2\2")
-        buf.write("\2\u014f\u0150\5(\25\2\u0150C\3\2\2\2\u0151\u0152\7\62")
-        buf.write("\2\2\u0152E\3\2\2\2\u0153\u0156\5&\24\2\u0154\u0155\7")
-        buf.write(",\2\2\u0155\u0157\5> \2\u0156\u0154\3\2\2\2\u0156\u0157")
-        buf.write("\3\2\2\2\u0157G\3\2\2\2\u0158\u0159\7A\2\2\u0159I\3\2")
-        buf.write("\2\2!N\\`eow|\u0083\u0089\u0097\u00a1\u00a6\u00ae\u00b1")
-        buf.write("\u00b6\u00ba\u00bd\u00c4\u00cd\u00d9\u00e3\u00ef\u00f9")
-        buf.write("\u00fd\u0104\u0116\u0140\u0142\u014a\u014d\u0156")
+        buf.write("\4\37\t\37\4 \t \4!\t!\4\"\t\"\4#\t#\4$\t$\4%\t%\4&\t")
+        buf.write("&\3\2\3\2\7\2O\n\2\f\2\16\2R\13\2\3\2\3\2\3\3\3\3\3\3")
+        buf.write("\3\3\3\3\3\4\3\4\3\5\3\5\5\5_\n\5\3\6\3\6\5\6c\n\6\3\7")
+        buf.write("\3\7\3\b\5\bh\n\b\3\b\3\b\3\t\3\t\3\t\3\t\7\tp\n\t\f\t")
+        buf.write("\16\ts\13\t\3\t\3\t\3\n\3\n\3\n\5\nz\n\n\3\13\7\13}\n")
+        buf.write("\13\f\13\16\13\u0080\13\13\3\13\3\13\7\13\u0084\n\13\f")
+        buf.write("\13\16\13\u0087\13\13\3\13\3\13\3\13\5\13\u008c\n\13\3")
+        buf.write("\13\3\13\3\f\3\f\3\f\3\f\3\f\3\r\3\r\3\r\3\r\3\r\5\r\u009a")
+        buf.write("\n\r\3\r\3\r\3\16\3\16\3\16\3\17\7\17\u00a2\n\17\f\17")
+        buf.write("\16\17\u00a5\13\17\3\20\3\20\5\20\u00a9\n\20\3\21\3\21")
+        buf.write("\3\21\3\21\7\21\u00af\n\21\f\21\16\21\u00b2\13\21\5\21")
+        buf.write("\u00b4\n\21\3\21\3\21\3\22\5\22\u00b9\n\22\3\22\3\22\5")
+        buf.write("\22\u00bd\n\22\3\23\5\23\u00c0\n\23\3\23\3\23\3\23\3\24")
+        buf.write("\3\24\3\24\5\24\u00c8\n\24\3\25\3\25\3\26\3\26\3\26\3")
+        buf.write("\26\3\26\5\26\u00d1\n\26\3\26\3\26\3\26\3\26\3\27\3\27")
+        buf.write("\3\27\3\30\3\30\3\31\3\31\7\31\u00de\n\31\f\31\16\31\u00e1")
+        buf.write("\13\31\3\31\3\31\3\32\3\32\3\32\3\32\3\32\5\32\u00ea\n")
+        buf.write("\32\3\33\3\33\3\33\3\34\3\34\3\34\3\34\3\34\3\34\3\34")
+        buf.write("\5\34\u00f6\n\34\3\35\3\35\3\35\3\35\3\35\3\35\3\36\3")
+        buf.write("\36\5\36\u0100\n\36\3\37\3\37\5\37\u0104\n\37\3\37\3\37")
+        buf.write("\3 \3 \3 \5 \u010b\n \3 \3 \3!\3!\3!\3!\3!\3!\3!\3!\3")
+        buf.write("!\3!\3!\3!\3!\3!\5!\u011d\n!\3!\3!\3!\3!\3!\3!\3!\3!\3")
+        buf.write("!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3")
+        buf.write("!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\3!\7!\u014a")
+        buf.write("\n!\f!\16!\u014d\13!\3\"\3\"\3\"\7\"\u0152\n\"\f\"\16")
+        buf.write("\"\u0155\13\"\5\"\u0157\n\"\3#\3#\3$\3$\3%\3%\3%\5%\u0160")
+        buf.write("\n%\3&\3&\3&\2\3@\'\2\4\6\b\n\f\16\20\22\24\26\30\32\34")
+        buf.write("\36 \"$&(*,.\60\62\64\668:<>@BDFHJ\2\b\3\2\5\13\4\2\25")
+        buf.write("\26..\3\2!\"\3\2$&\3\2\7\n\3\2\'(\2\u0172\2L\3\2\2\2\4")
+        buf.write("U\3\2\2\2\6Z\3\2\2\2\b^\3\2\2\2\n`\3\2\2\2\fd\3\2\2\2")
+        buf.write("\16g\3\2\2\2\20k\3\2\2\2\22y\3\2\2\2\24~\3\2\2\2\26\u008f")
+        buf.write("\3\2\2\2\30\u0094\3\2\2\2\32\u009d\3\2\2\2\34\u00a3\3")
+        buf.write("\2\2\2\36\u00a8\3\2\2\2 \u00aa\3\2\2\2\"\u00b8\3\2\2\2")
+        buf.write("$\u00bf\3\2\2\2&\u00c7\3\2\2\2(\u00c9\3\2\2\2*\u00cb\3")
+        buf.write("\2\2\2,\u00d6\3\2\2\2.\u00d9\3\2\2\2\60\u00db\3\2\2\2")
+        buf.write("\62\u00e9\3\2\2\2\64\u00eb\3\2\2\2\66\u00ee\3\2\2\28\u00f7")
+        buf.write("\3\2\2\2:\u00ff\3\2\2\2<\u0101\3\2\2\2>\u0107\3\2\2\2")
+        buf.write("@\u011c\3\2\2\2B\u0156\3\2\2\2D\u0158\3\2\2\2F\u015a\3")
+        buf.write("\2\2\2H\u015c\3\2\2\2J\u0161\3\2\2\2LP\5\4\3\2MO\5\20")
+        buf.write("\t\2NM\3\2\2\2OR\3\2\2\2PN\3\2\2\2PQ\3\2\2\2QS\3\2\2\2")
+        buf.write("RP\3\2\2\2ST\7\2\2\3T\3\3\2\2\2UV\7\3\2\2VW\5\6\4\2WX")
+        buf.write("\5\b\5\2XY\7\4\2\2Y\5\3\2\2\2Z[\5J&\2[\7\3\2\2\2\\_\5")
+        buf.write("\n\6\2]_\5@!\2^\\\3\2\2\2^]\3\2\2\2_\t\3\2\2\2`b\5\16")
+        buf.write("\b\2ac\5\16\b\2ba\3\2\2\2bc\3\2\2\2c\13\3\2\2\2de\t\2")
+        buf.write("\2\2e\r\3\2\2\2fh\5\f\7\2gf\3\2\2\2gh\3\2\2\2hi\3\2\2")
+        buf.write("\2ij\7\61\2\2j\17\3\2\2\2kl\7\f\2\2lm\5J&\2mq\7\r\2\2")
+        buf.write("np\5\22\n\2on\3\2\2\2ps\3\2\2\2qo\3\2\2\2qr\3\2\2\2rt")
+        buf.write("\3\2\2\2sq\3\2\2\2tu\7\16\2\2u\21\3\2\2\2vz\5\24\13\2")
+        buf.write("wz\5\26\f\2xz\5\30\r\2yv\3\2\2\2yw\3\2\2\2yx\3\2\2\2z")
+        buf.write("\23\3\2\2\2{}\7A\2\2|{\3\2\2\2}\u0080\3\2\2\2~|\3\2\2")
+        buf.write("\2~\177\3\2\2\2\177\u0081\3\2\2\2\u0080~\3\2\2\2\u0081")
+        buf.write("\u0085\5H%\2\u0082\u0084\7\67\2\2\u0083\u0082\3\2\2\2")
+        buf.write("\u0084\u0087\3\2\2\2\u0085\u0083\3\2\2\2\u0085\u0086\3")
+        buf.write("\2\2\2\u0086\u0088\3\2\2\2\u0087\u0085\3\2\2\2\u0088\u008b")
+        buf.write("\5J&\2\u0089\u008a\7\13\2\2\u008a\u008c\5@!\2\u008b\u0089")
+        buf.write("\3\2\2\2\u008b\u008c\3\2\2\2\u008c\u008d\3\2\2\2\u008d")
+        buf.write("\u008e\7\4\2\2\u008e\25\3\2\2\2\u008f\u0090\7\17\2\2\u0090")
+        buf.write("\u0091\5 \21\2\u0091\u0092\5\34\17\2\u0092\u0093\5\60")
+        buf.write("\31\2\u0093\27\3\2\2\2\u0094\u0095\7\20\2\2\u0095\u0096")
+        buf.write("\5J&\2\u0096\u0097\5 \21\2\u0097\u0099\5\34\17\2\u0098")
+        buf.write("\u009a\5\32\16\2\u0099\u0098\3\2\2\2\u0099\u009a\3\2\2")
+        buf.write("\2\u009a\u009b\3\2\2\2\u009b\u009c\5\60\31\2\u009c\31")
+        buf.write("\3\2\2\2\u009d\u009e\7\21\2\2\u009e\u009f\5 \21\2\u009f")
+        buf.write("\33\3\2\2\2\u00a0\u00a2\5\36\20\2\u00a1\u00a0\3\2\2\2")
+        buf.write("\u00a2\u00a5\3\2\2\2\u00a3\u00a1\3\2\2\2\u00a3\u00a4\3")
+        buf.write("\2\2\2\u00a4\35\3\2\2\2\u00a5\u00a3\3\2\2\2\u00a6\u00a9")
+        buf.write("\5.\30\2\u00a7\u00a9\7>\2\2\u00a8\u00a6\3\2\2\2\u00a8")
+        buf.write("\u00a7\3\2\2\2\u00a9\37\3\2\2\2\u00aa\u00b3\7\22\2\2\u00ab")
+        buf.write("\u00b0\5\"\22\2\u00ac\u00ad\7\23\2\2\u00ad\u00af\5\"\22")
+        buf.write("\2\u00ae\u00ac\3\2\2\2\u00af\u00b2\3\2\2\2\u00b0\u00ae")
+        buf.write("\3\2\2\2\u00b0\u00b1\3\2\2\2\u00b1\u00b4\3\2\2\2\u00b2")
+        buf.write("\u00b0\3\2\2\2\u00b3\u00ab\3\2\2\2\u00b3\u00b4\3\2\2\2")
+        buf.write("\u00b4\u00b5\3\2\2\2\u00b5\u00b6\7\24\2\2\u00b6!\3\2\2")
+        buf.write("\2\u00b7\u00b9\7A\2\2\u00b8\u00b7\3\2\2\2\u00b8\u00b9")
+        buf.write("\3\2\2\2\u00b9\u00ba\3\2\2\2\u00ba\u00bc\5H%\2\u00bb\u00bd")
+        buf.write("\5J&\2\u00bc\u00bb\3\2\2\2\u00bc\u00bd\3\2\2\2\u00bd#")
+        buf.write("\3\2\2\2\u00be\u00c0\7A\2\2\u00bf\u00be\3\2\2\2\u00bf")
+        buf.write("\u00c0\3\2\2\2\u00c0\u00c1\3\2\2\2\u00c1\u00c2\5H%\2\u00c2")
+        buf.write("\u00c3\5J&\2\u00c3%\3\2\2\2\u00c4\u00c8\5(\25\2\u00c5")
+        buf.write("\u00c8\5*\26\2\u00c6\u00c8\5,\27\2\u00c7\u00c4\3\2\2\2")
+        buf.write("\u00c7\u00c5\3\2\2\2\u00c7\u00c6\3\2\2\2\u00c8\'\3\2\2")
+        buf.write("\2\u00c9\u00ca\t\3\2\2\u00ca)\3\2\2\2\u00cb\u00cc\7\27")
+        buf.write("\2\2\u00cc\u00cd\7\22\2\2\u00cd\u00d0\5(\25\2\u00ce\u00cf")
+        buf.write("\7\30\2\2\u00cf\u00d1\5J&\2\u00d0\u00ce\3\2\2\2\u00d0")
+        buf.write("\u00d1\3\2\2\2\u00d1\u00d2\3\2\2\2\u00d2\u00d3\7\31\2")
+        buf.write("\2\u00d3\u00d4\5H%\2\u00d4\u00d5\7\24\2\2\u00d5+\3\2\2")
+        buf.write("\2\u00d6\u00d7\7\25\2\2\u00d7\u00d8\7<\2\2\u00d8-\3\2")
+        buf.write("\2\2\u00d9\u00da\7<\2\2\u00da/\3\2\2\2\u00db\u00df\7\r")
+        buf.write("\2\2\u00dc\u00de\5\62\32\2\u00dd\u00dc\3\2\2\2\u00de\u00e1")
+        buf.write("\3\2\2\2\u00df\u00dd\3\2\2\2\u00df\u00e0\3\2\2\2\u00e0")
+        buf.write("\u00e2\3\2\2\2\u00e1\u00df\3\2\2\2\u00e2\u00e3\7\16\2")
+        buf.write("\2\u00e3\61\3\2\2\2\u00e4\u00ea\5\66\34\2\u00e5\u00ea")
+        buf.write("\58\35\2\u00e6\u00ea\5\60\31\2\u00e7\u00ea\5<\37\2\u00e8")
+        buf.write("\u00ea\5:\36\2\u00e9\u00e4\3\2\2\2\u00e9\u00e5\3\2\2\2")
+        buf.write("\u00e9\u00e6\3\2\2\2\u00e9\u00e7\3\2\2\2\u00e9\u00e8\3")
+        buf.write("\2\2\2\u00ea\63\3\2\2\2\u00eb\u00ec\5@!\2\u00ec\u00ed")
+        buf.write("\7\4\2\2\u00ed\65\3\2\2\2\u00ee\u00ef\7\32\2\2\u00ef\u00f0")
+        buf.write("\7\22\2\2\u00f0\u00f1\5@!\2\u00f1\u00f2\7\24\2\2\u00f2")
+        buf.write("\u00f5\5\62\32\2\u00f3\u00f4\7\33\2\2\u00f4\u00f6\5\62")
+        buf.write("\32\2\u00f5\u00f3\3\2\2\2\u00f5\u00f6\3\2\2\2\u00f6\67")
+        buf.write("\3\2\2\2\u00f7\u00f8\7\34\2\2\u00f8\u00f9\7\22\2\2\u00f9")
+        buf.write("\u00fa\5@!\2\u00fa\u00fb\7\24\2\2\u00fb\u00fc\5\62\32")
+        buf.write("\2\u00fc9\3\2\2\2\u00fd\u0100\5> \2\u00fe\u0100\5\64\33")
+        buf.write("\2\u00ff\u00fd\3\2\2\2\u00ff\u00fe\3\2\2\2\u0100;\3\2")
+        buf.write("\2\2\u0101\u0103\7\35\2\2\u0102\u0104\5@!\2\u0103\u0102")
+        buf.write("\3\2\2\2\u0103\u0104\3\2\2\2\u0104\u0105\3\2\2\2\u0105")
+        buf.write("\u0106\7\4\2\2\u0106=\3\2\2\2\u0107\u010a\5$\23\2\u0108")
+        buf.write("\u0109\7\13\2\2\u0109\u010b\5@!\2\u010a\u0108\3\2\2\2")
+        buf.write("\u010a\u010b\3\2\2\2\u010b\u010c\3\2\2\2\u010c\u010d\7")
+        buf.write("\4\2\2\u010d?\3\2\2\2\u010e\u010f\b!\1\2\u010f\u011d\7")
+        buf.write("/\2\2\u0110\u011d\7\60\2\2\u0111\u0112\7\22\2\2\u0112")
+        buf.write("\u0113\5@!\2\u0113\u0114\7\24\2\2\u0114\u011d\3\2\2\2")
+        buf.write("\u0115\u0116\t\4\2\2\u0116\u011d\5@!\20\u0117\u0118\7")
+        buf.write("\30\2\2\u0118\u011d\5@!\17\u0119\u011d\7\62\2\2\u011a")
+        buf.write("\u011d\5F$\2\u011b\u011d\5J&\2\u011c\u010e\3\2\2\2\u011c")
+        buf.write("\u0110\3\2\2\2\u011c\u0111\3\2\2\2\u011c\u0115\3\2\2\2")
+        buf.write("\u011c\u0117\3\2\2\2\u011c\u0119\3\2\2\2\u011c\u011a\3")
+        buf.write("\2\2\2\u011c\u011b\3\2\2\2\u011d\u014b\3\2\2\2\u011e\u011f")
+        buf.write("\f\16\2\2\u011f\u0120\7#\2\2\u0120\u014a\5@!\17\u0121")
+        buf.write("\u0122\f\r\2\2\u0122\u0123\t\5\2\2\u0123\u014a\5@!\16")
+        buf.write("\u0124\u0125\f\f\2\2\u0125\u0126\t\4\2\2\u0126\u014a\5")
+        buf.write("@!\r\u0127\u0128\f\13\2\2\u0128\u0129\t\6\2\2\u0129\u014a")
+        buf.write("\5@!\f\u012a\u012b\f\n\2\2\u012b\u012c\t\7\2\2\u012c\u014a")
+        buf.write("\5@!\13\u012d\u012e\f\t\2\2\u012e\u012f\7)\2\2\u012f\u014a")
+        buf.write("\5@!\n\u0130\u0131\f\b\2\2\u0131\u0132\7*\2\2\u0132\u014a")
+        buf.write("\5@!\t\u0133\u0134\f\7\2\2\u0134\u0135\7+\2\2\u0135\u0136")
+        buf.write("\5@!\2\u0136\u0137\7,\2\2\u0137\u0138\5@!\b\u0138\u014a")
+        buf.write("\3\2\2\2\u0139\u013a\f\6\2\2\u013a\u013b\7\13\2\2\u013b")
+        buf.write("\u014a\5@!\7\u013c\u013d\f\24\2\2\u013d\u013e\7\36\2\2")
+        buf.write("\u013e\u013f\5@!\2\u013f\u0140\7\37\2\2\u0140\u014a\3")
+        buf.write("\2\2\2\u0141\u0142\f\23\2\2\u0142\u0143\7\22\2\2\u0143")
+        buf.write("\u0144\5B\"\2\u0144\u0145\7\24\2\2\u0145\u014a\3\2\2\2")
+        buf.write("\u0146\u0147\f\22\2\2\u0147\u0148\7 \2\2\u0148\u014a\5")
+        buf.write("J&\2\u0149\u011e\3\2\2\2\u0149\u0121\3\2\2\2\u0149\u0124")
+        buf.write("\3\2\2\2\u0149\u0127\3\2\2\2\u0149\u012a\3\2\2\2\u0149")
+        buf.write("\u012d\3\2\2\2\u0149\u0130\3\2\2\2\u0149\u0133\3\2\2\2")
+        buf.write("\u0149\u0139\3\2\2\2\u0149\u013c\3\2\2\2\u0149\u0141\3")
+        buf.write("\2\2\2\u0149\u0146\3\2\2\2\u014a\u014d\3\2\2\2\u014b\u0149")
+        buf.write("\3\2\2\2\u014b\u014c\3\2\2\2\u014cA\3\2\2\2\u014d\u014b")
+        buf.write("\3\2\2\2\u014e\u0153\5@!\2\u014f\u0150\7\23\2\2\u0150")
+        buf.write("\u0152\5@!\2\u0151\u014f\3\2\2\2\u0152\u0155\3\2\2\2\u0153")
+        buf.write("\u0151\3\2\2\2\u0153\u0154\3\2\2\2\u0154\u0157\3\2\2\2")
+        buf.write("\u0155\u0153\3\2\2\2\u0156\u014e\3\2\2\2\u0156\u0157\3")
+        buf.write("\2\2\2\u0157C\3\2\2\2\u0158\u0159\5(\25\2\u0159E\3\2\2")
+        buf.write("\2\u015a\u015b\7\63\2\2\u015bG\3\2\2\2\u015c\u015f\5&")
+        buf.write("\24\2\u015d\u015e\7-\2\2\u015e\u0160\5@!\2\u015f\u015d")
+        buf.write("\3\2\2\2\u015f\u0160\3\2\2\2\u0160I\3\2\2\2\u0161\u0162")
+        buf.write("\7B\2\2\u0162K\3\2\2\2!P^bgqy~\u0085\u008b\u0099\u00a3")
+        buf.write("\u00a8\u00b0\u00b3\u00b8\u00bc\u00bf\u00c7\u00d0\u00df")
+        buf.write("\u00e9\u00f5\u00ff\u0103\u010a\u011c\u0149\u014b\u0153")
+        buf.write("\u0156\u015f")
         return buf.getvalue()
 
 
@@ -178,13 +183,13 @@ class SolidityParser ( Parser ):
                      "'constructor'", "'function'", "'returns'", "'('", 
                      "','", "')'", "'address'", "'bool'", "'mapping'", "'!'", 
                      "'=>'", "'if'", "'else'", "'while'", "'return'", "'['", 
-                     "']'", "'+'", "'-'", "'**'", "'*'", "'/'", "'%'", "'=='", 
-                     "'!='", "'&&'", "'||'", "'?'", "':'", "'@'", "'uint'", 
-                     "'me'", "'all'", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "<INVALID>", "'anonymous'", "'break'", "'constant'", 
-                     "'continue'", "'external'", "'indexed'", "'internal'", 
-                     "'payable'", "'private'", "'public'", "'pure'", "'view'", 
-                     "'final'" ]
+                     "']'", "'.'", "'+'", "'-'", "'**'", "'*'", "'/'", "'%'", 
+                     "'=='", "'!='", "'&&'", "'||'", "'?'", "':'", "'@'", 
+                     "'uint'", "'me'", "'all'", "<INVALID>", "<INVALID>", 
+                     "<INVALID>", "<INVALID>", "'anonymous'", "'break'", 
+                     "'constant'", "'continue'", "'external'", "'indexed'", 
+                     "'internal'", "'payable'", "'private'", "'public'", 
+                     "'pure'", "'view'", "'final'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
@@ -196,14 +201,14 @@ class SolidityParser ( Parser ):
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                      "<INVALID>", "<INVALID>", "<INVALID>", "Uint", "MeKeyword", 
-                      "AllKeyword", "VersionLiteral", "BooleanLiteral", 
-                      "DecimalNumber", "ReservedKeyword", "AnonymousKeyword", 
-                      "BreakKeyword", "ConstantKeyword", "ContinueKeyword", 
-                      "ExternalKeyword", "IndexedKeyword", "InternalKeyword", 
-                      "PayableKeyword", "PrivateKeyword", "PublicKeyword", 
-                      "PureKeyword", "ViewKeyword", "FinalKeyword", "Identifier", 
-                      "WS", "COMMENT", "LINE_COMMENT" ]
+                      "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
+                      "Uint", "MeKeyword", "AllKeyword", "VersionLiteral", 
+                      "BooleanLiteral", "DecimalNumber", "ReservedKeyword", 
+                      "AnonymousKeyword", "BreakKeyword", "ConstantKeyword", 
+                      "ContinueKeyword", "ExternalKeyword", "IndexedKeyword", 
+                      "InternalKeyword", "PayableKeyword", "PrivateKeyword", 
+                      "PublicKeyword", "PureKeyword", "ViewKeyword", "FinalKeyword", 
+                      "Identifier", "WS", "COMMENT", "LINE_COMMENT" ]
 
     RULE_sourceUnit = 0
     RULE_pragmaDirective = 1
@@ -226,30 +231,31 @@ class SolidityParser ( Parser ):
     RULE_typeName = 18
     RULE_elementaryTypeName = 19
     RULE_mapping = 20
-    RULE_stateMutability = 21
-    RULE_block = 22
-    RULE_statement = 23
-    RULE_expressionStatement = 24
-    RULE_ifStatement = 25
-    RULE_whileStatement = 26
-    RULE_simpleStatement = 27
-    RULE_returnStatement = 28
-    RULE_variableDeclarationStatement = 29
-    RULE_expression = 30
-    RULE_functionCallArguments = 31
-    RULE_elementaryTypeNameExpression = 32
-    RULE_numberLiteral = 33
-    RULE_annotatedTypeName = 34
-    RULE_identifier = 35
+    RULE_payableAddress = 21
+    RULE_stateMutability = 22
+    RULE_block = 23
+    RULE_statement = 24
+    RULE_expressionStatement = 25
+    RULE_ifStatement = 26
+    RULE_whileStatement = 27
+    RULE_simpleStatement = 28
+    RULE_returnStatement = 29
+    RULE_variableDeclarationStatement = 30
+    RULE_expression = 31
+    RULE_functionCallArguments = 32
+    RULE_elementaryTypeNameExpression = 33
+    RULE_numberLiteral = 34
+    RULE_annotatedTypeName = 35
+    RULE_identifier = 36
 
     ruleNames =  [ "sourceUnit", "pragmaDirective", "pragmaName", "pragmaValue", 
                    "version", "versionOperator", "versionConstraint", "contractDefinition", 
                    "contractPart", "stateVariableDeclaration", "constructorDefinition", 
                    "functionDefinition", "returnParameters", "modifierList", 
                    "modifier", "parameterList", "parameter", "variableDeclaration", 
-                   "typeName", "elementaryTypeName", "mapping", "stateMutability", 
-                   "block", "statement", "expressionStatement", "ifStatement", 
-                   "whileStatement", "simpleStatement", "returnStatement", 
+                   "typeName", "elementaryTypeName", "mapping", "payableAddress", 
+                   "stateMutability", "block", "statement", "expressionStatement", 
+                   "ifStatement", "whileStatement", "simpleStatement", "returnStatement", 
                    "variableDeclarationStatement", "expression", "functionCallArguments", 
                    "elementaryTypeNameExpression", "numberLiteral", "annotatedTypeName", 
                    "identifier" ]
@@ -297,30 +303,31 @@ class SolidityParser ( Parser ):
     T__39=40
     T__40=41
     T__41=42
-    Uint=43
-    MeKeyword=44
-    AllKeyword=45
-    VersionLiteral=46
-    BooleanLiteral=47
-    DecimalNumber=48
-    ReservedKeyword=49
-    AnonymousKeyword=50
-    BreakKeyword=51
-    ConstantKeyword=52
-    ContinueKeyword=53
-    ExternalKeyword=54
-    IndexedKeyword=55
-    InternalKeyword=56
-    PayableKeyword=57
-    PrivateKeyword=58
-    PublicKeyword=59
-    PureKeyword=60
-    ViewKeyword=61
-    FinalKeyword=62
-    Identifier=63
-    WS=64
-    COMMENT=65
-    LINE_COMMENT=66
+    T__42=43
+    Uint=44
+    MeKeyword=45
+    AllKeyword=46
+    VersionLiteral=47
+    BooleanLiteral=48
+    DecimalNumber=49
+    ReservedKeyword=50
+    AnonymousKeyword=51
+    BreakKeyword=52
+    ConstantKeyword=53
+    ContinueKeyword=54
+    ExternalKeyword=55
+    IndexedKeyword=56
+    InternalKeyword=57
+    PayableKeyword=58
+    PrivateKeyword=59
+    PublicKeyword=60
+    PureKeyword=61
+    ViewKeyword=62
+    FinalKeyword=63
+    Identifier=64
+    WS=65
+    COMMENT=66
+    LINE_COMMENT=67
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -381,20 +388,20 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 72
+            self.state = 74
             localctx.pragma_directive = self.pragmaDirective()
-            self.state = 76
+            self.state = 78
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==SolidityParser.T__9:
-                self.state = 73
+                self.state = 75
                 localctx._contractDefinition = self.contractDefinition()
                 localctx.contracts.append(localctx._contractDefinition)
-                self.state = 78
+                self.state = 80
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 79
+            self.state = 81
             self.match(SolidityParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -445,13 +452,13 @@ class SolidityParser ( Parser ):
         self.enterRule(localctx, 2, self.RULE_pragmaDirective)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 81
-            self.match(SolidityParser.T__0)
-            self.state = 82
-            self.pragmaName()
             self.state = 83
-            self.pragmaValue()
+            self.match(SolidityParser.T__0)
             self.state = 84
+            self.pragmaName()
+            self.state = 85
+            self.pragmaValue()
+            self.state = 86
             self.match(SolidityParser.T__1)
         except RecognitionException as re:
             localctx.exception = re
@@ -498,7 +505,7 @@ class SolidityParser ( Parser ):
         self.enterRule(localctx, 4, self.RULE_pragmaName)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 86
+            self.state = 88
             self.identifier()
         except RecognitionException as re:
             localctx.exception = re
@@ -548,17 +555,17 @@ class SolidityParser ( Parser ):
         localctx = SolidityParser.PragmaValueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_pragmaValue)
         try:
-            self.state = 90
+            self.state = 92
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [SolidityParser.T__2, SolidityParser.T__3, SolidityParser.T__4, SolidityParser.T__5, SolidityParser.T__6, SolidityParser.T__7, SolidityParser.T__8, SolidityParser.VersionLiteral]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 88
+                self.state = 90
                 self.version()
                 pass
-            elif token in [SolidityParser.T__15, SolidityParser.T__21, SolidityParser.T__29, SolidityParser.T__30, SolidityParser.MeKeyword, SolidityParser.AllKeyword, SolidityParser.BooleanLiteral, SolidityParser.DecimalNumber, SolidityParser.Identifier]:
+            elif token in [SolidityParser.T__15, SolidityParser.T__21, SolidityParser.T__30, SolidityParser.T__31, SolidityParser.MeKeyword, SolidityParser.AllKeyword, SolidityParser.BooleanLiteral, SolidityParser.DecimalNumber, SolidityParser.Identifier]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 89
+                self.state = 91
                 self.expression(0)
                 pass
             else:
@@ -613,13 +620,13 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 92
-            self.versionConstraint()
             self.state = 94
+            self.versionConstraint()
+            self.state = 96
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__2) | (1 << SolidityParser.T__3) | (1 << SolidityParser.T__4) | (1 << SolidityParser.T__5) | (1 << SolidityParser.T__6) | (1 << SolidityParser.T__7) | (1 << SolidityParser.T__8) | (1 << SolidityParser.VersionLiteral))) != 0):
-                self.state = 93
+                self.state = 95
                 self.versionConstraint()
 
 
@@ -666,7 +673,7 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 96
+            self.state = 98
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__2) | (1 << SolidityParser.T__3) | (1 << SolidityParser.T__4) | (1 << SolidityParser.T__5) | (1 << SolidityParser.T__6) | (1 << SolidityParser.T__7) | (1 << SolidityParser.T__8))) != 0)):
                 self._errHandler.recoverInline(self)
@@ -722,15 +729,15 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 99
+            self.state = 101
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__2) | (1 << SolidityParser.T__3) | (1 << SolidityParser.T__4) | (1 << SolidityParser.T__5) | (1 << SolidityParser.T__6) | (1 << SolidityParser.T__7) | (1 << SolidityParser.T__8))) != 0):
-                self.state = 98
+                self.state = 100
                 self.versionOperator()
 
 
-            self.state = 101
+            self.state = 103
             self.match(SolidityParser.VersionLiteral)
         except RecognitionException as re:
             localctx.exception = re
@@ -787,24 +794,24 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 103
-            self.match(SolidityParser.T__9)
-            self.state = 104
-            self.identifier()
             self.state = 105
+            self.match(SolidityParser.T__9)
+            self.state = 106
+            self.identifier()
+            self.state = 107
             self.match(SolidityParser.T__10)
-            self.state = 109
+            self.state = 111
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__12) | (1 << SolidityParser.T__13) | (1 << SolidityParser.T__18) | (1 << SolidityParser.T__19) | (1 << SolidityParser.T__20) | (1 << SolidityParser.Uint) | (1 << SolidityParser.FinalKeyword))) != 0):
-                self.state = 106
+                self.state = 108
                 localctx._contractPart = self.contractPart()
                 localctx.parts.append(localctx._contractPart)
-                self.state = 111
+                self.state = 113
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 112
+            self.state = 114
             self.match(SolidityParser.T__11)
         except RecognitionException as re:
             localctx.exception = re
@@ -858,22 +865,22 @@ class SolidityParser ( Parser ):
         localctx = SolidityParser.ContractPartContext(self, self._ctx, self.state)
         self.enterRule(localctx, 16, self.RULE_contractPart)
         try:
-            self.state = 117
+            self.state = 119
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [SolidityParser.T__18, SolidityParser.T__19, SolidityParser.T__20, SolidityParser.Uint, SolidityParser.FinalKeyword]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 114
+                self.state = 116
                 self.stateVariableDeclaration()
                 pass
             elif token in [SolidityParser.T__12]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 115
+                self.state = 117
                 self.constructorDefinition()
                 pass
             elif token in [SolidityParser.T__13]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 116
+                self.state = 118
                 self.functionDefinition()
                 pass
             else:
@@ -951,43 +958,43 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 122
+            self.state = 124
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==SolidityParser.FinalKeyword:
-                self.state = 119
+                self.state = 121
                 localctx._FinalKeyword = self.match(SolidityParser.FinalKeyword)
                 localctx.keywords.append(localctx._FinalKeyword)
-                self.state = 124
+                self.state = 126
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 125
+            self.state = 127
             localctx.annotated_type = self.annotatedTypeName()
-            self.state = 129
+            self.state = 131
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==SolidityParser.ConstantKeyword:
-                self.state = 126
+                self.state = 128
                 localctx._ConstantKeyword = self.match(SolidityParser.ConstantKeyword)
                 localctx.keywords.append(localctx._ConstantKeyword)
-                self.state = 131
+                self.state = 133
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 132
+            self.state = 134
             localctx.idf = self.identifier()
-            self.state = 135
+            self.state = 137
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.T__8:
-                self.state = 133
+                self.state = 135
                 self.match(SolidityParser.T__8)
-                self.state = 134
+                self.state = 136
                 localctx.expr = self.expression(0)
 
 
-            self.state = 137
+            self.state = 139
             self.match(SolidityParser.T__1)
         except RecognitionException as re:
             localctx.exception = re
@@ -1045,13 +1052,13 @@ class SolidityParser ( Parser ):
         self.enterRule(localctx, 20, self.RULE_constructorDefinition)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 139
-            self.match(SolidityParser.T__12)
-            self.state = 140
-            localctx.parameters = self.parameterList()
             self.state = 141
-            localctx.modifiers = self.modifierList()
+            self.match(SolidityParser.T__12)
             self.state = 142
+            localctx.parameters = self.parameterList()
+            self.state = 143
+            localctx.modifiers = self.modifierList()
+            self.state = 144
             localctx.body = self.block()
         except RecognitionException as re:
             localctx.exception = re
@@ -1120,23 +1127,23 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 144
-            self.match(SolidityParser.T__13)
-            self.state = 145
-            localctx.idf = self.identifier()
             self.state = 146
-            localctx.parameters = self.parameterList()
+            self.match(SolidityParser.T__13)
             self.state = 147
-            localctx.modifiers = self.modifierList()
+            localctx.idf = self.identifier()
+            self.state = 148
+            localctx.parameters = self.parameterList()
             self.state = 149
+            localctx.modifiers = self.modifierList()
+            self.state = 151
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.T__14:
-                self.state = 148
+                self.state = 150
                 localctx.return_parameters = self.returnParameters()
 
 
-            self.state = 151
+            self.state = 153
             localctx.body = self.block()
         except RecognitionException as re:
             localctx.exception = re
@@ -1184,9 +1191,9 @@ class SolidityParser ( Parser ):
         self.enterRule(localctx, 24, self.RULE_returnParameters)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 153
+            self.state = 155
             self.match(SolidityParser.T__14)
-            self.state = 154
+            self.state = 156
             localctx.return_parameters = self.parameterList()
         except RecognitionException as re:
             localctx.exception = re
@@ -1239,14 +1246,14 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 159
+            self.state = 161
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==SolidityParser.PayableKeyword or _la==SolidityParser.PublicKeyword:
-                self.state = 156
+                self.state = 158
                 localctx._modifier = self.modifier()
                 localctx.modifiers.append(localctx._modifier)
-                self.state = 161
+                self.state = 163
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -1297,17 +1304,17 @@ class SolidityParser ( Parser ):
         localctx = SolidityParser.ModifierContext(self, self._ctx, self.state)
         self.enterRule(localctx, 28, self.RULE_modifier)
         try:
-            self.state = 164
+            self.state = 166
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [SolidityParser.PayableKeyword]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 162
+                self.state = 164
                 self.stateMutability()
                 pass
             elif token in [SolidityParser.PublicKeyword]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 163
+                self.state = 165
                 self.match(SolidityParser.PublicKeyword)
                 pass
             else:
@@ -1364,31 +1371,31 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 166
+            self.state = 168
             self.match(SolidityParser.T__15)
-            self.state = 175
+            self.state = 177
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__18) | (1 << SolidityParser.T__19) | (1 << SolidityParser.T__20) | (1 << SolidityParser.Uint) | (1 << SolidityParser.FinalKeyword))) != 0):
-                self.state = 167
+                self.state = 169
                 localctx._parameter = self.parameter()
                 localctx.params.append(localctx._parameter)
-                self.state = 172
+                self.state = 174
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la==SolidityParser.T__16:
-                    self.state = 168
+                    self.state = 170
                     self.match(SolidityParser.T__16)
-                    self.state = 169
+                    self.state = 171
                     localctx._parameter = self.parameter()
                     localctx.params.append(localctx._parameter)
-                    self.state = 174
+                    self.state = 176
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
 
 
-            self.state = 177
+            self.state = 179
             self.match(SolidityParser.T__17)
         except RecognitionException as re:
             localctx.exception = re
@@ -1447,22 +1454,22 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 180
+            self.state = 182
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.FinalKeyword:
-                self.state = 179
+                self.state = 181
                 localctx._FinalKeyword = self.match(SolidityParser.FinalKeyword)
                 localctx.keywords.append(localctx._FinalKeyword)
 
 
-            self.state = 182
-            localctx.annotated_type = self.annotatedTypeName()
             self.state = 184
+            localctx.annotated_type = self.annotatedTypeName()
+            self.state = 186
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.Identifier:
-                self.state = 183
+                self.state = 185
                 localctx.idf = self.identifier()
 
 
@@ -1523,18 +1530,18 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 187
+            self.state = 189
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.FinalKeyword:
-                self.state = 186
+                self.state = 188
                 localctx._FinalKeyword = self.match(SolidityParser.FinalKeyword)
                 localctx.keywords.append(localctx._FinalKeyword)
 
 
-            self.state = 189
+            self.state = 191
             localctx.annotated_type = self.annotatedTypeName()
-            self.state = 190
+            self.state = 192
             localctx.idf = self.identifier()
         except RecognitionException as re:
             localctx.exception = re
@@ -1557,6 +1564,10 @@ class SolidityParser ( Parser ):
 
         def mapping(self):
             return self.getTypedRuleContext(SolidityParser.MappingContext,0)
+
+
+        def payableAddress(self):
+            return self.getTypedRuleContext(SolidityParser.PayableAddressContext,0)
 
 
         def getRuleIndex(self):
@@ -1584,21 +1595,27 @@ class SolidityParser ( Parser ):
         localctx = SolidityParser.TypeNameContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_typeName)
         try:
-            self.state = 194
+            self.state = 197
             self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [SolidityParser.T__18, SolidityParser.T__19, SolidityParser.Uint]:
+            la_ = self._interp.adaptivePredict(self._input,17,self._ctx)
+            if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 192
+                self.state = 194
                 self.elementaryTypeName()
                 pass
-            elif token in [SolidityParser.T__20]:
+
+            elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 193
+                self.state = 195
                 self.mapping()
                 pass
-            else:
-                raise NoViableAltException(self)
+
+            elif la_ == 3:
+                self.enterOuterAlt(localctx, 3)
+                self.state = 196
+                self.payableAddress()
+                pass
+
 
         except RecognitionException as re:
             localctx.exception = re
@@ -1646,7 +1663,7 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 196
+            self.state = 199
             localctx.name = self._input.LT(1)
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__18) | (1 << SolidityParser.T__19) | (1 << SolidityParser.Uint))) != 0)):
@@ -1711,28 +1728,76 @@ class SolidityParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 198
+            self.state = 201
             self.match(SolidityParser.T__20)
-            self.state = 199
+            self.state = 202
             self.match(SolidityParser.T__15)
-            self.state = 200
-            localctx.key_type = self.elementaryTypeName()
             self.state = 203
+            localctx.key_type = self.elementaryTypeName()
+            self.state = 206
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.T__21:
-                self.state = 201
+                self.state = 204
                 self.match(SolidityParser.T__21)
-                self.state = 202
+                self.state = 205
                 localctx.key_label = self.identifier()
 
 
-            self.state = 205
+            self.state = 208
             self.match(SolidityParser.T__22)
-            self.state = 206
+            self.state = 209
             localctx.value_type = self.annotatedTypeName()
-            self.state = 207
+            self.state = 210
             self.match(SolidityParser.T__17)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class PayableAddressContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def PayableKeyword(self):
+            return self.getToken(SolidityParser.PayableKeyword, 0)
+
+        def getRuleIndex(self):
+            return SolidityParser.RULE_payableAddress
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterPayableAddress" ):
+                listener.enterPayableAddress(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitPayableAddress" ):
+                listener.exitPayableAddress(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitPayableAddress" ):
+                return visitor.visitPayableAddress(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def payableAddress(self):
+
+        localctx = SolidityParser.PayableAddressContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 42, self.RULE_payableAddress)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 212
+            self.match(SolidityParser.T__18)
+            self.state = 213
+            self.match(SolidityParser.PayableKeyword)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1774,10 +1839,10 @@ class SolidityParser ( Parser ):
     def stateMutability(self):
 
         localctx = SolidityParser.StateMutabilityContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 42, self.RULE_stateMutability)
+        self.enterRule(localctx, 44, self.RULE_stateMutability)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 209
+            self.state = 215
             self.match(SolidityParser.PayableKeyword)
         except RecognitionException as re:
             localctx.exception = re
@@ -1826,24 +1891,24 @@ class SolidityParser ( Parser ):
     def block(self):
 
         localctx = SolidityParser.BlockContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 44, self.RULE_block)
+        self.enterRule(localctx, 46, self.RULE_block)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 211
+            self.state = 217
             self.match(SolidityParser.T__10)
-            self.state = 215
+            self.state = 221
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__10) | (1 << SolidityParser.T__15) | (1 << SolidityParser.T__18) | (1 << SolidityParser.T__19) | (1 << SolidityParser.T__20) | (1 << SolidityParser.T__21) | (1 << SolidityParser.T__23) | (1 << SolidityParser.T__25) | (1 << SolidityParser.T__26) | (1 << SolidityParser.T__29) | (1 << SolidityParser.T__30) | (1 << SolidityParser.Uint) | (1 << SolidityParser.MeKeyword) | (1 << SolidityParser.AllKeyword) | (1 << SolidityParser.BooleanLiteral) | (1 << SolidityParser.DecimalNumber) | (1 << SolidityParser.FinalKeyword) | (1 << SolidityParser.Identifier))) != 0):
-                self.state = 212
+            while ((((_la - 11)) & ~0x3f) == 0 and ((1 << (_la - 11)) & ((1 << (SolidityParser.T__10 - 11)) | (1 << (SolidityParser.T__15 - 11)) | (1 << (SolidityParser.T__18 - 11)) | (1 << (SolidityParser.T__19 - 11)) | (1 << (SolidityParser.T__20 - 11)) | (1 << (SolidityParser.T__21 - 11)) | (1 << (SolidityParser.T__23 - 11)) | (1 << (SolidityParser.T__25 - 11)) | (1 << (SolidityParser.T__26 - 11)) | (1 << (SolidityParser.T__30 - 11)) | (1 << (SolidityParser.T__31 - 11)) | (1 << (SolidityParser.Uint - 11)) | (1 << (SolidityParser.MeKeyword - 11)) | (1 << (SolidityParser.AllKeyword - 11)) | (1 << (SolidityParser.BooleanLiteral - 11)) | (1 << (SolidityParser.DecimalNumber - 11)) | (1 << (SolidityParser.FinalKeyword - 11)) | (1 << (SolidityParser.Identifier - 11)))) != 0):
+                self.state = 218
                 localctx._statement = self.statement()
                 localctx.statements.append(localctx._statement)
-                self.state = 217
+                self.state = 223
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 218
+            self.state = 224
             self.match(SolidityParser.T__11)
         except RecognitionException as re:
             localctx.exception = re
@@ -1903,34 +1968,34 @@ class SolidityParser ( Parser ):
     def statement(self):
 
         localctx = SolidityParser.StatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_statement)
+        self.enterRule(localctx, 48, self.RULE_statement)
         try:
-            self.state = 225
+            self.state = 231
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [SolidityParser.T__23]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 220
+                self.state = 226
                 self.ifStatement()
                 pass
             elif token in [SolidityParser.T__25]:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 221
+                self.state = 227
                 self.whileStatement()
                 pass
             elif token in [SolidityParser.T__10]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 222
+                self.state = 228
                 self.block()
                 pass
             elif token in [SolidityParser.T__26]:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 223
+                self.state = 229
                 self.returnStatement()
                 pass
-            elif token in [SolidityParser.T__15, SolidityParser.T__18, SolidityParser.T__19, SolidityParser.T__20, SolidityParser.T__21, SolidityParser.T__29, SolidityParser.T__30, SolidityParser.Uint, SolidityParser.MeKeyword, SolidityParser.AllKeyword, SolidityParser.BooleanLiteral, SolidityParser.DecimalNumber, SolidityParser.FinalKeyword, SolidityParser.Identifier]:
+            elif token in [SolidityParser.T__15, SolidityParser.T__18, SolidityParser.T__19, SolidityParser.T__20, SolidityParser.T__21, SolidityParser.T__30, SolidityParser.T__31, SolidityParser.Uint, SolidityParser.MeKeyword, SolidityParser.AllKeyword, SolidityParser.BooleanLiteral, SolidityParser.DecimalNumber, SolidityParser.FinalKeyword, SolidityParser.Identifier]:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 224
+                self.state = 230
                 self.simpleStatement()
                 pass
             else:
@@ -1979,12 +2044,12 @@ class SolidityParser ( Parser ):
     def expressionStatement(self):
 
         localctx = SolidityParser.ExpressionStatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 48, self.RULE_expressionStatement)
+        self.enterRule(localctx, 50, self.RULE_expressionStatement)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 227
+            self.state = 233
             localctx.expr = self.expression(0)
-            self.state = 228
+            self.state = 234
             self.match(SolidityParser.T__1)
         except RecognitionException as re:
             localctx.exception = re
@@ -2038,26 +2103,26 @@ class SolidityParser ( Parser ):
     def ifStatement(self):
 
         localctx = SolidityParser.IfStatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 50, self.RULE_ifStatement)
+        self.enterRule(localctx, 52, self.RULE_ifStatement)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 230
+            self.state = 236
             self.match(SolidityParser.T__23)
-            self.state = 231
-            self.match(SolidityParser.T__15)
-            self.state = 232
-            localctx.condition = self.expression(0)
-            self.state = 233
-            self.match(SolidityParser.T__17)
-            self.state = 234
-            localctx.then_branch = self.statement()
             self.state = 237
+            self.match(SolidityParser.T__15)
+            self.state = 238
+            localctx.condition = self.expression(0)
+            self.state = 239
+            self.match(SolidityParser.T__17)
+            self.state = 240
+            localctx.then_branch = self.statement()
+            self.state = 243
             self._errHandler.sync(self)
             la_ = self._interp.adaptivePredict(self._input,21,self._ctx)
             if la_ == 1:
-                self.state = 235
+                self.state = 241
                 self.match(SolidityParser.T__24)
-                self.state = 236
+                self.state = 242
                 localctx.else_branch = self.statement()
 
 
@@ -2109,18 +2174,18 @@ class SolidityParser ( Parser ):
     def whileStatement(self):
 
         localctx = SolidityParser.WhileStatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 52, self.RULE_whileStatement)
+        self.enterRule(localctx, 54, self.RULE_whileStatement)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 239
+            self.state = 245
             self.match(SolidityParser.T__25)
-            self.state = 240
+            self.state = 246
             self.match(SolidityParser.T__15)
-            self.state = 241
+            self.state = 247
             localctx.condition = self.expression(0)
-            self.state = 242
+            self.state = 248
             self.match(SolidityParser.T__17)
-            self.state = 243
+            self.state = 249
             localctx.body = self.statement()
         except RecognitionException as re:
             localctx.exception = re
@@ -2168,18 +2233,18 @@ class SolidityParser ( Parser ):
     def simpleStatement(self):
 
         localctx = SolidityParser.SimpleStatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 54, self.RULE_simpleStatement)
+        self.enterRule(localctx, 56, self.RULE_simpleStatement)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 247
+            self.state = 253
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [SolidityParser.T__18, SolidityParser.T__19, SolidityParser.T__20, SolidityParser.Uint, SolidityParser.FinalKeyword]:
-                self.state = 245
+                self.state = 251
                 self.variableDeclarationStatement()
                 pass
-            elif token in [SolidityParser.T__15, SolidityParser.T__21, SolidityParser.T__29, SolidityParser.T__30, SolidityParser.MeKeyword, SolidityParser.AllKeyword, SolidityParser.BooleanLiteral, SolidityParser.DecimalNumber, SolidityParser.Identifier]:
-                self.state = 246
+            elif token in [SolidityParser.T__15, SolidityParser.T__21, SolidityParser.T__30, SolidityParser.T__31, SolidityParser.MeKeyword, SolidityParser.AllKeyword, SolidityParser.BooleanLiteral, SolidityParser.DecimalNumber, SolidityParser.Identifier]:
+                self.state = 252
                 self.expressionStatement()
                 pass
             else:
@@ -2228,21 +2293,21 @@ class SolidityParser ( Parser ):
     def returnStatement(self):
 
         localctx = SolidityParser.ReturnStatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 56, self.RULE_returnStatement)
+        self.enterRule(localctx, 58, self.RULE_returnStatement)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 249
+            self.state = 255
             self.match(SolidityParser.T__26)
-            self.state = 251
+            self.state = 257
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__15) | (1 << SolidityParser.T__21) | (1 << SolidityParser.T__29) | (1 << SolidityParser.T__30) | (1 << SolidityParser.MeKeyword) | (1 << SolidityParser.AllKeyword) | (1 << SolidityParser.BooleanLiteral) | (1 << SolidityParser.DecimalNumber) | (1 << SolidityParser.Identifier))) != 0):
-                self.state = 250
+            if ((((_la - 16)) & ~0x3f) == 0 and ((1 << (_la - 16)) & ((1 << (SolidityParser.T__15 - 16)) | (1 << (SolidityParser.T__21 - 16)) | (1 << (SolidityParser.T__30 - 16)) | (1 << (SolidityParser.T__31 - 16)) | (1 << (SolidityParser.MeKeyword - 16)) | (1 << (SolidityParser.AllKeyword - 16)) | (1 << (SolidityParser.BooleanLiteral - 16)) | (1 << (SolidityParser.DecimalNumber - 16)) | (1 << (SolidityParser.Identifier - 16)))) != 0):
+                self.state = 256
                 localctx.expr = self.expression(0)
 
 
-            self.state = 253
+            self.state = 259
             self.match(SolidityParser.T__1)
         except RecognitionException as re:
             localctx.exception = re
@@ -2292,23 +2357,23 @@ class SolidityParser ( Parser ):
     def variableDeclarationStatement(self):
 
         localctx = SolidityParser.VariableDeclarationStatementContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 58, self.RULE_variableDeclarationStatement)
+        self.enterRule(localctx, 60, self.RULE_variableDeclarationStatement)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 255
+            self.state = 261
             localctx.variable_declaration = self.variableDeclaration()
-            self.state = 258
+            self.state = 264
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==SolidityParser.T__8:
-                self.state = 256
+                self.state = 262
                 self.match(SolidityParser.T__8)
-                self.state = 257
+                self.state = 263
                 localctx.expr = self.expression(0)
 
 
-            self.state = 260
+            self.state = 266
             self.match(SolidityParser.T__1)
         except RecognitionException as re:
             localctx.exception = re
@@ -2743,6 +2808,36 @@ class SolidityParser ( Parser ):
                 return visitor.visitChildren(self)
 
 
+    class MemberAccessContext(ExpressionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a SolidityParser.ExpressionContext
+            super().__init__(parser)
+            self.expr = None # ExpressionContext
+            self.member = None # IdentifierContext
+            self.copyFrom(ctx)
+
+        def expression(self):
+            return self.getTypedRuleContext(SolidityParser.ExpressionContext,0)
+
+        def identifier(self):
+            return self.getTypedRuleContext(SolidityParser.IdentifierContext,0)
+
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterMemberAccess" ):
+                listener.enterMemberAccess(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitMemberAccess" ):
+                listener.exitMemberAccess(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitMemberAccess" ):
+                return visitor.visitMemberAccess(self)
+            else:
+                return visitor.visitChildren(self)
+
+
     class IdentifierExprContext(ExpressionContext):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a SolidityParser.ExpressionContext
@@ -2880,12 +2975,12 @@ class SolidityParser ( Parser ):
         _parentState = self.state
         localctx = SolidityParser.ExpressionContext(self, self._ctx, _parentState)
         _prevctx = localctx
-        _startState = 60
-        self.enterRecursionRule(localctx, 60, self.RULE_expression, _p)
+        _startState = 62
+        self.enterRecursionRule(localctx, 62, self.RULE_expression, _p)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 276
+            self.state = 282
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [SolidityParser.MeKeyword]:
@@ -2893,77 +2988,77 @@ class SolidityParser ( Parser ):
                 self._ctx = localctx
                 _prevctx = localctx
 
-                self.state = 263
+                self.state = 269
                 self.match(SolidityParser.MeKeyword)
                 pass
             elif token in [SolidityParser.AllKeyword]:
                 localctx = SolidityParser.AllExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 264
+                self.state = 270
                 self.match(SolidityParser.AllKeyword)
                 pass
             elif token in [SolidityParser.T__15]:
                 localctx = SolidityParser.ParenthesisExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 265
+                self.state = 271
                 self.match(SolidityParser.T__15)
-                self.state = 266
+                self.state = 272
                 localctx.expr = self.expression(0)
-                self.state = 267
+                self.state = 273
                 self.match(SolidityParser.T__17)
                 pass
-            elif token in [SolidityParser.T__29, SolidityParser.T__30]:
+            elif token in [SolidityParser.T__30, SolidityParser.T__31]:
                 localctx = SolidityParser.SignExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 269
+                self.state = 275
                 localctx.op = self._input.LT(1)
                 _la = self._input.LA(1)
-                if not(_la==SolidityParser.T__29 or _la==SolidityParser.T__30):
+                if not(_la==SolidityParser.T__30 or _la==SolidityParser.T__31):
                     localctx.op = self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
-                self.state = 270
+                self.state = 276
                 localctx.expr = self.expression(14)
                 pass
             elif token in [SolidityParser.T__21]:
                 localctx = SolidityParser.NotExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 271
+                self.state = 277
                 self.match(SolidityParser.T__21)
-                self.state = 272
+                self.state = 278
                 localctx.expr = self.expression(13)
                 pass
             elif token in [SolidityParser.BooleanLiteral]:
                 localctx = SolidityParser.BooleanLiteralExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 273
+                self.state = 279
                 self.match(SolidityParser.BooleanLiteral)
                 pass
             elif token in [SolidityParser.DecimalNumber]:
                 localctx = SolidityParser.NumberLiteralExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 274
+                self.state = 280
                 self.numberLiteral()
                 pass
             elif token in [SolidityParser.Identifier]:
                 localctx = SolidityParser.IdentifierExprContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
-                self.state = 275
+                self.state = 281
                 localctx.idf = self.identifier()
                 pass
             else:
                 raise NoViableAltException(self)
 
             self._ctx.stop = self._input.LT(-1)
-            self.state = 320
+            self.state = 329
             self._errHandler.sync(self)
             _alt = self._interp.adaptivePredict(self._input,27,self._ctx)
             while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
@@ -2971,20 +3066,20 @@ class SolidityParser ( Parser ):
                     if self._parseListeners is not None:
                         self.triggerExitRuleEvent()
                     _prevctx = localctx
-                    self.state = 318
+                    self.state = 327
                     self._errHandler.sync(self)
                     la_ = self._interp.adaptivePredict(self._input,26,self._ctx)
                     if la_ == 1:
                         localctx = SolidityParser.PowExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 278
+                        self.state = 284
                         if not self.precpred(self._ctx, 12):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 12)")
-                        self.state = 279
-                        localctx.op = self.match(SolidityParser.T__31)
-                        self.state = 280
+                        self.state = 285
+                        localctx.op = self.match(SolidityParser.T__32)
+                        self.state = 286
                         localctx.rhs = self.expression(13)
                         pass
 
@@ -2992,19 +3087,19 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.MultDivModExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 281
+                        self.state = 287
                         if not self.precpred(self._ctx, 11):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 11)")
-                        self.state = 282
+                        self.state = 288
                         localctx.op = self._input.LT(1)
                         _la = self._input.LA(1)
-                        if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__32) | (1 << SolidityParser.T__33) | (1 << SolidityParser.T__34))) != 0)):
+                        if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__33) | (1 << SolidityParser.T__34) | (1 << SolidityParser.T__35))) != 0)):
                             localctx.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 283
+                        self.state = 289
                         localctx.rhs = self.expression(12)
                         pass
 
@@ -3012,19 +3107,19 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.PlusMinusExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 284
+                        self.state = 290
                         if not self.precpred(self._ctx, 10):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 10)")
-                        self.state = 285
+                        self.state = 291
                         localctx.op = self._input.LT(1)
                         _la = self._input.LA(1)
-                        if not(_la==SolidityParser.T__29 or _la==SolidityParser.T__30):
+                        if not(_la==SolidityParser.T__30 or _la==SolidityParser.T__31):
                             localctx.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 286
+                        self.state = 292
                         localctx.rhs = self.expression(11)
                         pass
 
@@ -3032,11 +3127,11 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.CompExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 287
+                        self.state = 293
                         if not self.precpred(self._ctx, 9):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
-                        self.state = 288
+                        self.state = 294
                         localctx.op = self._input.LT(1)
                         _la = self._input.LA(1)
                         if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__4) | (1 << SolidityParser.T__5) | (1 << SolidityParser.T__6) | (1 << SolidityParser.T__7))) != 0)):
@@ -3044,7 +3139,7 @@ class SolidityParser ( Parser ):
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 289
+                        self.state = 295
                         localctx.rhs = self.expression(10)
                         pass
 
@@ -3052,19 +3147,19 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.EqExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 290
+                        self.state = 296
                         if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
-                        self.state = 291
+                        self.state = 297
                         localctx.op = self._input.LT(1)
                         _la = self._input.LA(1)
-                        if not(_la==SolidityParser.T__35 or _la==SolidityParser.T__36):
+                        if not(_la==SolidityParser.T__36 or _la==SolidityParser.T__37):
                             localctx.op = self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
                             self.consume()
-                        self.state = 292
+                        self.state = 298
                         localctx.rhs = self.expression(9)
                         pass
 
@@ -3072,13 +3167,13 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.AndExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 293
+                        self.state = 299
                         if not self.precpred(self._ctx, 7):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
-                        self.state = 294
-                        localctx.op = self.match(SolidityParser.T__37)
-                        self.state = 295
+                        self.state = 300
+                        localctx.op = self.match(SolidityParser.T__38)
+                        self.state = 301
                         localctx.rhs = self.expression(8)
                         pass
 
@@ -3086,13 +3181,13 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.OrExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 296
+                        self.state = 302
                         if not self.precpred(self._ctx, 6):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
-                        self.state = 297
-                        localctx.op = self.match(SolidityParser.T__38)
-                        self.state = 298
+                        self.state = 303
+                        localctx.op = self.match(SolidityParser.T__39)
+                        self.state = 304
                         localctx.rhs = self.expression(7)
                         pass
 
@@ -3100,17 +3195,17 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.IteExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.cond = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 299
+                        self.state = 305
                         if not self.precpred(self._ctx, 5):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 5)")
-                        self.state = 300
-                        self.match(SolidityParser.T__39)
-                        self.state = 301
-                        localctx.then_expr = self.expression(0)
-                        self.state = 302
+                        self.state = 306
                         self.match(SolidityParser.T__40)
-                        self.state = 303
+                        self.state = 307
+                        localctx.then_expr = self.expression(0)
+                        self.state = 308
+                        self.match(SolidityParser.T__41)
+                        self.state = 309
                         localctx.else_expr = self.expression(6)
                         pass
 
@@ -3118,14 +3213,14 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.AssignmentExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.lhs = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 305
+                        self.state = 311
                         if not self.precpred(self._ctx, 4):
                             from antlr4.error.Errors import FailedPredicateException
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 4)")
 
-                        self.state = 306
+                        self.state = 312
                         self.match(SolidityParser.T__8)
-                        self.state = 307
+                        self.state = 313
                         localctx.rhs = self.expression(5)
                         pass
 
@@ -3133,15 +3228,15 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.IndexExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.arr = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 308
-                        if not self.precpred(self._ctx, 17):
+                        self.state = 314
+                        if not self.precpred(self._ctx, 18):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 17)")
-                        self.state = 309
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 18)")
+                        self.state = 315
                         self.match(SolidityParser.T__27)
-                        self.state = 310
+                        self.state = 316
                         localctx.index = self.expression(0)
-                        self.state = 311
+                        self.state = 317
                         self.match(SolidityParser.T__28)
                         pass
 
@@ -3149,20 +3244,34 @@ class SolidityParser ( Parser ):
                         localctx = SolidityParser.FunctionCallExprContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
                         localctx.func = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
-                        self.state = 313
-                        if not self.precpred(self._ctx, 16):
+                        self.state = 319
+                        if not self.precpred(self._ctx, 17):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 16)")
-                        self.state = 314
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 17)")
+                        self.state = 320
                         self.match(SolidityParser.T__15)
-                        self.state = 315
+                        self.state = 321
                         localctx.args = self.functionCallArguments()
-                        self.state = 316
+                        self.state = 322
                         self.match(SolidityParser.T__17)
                         pass
 
+                    elif la_ == 12:
+                        localctx = SolidityParser.MemberAccessContext(self, SolidityParser.ExpressionContext(self, _parentctx, _parentState))
+                        localctx.expr = _prevctx
+                        self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
+                        self.state = 324
+                        if not self.precpred(self._ctx, 16):
+                            from antlr4.error.Errors import FailedPredicateException
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 16)")
+                        self.state = 325
+                        self.match(SolidityParser.T__29)
+                        self.state = 326
+                        localctx.member = self.identifier()
+                        pass
+
              
-                self.state = 322
+                self.state = 331
                 self._errHandler.sync(self)
                 _alt = self._interp.adaptivePredict(self._input,27,self._ctx)
 
@@ -3213,27 +3322,27 @@ class SolidityParser ( Parser ):
     def functionCallArguments(self):
 
         localctx = SolidityParser.FunctionCallArgumentsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 62, self.RULE_functionCallArguments)
+        self.enterRule(localctx, 64, self.RULE_functionCallArguments)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 331
+            self.state = 340
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << SolidityParser.T__15) | (1 << SolidityParser.T__21) | (1 << SolidityParser.T__29) | (1 << SolidityParser.T__30) | (1 << SolidityParser.MeKeyword) | (1 << SolidityParser.AllKeyword) | (1 << SolidityParser.BooleanLiteral) | (1 << SolidityParser.DecimalNumber) | (1 << SolidityParser.Identifier))) != 0):
-                self.state = 323
+            if ((((_la - 16)) & ~0x3f) == 0 and ((1 << (_la - 16)) & ((1 << (SolidityParser.T__15 - 16)) | (1 << (SolidityParser.T__21 - 16)) | (1 << (SolidityParser.T__30 - 16)) | (1 << (SolidityParser.T__31 - 16)) | (1 << (SolidityParser.MeKeyword - 16)) | (1 << (SolidityParser.AllKeyword - 16)) | (1 << (SolidityParser.BooleanLiteral - 16)) | (1 << (SolidityParser.DecimalNumber - 16)) | (1 << (SolidityParser.Identifier - 16)))) != 0):
+                self.state = 332
                 localctx._expression = self.expression(0)
                 localctx.exprs.append(localctx._expression)
-                self.state = 328
+                self.state = 337
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la==SolidityParser.T__16:
-                    self.state = 324
+                    self.state = 333
                     self.match(SolidityParser.T__16)
-                    self.state = 325
+                    self.state = 334
                     localctx._expression = self.expression(0)
                     localctx.exprs.append(localctx._expression)
-                    self.state = 330
+                    self.state = 339
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
@@ -3281,10 +3390,10 @@ class SolidityParser ( Parser ):
     def elementaryTypeNameExpression(self):
 
         localctx = SolidityParser.ElementaryTypeNameExpressionContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 64, self.RULE_elementaryTypeNameExpression)
+        self.enterRule(localctx, 66, self.RULE_elementaryTypeNameExpression)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 333
+            self.state = 342
             self.elementaryTypeName()
         except RecognitionException as re:
             localctx.exception = re
@@ -3327,10 +3436,10 @@ class SolidityParser ( Parser ):
     def numberLiteral(self):
 
         localctx = SolidityParser.NumberLiteralContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 66, self.RULE_numberLiteral)
+        self.enterRule(localctx, 68, self.RULE_numberLiteral)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 335
+            self.state = 344
             self.match(SolidityParser.DecimalNumber)
         except RecognitionException as re:
             localctx.exception = re
@@ -3380,19 +3489,19 @@ class SolidityParser ( Parser ):
     def annotatedTypeName(self):
 
         localctx = SolidityParser.AnnotatedTypeNameContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 68, self.RULE_annotatedTypeName)
+        self.enterRule(localctx, 70, self.RULE_annotatedTypeName)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 337
+            self.state = 346
             localctx.type_name = self.typeName()
-            self.state = 340
+            self.state = 349
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==SolidityParser.T__41:
-                self.state = 338
-                self.match(SolidityParser.T__41)
-                self.state = 339
+            if _la==SolidityParser.T__42:
+                self.state = 347
+                self.match(SolidityParser.T__42)
+                self.state = 348
                 localctx.privacy_annotation = self.expression(0)
 
 
@@ -3438,10 +3547,10 @@ class SolidityParser ( Parser ):
     def identifier(self):
 
         localctx = SolidityParser.IdentifierContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 70, self.RULE_identifier)
+        self.enterRule(localctx, 72, self.RULE_identifier)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 342
+            self.state = 351
             localctx.name = self.match(SolidityParser.Identifier)
         except RecognitionException as re:
             localctx.exception = re
@@ -3456,7 +3565,7 @@ class SolidityParser ( Parser ):
     def sempred(self, localctx:RuleContext, ruleIndex:int, predIndex:int):
         if self._predicates == None:
             self._predicates = dict()
-        self._predicates[30] = self.expression_sempred
+        self._predicates[31] = self.expression_sempred
         pred = self._predicates.get(ruleIndex, None)
         if pred is None:
             raise Exception("No predicate with index:" + str(ruleIndex))
@@ -3501,10 +3610,14 @@ class SolidityParser ( Parser ):
          
 
             if predIndex == 9:
-                return self.precpred(self._ctx, 17)
+                return self.precpred(self._ctx, 18)
          
 
             if predIndex == 10:
+                return self.precpred(self._ctx, 17)
+         
+
+            if predIndex == 11:
                 return self.precpred(self._ctx, 16)
          
 

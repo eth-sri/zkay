@@ -254,6 +254,16 @@ class FunctionCallExpr(Expression):
 		return [self.func] + self.args
 
 
+class MemberAccess(Expression):
+	def __init__(self, expr: Expression, member: Identifier):
+		super().__init__()
+		self.expr = expr
+		self.member = member
+
+	def children_internal(self) -> List:
+		return [self.expr, self.member]
+
+
 class AssignmentExpr(Expression):
 
 	def __init__(self, lhs: Expression, rhs: Expression):
@@ -515,6 +525,9 @@ class Mapping(TypeName):
 		else:
 			return False
 
+class PayableAddress(TypeName):
+	def __eq__(self, other):
+		return isinstance(other, PayableAddress)
 
 class Array(TypeName):
 
@@ -864,6 +877,9 @@ class CodeVisitor(AstVisitor):
 			a = self.visit_list(ast.args, ', ')
 			return f'{f}({a})'
 
+	def visitMemberAccess(self, ast: MemberAccess):
+		return f'{self.visit(ast.expr)}.{self.visit(ast.member)}'
+
 	def visitAssignmentExpr(self, ast: AssignmentExpr):
 		lhs = self.visit(ast.lhs)
 		rhs = self.visit(ast.rhs)
@@ -941,6 +957,9 @@ class CodeVisitor(AstVisitor):
 		label = '!' + self.visit(ast.key_label) if ast.key_label else ''
 		v = self.visit(ast.value_type)
 		return f"mapping({k}{label} => {v})"
+
+	def visitPayableAddress(self, ast: PayableAddress):
+		return "address payable"
 
 	def visitArray(self, ast: Array):
 		t = self.visit(ast.value_type)

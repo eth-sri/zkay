@@ -1,4 +1,4 @@
-# Generated from Solidity.g4 by ANTLR 4.7.2
+# Generated from /home/nibau/msc-thesis/zkay/src/solidity_parser/Solidity.g4 by ANTLR 4.7.2
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .SolidityParser import SolidityParser
@@ -114,6 +114,11 @@ class SolidityVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by SolidityParser#payableAddress.
+    def visitPayableAddress(self, ctx:SolidityParser.PayableAddressContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by SolidityParser#stateMutability.
     def visitStateMutability(self, ctx:SolidityParser.StateMutabilityContext):
         return self.visitChildren(ctx)
@@ -226,6 +231,11 @@ class SolidityVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by SolidityParser#FunctionCallExpr.
     def visitFunctionCallExpr(self, ctx:SolidityParser.FunctionCallExprContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by SolidityParser#MemberAccess.
+    def visitMemberAccess(self, ctx:SolidityParser.MemberAccessContext):
         return self.visitChildren(ctx)
 
 

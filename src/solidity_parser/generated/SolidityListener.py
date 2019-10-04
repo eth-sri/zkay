@@ -1,4 +1,4 @@
-# Generated from Solidity.g4 by ANTLR 4.7.2
+# Generated from /home/nibau/msc-thesis/zkay/src/solidity_parser/Solidity.g4 by ANTLR 4.7.2
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .SolidityParser import SolidityParser
@@ -194,6 +194,15 @@ class SolidityListener(ParseTreeListener):
 
     # Exit a parse tree produced by SolidityParser#mapping.
     def exitMapping(self, ctx:SolidityParser.MappingContext):
+        pass
+
+
+    # Enter a parse tree produced by SolidityParser#payableAddress.
+    def enterPayableAddress(self, ctx:SolidityParser.PayableAddressContext):
+        pass
+
+    # Exit a parse tree produced by SolidityParser#payableAddress.
+    def exitPayableAddress(self, ctx:SolidityParser.PayableAddressContext):
         pass
 
 
@@ -401,6 +410,15 @@ class SolidityListener(ParseTreeListener):
 
     # Exit a parse tree produced by SolidityParser#FunctionCallExpr.
     def exitFunctionCallExpr(self, ctx:SolidityParser.FunctionCallExprContext):
+        pass
+
+
+    # Enter a parse tree produced by SolidityParser#MemberAccess.
+    def enterMemberAccess(self, ctx:SolidityParser.MemberAccessContext):
+        pass
+
+    # Exit a parse tree produced by SolidityParser#MemberAccess.
+    def exitMemberAccess(self, ctx:SolidityParser.MemberAccessContext):
         pass
 
 
