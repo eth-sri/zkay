@@ -48,6 +48,11 @@ def get_line_col(code: str, idx: int):
 	col = (idx - (code[:idx+1].rfind('\n') + 1))
 	return line, col
 
+def get_error_order_key(error):
+	if 'sourceLocation' in error:
+		return error['sourceLocation']['start']
+	else:
+		return -1
 
 def check_solc_errors(code: str):
 	# dump fake solidity code into temporary file
@@ -66,8 +71,12 @@ def check_solc_errors(code: str):
 
 	# if solc reported any errors or warnings, print them and throw exception
 	if 'errors' in json_output.keys():
+		print('')
+
 		had_error = False
-		for error in json_output['errors']:
+		errors = sorted(json_output['errors'], key=get_error_order_key)
+
+		for error in errors:
 			from utils.progress_printer import colored_print, TermColor
 			is_error = error['severity'] == 'error'
 			had_error = had_error or is_error
@@ -80,9 +89,10 @@ def check_solc_errors(code: str):
 					report = ''
 				report += error['message']
 
-				print(f'\n\n{error["severity"].upper()}: {error["type"] if is_error else ""}')
-				print(f'{report}\n')
+				print(f'\n{error["severity"].upper()}: {error["type"] if is_error else ""}')
+				print(f'{report}')
 
+		print('')
 		if had_error:
 			raise SolcException()
 
