@@ -1,3 +1,4 @@
+from compiler.solidity.compiler import check_solc_errors
 from utils.progress_printer import print_step, colored_print, TermColor
 from zkay_ast.analysis.alias_analysis import alias_analysis as a
 from zkay_ast.build_ast import build_ast
@@ -42,11 +43,14 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
 				print(f'{str(e)}\n')
 			raise ParseExeception()
 
-	from compiler.solidity.fake_solidity_compiler import fake_solidity_code
-	fake_code = fake_solidity_code(str(code))
-	# TODO create json solc input, invoke solc, read and display errors from json solc output
-
+	# Zkay preprocessing and type checking
 	process_ast(ast, parents, link_identifiers, check_return, alias_analysis, type_check)
+
+	# Solc type checking
+	with print_step("Running through solc"):
+		from compiler.solidity.fake_solidity_compiler import fake_solidity_code
+		fake_code = fake_solidity_code(str(code))
+		check_solc_errors(fake_code)
 
 	return ast
 

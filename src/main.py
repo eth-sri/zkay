@@ -9,7 +9,7 @@ from zkay_ast.process_ast import get_processed_ast, TypeCheckException, Preproce
 from zkay_ast.visitor.statement_counter import count_statements
 
 from compiler.privacy.compiler import compile_ast
-from compiler.solidity.compiler import compile_solidity
+from compiler.solidity.compiler import compile_solidity, SolcException
 from my_logging.log_context import log_context
 from utils.helpers import read_file, lines_of_code
 from utils.timer import time_measure
@@ -52,7 +52,7 @@ def compile(file_location: str, d, count, get_binaries=False):
 	with time_measure('compileFull'):
 		try:
 			ast = get_processed_ast(code)
-		except (ParseExeception, PreprocessAstException, TypeCheckException):
+		except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
 			exit(3)
 
 		code_file = compile_ast(ast, d, filename)
@@ -72,7 +72,8 @@ if __name__ == '__main__':
 
 	input_file = Path(a.input)
 	if not input_file.exists():
-		print(f'Error: input file \'{input_file}\' does not exist')
+		with colored_print(TermColor.FAIL):
+			print(f'Error: input file \'{input_file}\' does not exist')
 		exit(1)
 
 	# create output directory
@@ -80,7 +81,8 @@ if __name__ == '__main__':
 	if not output_dir.exists():
 		os.mkdir(output_dir)
 	elif not output_dir.is_dir():
-		print(f'Error: \'{output_dir}\' is not a directory')
+		with colored_print(TermColor.FAIL):
+			print(f'Error: \'{output_dir}\' is not a directory')
 		exit(2)
 
 	# create log directory
@@ -95,7 +97,7 @@ if __name__ == '__main__':
 
 		try:
 			ast = get_processed_ast(code)
-		except (ParseExeception, PreprocessAstException, TypeCheckException):
+		except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
 			exit(3)
 	else:
 		# compile
