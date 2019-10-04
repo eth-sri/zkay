@@ -66,9 +66,13 @@ def check_solc_errors(code: str):
 
 	# if solc reported any errors or warnings, print them and throw exception
 	if 'errors' in json_output.keys():
+		had_error = False
 		for error in json_output['errors']:
 			from utils.progress_printer import colored_print, TermColor
-			with colored_print(TermColor.FAIL if error['severity'] == 'error' else TermColor.WARNING):
+			is_error = error['severity'] == 'error'
+			had_error = had_error or is_error
+
+			with colored_print(TermColor.FAIL if is_error else TermColor.WARNING):
 				if 'sourceLocation' in error:
 					line, column = get_line_col(code, error['sourceLocation']['start'])
 					report = f'{get_code_error_msg(line, column + 1, str(code).splitlines())}\n'
@@ -76,10 +80,11 @@ def check_solc_errors(code: str):
 					report = ''
 				report += error['message']
 
-				print(f'\n\n{error["severity"].upper()}: {error["type"]}')
+				print(f'\n\n{error["severity"].upper()}: {error["type"] if is_error else ""}')
 				print(f'{report}\n')
 
-		raise SolcException()
+		if had_error:
+			raise SolcException()
 
 
 def compile_solidity_code(code: str, output_directory: str):
