@@ -1,7 +1,6 @@
 
 # Use regular expression replacements (stack program for reveal) to strip all zkay specific language features
 # so that code can be passed to solc for type checking
-# TODO? currently text inside comments is also processed
 
 import re
 from typing import Optional
@@ -20,6 +19,9 @@ BTPATTERN = r'(?:address|bool|uint)'
 # Match what is adjacent to word (type, identifier, keyword)
 NONIDSTART = r'(?:[^\w]|^)'
 NONIDEND = r'(?:[^\w]|$)'
+
+# Match comments
+COMMENT_PATTERN = re.compile(r'(?P<repl>(?://[^\r\n]*)|(?:/\*.*?\*/))', re.DOTALL)
 
 # Regex to match contract declaration
 CONTRACT_DECL_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}contract{WSPATTERN}*{IDPATTERN}{WSPATTERN}*{"{"}[^\\n]*?)'
@@ -45,7 +47,7 @@ MAP_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}mapping{WSPATTERN}*\\({WSPATTERN
 						 f'(?={WSPATTERN}*=>{WSPATTERN}*)')                                             # match '=>'
 
 # Regex to detect start of reveal
-REVEAL_START_PATTERN = re.compile(f'(?<=[^\\w]|^])reveal{WSPATTERN}*\\(') # match 'reveal('
+REVEAL_START_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))reveal{WSPATTERN}*\\(') # match 'reveal('
 
 PARENS_PATTERN = re.compile(r'[()]')
 
@@ -91,12 +93,13 @@ def create_surrogate_string(instr: str):
 
 
 def replace_with_surrogate(code: str, search_pattern: re.Pattern, surrogate_text: Optional[str]= None):
+	keep_repl_pattern = r'\g<keep>' if '(?P<keep>' in search_pattern.pattern else ''
 	while True:
 		match = re.search(search_pattern, code)
 		if match is None:
 			return code
 
-		rep_pattern = r'\g<keep>' + \
+		rep_pattern = keep_repl_pattern + \
 					  (create_surrogate_string(match.groupdict()["repl"]) if surrogate_text is None else surrogate_text)
 
 		code = re.sub(search_pattern, rep_pattern, code, count=1)
@@ -109,6 +112,9 @@ def fake_solidity_code(zkay_code: str):
 	"""
 
 	code = zkay_code
+
+	# Strip comments
+	code = replace_with_surrogate(code, COMMENT_PATTERN)
 
 	# Strip final
 	code = replace_with_surrogate(code, FINAL_PATTERN)

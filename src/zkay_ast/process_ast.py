@@ -50,7 +50,7 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
 	with print_step("Running through solc"):
 		from compiler.solidity.fake_solidity_compiler import fake_solidity_code
 		fake_code = fake_solidity_code(str(code))
-		check_solc_errors(fake_code)
+		check_solc_errors(code, fake_code)
 
 	return ast
 

@@ -54,12 +54,12 @@ def get_error_order_key(error):
 	else:
 		return -1
 
-def check_solc_errors(code: str):
+def check_solc_errors(original_code: str, stripped_code: str):
 	# dump fake solidity code into temporary file
 	_, file = tempfile.mkstemp('.sol')
 	path = pathlib.Path(file)
 	with open(path, 'w') as f:
-		f.write(code)
+		f.write(stripped_code)
 
 	# invoke solc via standard-json interface and parse json result
 	compiler_input = create_input_json(str(path))
@@ -83,8 +83,8 @@ def check_solc_errors(code: str):
 
 			with colored_print(TermColor.FAIL if is_error else TermColor.WARNING):
 				if 'sourceLocation' in error:
-					line, column = get_line_col(code, error['sourceLocation']['start'])
-					report = f'{get_code_error_msg(line, column + 1, str(code).splitlines())}\n'
+					line, column = get_line_col(stripped_code, error['sourceLocation']['start'])
+					report = f'{get_code_error_msg(line, column + 1, str(original_code).splitlines())}\n'
 				else:
 					report = ''
 				report += error['message']
