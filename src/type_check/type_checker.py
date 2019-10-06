@@ -1,15 +1,15 @@
-from typing import Union
-
+from type_check.contains_private import contains_private
+from type_check.final_checker import check_final
+from type_check.type_exceptions import TypeMismatchException, TypeException
+from zkay_ast.analysis.side_effects import has_side_effects
 from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
 	AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
 	FunctionDefinition, StateVariableDeclaration, Mapping, \
 	AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
-	BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccess, PayableAddress, AllExpr
+	BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
+	AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType
 from zkay_ast.visitor.deep_copy import deep_copy
 from zkay_ast.visitor.visitor import AstVisitor
-from type_check.contains_private import contains_private
-from type_check.final_checker import check_final
-from type_check.type_exceptions import TypeMismatchException, TypeException
 
 
 def type_check(ast):
@@ -64,7 +64,7 @@ class TypeCheckVisitor(AstVisitor):
 			p = Expression.me_expr()
 		else:
 			p = Expression.all_expr()
-		output_type = AnnotatedTypeName(ast.func.output_type(), p)
+		output_type = AnnotatedTypeName(func.output_type(), p)
 		# can function be evaluated privately?
 		can_be_private = func.can_be_private()
 
@@ -93,6 +93,13 @@ class TypeCheckVisitor(AstVisitor):
 
 			parameter_types = [TypeName.bool_type(), t, t]
 			output_type = AnnotatedTypeName(t, p)
+
+			# Conservatively ensure no side effects in private conditional expressions
+			# (public side effects could leak information about private condition)
+			if private:
+				for arg in ast.args:
+					if has_side_effects(arg):
+						raise TypeException("Expression inside private conditional expression has side effect", arg)
 
 		for i in range(len(parameter_types)):
 			t = parameter_types[i]
@@ -147,6 +154,9 @@ class TypeCheckVisitor(AstVisitor):
 	def make_private(expr: Expression, privacy: Expression):
 		assert(privacy.privacy_annotation_label() is not None)
 
+		if has_side_effects(expr):  # TODO
+			raise NotImplementedError("Expressions with side effects are not allowed inside private expressions")
+
 		r = ReclassifyExpr(expr, privacy.privacy_annotation_label())
 
 		# set type
@@ -165,19 +175,46 @@ class TypeCheckVisitor(AstVisitor):
 	def visitFunctionCallExpr(self, ast: FunctionCallExpr):
 		if isinstance(ast.func, BuiltinFunction):
 			self.handle_builtin_function_call(ast, ast.func)
-		elif isinstance(ast.func, MemberAccess) and ast.func.expr.instanceof_data_type(PayableAddress()):
-			if ast.func.member.name != 'send' and ast.func.member.name != 'transfer':
-				raise TypeException('Currently only send and transfer are supported', ast)
+		elif isinstance(ast.func.annotated_type.type_name, FunctionTypeName):
+			ft = ast.func.annotated_type.type_name
 
-			for arg in ast.args:
-				if arg.annotated_type.privacy_annotation != AllExpr():
-					raise TypeException("Cannot have private arguments in send/transfer", arg)
+			if len(ft.parameters) != len(ast.args):
+				raise TypeException("Wrong number of arguments", ast.func)
 
-			if ast.func.member.name == 'send':
-				ast.annotated_type = AnnotatedTypeName.bool_all()
+			# Check arguments
+			for i in range(len(ast.args)):
+				ast.args[i] = self.get_rhs(ast.args[i], ft.parameters[i].annotated_type)
 
+			# Set expression type to return type
+			if len(ft.return_parameters) == 1:
+				ast.annotated_type = ft.return_parameters[0].annotated_type
+			else:
+				ast.annotated_type = TupleType([t.annotated_type for t in ft.return_parameters])
 		else:
 			raise TypeException('Function calls currently not supported', ast)
+
+	def visitMemberAccessExpr(self, ast: MemberAccessExpr):
+		t = ast.expr.annotated_type.type_name
+		name = ast.member.name
+		if t == TypeName.address_type():
+			ast.annotated_type = getattr(AddressMembers, name, None)
+		elif isinstance(t, PayableAddress):
+			ast.annotated_type = getattr(AddressPayableMembers, name, None)
+		elif not t.is_primitive_type() or isinstance(t, Mapping):
+			assert isinstance(t, UserDefinedTypeName)
+			if isinstance(t.definition, StructDefinition):
+				# Handle struct access
+				matches = [x.annotated_type for x in t.definition.members if x.idf.name == ast.member.name]
+				if len(matches) != 1:
+					raise TypeException(f'Member {name} not found', ast.member)
+				ast.annotated_type = matches[0]
+			else:
+				raise NotImplementedError("Member access is not supported for custom types")
+		else:
+			raise TypeException("Primitive types and mappings don't have members", ast.member)
+
+		if ast.annotated_type is None:
+			raise NotImplementedError(f'operation {name} is currently not supported')
 
 	def visitReclassifyExpr(self, ast: ReclassifyExpr):
 		if not ast.privacy.privacy_annotation_label():

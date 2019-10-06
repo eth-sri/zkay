@@ -247,7 +247,7 @@ expression
   | AllKeyword # AllExpr
   | arr=expression '[' index=expression ']' # IndexExpr
   | func=expression '(' args=functionCallArguments ')' # FunctionCallExpr
-  | expr=expression '.' member=identifier # MemberAccess // NB: add member access again
+  | expr=expression '.' member=identifier # MemberAccessExpr // NB: add member access again
   | '(' expr=expression ')' # ParenthesisExpr
   | op=('+' | '-') expr=expression # SignExpr
   | '!' expr=expression # NotExpr

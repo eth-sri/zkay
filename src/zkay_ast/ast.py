@@ -190,10 +190,7 @@ class BuiltinFunction(Expression):
 		return self.op == 'ite'
 
 	def arity(self):
-		c = 0
-		for _ in Formatter().parse(self.format_string()):
-			c += 1
-		return c
+		return self.format_string().count('{}')
 
 	def input_types(self):
 		"""
@@ -254,7 +251,7 @@ class FunctionCallExpr(Expression):
 		return [self.func] + self.args
 
 
-class MemberAccess(Expression):
+class MemberAccessExpr(Expression):
 	def __init__(self, expr: Expression, member: Identifier):
 		super().__init__()
 		self.expr = expr
@@ -434,6 +431,14 @@ class TypeName(AST):
 	def address_type():
 		return ElementaryTypeName('address')
 
+	@staticmethod
+	def void_type():
+		return TupleType([])
+
+	@staticmethod
+	def address_payable_type():
+		return PayableAddress()
+
 	def is_primitive_type(self):
 		return self == TypeName.bool_type() or self == TypeName.uint_type() or self == TypeName.address_type()
 
@@ -458,12 +463,13 @@ class ElementaryTypeName(TypeName):
 
 class UserDefinedTypeName(TypeName):
 
-	def __init__(self, names: List[Identifier]):
+	def __init__(self, names: List[Identifier], definition=None):
 		super().__init__()
 		self.names = names
+		self.definition = definition
 
 	def __eq__(self, other):
-		return self == other
+		return isinstance(other, UserDefinedTypeName) and self.names == other.names
 
 
 class AnnotatedTypeName(AST):
@@ -499,6 +505,18 @@ class AnnotatedTypeName(AST):
 		return AnnotatedTypeName(TypeName.address_type(), Expression.all_expr())
 
 	@staticmethod
+	def void_all():
+		return AnnotatedTypeName(TypeName.void_type(), Expression.all_expr())
+
+	@staticmethod
+	def all(type: TypeName):
+		return AnnotatedTypeName(type, Expression.all_expr())
+
+	@staticmethod
+	def me(type: TypeName):
+		return AnnotatedTypeName(type, Expression.me_expr())
+
+	@staticmethod
 	def array_all(value_type, *length: int):
 		t = value_type
 		for l in length:
@@ -525,9 +543,11 @@ class Mapping(TypeName):
 		else:
 			return False
 
+
 class PayableAddress(TypeName):
 	def __eq__(self, other):
 		return isinstance(other, PayableAddress)
+
 
 class Array(TypeName):
 
@@ -638,6 +658,18 @@ class Parameter(AST):
 		return [self.annotated_type, self.idf]
 
 
+class FunctionTypeName(TypeName):
+	def __init__(self, parameters: List[Parameter], modifiers: List[str], return_parameters: List[Parameter]):
+		super().__init__()
+		self.parameters = parameters
+		self.modifiers = modifiers
+		self.return_parameters = return_parameters
+
+	def __eq__(self, other):
+		return isinstance(other, FunctionTypeName) and self.parameters == other.parameters and \
+			   self.modifiers == other.modifiers and self.return_parameters == other.return_parameters
+
+
 class ConstructorOrFunctionDefinition(AST):
 
 	def __init__(self, parameters: List[Parameter], modifiers: List[str], body: Block):
@@ -712,6 +744,13 @@ class StateVariableDeclaration(AST):
 		return [self.annotated_type, self.idf, self.expr]
 
 
+class StructDefinition(AST):
+	def __init__(self, idf: Identifier, members: List[VariableDeclaration]):
+		super().__init__()
+		self.idf = idf
+		self.members = members
+
+
 class ContractDefinition(AST):
 
 	def __init__(
@@ -762,6 +801,71 @@ class SourceUnit(AST):
 		c = c_identifier.parent
 		assert(isinstance(c, ContractDefinition))
 		return c
+
+
+# BUILTIN SPECIAL TYPE DEFINITIONS
+
+
+class AddressMembers:
+	# addr.balance: uint
+	balance: AnnotatedTypeName = AnnotatedTypeName.uint_all()
+
+
+class AddressPayableMembers(AddressMembers):
+	# addr.send(uint) returns bool
+	send: AnnotatedTypeName = AnnotatedTypeName.all(
+		FunctionTypeName(
+			parameters=[Parameter([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('')),
+						Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
+			modifiers=[],
+			return_parameters=[Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))]
+		)
+	)
+
+	# addr.transfer(uint)
+	transfer: AnnotatedTypeName = AnnotatedTypeName.all(
+		FunctionTypeName(
+			parameters=[Parameter([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('')),
+						Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
+			modifiers=[],
+			return_parameters=[]
+		)
+	)
+
+
+class SpecialStructDefs:
+	msg_struct: StructDefinition = StructDefinition(
+		Identifier('<msg>'), [
+			VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('sender')),
+			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('value')),
+		]
+	)
+	msg: VariableDeclaration = \
+		VariableDeclaration([], AnnotatedTypeName.all(UserDefinedTypeName([msg_struct.idf], msg_struct)), Identifier('msg'))
+	msg.idf.parent = msg
+
+	block_struct: StructDefinition = StructDefinition(
+		Identifier('<block>'), [
+			VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('coinbase')),
+			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('difficulty')),
+			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('gaslimit')),
+			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('number')),
+			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('timestamp')),
+		]
+	)
+	block: VariableDeclaration = \
+		VariableDeclaration([], AnnotatedTypeName.all(UserDefinedTypeName([block_struct.idf], block_struct)), Identifier('block'))
+	block.idf.parent = block
+
+	tx_struct: StructDefinition = StructDefinition(
+		Identifier('<tx>'), [
+			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('gasprice')),
+			VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('origin')),
+		]
+	)
+	tx: VariableDeclaration = \
+		VariableDeclaration([], AnnotatedTypeName.all(UserDefinedTypeName([tx_struct.idf], tx_struct)), Identifier('tx'))
+	tx.idf.parent = tx
 
 
 # UTIL FUNCTIONS
@@ -873,11 +977,12 @@ class CodeVisitor(AstVisitor):
 			args = [self.visit(a) for a in ast.args]
 			return ast.func.format_string().format(*args)
 		else:
+			first_arg = 1 if isinstance(ast.func, MemberAccessExpr) else 0
 			f = self.visit(ast.func)
-			a = self.visit_list(ast.args, ', ')
+			a = self.visit_list(ast.args[first_arg:], ', ')
 			return f'{f}({a})'
 
-	def visitMemberAccess(self, ast: MemberAccess):
+	def visitMemberAccessExpr(self, ast: MemberAccessExpr):
 		return f'{self.visit(ast.expr)}.{self.visit(ast.member)}'
 
 	def visitAssignmentExpr(self, ast: AssignmentExpr):

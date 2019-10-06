@@ -2,7 +2,7 @@ from antlr4.Token import CommonToken
 
 from zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
 	BooleanLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, ReclassifyExpr, \
-	BuiltinFunction
+	BuiltinFunction, MemberAccessExpr
 from type_check.type_exceptions import RequireException, ReclassifyException
 from solidity_parser.emit import Emitter
 from solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
@@ -218,5 +218,8 @@ class BuildASTVisitor(SolidityVisitor):
 				if len(args) != 2:
 					ReclassifyException(f'Invalid number of arguments for reveal: {args}')
 				return ReclassifyExpr(args[0], args[1])
+		elif isinstance(func, MemberAccessExpr):
+			# Add implicit self argument
+			return FunctionCallExpr(func, [func.expr] + args)
 
 		return FunctionCallExpr(func, args)
