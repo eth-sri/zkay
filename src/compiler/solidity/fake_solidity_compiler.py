@@ -76,6 +76,10 @@ def strip_reveals(code: str):
 		last_comma_loc = code[:idx].rfind(',')
 		after_reveal_loc = idx
 
+		# Preserve parenthesis
+		inside_reveal_loc -= 1
+		after_reveal_loc -= 1
+
 		# Replace reveal by its inner expression + padding
 		code = f'{code[:before_reveal_loc]}' \
 			   f'{create_surrogate_string(code[before_reveal_loc:inside_reveal_loc])}' \
