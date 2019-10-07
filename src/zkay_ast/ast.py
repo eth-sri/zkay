@@ -626,7 +626,7 @@ class VariableDeclaration(AST):
 
 class VariableDeclarationStatement(SimpleStatement):
 
-	def __init__(self, variable_declaration: VariableDeclaration, expr: Expression):
+	def __init__(self, variable_declaration: VariableDeclaration, expr: Optional[Expression]):
 		"""
 
 		:param variable_declaration:
@@ -833,16 +833,22 @@ class AddressPayableMembers(AddressMembers):
 	)
 
 
-class SpecialStructDefs:
+class GlobalDefs:
+	gasleft: FunctionDefinition = FunctionDefinition(
+		idf=Identifier('gasleft'),
+		parameters=[],
+		modifiers=[],
+		return_parameters=[Parameter([], annotated_type=AnnotatedTypeName.uint_all(), idf=Identifier(''))],
+		body=Block([])
+	)
+	gasleft.idf.parent = gasleft
+
 	msg_struct: StructDefinition = StructDefinition(
 		Identifier('<msg>'), [
 			VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('sender')),
 			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('value')),
 		]
 	)
-	msg: VariableDeclaration = \
-		VariableDeclaration([], AnnotatedTypeName.all(UserDefinedTypeName([msg_struct.idf], msg_struct)), Identifier('msg'))
-	msg.idf.parent = msg
 
 	block_struct: StructDefinition = StructDefinition(
 		Identifier('<block>'), [
@@ -853,9 +859,6 @@ class SpecialStructDefs:
 			VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('timestamp')),
 		]
 	)
-	block: VariableDeclaration = \
-		VariableDeclaration([], AnnotatedTypeName.all(UserDefinedTypeName([block_struct.idf], block_struct)), Identifier('block'))
-	block.idf.parent = block
 
 	tx_struct: StructDefinition = StructDefinition(
 		Identifier('<tx>'), [
@@ -863,9 +866,32 @@ class SpecialStructDefs:
 			VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('origin')),
 		]
 	)
-	tx: VariableDeclaration = \
-		VariableDeclaration([], AnnotatedTypeName.all(UserDefinedTypeName([tx_struct.idf], tx_struct)), Identifier('tx'))
+
+
+class GlobalVars:
+	msg: StateVariableDeclaration = StateVariableDeclaration(
+		AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.msg_struct.idf], GlobalDefs.msg_struct)), [],
+		Identifier('msg'), None
+	)
+	msg.idf.parent = msg
+
+	block: StateVariableDeclaration = StateVariableDeclaration(
+		AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.block_struct.idf], GlobalDefs.block_struct)), [],
+		Identifier('block'), None
+	)
+	block.idf.parent = block
+
+	tx: StateVariableDeclaration = StateVariableDeclaration(
+		AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.tx_struct.idf], GlobalDefs.tx_struct)), [],
+		Identifier('tx'), None
+	)
 	tx.idf.parent = tx
+
+	now: StateVariableDeclaration = StateVariableDeclaration(
+		AnnotatedTypeName.uint_all(), [],
+		Identifier('now'), None
+	)
+	now.idf.parent = now
 
 
 # UTIL FUNCTIONS
