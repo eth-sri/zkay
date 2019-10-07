@@ -32,6 +32,7 @@ class MyParser:
 		else:
 			self.stream = code
 		self.lexer = SolidityLexer(self.stream)
+		self.lexer._listeners = [MyErrorListener(code)]
 		self.tokens = CommonTokenStream(self.lexer)
 		self.parser = SolidityParser(self.tokens)
 		self.parser._listeners = [MyErrorListener(code)]
