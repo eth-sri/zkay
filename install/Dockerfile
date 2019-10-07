@@ -138,3 +138,5 @@ RUN apt-get update \
 
 # copy relevant binaries
 COPY --from=helper /ZoKrates $ZOKRATES_ROOT
+
+RUN wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-static-linux && mv solc-static-linux /usr/bin/solc && chmod +x /usr/bin/solc

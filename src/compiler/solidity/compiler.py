@@ -8,10 +8,10 @@ from zkay_ast.ast import get_code_error_msg
 from utils.run_command import run_command
 
 # could also be 'solc'
-solc = 'solcjs'
+solc = 'solc'
 
 
-def create_input_json(uri: str):
+def create_input_json(sol_file: pathlib.Path):
 	"""
 	Generate json input adhering to solc standard-json interface
 
@@ -22,7 +22,7 @@ def create_input_json(uri: str):
 			"sources": {
 				"contract.sol": {
 					"urls": [
-						uri
+						str(sol_file.absolute())
 					]
 				}
 			},
@@ -48,11 +48,13 @@ def get_line_col(code: str, idx: int):
 	col = (idx - (code[:idx+1].rfind('\n') + 1))
 	return line, col
 
+
 def get_error_order_key(error):
 	if 'sourceLocation' in error:
 		return error['sourceLocation']['start']
 	else:
 		return -1
+
 
 def check_solc_errors(original_code: str, stripped_code: str):
 	# dump fake solidity code into temporary file
@@ -62,9 +64,9 @@ def check_solc_errors(original_code: str, stripped_code: str):
 		f.write(stripped_code)
 
 	# invoke solc via standard-json interface and parse json result
-	compiler_input = create_input_json(str(path))
+	compiler_input = create_input_json(path)
 	from subprocess import run, PIPE
-	p = run(['solc', '--allow-paths', str(path.absolute().parent), '--standard-json'], stdout=PIPE,
+	p = run([solc, '--allow-paths', str(path.absolute().parent), '--standard-json'], stdout=PIPE,
 			input=compiler_input, encoding='utf-8')
 	json_output = json.loads(p.stdout)
 	os.remove(str(path))
