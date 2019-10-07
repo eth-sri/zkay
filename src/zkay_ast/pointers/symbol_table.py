@@ -87,6 +87,4 @@ class SymbolTableLinker(AstVisitor):
 	def visitIdentifierExpr(self, ast: IdentifierExpr):
 		idf = self.find_identifier_declaration(ast, ast.idf.name)
 		ast.target = idf.parent
-		if isinstance(ast.target, FunctionDefinition):
-			raise NotImplementedError('Currently not handling function calls')
 		assert(ast.target is not None)

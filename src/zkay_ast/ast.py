@@ -709,6 +709,9 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
 		if return_parameters is None:
 			self.return_parameters = []
 
+		self.annotated_type: AnnotatedTypeName \
+			= AnnotatedTypeName.all(FunctionTypeName(parameters, modifiers, return_parameters))
+
 	def children_internal(self):
 		return [self.idf] + self.parameters + self.return_parameters + [self.body]
 

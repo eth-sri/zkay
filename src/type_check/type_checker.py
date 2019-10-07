@@ -96,10 +96,10 @@ class TypeCheckVisitor(AstVisitor):
 
 			# Conservatively ensure no side effects in private conditional expressions
 			# (public side effects could leak information about private condition)
-			if private:
+			if ast.args[0].annotated_type.privacy_annotation != Expression.all_expr():
 				for arg in ast.args:
 					if has_side_effects(arg):
-						raise TypeException("Expression inside private conditional expression has side effect", arg)
+						raise TypeException("Expression inside private conditional expression might have side effect", arg)
 
 		for i in range(len(parameter_types)):
 			t = parameter_types[i]
@@ -183,7 +183,13 @@ class TypeCheckVisitor(AstVisitor):
 
 			# Check arguments
 			for i in range(len(ast.args)):
+				if ft.parameters[i].annotated_type.privacy_annotation != Expression.all_expr():
+					raise NotImplementedError("Private arguments in function calls not yet supported")
 				ast.args[i] = self.get_rhs(ast.args[i], ft.parameters[i].annotated_type)
+
+			for rp in ft.return_parameters:
+				if rp.annotated_type.privacy_annotation != Expression.all_expr():
+					raise NotImplementedError("Private return values for called functions not yet supported")
 
 			# Set expression type to return type
 			if len(ft.return_parameters) == 1:
