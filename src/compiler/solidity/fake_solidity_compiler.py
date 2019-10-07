@@ -11,7 +11,7 @@ ME_DECL = ' address private me = msg.sender;'
 WSPATTERN = r'[ \t\r\n\u000C]'
 
 # Identifier
-IDPATTERN = r'[a-zA-Z\$_][a-zA-Z\$_]*'
+IDPATTERN = r'[a-zA-Z\$_][a-zA-Z0-9\$_]*'
 
 # Type
 BTPATTERN = r'(?:address|bool|uint)'
@@ -28,7 +28,7 @@ CONTRACT_DECL_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}contract{WSPATTERN}*{I
 								   f'(?<!{ME_DECL})(?P<repl>\\n)')
 
 # Regex to match annotated types
-ATYPE_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}{BTPATTERN}{WSPATTERN}*)' # match type
+ATYPE_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}{BTPATTERN}{WSPATTERN}*)' # match basic type
 						   f'(?P<repl>@{WSPATTERN}*{IDPATTERN})')           # match @owner
 
 # Regex to match 'final' keyword
