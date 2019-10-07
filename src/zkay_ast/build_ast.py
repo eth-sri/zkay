@@ -11,14 +11,14 @@ from solidity_parser.parse import MyParser
 import zkay_ast.ast as ast
 
 
-def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream) -> ast.AST:
-	v = BuildASTVisitor(tokens)
+def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream, code: str) -> ast.AST:
+	v = BuildASTVisitor(tokens, code)
 	return v.visit(parse_tree)
 
 
 def build_ast(code):
 	p = MyParser(code)
-	full_ast = build_ast_from_parse_tree(p.tree, p.tokens)
+	full_ast = build_ast_from_parse_tree(p.tree, p.tokens, code)
 	assert isinstance(full_ast, ast.SourceUnit)
 	full_ast.original_code = str(code).splitlines()
 	return full_ast
@@ -26,8 +26,9 @@ def build_ast(code):
 
 class BuildASTVisitor(SolidityVisitor):
 
-	def __init__(self, tokens: CommonTokenStream):
+	def __init__(self, tokens: CommonTokenStream, code: str):
 		self.emitter = Emitter(tokens)
+		self.code = code
 
 	def visit(self, tree):
 		sub_ast = super().visit(tree)
@@ -150,6 +151,19 @@ class BuildASTVisitor(SolidityVisitor):
 
 	def visitModifier(self, ctx: SolidityParser.ModifierContext):
 		return ctx.getText()
+
+	def visitAnnotatedTypeName(self, ctx: SolidityParser.AnnotatedTypeNameContext):
+		pa = None
+		if ctx.privacy_annotation is not None:
+			pa = self.visit(ctx.privacy_annotation)
+
+			if not (isinstance(pa, ast.AllExpr) or isinstance(pa, ast.MeExpr) or isinstance(pa, IdentifierExpr)):
+				from solidity_parser.parse import SyntaxException
+				report = f'{ast.get_code_error_msg(pa.line, pa.column + 1, str(self.code).splitlines())}\n' \
+						 f'Privacy annotation can only be me | all | Identifier'
+				raise SyntaxException(report)
+
+		return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa)
 
 	def visitIndexExpr(self, ctx: SolidityParser.IndexExprContext):
 		f = BuiltinFunction('index')

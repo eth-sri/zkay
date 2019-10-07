@@ -474,7 +474,7 @@ class UserDefinedTypeName(TypeName):
 
 class AnnotatedTypeName(AST):
 
-	def __init__(self, type_name: TypeName, privacy_annotation: Expression):
+	def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression]):
 		super().__init__()
 		self.type_name = type_name
 		self.had_privacy_annotation = privacy_annotation is not None
