@@ -1,95 +1,52 @@
-
 # Use regular expression replacements (stack program for reveal) to strip all zkay specific language features
-# so that code can be passed to solc for type checking
+# so that code can be passed to solc for type checking.
 
 import re
-from typing import Optional
+from typing import Pattern
 
+# Declaration for me which is injected into each contract
 ME_DECL = ' address private me = msg.sender;'
 
-# Whitespace
-WSPATTERN = r'[ \t\r\n\u000C]'
+# ---------  Lexer Rules ---------
 
-# Identifier
-IDPATTERN = r'[a-zA-Z\$_][a-zA-Z0-9\$_]*'
+WS_PATTERN = r'[ \t\r\n\u000C]'
+ID_PATTERN = r'[a-zA-Z\$_][a-zA-Z0-9\$_]*'
+BT_PATTERN = r'(?:address|bool|uint)'
+NONID_START = r'(?:[^a-zA-Z0-9\$_]|^)'
+NONID_END = r'(?:[^a-zA-Z0-9\$_]|$)'
+PARENS_PATTERN = re.compile(r'[()]')
+STRING_OR_COMMENT_PATTERN = re.compile(
+	r'(?P<repl>'
+		r'(?://[^\r\n]*)' # match line comment
+		r'|(?:/\*.*?\*/)' # match block comment
+		r"|(?:(?<=')(?:[^'\r\n\\]|(?:\\.))*(?='))" # match single quoted string literal
+		r'|(?:(?<=")(?:[^"\r\n\\]|(?:\\.))*(?="))' # match double quoted string literal
+	r')', re.DOTALL
+)
 
-# Type
-BTPATTERN = r'(?:address|bool|uint)'
-
-# Match what is adjacent to word (type, identifier, keyword)
-NONIDSTART = r'(?:[^\w]|^)'
-NONIDEND = r'(?:[^\w]|$)'
-
-# Match comments
-COMMENT_PATTERN = re.compile(r'(?P<repl>(?://[^\r\n]*)|(?:/\*.*?\*/))', re.DOTALL)
-
-# Match string literals
-SINGLE_QUOTED_STRING_LITERAL_PATTERN = re.compile(r"(?P<keep>')(?P<repl>(?:[^'\r\n\\]|(?:\\.)))*(?=')", re.DOTALL)
-DOUBLE_QUOTED_STRING_LITERAL_PATTERN = re.compile(r'(?P<keep>")(?P<repl>(?:[^"\r\n\\]|(?:\\.)))*(?=")', re.DOTALL)
+# ---------  Parsing ---------
 
 # Regex to match contract declaration
-CONTRACT_DECL_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}contract{WSPATTERN}*{IDPATTERN}{WSPATTERN}*{"{"}[^\\n]*?)'
+CONTRACT_DECL_PATTERN = re.compile(f'(?P<keep>{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*{"{"}[^\\n]*?)'
 								   f'(?<!{ME_DECL})(?P<repl>\\n)')
 
 # Regex to match annotated types
-ATYPE_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}{BTPATTERN}{WSPATTERN}*)' # match basic type
-						   f'(?P<repl>@{WSPATTERN}*{IDPATTERN})')           # match @owner
+ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{BT_PATTERN}{WS_PATTERN}*)'  # match basic type
+						   f'(?P<repl>@{WS_PATTERN}*{ID_PATTERN})')  			# match @owner
 
-# Regex to match 'final' keyword
-FINAL_PATTERN = re.compile(f'(?P<keep>{NONIDSTART})' # match before final
-						   f'(?P<repl>final)'        # match final
-						   f'(?={NONIDEND})')        # match after final
-
-# Regex to match 'all' keyword
-ALL_PATTERN = re.compile(f'(?P<keep>{NONIDSTART})' # match before all
-						 f'(?P<repl>all)'          # match all
-						 f'(?={NONIDEND})')        # match after all
+# Regexes to match 'all' and 'final'
+MATCH_WORD_FSTR = f'(?P<keep>{NONID_START})(?P<repl>{{}})(?={NONID_END})'
+FINAL_PATTERN = re.compile(MATCH_WORD_FSTR.format('final'))
+ALL_PATTERN = re.compile(MATCH_WORD_FSTR.format('all'))
 
 # Regex to match tagged mapping declarations
-MAP_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}mapping{WSPATTERN}*\\({WSPATTERN}*address{WSPATTERN}*)' # match 'mapping (address'
-						 f'(?P<repl>!{WSPATTERN}*{IDPATTERN})'                                          # match '!tag'
-						 f'(?={WSPATTERN}*=>{WSPATTERN}*)')                                             # match '=>'
+MAP_PATTERN = re.compile(
+	f'(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*address{WS_PATTERN}*)'  # match 'mapping (address'
+	f'(?P<repl>!{WS_PATTERN}*{ID_PATTERN})'  											# match '!tag'
+	f'(?={WS_PATTERN}*=>{WS_PATTERN}*)')  												# expect '=>'
 
 # Regex to detect start of reveal
-REVEAL_START_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))reveal{WSPATTERN}*\\(') # match 'reveal('
-
-PARENS_PATTERN = re.compile(r'[()]')
-
-
-# Replacing reveals only with regex is impossible because they could be nested -> do it with a stack
-def strip_reveals(code: str):
-	while True:
-		# Get position of next reveal expression
-		m = re.search(REVEAL_START_PATTERN, code)
-		if not m:
-			return code
-
-		before_reveal_loc = m.start()
-		inside_reveal_loc = m.end()
-
-		# Find matching closing parenthesis
-		idx = inside_reveal_loc
-		open = 1
-		while open > 0:
-			cstr = code[idx:]
-			idx += re.search(PARENS_PATTERN, cstr).start()
-			open += 1 if code[idx] == '(' else -1
-			idx += 1
-
-		# Go backwards to find comma before owner tag
-		last_comma_loc = code[:idx].rfind(',')
-		after_reveal_loc = idx
-
-		# Preserve parenthesis
-		inside_reveal_loc -= 1
-		after_reveal_loc -= 1
-
-		# Replace reveal by its inner expression + padding
-		code = f'{code[:before_reveal_loc]}' \
-			   f'{create_surrogate_string(code[before_reveal_loc:inside_reveal_loc])}' \
-			   f'{code[inside_reveal_loc:last_comma_loc]}' \
-			   f'{create_surrogate_string(code[last_comma_loc:after_reveal_loc])}' \
-			   f'{code[after_reveal_loc:]}'
+REVEAL_START_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()')  # match 'reveal', expect '('
 
 
 def create_surrogate_string(instr: str):
@@ -100,33 +57,69 @@ def create_surrogate_string(instr: str):
 	return ''.join(['\n' if e == '\n' else ' ' for e in instr])
 
 
-def replace_with_surrogate(code: str, search_pattern: re.Pattern, surrogate_text: Optional[str]= None):
+# Replacing reveals only with regex is impossible because they could be nested -> do it with a stack
+def strip_reveals(code: str):
+	matches = re.finditer(REVEAL_START_PATTERN, code)
+	for m in matches:
+		before_reveal_loc = m.start()
+		reveal_open_parens_loc = m.end()
+
+		# Find matching closing parenthesis
+		idx = reveal_open_parens_loc + 1
+		open = 1
+		while open > 0:
+			cstr = code[idx:]
+			idx += re.search(PARENS_PATTERN, cstr).start()
+			open += 1 if code[idx] == '(' else -1
+			idx += 1
+
+		# Go backwards to find comma before owner tag
+		last_comma_loc = code[:idx].rfind(',')
+		reveal_close_parens_loc = idx - 1
+
+		# Replace reveal by its inner expression + padding
+		code = f'{code[:before_reveal_loc]}' \
+			f'{create_surrogate_string(code[before_reveal_loc:reveal_open_parens_loc])}' \
+			f'{code[reveal_open_parens_loc:last_comma_loc]}' \
+			f'{create_surrogate_string(code[last_comma_loc:reveal_close_parens_loc])}' \
+			f'{code[reveal_close_parens_loc:]}'
+	return code
+
+
+def replace_with_surrogate(code: str, search_pattern: Pattern, replacement_fstr: str = '{}'):
+	"""
+	Replaces all occurrences of search_pattern in code with:
+		content of capture group <keep> (if any) + either
+		a) replacement_fstr (if replacement_fstr does not contain '{}')
+		b) replacement_fstr with {} replaced by whitespace corresponding to content of capture group <repl>
+			(such that replacement length == <repl> length with line breaks preserved)
+
+	The <repl> capture group must be the last thing that is matched in search pattern
+	"""
 	keep_repl_pattern = r'\g<keep>' if '(?P<keep>' in search_pattern.pattern else ''
+	has_ph = '{}' in replacement_fstr
+	replace_len = len(replacement_fstr) - 2
+	replacement = replacement_fstr
+	search_idx = 0
 	while True:
-		match = re.search(search_pattern, code)
+		match = re.search(search_pattern, code[search_idx:])
 		if match is None:
 			return code
+		if has_ph:
+			replacement = replacement_fstr.format(create_surrogate_string(match.groupdict()["repl"])[replace_len:])
 
-		rep_pattern = keep_repl_pattern + \
-					  (create_surrogate_string(match.groupdict()["repl"]) if surrogate_text is None else surrogate_text)
-
-		code = re.sub(search_pattern, rep_pattern, code, count=1)
+		code = code[:search_idx] + re.sub(search_pattern, keep_repl_pattern + replacement, code[search_idx:], count=1)
+		search_idx += match.end() + 1
 
 
-def fake_solidity_code(zkay_code: str):
+def fake_solidity_code(code: str):
 	"""
 	Returns the solidity code to which the given zkay_code corresponds when dropping all privacy features,
 	while preserving original formatting
 	"""
 
-	code = zkay_code
-
-	# Strip comments
-	code = replace_with_surrogate(code, COMMENT_PATTERN)
-
-	# Strip string literals
-	code = replace_with_surrogate(code, SINGLE_QUOTED_STRING_LITERAL_PATTERN)
-	code = replace_with_surrogate(code, DOUBLE_QUOTED_STRING_LITERAL_PATTERN)
+	# Strip string literals and comments
+	code = replace_with_surrogate(code, STRING_OR_COMMENT_PATTERN)
 
 	# Strip final
 	code = replace_with_surrogate(code, FINAL_PATTERN)
@@ -139,8 +132,6 @@ def fake_solidity_code(zkay_code: str):
 
 	# Strip reveal expressions
 	code = strip_reveals(code)
-
-	# 'all' should have been removed by first step
 	assert re.search(ALL_PATTERN, code) is None
 
 	# Inject me address declaration (should be okay for type checking, maybe not for program analysis)
