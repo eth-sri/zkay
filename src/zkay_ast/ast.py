@@ -286,6 +286,13 @@ class NumberLiteralExpr(Expression):
 		self.value = value
 
 
+class StringLiteralExpr(Expression):
+
+	def __init__(self, value: str):
+		super().__init__()
+		self.value = value
+
+
 class IdentifierExpr(Expression):
 
 	def __init__(self, idf: Identifier):

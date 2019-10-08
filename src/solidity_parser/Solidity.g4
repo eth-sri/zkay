@@ -262,6 +262,7 @@ expression
   | lhs=expression ('=' ) rhs=expression # AssignmentExpr
   | BooleanLiteral # BooleanLiteralExpr
   | numberLiteral # NumberLiteralExpr
+  | StringLiteral # StringLiteralExpr
   | idf=identifier # IdentifierExpr ;
 
 // CHANGED:
@@ -353,6 +354,17 @@ IdentifierStart
 fragment
 IdentifierPart
   : [a-zA-Z0-9$_] ;
+
+StringLiteral
+  : '"' DoubleQuotedStringCharacter* '"'
+  | '\'' SingleQuotedStringCharacter* '\'' ;
+
+fragment
+DoubleQuotedStringCharacter
+  : ~["\r\n\\] | ('\\' .) ;
+fragment
+SingleQuotedStringCharacter
+  : ~['\r\n\\] | ('\\' .) ;
 
 // CHANGED: switched WS to HIDDEN channel (allows preserving whitespaces)
 WS

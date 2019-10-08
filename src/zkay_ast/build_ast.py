@@ -1,8 +1,8 @@
 from antlr4.Token import CommonToken
 
 from zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
-	BooleanLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, ReclassifyExpr, \
-	BuiltinFunction, MemberAccessExpr
+	BooleanLiteralExpr, StringLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
+	ReclassifyExpr, BuiltinFunction, MemberAccessExpr
 from type_check.type_exceptions import RequireException, ReclassifyException
 from solidity_parser.emit import Emitter
 from solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
@@ -148,6 +148,17 @@ class BuildASTVisitor(SolidityVisitor):
 	def visitBooleanLiteralExpr(self, ctx: SolidityParser.BooleanLiteralExprContext):
 		b = ctx.getText() == 'true'
 		return BooleanLiteralExpr(b)
+
+	def visitStringLiteralExpr(self, ctx: SolidityParser.StringLiteralExprContext):
+		s = ctx.getText()
+
+		# Remove quotes
+		if s.startswith('"'):
+			s = s[1:-1].replace('\\"', '"')
+		else:
+			s = s[2:-2]
+
+		return StringLiteralExpr(s)
 
 	def visitModifier(self, ctx: SolidityParser.ModifierContext):
 		return ctx.getText()

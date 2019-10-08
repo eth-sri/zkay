@@ -23,6 +23,10 @@ NONIDEND = r'(?:[^\w]|$)'
 # Match comments
 COMMENT_PATTERN = re.compile(r'(?P<repl>(?://[^\r\n]*)|(?:/\*.*?\*/))', re.DOTALL)
 
+# Match string literals
+SINGLE_QUOTED_STRING_LITERAL_PATTERN = re.compile(r"(?P<keep>')(?P<repl>(?:[^'\r\n\\]|(?:\\.)))*(?=')", re.DOTALL)
+DOUBLE_QUOTED_STRING_LITERAL_PATTERN = re.compile(r'(?P<keep>")(?P<repl>(?:[^"\r\n\\]|(?:\\.)))*(?=")', re.DOTALL)
+
 # Regex to match contract declaration
 CONTRACT_DECL_PATTERN = re.compile(f'(?P<keep>{NONIDSTART}contract{WSPATTERN}*{IDPATTERN}{WSPATTERN}*{"{"}[^\\n]*?)'
 								   f'(?<!{ME_DECL})(?P<repl>\\n)')
@@ -119,6 +123,10 @@ def fake_solidity_code(zkay_code: str):
 
 	# Strip comments
 	code = replace_with_surrogate(code, COMMENT_PATTERN)
+
+	# Strip string literals
+	code = replace_with_surrogate(code, SINGLE_QUOTED_STRING_LITERAL_PATTERN)
+	code = replace_with_surrogate(code, DOUBLE_QUOTED_STRING_LITERAL_PATTERN)
 
 	# Strip final
 	code = replace_with_surrogate(code, FINAL_PATTERN)
