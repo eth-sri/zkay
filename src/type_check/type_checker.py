@@ -8,6 +8,7 @@ from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
     AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType
+from zkay_ast.pointers.parent_setter import set_parents
 from zkay_ast.visitor.deep_copy import deep_copy
 from zkay_ast.visitor.visitor import AstVisitor
 
@@ -33,6 +34,21 @@ class TypeCheckVisitor(AstVisitor):
         raise TypeException("Subexpressions with side-effects are currently not supported", ast)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
+        # FIXME/TODO?
+        # Prevent assignment to a variable which is not owned
+        if ast.lhs.annotated_type.is_private() and isinstance(ast.rhs, IdentifierExpr):
+            astmt = deep_copy(ast)
+            if ast.lhs.annotated_type.type_name == TypeName.uint_type():
+                astmt = ast.replaced_with(AssignmentStatement(astmt.lhs, FunctionCallExpr(BuiltinFunction('+'), [astmt.rhs, NumberLiteralExpr(0)])))
+            else:
+                assert ast.lhs.annotated_type.type_name == TypeName.bool_type()
+                astmt = ast.replaced_with(AssignmentStatement(astmt.lhs, FunctionCallExpr(BuiltinFunction('&&'), [astmt.rhs, BooleanLiteralExpr(True)])))
+            set_parents(astmt)
+            try:
+                self.visit(astmt)
+            except TypeMismatchException:
+                raise TypeException("Only owner can assign to private variables", ast)
+
         expected_type = ast.lhs.annotated_type
         ast.rhs = self.get_rhs(ast.rhs, expected_type)
         ast.annotated_type = expected_type

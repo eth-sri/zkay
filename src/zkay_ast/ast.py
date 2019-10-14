@@ -1,6 +1,6 @@
 import abc
 import textwrap
-from typing import List, Dict, Union, Optional, Callable, Tuple, Any
+from typing import List, Dict, Union, Optional, Callable
 
 from zkay_ast.analysis.partition_state import PartitionState
 from zkay_ast.visitor.visitor import AstVisitor
@@ -1082,9 +1082,10 @@ class AstException(Exception):
         while root is not None and not isinstance(root, SourceUnit):
             root = root.parent
 
-        assert root is not None
-
-        error_msg = get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
+        if root is None:
+            error_msg = 'error'
+        else:
+            error_msg = get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
 
         super().__init__(f'\n{error_msg}\n{msg}')
 
