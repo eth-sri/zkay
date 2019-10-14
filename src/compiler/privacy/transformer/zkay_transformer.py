@@ -1,6 +1,6 @@
 from typing import Dict, Optional, List
 
-from compiler.privacy.circuit_generation.circuit_generator import HybridArgumentIdf, CircuitHelper
+from compiler.privacy.circuit_generation.circuit_generator import HybridArgumentIdf, CircuitHelper, EncParamIdf
 from compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from compiler.privacy.used_contract import UsedContract
 from zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
@@ -119,6 +119,11 @@ class ZkayTransformer(AstTransformerVisitor):
         self.current_generator = circuit_generator
         self.visit_children(ast)
 
+        for p in ast.parameters:
+            """ Rule (8) """
+            if p.annotated_type.is_private():
+                self.current_generator.ensure_encryption(EncParamIdf(p.idf.name), Expression.me_expr(), HybridArgumentIdf(p.idf.name))
+
         # Add external contract initialization for constructor
         c_assignments: List[Statement] = []
         if isinstance(ast, ConstructorDefinition):
@@ -178,7 +183,7 @@ class ZkayTransformer(AstTransformerVisitor):
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         """ Rule (2) """
         return ast.replaced_with(AssignmentStatement(
-            lhs=ZkayLocationTransformer(self).visit(ast.lhs),
+            lhs=ZkayExpressionTransformer(self).visit(ast.lhs),
             rhs=ZkayExpressionTransformer(self).visit(ast.rhs)
         ))
 
@@ -195,19 +200,17 @@ class ZkayTransformer(AstTransformerVisitor):
         return ast.replaced_with(ZkayExpressionTransformer(self).visit(ast))
 
 
-class ZkayLocationTransformer(AstTransformerVisitor):
-    def __init__(self, trafo: ZkayTransformer):
+class ZkayExpressionTransformer(AstTransformerVisitor):
+    def __init__(self, t: ZkayTransformer):
         super().__init__()
-        self.zkay_trafo = trafo
-        self.move_out = self.zkay_trafo.current_generator.move_out
+        self.move_out = t.current_generator.move_out
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         """ Rule (9) """
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_index():
             return ast.replaced_with(FunctionCallExpr(
                 ast.func,
-                [ZkayLocationTransformer(self.zkay_trafo).visit(ast.args[0]),
-                 ZkayExpressionTransformer(self.zkay_trafo).visit(ast.args[1])]
+                [self.visit(ast.args[0]), self.visit(ast.args[1])]
             ))
         else:
             return self.visitExpression(ast)
@@ -222,14 +225,6 @@ class ZkayLocationTransformer(AstTransformerVisitor):
             return self.move_out(ast, Expression.me_expr())
         else:
             return super().visit(ast)
-
-
-class ZkayExpressionTransformer(ZkayLocationTransformer):
-    def visitIdentifierExpr(self, ast: IdentifierExpr):
-        """ Rule (8) """
-        if isinstance(ast.target, Parameter) and ast.target.annotated_type.is_private():
-            self.zkay_trafo.current_generator.ensure_encryption(DecryptionExpr(ast), Expression.me_expr(), HybridArgumentIdf(ast.idf.name))
-        return ast
 
 
 class ZkayCircuitTransformer(AstTransformerVisitor):
