@@ -6,7 +6,7 @@ import my_logging
 from compiler.privacy.hash_function import hash_function
 from compiler.privacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
 from compiler.privacy.tags import tag, helper_tag, param_tag
-from compiler.privacy.used_contract import UsedContract
+from compiler.privacy.used_contract import UsedContractLegacy
 from compiler.zokrates.compiler import compile_zokrates, n_proof_arguments, get_work_dir, get_zok_output_filename
 from my_logging.log_context import log_context
 from utils.helpers import save_to_file, prepend_to_lines, lines_of_code
@@ -136,8 +136,8 @@ class SolidityVisitor(CodeVisitor):
         self.simulate = simulate
 
         # synthesized code
-        self.pki_contract: Optional[UsedContract] = None
-        self.used_contracts: List[UsedContract] = []
+        self.pki_contract: Optional[UsedContractLegacy] = None
+        self.used_contracts: List[UsedContractLegacy] = []
         self.new_state_variables: List[StateVariableDeclaration] = []
 
         # per-function properties
@@ -198,7 +198,7 @@ class SolidityVisitor(CodeVisitor):
                 # Actual Zokrates compilation and proof generation is deferred until after solidity transformation
 
                 verifier_contract_variable = verifier_contract_name + '_var'
-                c = UsedContract(output_filename, verifier_contract_name, verifier_contract_variable)
+                c = UsedContractLegacy(output_filename, verifier_contract_name, verifier_contract_variable)
                 self.used_contracts += [c]
 
                 # proof
@@ -444,7 +444,7 @@ class ZokratesVisitor(CodeVisitor):
         contract_name = 'PublicKeyInfrastructure'
         pki = f'{tag}{contract_name}'
         if self.sol.pki_contract is None:
-            self.sol.pki_contract = UsedContract(pki_contract_filename, contract_name, pki)
+            self.sol.pki_contract = UsedContractLegacy(pki_contract_filename, contract_name, pki)
             self.sol.used_contracts += [self.sol.pki_contract]
         return pki
 
