@@ -6,21 +6,17 @@ from zkay_ast.analysis.partition_state import PartitionState
 from zkay_ast.visitor.visitor import AstVisitor
 
 
-class ASTBase:
-    pass
-
-
 class ChildListBuilder:
     def __init__(self):
         self.children = []
 
-    def add_child(self, ast: ASTBase) -> ASTBase:
+    def add_child(self, ast: 'AST') -> 'AST':
         if ast is not None:
             self.children.append(ast)
         return ast
 
 
-class AST(ASTBase):
+class AST:
 
     def __init__(self):
         # set later by parent setter
@@ -41,15 +37,15 @@ class AST(ASTBase):
         self.process_children(cb.add_child)
         return cb.children
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         pass
 
-    def code(self):
+    def code(self) -> str:
         v = CodeVisitor()
         s = v.visit(self)
         return s
 
-    def replaced_with(self, replacement):
+    def replaced_with(self, replacement: 'AST') -> 'AST':
         replacement.parent = self.parent
         replacement.names = self.names
         replacement.line = self.line
@@ -65,6 +61,18 @@ class Identifier(AST):
     def __init__(self, name: str):
         super().__init__()
         self.name = name
+
+
+class Comment(AST):
+
+    def __init__(self, text: str = ''):
+        super().__init__()
+        self.text = text
+
+    @staticmethod
+    def comment_list(text: str, block: List[AST]) -> List[AST]:
+        return block if not block else [Comment(text)] + block + [Comment()]
+
 
 
 class Expression(AST):
@@ -155,7 +163,7 @@ class Expression(AST):
             else:
                 return False
 
-    def replaced_with(self, replacement):
+    def replaced_with(self, replacement: 'Expression') -> 'Expression':
         repl = super().replaced_with(replacement)
         assert isinstance(repl, Expression)
         repl.statement = self.statement
@@ -292,7 +300,7 @@ class FunctionCallExpr(Expression):
     def is_location(self) -> bool:
         return isinstance(self.func, BuiltinFunction) and self.func.is_index()
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.func = f(self.func)
         self.args = list(map(f, self.args))
 
@@ -303,7 +311,7 @@ class MemberAccessExpr(Expression):
         self.expr = expr
         self.member = member
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.expr = f(self.expr)
         self.member = f(self.member)
 
@@ -315,26 +323,30 @@ class AssignmentExpr(Expression):
         self.lhs = lhs
         self.rhs = rhs
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
 
 
-class BooleanLiteralExpr(Expression):
+class LiteralExpr(Expression):
+    pass
+
+
+class BooleanLiteralExpr(LiteralExpr):
 
     def __init__(self, value: bool):
         super().__init__()
         self.value = value
 
 
-class NumberLiteralExpr(Expression):
+class NumberLiteralExpr(LiteralExpr):
 
     def __init__(self, value: int):
         super().__init__()
         self.value = value
 
 
-class StringLiteralExpr(Expression):
+class StringLiteralExpr(LiteralExpr):
 
     def __init__(self, value: str):
         super().__init__()
@@ -360,7 +372,7 @@ class IdentifierExpr(Expression):
     def is_location(self) -> bool:
         return True
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
 
 
@@ -394,7 +406,7 @@ class ReclassifyExpr(Expression):
         # TODO FIXME? this is violated because privacy_annotation_label returns idf, not idfexpr
         # assert privacy is None or isinstance(privacy, MeExpr) or isinstance(privacy, AllExpr) or isinstance(privacy, IdentifierExpr)
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.expr = f(self.expr)
         self.privacy = f(self.privacy)
 
@@ -409,20 +421,13 @@ class Statement(AST):
         # set by parent setter
         self.function: ConstructorOrFunctionDefinition = None
 
-    def replaced_with(self, replacement):
+    def replaced_with(self, replacement: 'Statement') -> 'Statement':
         repl = super().replaced_with(replacement)
         assert isinstance(repl, Statement)
         repl.before_analysis = self.before_analysis
         repl.after_analysis = self.after_analysis
         repl.function = self.function
         return repl
-
-
-class CommentStatement(Statement):
-
-    def __init__(self, text: str):
-        super().__init__()
-        self.text = text
 
 
 class IfStatement(Statement):
@@ -433,7 +438,7 @@ class IfStatement(Statement):
         self.then_branch = then_branch
         self.else_branch = else_branch
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.condition = f(self.condition)
         self.then_branch = f(self.then_branch)
         self.else_branch = f(self.else_branch)
@@ -445,7 +450,7 @@ class ReturnStatement(Statement):
         super().__init__()
         self.expr = expr
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.expr = f(self.expr)
 
 
@@ -459,7 +464,7 @@ class ExpressionStatement(SimpleStatement):
         super().__init__()
         self.expr = expr
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.expr = f(self.expr)
 
 
@@ -469,7 +474,7 @@ class RequireStatement(SimpleStatement):
         super().__init__()
         self.condition = condition
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.condition = f(self.condition)
 
 
@@ -480,7 +485,7 @@ class AssignmentStatement(SimpleStatement):
         self.lhs = lhs
         self.rhs = rhs
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
 
@@ -493,7 +498,7 @@ class Block(Statement):
 
     # Special case, if processing a statement returns a list of statements,
     # all statements will be integrated into this block
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         new_stmts = []
         for idx, stmt in enumerate(self.statements):
             new_stmt = f(stmt)
@@ -595,7 +600,7 @@ class AnnotatedTypeName(AST):
         else:
             self.privacy_annotation = AllExpr()
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.type_name = f(self.type_name)
         self.privacy_annotation = f(self.privacy_annotation)
 
@@ -613,19 +618,19 @@ class AnnotatedTypeName(AST):
 
     @staticmethod
     def uint_all():
-        return AnnotatedTypeName(TypeName.uint_type(), Expression.all_expr())
+        return AnnotatedTypeName(TypeName.uint_type(), None)
 
     @staticmethod
     def bool_all():
-        return AnnotatedTypeName(TypeName.bool_type(), Expression.all_expr())
+        return AnnotatedTypeName(TypeName.bool_type(), None)
 
     @staticmethod
     def address_all():
-        return AnnotatedTypeName(TypeName.address_type(), Expression.all_expr())
+        return AnnotatedTypeName(TypeName.address_type(), None)
 
     @staticmethod
     def void_all():
-        return AnnotatedTypeName(TypeName.void_type(), Expression.all_expr())
+        return AnnotatedTypeName(TypeName.void_type(), None)
 
     @staticmethod
     def cipher_type():
@@ -639,8 +644,8 @@ class AnnotatedTypeName(AST):
 
     @staticmethod
     def proof_type():
-        # TODO correct type
-        return AnnotatedTypeName(TypeName.proof_type(), None)
+        # TODO correct type (depends on proving scheme)
+        return AnnotatedTypeName.array_all(AnnotatedTypeName.uint_all(), 8)
 
     @staticmethod
     def all(type: TypeName):
@@ -651,10 +656,10 @@ class AnnotatedTypeName(AST):
         return AnnotatedTypeName(type, Expression.me_expr())
 
     @staticmethod
-    def array_all(value_type, *length: int):
+    def array_all(value_type: 'AnnotatedTypeName', *length: int):
         t = value_type
         for l in length:
-            t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)), Expression.all_expr())
+            t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)), None)
         return t
 
 
@@ -668,7 +673,7 @@ class Mapping(TypeName):
         # set by type checker: instantiation of the key by IndexExpr
         self.instantiated_key: Expression = None
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.key_type = f(self.key_type)
         self.key_label = f(self.key_label)
         self.value_type = f(self.value_type)
@@ -692,7 +697,7 @@ class Array(TypeName):
         self.value_type = value_type
         self.expr = expr
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.value_type = f(self.value_type)
         self.expr = f(self.expr)
 
@@ -758,7 +763,7 @@ class VariableDeclaration(AST):
         self.annotated_type = annotated_type
         self.idf = idf
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
 
@@ -775,7 +780,7 @@ class VariableDeclarationStatement(SimpleStatement):
         self.variable_declaration = variable_declaration
         self.expr = expr
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.variable_declaration = f(self.variable_declaration)
         self.expr = f(self.expr)
 
@@ -794,7 +799,7 @@ class Parameter(AST):
         self.storage_location = storage_location
         self.idf = idf
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
 
@@ -822,7 +827,7 @@ class ConstructorOrFunctionDefinition(AST):
         # specify parent type
         self.parent: ContractDefinition = None
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
         self.body = f(self.body)
 
@@ -854,7 +859,7 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
         self.annotated_type: AnnotatedTypeName \
             = AnnotatedTypeName.all(FunctionTypeName(parameters, modifiers, return_parameters))
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
         self.parameters = list(map(f, self.parameters))
         self.return_parameters = list(map(f, self.return_parameters))
@@ -888,7 +893,7 @@ class StateVariableDeclaration(AST):
         self.idf = idf
         self.expr = expr
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
         self.expr = f(self.expr)
@@ -900,7 +905,7 @@ class StructDefinition(AST):
         self.idf = idf
         self.members = members
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
         self.members = list(map(f, self.members))
 
@@ -919,7 +924,7 @@ class ContractDefinition(AST):
         self.constructor_definitions = constructor_definitions
         self.function_definitions = function_definitions
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
         self.state_variable_declarations = list(map(f, self.state_variable_declarations))
         self.constructor_definitions = list(map(f, self.constructor_definitions))
@@ -951,7 +956,7 @@ class SourceUnit(AST):
 
         self.original_code: List[str] = []
 
-    def process_children(self, f: Callable[[ASTBase], ASTBase]):
+    def process_children(self, f: Callable[['AST'], 'AST']):
         self.contracts = list(map(f, self.contracts))
 
     def __getitem__(self, key: str):
@@ -977,8 +982,7 @@ class AddressPayableMembers(AddressMembers):
     # addr.send(uint) returns bool
     send: AnnotatedTypeName = AnnotatedTypeName.all(
         FunctionTypeName(
-            parameters=[Parameter([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('')),
-                        Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
+            parameters=[Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
             modifiers=[],
             return_parameters=[Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))]
         )
@@ -987,8 +991,7 @@ class AddressPayableMembers(AddressMembers):
     # addr.transfer(uint)
     transfer: AnnotatedTypeName = AnnotatedTypeName.all(
         FunctionTypeName(
-            parameters=[Parameter([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('')),
-                        Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
+            parameters=[Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
             modifiers=[],
             return_parameters=[]
         )
@@ -1158,6 +1161,9 @@ class CodeVisitor(AstVisitor):
         # should never be called
         raise NotImplementedError("Did not implement code generation for " + repr(ast))
 
+    def visitComment(self, ast: Comment):
+        return '' if ast.text == '' else f'/* {ast.text} */'
+
     def visitIdentifier(self, ast: Identifier):
         return ast.name
 
@@ -1166,9 +1172,8 @@ class CodeVisitor(AstVisitor):
             args = [self.visit(a) for a in ast.args]
             return ast.func.format_string().format(*args)
         else:
-            first_arg = 1 if isinstance(ast.func, MemberAccessExpr) else 0
             f = self.visit(ast.func)
-            a = self.visit_list(ast.args[first_arg:], ', ')
+            a = self.visit_list(ast.args, ', ')
             return f'{f}({a})'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
@@ -1368,4 +1373,4 @@ class CodeVisitor(AstVisitor):
     def visitSourceUnit(self, ast: SourceUnit):
         p = ast.pragma_directive
         contracts = self.visit_list(ast.contracts)
-        return f'{p}\n{contracts}'
+        return f'{p}\n\n{contracts}'
