@@ -528,6 +528,26 @@ class TypeName(AST):
         return TupleType([])
 
     @staticmethod
+    def cipher_type():
+        # TODO correct type
+        return TypeName.uint_type()
+
+    @staticmethod
+    def rnd_type():
+        # TODO correct type
+        return TypeName.uint_type()
+
+    @staticmethod
+    def key_type():
+        # TODO correct type
+        return TypeName.uint_type()
+
+    @staticmethod
+    def proof_type():
+        # TODO correct type
+        return TypeName.uint_type()
+
+    @staticmethod
     def address_payable_type():
         return PayableAddress()
 
@@ -610,17 +630,17 @@ class AnnotatedTypeName(AST):
     @staticmethod
     def cipher_type():
         # TODO correct type
-        return AnnotatedTypeName.uint_all()
+        return AnnotatedTypeName(TypeName.cipher_type(), None)
 
     @staticmethod
     def key_type():
         # TODO correct type
-        return AnnotatedTypeName.uint_all()
+        return AnnotatedTypeName(TypeName.key_type(), None)
 
     @staticmethod
     def proof_type():
         # TODO correct type
-        return AnnotatedTypeName.uint_all()
+        return AnnotatedTypeName(TypeName.proof_type(), None)
 
     @staticmethod
     def all(type: TypeName):
