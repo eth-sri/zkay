@@ -16,15 +16,15 @@ class AstVisitor:
         if self.traversal == 'post':
             ret_children = self.visitChildren(ast)
         f = self.get_visit_function(ast.__class__)
-        if f:
+        if f is not None:
             ret = f(ast)
         elif self.traversal == 'node-or-children':
             ret_children = self.visitChildren(ast)
         if self.traversal == 'pre':
             ret_children = self.visitChildren(ast)
-        if ret:
+        if ret is not None:
             return ret
-        elif ret_children:
+        elif ret_children is not None:
             return ret_children
         else:
             return None
