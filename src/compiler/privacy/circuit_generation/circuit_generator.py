@@ -1,19 +1,22 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional, List, Dict
+from typing import List, Dict
 
 from compiler.privacy.circuit_generation.proving_scheme import ProvingScheme, VerifyingKey
-from compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer, ZkayExpressionTransformer, DecryptionExpr
+from compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer, ZkayExpressionTransformer
 from zkay_ast.ast import Expression, Parameter, Statement, IdentifierExpr, AnnotatedTypeName, \
-    Identifier, VariableDeclarationStatement, VariableDeclaration, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, LocationExpr
+    Identifier, VariableDeclarationStatement, VariableDeclaration, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, LocationExpr, \
+    TypeName
 
 
 class HybridArgumentIdf(Identifier):
-    pass
+    def __init__(self, name: str, t: TypeName):
+        super().__init__(name)
+        self.t = t
 
 
 class DecryptLocallyIdf(HybridArgumentIdf):
-    def __init__(self, name: str, idf: HybridArgumentIdf):
-        super().__init__(name)
+    def __init__(self, name: str, t: TypeName, idf: HybridArgumentIdf):
+        super().__init__(name, t)
         self.idf = idf
 
 
@@ -33,12 +36,16 @@ class ExpressionToLocAssignment(CircuitStatement):
 
 class EncConstraint(CircuitStatement):
     def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf):
-        pass
+        self.plain = plain
+        self.rnd = rnd
+        self.pk = pk
+        self.cipher = cipher
 
 
 class EqConstraint(CircuitStatement):
     def __init__(self, expr: HybridArgumentIdf, val: HybridArgumentIdf):
-        pass
+        self.expr = expr
+        self.val = val
 
 
 class NameFactory:
@@ -46,8 +53,8 @@ class NameFactory:
         self.base_name = base_name
         self.count = 0
 
-    def get_new_idf(self) -> HybridArgumentIdf:
-        idf = HybridArgumentIdf(f'{self.base_name}_{self.count}')
+    def get_new_idf(self, t: TypeName) -> HybridArgumentIdf:
+        idf = HybridArgumentIdf(f'{self.base_name}_{self.count}', t)
         self.count += 1
         return idf
 
@@ -80,15 +87,15 @@ class CircuitHelper:
         self.additional_params: List[Parameter] = []
 
     @staticmethod
-    def get_type(expr: Expression, privacy: PrivacyLabelExpr):
-        return AnnotatedTypeName(expr.annotated_type.type_name, None) if privacy.is_all_expr() else AnnotatedTypeName.cipher_type()
+    def get_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
+        return expr.annotated_type.type_name if privacy.is_all_expr() else TypeName.cipher_type()
 
     def request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         pname = privacy.idf.name
         if pname in self.pk_for_label:
             return self.pk_for_label[pname].variable_declaration.idf
         else:
-            idf = self.pk_name_factory.get_new_idf()
+            idf = self.pk_name_factory.get_new_idf(TypeName.key_type())
             pki_idf = self.zkay_trafo.used_contracts[0].state_variable_idf
             assert pki_idf
             self.pk_for_label[pname] = VariableDeclarationStatement(
@@ -100,16 +107,18 @@ class CircuitHelper:
             return idf
 
     def add_param(self, expr: Expression, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
-        idf = self.param_name_factory.get_new_idf()
+        t = self.get_type(expr, privacy)
+        idf = self.param_name_factory.get_new_idf(t)
         self.additional_params.append(Parameter(
-            [], self.get_type(expr, privacy), idf, None # TODO need to specify storage loc?
+            [], AnnotatedTypeName(t, None), idf, None # TODO need to specify storage loc?
         ))
         return idf
 
     def add_temp_var(self, expr: Expression, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
-        idf = self.temp_name_factory.get_new_idf()
         te = ZkayExpressionTransformer(self.zkay_trafo).visit(expr)
-        stmt = VariableDeclarationStatement(VariableDeclaration([], self.get_type(expr, privacy), idf), te)
+        te_t = self.get_type(expr, privacy)
+        idf = self.temp_name_factory.get_new_idf(te_t)
+        stmt = VariableDeclarationStatement(VariableDeclaration([], AnnotatedTypeName(te_t, None), idf), te)
         if expr.statement in self.temp_vars:
             self.temp_vars[expr.statement].append(stmt)
         else:
@@ -117,7 +126,7 @@ class CircuitHelper:
         return idf
 
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
-        rnd = HybridArgumentIdf(f'{cipher.name}_R')
+        rnd = HybridArgumentIdf(f'{cipher.name}_R', TypeName.rnd_type())
 
         self.s.append(rnd)
 
@@ -130,8 +139,9 @@ class CircuitHelper:
     def move_out(self, expr: Expression, new_privacy: PrivacyLabelExpr):
         new_param = self.add_param(expr, new_privacy)
 
-        sec_circ_var_idf = self.local_expr_name_factory.get_new_idf()
-        self.phi.append(ExpressionToLocAssignment(sec_circ_var_idf, ZkayCircuitTransformer(self.zkay_trafo).visit(expr)))
+        rhs_expr = ZkayCircuitTransformer(self.zkay_trafo).visit(expr)
+        sec_circ_var_idf = self.local_expr_name_factory.get_new_idf(rhs_expr.annotated_type.type_name)
+        self.phi.append(ExpressionToLocAssignment(sec_circ_var_idf, rhs_expr))
 
         if not new_privacy.is_all_expr():
             self.ensure_encryption(sec_circ_var_idf, new_privacy, new_param)
@@ -148,7 +158,8 @@ class CircuitHelper:
         if privacy.is_me_expr():
             # Instead of secret key, decrypt outside proof circuit (but locally), add plain value as secret param
             #  and prove encryption (because its not feasible to decrypt inside proof circuit)
-            dec_loc_idf = DecryptLocallyIdf(self.local_expr_name_factory.get_new_idf().name, new_var)
+            new_idf_name = self.local_expr_name_factory.get_new_idf(TypeName.void_type()).name
+            dec_loc_idf = DecryptLocallyIdf(new_idf_name, loc_expr.annotated_type.type_name, new_var)
             self.s.append(dec_loc_idf)
             self.ensure_encryption(dec_loc_idf, Expression.me_expr(), new_var)
 
@@ -156,11 +167,11 @@ class CircuitHelper:
 
 
 class CircuitGenerator(metaclass=ABCMeta):
-    def __init__(self, circuit: CircuitHelper, proving_scheme: ProvingScheme):
-        self.circuit = circuit
+    def __init__(self, circuits: List[CircuitHelper], proving_scheme: ProvingScheme):
+        self.circuits = circuits
         self.proving_scheme = proving_scheme
 
-    def generate_circuit(self):
+    def generate_circuits(self):
         # Generate code which is needed to issue a transaction for this function (offchain computations)
         self._generate_offchain_code()
 
