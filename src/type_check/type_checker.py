@@ -212,7 +212,8 @@ class TypeCheckVisitor(AstVisitor):
             if len(ft.return_parameters) == 1:
                 ast.annotated_type = ft.return_parameters[0].annotated_type
             else:
-                ast.annotated_type = TupleType([t.annotated_type for t in ft.return_parameters])
+                # TODO maybe not None label in the future
+                ast.annotated_type = AnnotatedTypeName(TupleType([t.annotated_type for t in ft.return_parameters]), None)
         else:
             raise TypeException('Function calls currently not supported', ast)
 
