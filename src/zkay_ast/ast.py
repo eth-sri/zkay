@@ -103,12 +103,28 @@ class Expression(AST):
         else:
             return None
 
-    def instanceof_data_type(self, expected):
+    def instanceof_data_type(self, expected) -> bool:
         assert (isinstance(expected, TypeName))
 
         # check data type
         actual = self.annotated_type.type_name
         return expected == actual
+
+    def is_lvalue(self) -> bool:
+        return isinstance(self.statement, AssignmentStatement) and self.statement.lhs.is_parent_of(self)
+
+    def is_rvalue(self) -> bool:
+        return not self.is_lvalue()
+
+    def is_location(self) -> bool:
+        """True if this expression can be used as an lvalue"""
+        return False
+
+    def is_parent_of(self, child):
+        e = child
+        while e != self and isinstance(e.parent, Expression):
+            e = e.parent
+        return e == self
 
     def instanceof(self, expected):
         """
@@ -273,6 +289,9 @@ class FunctionCallExpr(Expression):
         self.func = func
         self.args = args
 
+    def is_location(self) -> bool:
+        return isinstance(self.func, BuiltinFunction) and self.func.is_index()
+
     def process_children(self, f: Callable[[ASTBase], ASTBase]):
         self.func = f(self.func)
         self.args = list(map(f, self.args))
@@ -337,6 +356,9 @@ class IdentifierExpr(Expression):
 
     def get_annotated_type(self):
         return self.target.annotated_type
+
+    def is_location(self) -> bool:
+        return True
 
     def process_children(self, f: Callable[[ASTBase], ASTBase]):
         self.idf = f(self.idf)

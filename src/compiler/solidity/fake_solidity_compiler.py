@@ -132,7 +132,6 @@ def fake_solidity_code(code: str):
 
     # Strip reveal expressions
     code = strip_reveals(code)
-    assert re.search(ALL_PATTERN, code) is None
 
     # Inject me address declaration (should be okay for type checking, maybe not for program analysis)
     # An alternative would be to replace me by msg.sender, but this would affect code length (error locations)

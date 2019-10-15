@@ -8,7 +8,6 @@ from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
     AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType
-from zkay_ast.pointers.parent_setter import set_parents
 from zkay_ast.visitor.deep_copy import deep_copy
 from zkay_ast.visitor.visitor import AstVisitor
 
@@ -34,20 +33,14 @@ class TypeCheckVisitor(AstVisitor):
         raise TypeException("Subexpressions with side-effects are currently not supported", ast)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        # FIXME/TODO?
-        # Prevent assignment to a variable which is not owned
-        if ast.lhs.annotated_type.is_private() and isinstance(ast.rhs, IdentifierExpr):
-            astmt = deep_copy(ast)
-            if ast.lhs.annotated_type.type_name == TypeName.uint_type():
-                astmt = ast.replaced_with(AssignmentStatement(astmt.lhs, FunctionCallExpr(BuiltinFunction('+'), [astmt.rhs, NumberLiteralExpr(0)])))
-            else:
-                assert ast.lhs.annotated_type.type_name == TypeName.bool_type()
-                astmt = ast.replaced_with(AssignmentStatement(astmt.lhs, FunctionCallExpr(BuiltinFunction('&&'), [astmt.rhs, BooleanLiteralExpr(True)])))
-            set_parents(astmt)
-            try:
-                self.visit(astmt)
-            except TypeMismatchException:
-                raise TypeException("Only owner can assign to private variables", ast)
+        # NB TODO? Should we optionally disallow writes to variables which are owned by someone else (with e.g. a new modifier)
+        #if ast.lhs.annotated_type.is_private():
+        #    expected_rhs_type = AnnotatedTypeName(ast.lhs.annotated_type.type_name, Expression.me_expr())
+        #    if not ast.lhs.instanceof(expected_rhs_type):
+        #        raise TypeException("Only owner can assign to its private variables", ast)
+
+        if not ast.lhs.is_location():
+            raise TypeException("Assignment target is not a location", ast.lhs)
 
         expected_type = ast.lhs.annotated_type
         ast.rhs = self.get_rhs(ast.rhs, expected_type)
@@ -163,8 +156,16 @@ class TypeCheckVisitor(AstVisitor):
 
             # determine value type
             ast.annotated_type = map_t.type_name.value_type
+
+            if not self.is_accessible_by_invoker(ast):
+                raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
         else:
             raise TypeException('Indexing into non-mapping', ast)
+
+    @staticmethod
+    def is_accessible_by_invoker(ast: Expression):
+        return ast.annotated_type.is_public() or ast.is_lvalue() or \
+               ast.instanceof(AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr()))
 
     @staticmethod
     def make_private(expr: Expression, privacy: Expression):
@@ -241,9 +242,11 @@ class TypeCheckVisitor(AstVisitor):
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         if not ast.privacy.privacy_annotation_label():
             raise TypeException('Second argument of "reveal" cannot be used as a privacy type', ast)
-        if ast.privacy.is_all_expr() and ast.expr.annotated_type.privacy_annotation.is_all_expr():
-            raise TypeException('Redundant "reveal": Expression is already "@all"', ast)
+
+        # NB prevent any redundant reveal (not just for public)
         ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy)
+        if ast.instanceof(ast.expr.annotated_type) is True:
+            raise TypeException(f'Redundant "reveal": Expression is already "@{ast.privacy.code()}"', ast)
 
     def visitIfStatement(self, ast: IfStatement):
         b = ast.condition
@@ -282,6 +285,9 @@ class TypeCheckVisitor(AstVisitor):
             pass
         else:
             ast.annotated_type = deep_copy(ast.target.annotated_type)
+
+            if not self.is_accessible_by_invoker(ast):
+                raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
 
     def visitFunctionDefinition(self, ast: FunctionDefinition):
         for t in ast.get_parameter_types():
