@@ -1,5 +1,6 @@
 import abc
 import textwrap
+from os import linesep
 from typing import List, Dict, Union, Optional, Callable
 
 from zkay_ast.analysis.partition_state import PartitionState
@@ -1162,7 +1163,12 @@ class CodeVisitor(AstVisitor):
         raise NotImplementedError("Did not implement code generation for " + repr(ast))
 
     def visitComment(self, ast: Comment):
-        return '' if ast.text == '' else f'/* {ast.text} */'
+        if ast.text == '':
+            return ''
+        elif ast.text.find('\n') != -1:
+            return f'/* {ast.text} */'
+        else:
+            return f'// {ast.text}'
 
     def visitIdentifier(self, ast: Identifier):
         return ast.name
@@ -1373,4 +1379,7 @@ class CodeVisitor(AstVisitor):
     def visitSourceUnit(self, ast: SourceUnit):
         p = ast.pragma_directive
         contracts = self.visit_list(ast.contracts)
-        return f'{p}\n\n{contracts}'
+        lfstr = 'import "./{}";'
+        return f'{p}\n\n' \
+               f'{linesep.join([lfstr.format(uc) for uc in ast.used_contracts])}\n\n' \
+               f'{contracts}'
