@@ -15,12 +15,6 @@ class VerifyingKeyGm17(VerifyingKey):
         self.h_gamma = h_gamma
         self.query = query
 
-    @staticmethod
-    def dummy_vk() -> 'VerifyingKeyGm17':
-        p1 = G1Point('0', '0')
-        p2 = G2Point('0', '0', '0', '0')
-        return VerifyingKeyGm17(p2, p1, p1, p1, p2, [p1])
-
 
 class ProofGm17(Proof):
     def __init__(self, a: G1Point, b: G2Point, c: G1Point):
@@ -30,6 +24,11 @@ class ProofGm17(Proof):
 
 
 class ProvingSchemeGm17(ProvingScheme):
+
+    def dummy_vk(self) -> VerifyingKeyGm17:
+        p1 = G1Point('0', '0')
+        p2 = G2Point('0', '0', '0', '0')
+        return VerifyingKeyGm17(p2, p1, p1, p1, p2, [p1])
 
     def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper) -> str:
         vk = verification_key
@@ -43,6 +42,9 @@ class ProvingSchemeGm17(ProvingScheme):
         # TODO, perform input hashing to reduce query size
 
         return dedent(f'''\
+        pragma solidity ^0.5.0;
+        import "{ProvingScheme.verify_libs_contract_filename}";
+
         contract {circuit.verifier_contract.contract_type.type_name.names[0]} {{
             using Pairing for *;
 
@@ -93,11 +95,11 @@ class ProvingSchemeGm17(ProvingScheme):
                 }}''') + '''
 
                 vk_x = Pairing.addition(vk_x, vk.query[0]);
-                if (!Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta))) {{
+                if (!Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta))) {
                     require(false, "Proof verification failed at first check");
-                }}
-                if (!Pairing.pairingProd2(proof.a, vk.h_gamma, Pairing.negate(vk.g_gamma), proof.b)) {{
+                }
+                if (!Pairing.pairingProd2(proof.a, vk.h_gamma, Pairing.negate(vk.g_gamma), proof.b)) {
                     require(false, "Proof verification failed at second check");
-                }}
-            }}
-        }}''')
+                }
+            }
+        }''')
