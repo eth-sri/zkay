@@ -74,6 +74,16 @@ class Comment(AST):
     def comment_list(text: str, block: List[AST]) -> List[AST]:
         return block if not block else [Comment(text)] + block + [Comment()]
 
+    @staticmethod
+    def comment_wrap_block(text: str, block: List[AST]) -> List[AST]:
+        return [
+            Comment('-' * 30),
+            Comment(text),
+            Comment('-' * 30),
+        ] + block + [
+            Comment('-' * 30),
+            Comment(),
+        ]
 
 
 class Expression(AST):
