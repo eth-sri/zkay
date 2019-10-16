@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from typing import List
 
 from compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
-from compiler.privacy.circuit_generation.proving_scheme import ProvingScheme, VerifyingKey
+from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
 from zkay_ast.ast import AST
 
 
@@ -18,12 +18,14 @@ class CircuitGenerator(metaclass=ABCMeta):
         # Generate code which is needed to issue a transaction for this function (offchain computations)
         self._generate_offchain_code()
 
+        # Generate proof circuit code
         for circuit in self.circuits:
-            # Generate proof circuit, keys and verification contract
-            self._generate_zkcircuit()
-            self._generate_keys()
+            self._generate_zkcircuit(circuit)
 
-            vk = self._parse_verification_key()
+        for circuit in self.circuits:
+            # Generate prover and verifier keys and verification contract
+            self._generate_keys(circuit)
+            vk = self._parse_verification_key(circuit)
             with open(os.path.join(self.output_dir, circuit.verifier_contract.filename), 'w') as f:
                 f.write(self.proving_scheme.generate_verification_contract(vk, circuit))
 
@@ -31,14 +33,14 @@ class CircuitGenerator(metaclass=ABCMeta):
         # Generate python code corresponding to the off-chain computations for the circuit
         pass
 
-    #@abstractmethod
-    def _parse_verification_key(self) -> VerifyingKey:
+    @abstractmethod
+    def _generate_zkcircuit(self, circuit: CircuitHelper):
+        pass
+
+    @abstractmethod
+    def _generate_keys(self, circuit: CircuitHelper):
+        pass
+
+    @abstractmethod
+    def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         return self.proving_scheme.dummy_vk()
-
-    #@abstractmethod
-    def _generate_zkcircuit(self):
-        pass
-
-    #@abstractmethod
-    def _generate_keys(self):
-        pass

@@ -4,7 +4,7 @@ from compiler.privacy.transformer.transformer_visitor import AstTransformerVisit
 from compiler.privacy.used_contract import UsedContract
 from zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
     LocationExpr, \
-    TypeName, AssignmentStatement
+    TypeName, AssignmentStatement, UserDefinedTypeName
 
 
 class HybridArgumentIdf(Identifier):
@@ -98,6 +98,13 @@ class CircuitHelper:
         self.pk_for_label: Dict[str, AssignmentStatement] = {}
         self.old_code_and_temp_var_decls_for_stmt: Dict[Statement, Tuple[str, List[AssignmentStatement]]] = {}
 
+    def get_circuit_name(self) -> str:
+        if self.verifier_contract is None:
+            return ''
+        else:
+            assert isinstance(self.verifier_contract.contract_type.type_name, UserDefinedTypeName)
+            return self.verifier_contract.contract_type.type_name.names[0]
+
     @staticmethod
     def get_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
         return expr.annotated_type.type_name if privacy.is_all_expr() else TypeName.cipher_type()
@@ -138,7 +145,7 @@ class CircuitHelper:
         return idf
 
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
-        rnd = HybridArgumentIdf(f'{cipher.name}_R', None, TypeName.rnd_type())
+        rnd = HybridArgumentIdf(f'{cipher.name.replace("[", "_").replace("]", "")}_R', None, TypeName.rnd_type())
 
         if isinstance(plain, EncParamIdf) or isinstance(plain, DecryptLocallyIdf):
             self.s.append(plain)
