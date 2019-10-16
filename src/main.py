@@ -5,6 +5,7 @@ from pathlib import Path
 
 import my_logging
 from compiler.privacy.compiler import compile_ast
+from compiler.privacy.transformer.zkay_transformer import transform_ast
 from compiler.solidity.compiler import compile_solidity, SolcException
 from my_logging.log_context import log_context
 from utils.helpers import read_file, lines_of_code
@@ -54,12 +55,19 @@ def compile(file_location: str, d, count, get_binaries=False):
         except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
             exit(3)
 
-        code_file = compile_ast(ast, d, filename)
+        with print_step('Transforming zkay to public solidity'):
+            trans_ast = transform_ast(ast)
 
-        if get_binaries:
+        with print_step('Generating solidity code'):
+            code_text = trans_ast.code()
+        print(code_text)
+
+        #code_file = compile_ast(ast, d, filename)
+
+        #if get_binaries:
             # compilation of the solidity code is not required
-            with print_step("Compiling"):
-                compile_solidity(d, code_file)
+        #    with print_step("Compiling"):
+        #        compile_solidity(d, code_file)
 
     if count:
         my_logging.data('nStatements', count_statements(ast))
