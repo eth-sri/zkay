@@ -1,7 +1,6 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 
 from compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
-from compiler.privacy.circuit_generation.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from compiler.privacy.used_contract import UsedContract
 from zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
@@ -18,14 +17,10 @@ default_return_var_name = '__return_value'
 contract_var_suffix = 'inst'
 
 
-def transform_ast(ast: AST) -> AST:
+def transform_ast(ast: AST) -> Tuple[AST, 'ZkayTransformer']:
     zt = ZkayTransformer()
     new_ast = zt.visit(ast)
-    for cg in zt.circuit_generators.values():
-        if cg.requires_verification():
-            vc = ProvingSchemeGm17().generate_verification_contract(VerifyingKeyGm17.dummy_vk(), cg)
-            #print(vc)
-    return new_ast
+    return new_ast, zt
 
 
 class ZkayTransformer(AstTransformerVisitor):
@@ -63,7 +58,7 @@ class ZkayTransformer(AstTransformerVisitor):
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_children(f)
                 if self.current_generator.requires_verification():
-                    uc, sv = self.import_contract(ast, f'Verify_{c.idf.name}_${len(ext_var_decls)-1}_{f.name}')
+                    uc, sv = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls)-1}_{f.name}')
                     self.current_generator.verifier_contract = uc
                     self.used_contracts.append(uc)
                     ext_var_decls.append(sv)
@@ -130,7 +125,7 @@ class ZkayTransformer(AstTransformerVisitor):
                     VariableDeclarationStatement(VariableDeclaration(
                         [], AnnotatedTypeName.array_all(
                             AnnotatedTypeName.uint_all(), circuit_generator.temp_name_factory.count
-                        ), Identifier(circuit_generator.temp_name_factory.base_name)
+                        ), Identifier(circuit_generator.temp_name_factory.base_name), 'memory'
                     ), None)
                 ])
 
@@ -213,7 +208,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         assert self.gen.return_var is None
         self.gen.return_var = rv
 
-        repl = ast.replaced_with(VariableDeclarationStatement(VariableDeclaration([], ast.expr.annotated_type, rv), e))
+        storage_loc = None if ast.expr.annotated_type.type_name.is_primitive_type() else 'memory'
+        repl = ast.replaced_with(VariableDeclarationStatement(VariableDeclaration([], ast.expr.annotated_type, rv, storage_loc), e))
         if ast in self.gen.old_code_and_temp_var_decls_for_stmt:
             self.gen.old_code_and_temp_var_decls_for_stmt[repl] = self.gen.old_code_and_temp_var_decls_for_stmt[ast]
             del self.gen.old_code_and_temp_var_decls_for_stmt[ast]

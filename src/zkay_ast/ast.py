@@ -768,11 +768,12 @@ class TupleType(TypeName):
 
 class VariableDeclaration(AST):
 
-    def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier):
+    def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
         super().__init__()
         self.keywords = keywords
         self.annotated_type = annotated_type
         self.idf = idf
+        self.storage_location = storage_location
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
@@ -1292,8 +1293,9 @@ class CodeVisitor(AstVisitor):
         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
         k = ' '.join(keywords)
         t = self.visit(ast.annotated_type)
+        s = '' if ast.storage_location is None else f' {ast.storage_location}'
         i = self.visit(ast.idf)
-        return f'{k} {t} {i}'.strip()
+        return f'{k} {t}{s} {i}'.strip()
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         s = self.visit(ast.variable_declaration)
