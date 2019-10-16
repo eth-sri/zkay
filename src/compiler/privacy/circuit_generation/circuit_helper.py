@@ -1,5 +1,6 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Callable
 
+from compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from compiler.privacy.used_contract import UsedContract
 from zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
     LocationExpr, \
@@ -70,21 +71,22 @@ class CircuitHelper:
     param_base_name = '__out'
     temp_base_name = '__in'
 
-    def __init__(self, zkay_trafo):
+    def __init__(self, used_contracts: List[UsedContract], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
         super().__init__()
-        self.zkay_trafo = zkay_trafo
+        self.used_contracts = used_contracts
+        self.expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
+        self.return_var: Optional[Identifier] = None
+        self.verifier_contract: Optional[UsedContract] = None
 
         # Circuit elements
         self.p: List[HybridArgumentIdf] = []
-        """Public arguments for proof circuit"""
+        """ Public arguments for proof circuit """
 
         self.s: List[HybridArgumentIdf] = []
-        """Secret argument for proof circuit"""
+        """ Secret argument for proof circuit """
 
         self.phi: List[CircuitStatement] = []
-        """List of constraints which are checked by proof circuit"""
-
-        self.verifier_contract: Optional[UsedContract] = None
+        """ List of proof circuit statements (assertions and assignments) """
 
         self.secret_input_name_factory = NameFactory('__secret_')
         self.local_expr_name_factory = NameFactory('__tmp_')
@@ -94,11 +96,15 @@ class CircuitHelper:
 
         # Public contract elements
         self.pk_for_label: Dict[str, AssignmentStatement] = {}
-        self.temp_vars: Dict[Statement, Tuple[str, List[AssignmentStatement]]] = {}
+        self.old_code_and_temp_var_decls_for_stmt: Dict[Statement, Tuple[str, List[AssignmentStatement]]] = {}
 
     @staticmethod
     def get_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
         return expr.annotated_type.type_name if privacy.is_all_expr() else TypeName.cipher_type()
+
+    def requires_verification(self) -> bool:
+        """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
+        return self.p or self.s
 
     def request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         pname = privacy.idf.name
@@ -106,11 +112,11 @@ class CircuitHelper:
             return self.pk_for_label[pname].lhs.idf
         else:
             idf = self.temp_name_factory.get_new_idf(TypeName.key_type())
-            pki_idf = self.zkay_trafo.used_contracts[0].state_variable_idf
+            pki_idf = self.used_contracts[0].state_variable_idf
             assert pki_idf
             self.pk_for_label[pname] = AssignmentStatement(
                 IdentifierExpr(idf), FunctionCallExpr(MemberAccessExpr(IdentifierExpr(pki_idf), Identifier('getPk')),
-                                                      [self.zkay_trafo.visit(privacy)])
+                                                      [self.expr_trafo.visit(privacy)])
             )
             return idf
 
@@ -120,16 +126,15 @@ class CircuitHelper:
         return idf
 
     def add_temp_var(self, expr: Expression, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
-        from compiler.privacy.transformer.zkay_transformer import ZkayExpressionTransformer
-        te = ZkayExpressionTransformer(self.zkay_trafo).visit(expr)
+        te = self.expr_trafo.visit(expr)
         te_t = self.get_type(expr, privacy)
         idf = self.temp_name_factory.get_new_idf(te_t)
         stmt = AssignmentStatement(IdentifierExpr(idf), te)
         assert expr.statement is not None
-        if expr.statement in self.temp_vars:
-            self.temp_vars[expr.statement][1].append(stmt)
+        if expr.statement in self.old_code_and_temp_var_decls_for_stmt:
+            self.old_code_and_temp_var_decls_for_stmt[expr.statement][1].append(stmt)
         else:
-            self.temp_vars[expr.statement] = (expr.statement.code(), [stmt])
+            self.old_code_and_temp_var_decls_for_stmt[expr.statement] = (expr.statement.code(), [stmt])
         return idf
 
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
@@ -150,7 +155,7 @@ class CircuitHelper:
         new_param = self.add_param(expr, new_privacy)
 
         from compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer
-        rhs_expr = ZkayCircuitTransformer(self.zkay_trafo).visit(expr)
+        rhs_expr = ZkayCircuitTransformer(self).visit(expr)
         sec_circ_var_idf = self.local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)
         self.phi.append(ExpressionToLocAssignment(sec_circ_var_idf, rhs_expr))
 
