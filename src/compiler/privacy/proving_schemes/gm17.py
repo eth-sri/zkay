@@ -1,9 +1,8 @@
 from textwrap import dedent
 from typing import List
-from os import linesep
 
 from compiler.privacy.circuit_generation.circuit_generator import CircuitHelper
-from compiler.privacy.circuit_generation.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
+from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
 
 
 class VerifyingKeyGm17(VerifyingKey):
@@ -24,11 +23,13 @@ class ProofGm17(Proof):
 
 
 class ProvingSchemeGm17(ProvingScheme):
+    def __init__(self):
+        super().__init__('gm17')
 
     def dummy_vk(self) -> VerifyingKeyGm17:
         p1 = G1Point('0', '0')
         p2 = G2Point('0', '0', '0', '0')
-        return VerifyingKeyGm17(p2, p1, p1, p1, p2, [p1])
+        return VerifyingKeyGm17(p2, p1, p1, p1, p2, [p1, p1])
 
     def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper) -> str:
         vk = verification_key
@@ -45,7 +46,7 @@ class ProvingSchemeGm17(ProvingScheme):
         pragma solidity ^0.5.0;
         import "{ProvingScheme.verify_libs_contract_filename}";
 
-        contract {circuit.verifier_contract.contract_type.type_name.names[0]} {{
+        contract {circuit.get_circuit_name()} {{
             using Pairing for *;
 
             struct VerifyingKey {{
@@ -69,8 +70,8 @@ class ProvingSchemeGm17(ProvingScheme):
                 vk.h_beta = Pairing.G2Point({str(vk.h_beta)});
                 vk.g_gamma = Pairing.G1Point({str(vk.g_gamma)});
                 vk.h_gamma = Pairing.G2Point({str(vk.h_gamma)});
-                vk.query = new Pairing.G1Point[]({len(vk.query)});
-                {linesep.join([f"vk.query[{idx}] = Pairing.G1Point({str(q)});" for idx, q in enumerate(vk.query)])}
+                vk.query = new Pairing.G1Point[]({len(vk.query)});''' + ''.join([f'''
+                vk.query[{idx}] = Pairing.G1Point({str(q)});''' for idx, q in enumerate(vk.query)]) + f'''
             }}
 
             function check_verify(uint[8] memory proof_{self._get_uint_param(indata)}{self._get_uint_param(outdata)}) {{
