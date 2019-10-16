@@ -2,6 +2,7 @@ from textwrap import dedent
 from typing import List
 from os import linesep
 
+from compiler.privacy.circuit_generation.circuit_generator import CircuitHelper
 from compiler.privacy.circuit_generation.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
 
 
@@ -14,6 +15,12 @@ class VerifyingKeyGm17(VerifyingKey):
         self.h_gamma = h_gamma
         self.query = query
 
+    @staticmethod
+    def dummy_vk() -> 'VerifyingKeyGm17':
+        p1 = G1Point('0', '0')
+        p2 = G2Point('0', '0', '0', '0')
+        return VerifyingKeyGm17(p2, p1, p1, p1, p2, [p1])
+
 
 class ProofGm17(Proof):
     def __init__(self, a: G1Point, b: G2Point, c: G1Point):
@@ -24,13 +31,21 @@ class ProofGm17(Proof):
 
 class ProvingSchemeGm17(ProvingScheme):
 
-    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, input_length: int) -> str:
+    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper) -> str:
         vk = verification_key
-        # Verification contract source:
+        # Verification contract source (with some modifications by NB):
         # https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/gm17.rs#L199
+        indata = circuit.temp_name_factory
+        inlen = indata.count
+        outdata = circuit.param_name_factory
+        outlen = outdata.count
+
+        # TODO, perform input hashing to reduce query size
+
         return dedent(f'''\
-        contract Verifier {{
+        contract {circuit.verifier_contract.contract_type.type_name.names[0]} {{
             using Pairing for *;
+
             struct VerifyingKey {{
                 Pairing.G2Point h;
                 Pairing.G1Point g_alpha;
@@ -39,13 +54,15 @@ class ProvingSchemeGm17(ProvingScheme):
                 Pairing.G2Point h_gamma;
                 Pairing.G1Point[] query;
             }}
+
             struct Proof {{
                 Pairing.G1Point a;
                 Pairing.G2Point b;
                 Pairing.G1Point c;
             }}
+
             function verifyingKey() pure internal returns (VerifyingKey memory vk) {{
-                vk.h= Pairing.G2Point({str(vk.h)});
+                vk.h = Pairing.G2Point({str(vk.h)});
                 vk.g_alpha = Pairing.G1Point({str(vk.g_alpha)});
                 vk.h_beta = Pairing.G2Point({str(vk.h_beta)});
                 vk.g_gamma = Pairing.G1Point({str(vk.g_gamma)});
@@ -53,34 +70,34 @@ class ProvingSchemeGm17(ProvingScheme):
                 vk.query = new Pairing.G1Point[]({len(vk.query)});
                 {linesep.join([f"vk.query[{idx}] = Pairing.G1Point({str(q)});" for idx, q in enumerate(vk.query)])}
             }}
-            function verify(uint[] memory input, Proof memory proof) internal returns (uint) {{
+
+            function check_verify(uint[8] memory proof_{self._get_uint_param(indata)}{self._get_uint_param(outdata)}) {{
+                Proof memory proof:
+                proof.A = Pairing.G1Point(proof_[0], proof_[1]);
+                proof.B = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
+                proof.C = Pairing.G1Point(proof_[6], proof_[7]);
+
                 uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
                 VerifyingKey memory vk = verifyingKey();
-                require(input.length + 1 == vk.query.length);
-                Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
-                for (uint i = 0; i < input.length; i++) {{
-                    require(input[i] < snark_scalar_field);
-                    vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + 1], input[i]));
-                }}
+                require(vk.query.length == {inlen + outlen + 1});
+                Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);''' +
+                ('' if inlen == 0 else f'''
+                for (uint i = 0; i < {inlen}; i++) {{
+                    require({indata.base_name}[i] < snark_scalar_field);
+                    vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + 1], {indata.base_name}[i]));
+                }}''') +
+                ('' if outlen == 0 else f'''
+                for (uint i = 0; i < {outlen}; i++) {{
+                    require({outdata.base_name}[i] < snark_scalar_field);
+                    vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + {inlen + 1}], {outdata.base_name}[i]));
+                }}''') + '''
+
                 vk_x = Pairing.addition(vk_x, vk.query[0]);
-                if (!Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta))) return 1;
-                if (!Pairing.pairingProd2(proof.a, vk.h_gamma, Pairing.negate(vk.g_gamma), proof.b)) return 2;
-                return 0;
-            }}
-            event Verified(string s);
-            function verifyTx(
-                    Proof memory proof,
-                    uint[{input_length}] memory input
-                ) public returns (bool r) {{
-                uint[] memory inputValues = new uint[](input.length);
-                for(uint i = 0; i < input.length; i++){{
-                    inputValues[i] = input[i];
+                if (!Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta))) {{
+                    require(false, "Proof verification failed at first check");
                 }}
-                if (verify(inputValues, proof) == 0) {{
-                    emit Verified("Transaction successfully verified.");
-                    return true;
-                }} else {{
-                    return false;
+                if (!Pairing.pairingProd2(proof.a, vk.h_gamma, Pairing.negate(vk.g_gamma), proof.b)) {{
+                    require(false, "Proof verification failed at second check");
                 }}
             }}
         }}''')

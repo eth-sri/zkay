@@ -1,5 +1,8 @@
 from abc import ABCMeta, abstractmethod
 
+from compiler.privacy.circuit_generation.circuit_helper import ArrayBasedNameFactory
+from compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+
 
 class G1Point:
     def __init__(self, x: str, y: str):
@@ -28,9 +31,13 @@ class Proof:
 
 
 class ProvingScheme(metaclass=ABCMeta):
-    def __init__(self):
-        pass
+    @staticmethod
+    def _get_uint_param(name_factory: ArrayBasedNameFactory) -> str:
+        if name_factory.count == 0:
+            return ''
+        else:
+            return f', uint[{name_factory.count}] memory {name_factory.base_name}'
 
     @abstractmethod
-    def generate_verification_contract(self, verification_key: VerifyingKey, input_length: int) -> str:
+    def generate_verification_contract(self, verification_key: VerifyingKey, circuit: CircuitHelper) -> str:
         return ''
