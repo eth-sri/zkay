@@ -10,7 +10,7 @@ from zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefini
     ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition
 
-pki_contract_name = 'pki'
+pki_contract_name = 'PublicKeyInfrastructure'
 proof_param_name = '__proof'
 verification_function_name = 'check_verify'
 default_return_var_name = '__return_value'
@@ -239,10 +239,9 @@ class ZkayStatementTransformer(AstTransformerVisitor):
     def process_statement_child(self, child: AST):
         if isinstance(child, Expression):
             return self.expr_trafo.visit(child)
-        elif isinstance(child, VariableDeclaration):
-            return self.var_decl_trafo.visit(child)
         else:
-            assert False, f'Child had unhandled type {type(child)}'
+            assert isinstance(child, VariableDeclaration), f'Child had unhandled type {type(child)}'
+            return self.var_decl_trafo.visit(child)
 
     def visitStatement(self, ast: Statement):
         """ Rules (2), (3), (4) """
