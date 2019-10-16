@@ -15,6 +15,7 @@ class AstTransformerVisitor:
 
     def visit_children(self, ast: AST):
         ast.process_children(self.visit)
+        return ast
 
     def _visit_internal(self, ast):
         if ast is None:
@@ -36,5 +37,4 @@ class AstTransformerVisitor:
         assert False
 
     def visitAST(self, ast: AST):
-        self.visit_children(ast)
-        return ast
+        return self.visit_children(ast)
