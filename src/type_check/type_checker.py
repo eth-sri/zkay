@@ -7,7 +7,7 @@ from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
-    AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType
+    AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType, Identifier
 from zkay_ast.visitor.deep_copy import deep_copy
 from zkay_ast.visitor.visitor import AstVisitor
 
@@ -174,7 +174,10 @@ class TypeCheckVisitor(AstVisitor):
         if has_side_effects(expr):  # TODO
             raise NotImplementedError("Expressions with side effects are not allowed inside private expressions")
 
-        r = ReclassifyExpr(expr, privacy.privacy_annotation_label())
+        pl = privacy.privacy_annotation_label()
+        if isinstance(pl, Identifier):
+            pl = privacy.replaced_with(IdentifierExpr(pl))
+        r = ReclassifyExpr(expr, pl)
 
         # set type
         r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, privacy)

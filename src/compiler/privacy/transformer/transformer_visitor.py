@@ -22,7 +22,7 @@ class AstTransformerVisitor:
 
         if self.log:
             print('Visiting', type(ast))
-        return self.get_visit_function(ast.__class__)()
+        return self.get_visit_function(ast.__class__)(ast)
 
     def get_visit_function(self, c):
         visitor_function = 'visit' + c.__name__
