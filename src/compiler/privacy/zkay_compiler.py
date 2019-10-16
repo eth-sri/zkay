@@ -2,7 +2,7 @@ import os
 
 from compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from compiler.privacy.circuit_generation.proving_scheme import ProvingScheme
-from compiler.privacy.circuit_generation.proving_schemes.gm17 import ProvingSchemeGm17
+from compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from compiler.privacy.transformer.zkay_transformer import transform_ast, pki_contract_name
 from zkay_ast.ast import AST
 

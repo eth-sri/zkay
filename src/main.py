@@ -4,10 +4,8 @@ import re
 from pathlib import Path
 
 import my_logging
-from compiler.privacy.compiler import compile_ast
-from compiler.privacy.transformer.zkay_transformer import transform_ast
 from compiler.privacy.zkay_compiler import compile_zkay
-from compiler.solidity.compiler import compile_solidity, SolcException
+from compiler.solidity.compiler import SolcException
 from my_logging.log_context import log_context
 from utils.helpers import read_file, lines_of_code
 from utils.progress_printer import print_step, TermColor, colored_print

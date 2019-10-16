@@ -3,7 +3,7 @@ import shutil
 
 from parameterized import parameterized_class
 
-from compiler.privacy.compiler import compile_code
+from compiler.privacy.legacy.compiler import compile_code
 from compiler.solidity.compiler import compile_solidity
 from examples.examples import all_examples
 from examples.test_examples import TestExamples

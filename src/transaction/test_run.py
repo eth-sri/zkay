@@ -2,7 +2,7 @@ import os
 import shutil
 from unittest import TestCase
 
-from compiler.privacy.compiler import compile_code
+from compiler.privacy.legacy.compiler import compile_code
 from examples.examples import addition, private_addition, power_grid
 from transaction.run import get_runner
 

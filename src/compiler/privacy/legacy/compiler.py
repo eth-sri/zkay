@@ -3,9 +3,9 @@ from shutil import copy
 from typing import List, Dict, Optional
 
 import my_logging
-from compiler.privacy.hash_function import hash_function
-from compiler.privacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
-from compiler.privacy.tags import tag, helper_tag, param_tag
+from compiler.privacy.legacy.hash_function import hash_function
+from compiler.privacy.legacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
+from compiler.privacy.legacy.tags import tag, helper_tag, param_tag
 from compiler.privacy.used_contract import UsedContractLegacy
 from compiler.zokrates.compiler import compile_zokrates, n_proof_arguments, get_work_dir, get_zok_output_filename
 from my_logging.log_context import log_context

@@ -2,8 +2,8 @@ from random import randint
 from typing import Dict, Union, List
 
 import my_logging
-from compiler.privacy.compiler import compile_code, SolidityVisitor
-from compiler.privacy.proof_helper import FromZok, ParameterCheck, FromSolidity
+from compiler.privacy.legacy.compiler import compile_code, SolidityVisitor
+from compiler.privacy.legacy.proof_helper import FromZok, ParameterCheck, FromSolidity
 from compiler.zokrates.compiler import generate_proof
 from transaction.encoding_helper import hash_ints_to_split_int
 from transaction.simulate import Simulator
