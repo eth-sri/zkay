@@ -208,8 +208,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         assert self.gen.return_var is None
         self.gen.return_var = rv
 
-        storage_loc = None if ast.expr.annotated_type.type_name.is_primitive_type() else 'memory'
-        repl = ast.replaced_with(VariableDeclarationStatement(VariableDeclaration([], ast.expr.annotated_type, rv, storage_loc), e))
+        repl = ast.replaced_with(AssignmentStatement(rv, e))
         if ast in self.gen.old_code_and_temp_var_decls_for_stmt:
             self.gen.old_code_and_temp_var_decls_for_stmt[repl] = self.gen.old_code_and_temp_var_decls_for_stmt[ast]
             del self.gen.old_code_and_temp_var_decls_for_stmt[ast]
@@ -217,6 +216,10 @@ class ZkayStatementTransformer(AstTransformerVisitor):
 
     def visitBlock(self, ast: Block):
         """ Rule (1) """
+        for stmt in ast.statements:
+            # TODO don't add fully public statements
+            self.gen.old_code_and_temp_var_decls_for_stmt[stmt] = (stmt.code(), [])
+
         self.visit_children(ast)
 
         block_stmts = []

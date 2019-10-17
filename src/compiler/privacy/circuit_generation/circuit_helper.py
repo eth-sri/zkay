@@ -137,11 +137,8 @@ class CircuitHelper:
         te_t = self.get_type(expr, privacy)
         idf = self.temp_name_factory.get_new_idf(te_t)
         stmt = AssignmentStatement(IdentifierExpr(idf), te)
-        assert expr.statement is not None
-        if expr.statement in self.old_code_and_temp_var_decls_for_stmt:
-            self.old_code_and_temp_var_decls_for_stmt[expr.statement][1].append(stmt)
-        else:
-            self.old_code_and_temp_var_decls_for_stmt[expr.statement] = (expr.statement.code(), [stmt])
+        assert expr.statement is not None and expr.statement in self.old_code_and_temp_var_decls_for_stmt
+        self.old_code_and_temp_var_decls_for_stmt[expr.statement][1].append(stmt)
         return idf
 
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
