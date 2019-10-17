@@ -1,53 +1,6 @@
-FROM debian:latest AS helper
-# Helper image to install
-# - zokrates
+FROM zokrates/zokrates:0.5.0 AS zok
 
-#######################
-# BASIC PREREQUISITES #
-#######################
-# Needed for download/compilation/...
-# To install on host:
-# - install packages listed below
-
-# -qq: quiet installation
-RUN apt-get update \
-	&& apt-get install -y \
-		curl \
-		build-essential \
-		git \
-	&& rm -rf /var/lib/apt/lists/*
-
-####################
-# INSTALL ZOKRATES #
-####################
-# To install on host:
-# - install packages listed below
-# $ ./scripts/install-zokrates.sh
-
-# libsnark (prerequisite)
-# Instructions taken from:
-# https://github.com/Zokrates/ZoKrates/blob/master/scripts/install_libsnark_prerequisites.sh
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends \
-		build-essential \
-		cmake \
-		libboost-dev \
-		libboost-program-options-dev \
-		libgmp3-dev \
-		libprocps-dev \
-		libssl-dev \
-		pkg-config \
-		python-markdown \
-	&& rm -rf /var/lib/apt/lists/*
-
-# prepare scripts
-WORKDIR /scripts
-COPY scripts/install-zokrates.sh install-zokrates.sh
-# run installation script
-RUN ./install-zokrates.sh
-
-
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:4.7.12
 # Image to be distributed
 # - starts from image containing conda
 # - conda allows to keep the installation within docker and on host consistent
@@ -85,7 +38,6 @@ RUN conda env update -n root --file $SCRIPTS/environment.yml \
 # - No action necessary
 
 # zokrates
-ENV WITH_LIBSNARK 1
 ENV ZOKRATES_ROOT /zokrates
 ENV ZOKRATES_HOME $ZOKRATES_ROOT/zokrates_home
 
@@ -95,7 +47,7 @@ ENV ZKAYSRC $ZKAYDIR/src
 ENV PYTHONPATH $ZKAYSRC
 
 ##########################
-# INSTALL SOLC & TRUFFLE #
+# INSTALL SOLCJS & TRUFFLE #
 ##########################
 # SOLC instructions take from:
 # https://solidity.readthedocs.io/en/v0.5.3/installing-solidity.html
@@ -108,35 +60,24 @@ ENV PYTHONPATH $ZKAYSRC
 # -q: install globally
 # emits warnings because we are root
 RUN npm install -q -g \
-		solc@0.5.10 \
+		solc@0.5.12 \
 		truffle@5.0.30 \
 		ganache-cli@6.5.1
+
+
+##########################
+# INSTALL SOLC
+#########################
+
+RUN wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-static-linux && mv solc-static-linux /usr/bin/solc && chmod +x /usr/bin/solc
 
 ############
 # ZOKRATES #
 ############
-# Install zokrates
-# - binaries were already compiled in the previous stage
-# To install on host:
-# - no action necessary
 
-# libsnark (prerequisite)
-# Instructions taken from:
-# https://github.com/Zokrates/ZoKrates/blob/master/scripts/install_libsnark_prerequisites.sh
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends \
-		build-essential \
-		cmake \
-		libboost-dev \
-		libboost-program-options-dev \
-		libgmp3-dev \
-		libprocps-dev \
-		libssl-dev \
-		pkg-config \
-		python-markdown \
-	&& rm -rf /var/lib/apt/lists/*
+# Install dynamic lib dependency
+RUN apt-get update && apt-get install -y --no-install-recommends libgmp3-dev && rm -rf /var/lib/apt/lists/*
 
-# copy relevant binaries
-COPY --from=helper /ZoKrates $ZOKRATES_ROOT
-
-RUN wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-static-linux && mv solc-static-linux /usr/bin/solc && chmod +x /usr/bin/solc
+# copy zokrates binaries from zokrates image
+COPY --from=zok /home/zokrates $ZOKRATES_ROOT
+RUN mv $ZOKRATES_ROOT/.zokrates $ZOKRATES_HOME
