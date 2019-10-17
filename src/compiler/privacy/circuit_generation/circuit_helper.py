@@ -68,8 +68,8 @@ class ArrayBasedNameFactory(NameFactory):
 
 
 class CircuitHelper:
-    param_base_name = '__out'
-    temp_base_name = '__in'
+    param_base_name = 'out__'
+    temp_base_name = 'in__'
 
     def __init__(self, used_contracts: List[UsedContract], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
         super().__init__()
@@ -88,8 +88,8 @@ class CircuitHelper:
         self.phi: List[CircuitStatement] = []
         """ List of proof circuit statements (assertions and assignments) """
 
-        self.secret_input_name_factory = NameFactory('__secret_')
-        self.local_expr_name_factory = NameFactory('__tmp_')
+        self.secret_input_name_factory = NameFactory('secret_')
+        self.local_expr_name_factory = NameFactory('tmp_')
 
         self.param_name_factory = ArrayBasedNameFactory(CircuitHelper.param_base_name)
         self.temp_name_factory = ArrayBasedNameFactory(CircuitHelper.temp_base_name)

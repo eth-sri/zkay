@@ -14,7 +14,7 @@ class G1Point:
         return G1Point(seq[0], seq[1])
 
     def __str__(self):
-        return f'{self.x}, {self.y}'
+        return f'uint256({self.x}), uint256({self.y})'
 
 
 class G2Point:
@@ -27,7 +27,7 @@ class G2Point:
         return G2Point(seq[0], seq[1], seq[2], seq[3])
 
     def __str__(self):
-        return f'[{self.x[0]}, {self.x[1]}], [{self.y[0]}, {self.y[1]}]'
+        return f'[uint256({self.x[0]}), uint256({self.x[1]})], [uint256({self.y[0]}), uint256({self.y[1]})]'
 
 
 class VerifyingKey:
