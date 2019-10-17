@@ -237,6 +237,9 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         return ast
 
     def process_statement_child(self, child: AST):
+        if child is None:
+            return
+
         if isinstance(child, Expression):
             return self.expr_trafo.visit(child)
         else:
