@@ -11,6 +11,7 @@ class G1Point:
 
     @staticmethod
     def from_seq(seq):
+        assert len(seq) == 2
         return G1Point(seq[0], seq[1])
 
     def __str__(self):
@@ -24,6 +25,7 @@ class G2Point:
 
     @staticmethod
     def from_seq(seq):
+        assert len(seq) == 4
         return G2Point(seq[0], seq[1], seq[2], seq[3])
 
     def __str__(self):

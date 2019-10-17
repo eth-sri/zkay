@@ -29,7 +29,7 @@ class ProvingSchemeGm17(ProvingScheme):
     def dummy_vk(self) -> VerifyingKeyGm17:
         p1 = G1Point('0', '0')
         p2 = G2Point('0', '0', '0', '0')
-        return VerifyingKeyGm17(p2, p1, p1, p1, p2, [p1, p1])
+        return VerifyingKeyGm17(p2, p1, p2, p1, p2, [p1, p1])
 
     def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper) -> str:
         vk = verification_key

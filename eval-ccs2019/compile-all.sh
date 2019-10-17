@@ -9,7 +9,7 @@ cd "$BASEDIR"
 
 ./list-examples.sh | while read SOL; do
 	DIR="$(dirname "$SOL")"
-	TARGET="$DIR/compiled"
+	TARGET="$DIR/compiled_all"
 	echo "Compiling $SOL to $TARGET"
 	python3 "$ZKAYSRC/main.py" --output "$TARGET" --count-statements "$SOL"
 done
