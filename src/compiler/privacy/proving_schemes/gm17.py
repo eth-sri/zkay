@@ -6,7 +6,7 @@ from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Poi
 
 
 class VerifyingKeyGm17(VerifyingKey):
-    def __init__(self, h: G2Point, g_alpha: G1Point, h_beta: G1Point, g_gamma: G1Point, h_gamma: G2Point, query: List[G1Point]):
+    def __init__(self, h: G2Point, g_alpha: G1Point, h_beta: G2Point, g_gamma: G1Point, h_gamma: G2Point, query: List[G1Point]):
         self.h = h
         self.g_alpha = g_alpha
         self.h_beta = h_beta
@@ -44,6 +44,7 @@ class ProvingSchemeGm17(ProvingScheme):
 
         return dedent(f'''\
         pragma solidity ^0.5.0;
+
         import "{ProvingScheme.verify_libs_contract_filename}";
 
         contract {circuit.get_circuit_name()} {{
