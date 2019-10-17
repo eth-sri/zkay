@@ -10,10 +10,8 @@ from compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKe
 from compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
 from utils.run_command import run_command
 from utils.timer import time_measure
-from zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr
-
-g1_point_pattern = r'(0x[0-9a-f]{64}), (0x[0-9a-f]{64})'
-g2_point_pattern = f'\\[{g1_point_pattern}\\], \\[{g1_point_pattern}\\]'
+from zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr, Expression, \
+    AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr
 
 zok_bin = 'zokrates'
 if 'ZOKRATES_ROOT' in os.environ:
@@ -22,38 +20,50 @@ if 'ZOKRATES_ROOT' in os.environ:
 
 
 class ZokratesCodeVisitor(CodeVisitor):
+    @staticmethod
+    def as_bool(expr: Expression) -> Expression:
+        if not isinstance(expr, BooleanLiteralExpr) and expr.annotated_type.type_name == TypeName.uint_type():
+            expr = expr.replaced_with(FunctionCallExpr(BuiltinFunction('=='), [expr, NumberLiteralExpr(1)]))
+        expr.annotated_type = AnnotatedTypeName.bool_all()
+        return expr
+
+    @staticmethod
+    def as_int(expr: Expression) -> Expression:
+        if not isinstance(expr, NumberLiteralExpr) and expr.annotated_type.type_name == TypeName.bool_type():
+            expr = expr.replaced_with(FunctionCallExpr(BuiltinFunction('ite'), [expr, NumberLiteralExpr(1), NumberLiteralExpr(0)]))
+        expr.annotated_type = AnnotatedTypeName.uint_all()
+        return expr
+
+    def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
+        return '(1 == 1)' if ast.value else '(0 == 1)'
+
+    def visitAssignmentStatement(self, ast: AssignmentStatement):
+        return f'{self.visit(ast.lhs)} = {self.visit(self.as_int(ast.rhs))}'
+
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, BuiltinFunction) and ast.func.is_ite():
-            return f'if ({self.visit(ast.args[0])}) then ({self.visit(ast.args[1])}) else ({self.visit(ast.args[2])}) fi'
+        if isinstance(ast.func, BuiltinFunction):
+            if ast.func.op == 'ite':
+                cond = self.visit(self.as_bool(ast.args[0]))
+                t = self.visit(ast.args[1])
+                e = self.visit(ast.args[2])
+                return f'if ({cond}) then ({t}) else ({e}) fi'
+            elif ast.func.op == '!=':
+                ast.func.op = '=='
+                return f'(! {self.visitFunctionCallExpr(ast)})'
+            elif ast.func.is_bop():
+                ast.args = [self.as_bool(arg) for arg in ast.args]
+            elif ast.func.op == '==' or ast.func.is_comp():
+                ast.args = [self.as_int(arg) for arg in ast.args]
         else:
-            return super().visitFunctionCallExpr(ast)
+            ast.args = [self.as_int(arg) for arg in ast.args]
 
-
-def compile_zokrates(output_dir: str, code_file_name: str, proving_scheme: str):
-    with time_measure('compileZokrates'):
-        # compile
-        try:
-            run_command([zok_bin, 'compile', '-i', code_file_name], cwd=output_dir)
-        except SubprocessError as e:
-            print(e)
-            raise ValueError(f'Error compiling {code_file_name}') from e
-
-        # setup
-        run_command([zok_bin, 'setup', '--proving-scheme', proving_scheme], cwd=output_dir)
+        return super().visitFunctionCallExpr(ast)
 
 
 class ZokratesGenerator(CircuitGenerator):
-    def to_zok_code(self, stmt: CircuitStatement):
-        if isinstance(stmt, ExpressionToLocAssignment):
-            expr = stmt.expr
-            if stmt.lhs.t == TypeName.bool_type():
-                expr = stmt.expr.replaced_with(FunctionCallExpr(BuiltinFunction('ite'), [expr, NumberLiteralExpr(1), NumberLiteralExpr(0)]))
-            return f'field {stmt.lhs.name} = {ZokratesCodeVisitor().visit(expr)}'
-        elif isinstance(stmt, EqConstraint):
-            return f'{stmt.expr.name} == {stmt.val.name}'
-        else:
-            assert isinstance(stmt, EncConstraint)
-            return f'enc({stmt.plain.name}, {stmt.rnd.name}, {stmt.pk.name}) == {stmt.cipher.name}'
+    zkvisitor = ZokratesCodeVisitor()
+    g1_point_pattern = r'(0x[0-9a-f]{64}), (0x[0-9a-f]{64})'
+    g2_point_pattern = f'\\[{g1_point_pattern}\\], \\[{g1_point_pattern}\\]'
 
     def _generate_zkcircuit(self, circuit: CircuitHelper):
         secret_args = ', '.join([f'private field {s.name}' for s in circuit.s])
@@ -66,7 +76,7 @@ class ZokratesGenerator(CircuitGenerator):
         zok_code = lib_code + dedent(f'''\
             def main({", ".join([secret_args, pub_args])}) -> (field):\
                 ''' + ''.join([f'''
-                {self.to_zok_code(stmt)}''' for stmt in circuit.phi]) + f'''
+                {self.__to_zok_code(stmt)}''' for stmt in circuit.phi]) + f'''
                 return 1
             ''')
 
@@ -79,7 +89,15 @@ class ZokratesGenerator(CircuitGenerator):
 
     def _generate_keys(self, circuit: CircuitHelper):
         odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
-        compile_zokrates(odir, f'{circuit.get_circuit_name()}.zok', self.proving_scheme.name)
+        code_file_name = f'{circuit.get_circuit_name()}.zok'
+        with time_measure('compileZokrates'):
+            try:
+                run_command([zok_bin, 'compile', '-i', code_file_name], cwd=odir)
+            except SubprocessError as e:
+                print(e)
+                raise ValueError(f'Error compiling {code_file_name}') from e
+        with time_measure('generatingKeyPair'):
+            run_command([zok_bin, 'setup', '--proving-scheme', self.proving_scheme.name], cwd=odir)
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper):
         odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
@@ -91,20 +109,35 @@ class ZokratesGenerator(CircuitGenerator):
                 key_file = f.read()
 
             query = []
-            for match in re.finditer(r'vk\.query\[\d+\] = ' + g1_point_pattern, key_file):
+            for match in re.finditer(r'vk\.query\[\d+\] = ' + self.g1_point_pattern, key_file):
                 query.append(G1Point.from_seq(match.groups()))
 
             key: VerifyingKeyGm17 = VerifyingKeyGm17(
-                G2Point.from_seq(re.search(f'vk\\.h = {g2_point_pattern}', key_file).groups()),
-                G1Point.from_seq(re.search(f'vk\\.g_alpha = {g1_point_pattern}', key_file).groups()),
-                G2Point.from_seq(re.search(f'vk\\.h_beta = {g2_point_pattern}', key_file).groups()),
-                G1Point.from_seq(re.search(f'vk\\.g_gamma = {g1_point_pattern}', key_file).groups()),
-                G2Point.from_seq(re.search(f'vk\\.h_gamma = {g2_point_pattern}', key_file).groups()),
+                G2Point.from_seq(re.search(f'vk\\.h = {self.g2_point_pattern}', key_file).groups()),
+                G1Point.from_seq(re.search(f'vk\\.g_alpha = {self.g1_point_pattern}', key_file).groups()),
+                G2Point.from_seq(re.search(f'vk\\.h_beta = {self.g2_point_pattern}', key_file).groups()),
+                G1Point.from_seq(re.search(f'vk\\.g_gamma = {self.g1_point_pattern}', key_file).groups()),
+                G2Point.from_seq(re.search(f'vk\\.h_gamma = {self.g2_point_pattern}', key_file).groups()),
                 query
             )
         else:
             assert False
         return key
+
+    def __to_zok_code(self, stmt: CircuitStatement):
+        if isinstance(stmt, ExpressionToLocAssignment):
+            lhs = IdentifierExpr(stmt.lhs, AnnotatedTypeName.uint_all())
+            return f'field {self.zkvisitor.visit(AssignmentStatement(lhs, stmt.expr))}'
+        elif isinstance(stmt, EqConstraint):
+            return self.zkvisitor.visit(FunctionCallExpr(BuiltinFunction('=='),
+                                                         [IdentifierExpr(e, AnnotatedTypeName.uint_all()) for e in [stmt.tgt, stmt.val]]))
+        else:
+            assert isinstance(stmt, EncConstraint)
+            fcall = FunctionCallExpr(IdentifierExpr(Identifier('enc')),
+                                 [IdentifierExpr(e, AnnotatedTypeName.uint_all()) for e in [stmt.plain, stmt.rnd, stmt.pk]])
+            fcall.annotated_type = AnnotatedTypeName.uint_all()
+            return self.zkvisitor.visit(FunctionCallExpr(BuiltinFunction('=='),
+                                                         [fcall, IdentifierExpr(stmt.cipher, AnnotatedTypeName.uint_all())]))
 
 
 lib_code = '''\
@@ -115,3 +148,5 @@ def enc(field msg, field R, field key) -> (field):
     return msg + key
 
 '''
+
+

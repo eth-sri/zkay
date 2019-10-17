@@ -4,7 +4,7 @@ from compiler.privacy.transformer.transformer_visitor import AstTransformerVisit
 from compiler.privacy.used_contract import UsedContract
 from zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
     LocationExpr, \
-    TypeName, AssignmentStatement, UserDefinedTypeName
+    TypeName, AssignmentStatement, UserDefinedTypeName, AnnotatedTypeName
 
 
 class HybridArgumentIdf(Identifier):
@@ -44,8 +44,8 @@ class EncConstraint(CircuitStatement):
 
 
 class EqConstraint(CircuitStatement):
-    def __init__(self, expr: HybridArgumentIdf, val: HybridArgumentIdf):
-        self.expr = expr
+    def __init__(self, tgt: HybridArgumentIdf, val: HybridArgumentIdf):
+        self.tgt = tgt
         self.val = val
 
 
@@ -145,7 +145,7 @@ class CircuitHelper:
         return idf
 
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
-        rnd = HybridArgumentIdf(f'{cipher.name.replace("[", "_").replace("]", "")}_R', None, TypeName.rnd_type())
+        rnd = HybridArgumentIdf(f'{cipher.name.replace("[", "").replace("]", "")}_R', None, TypeName.rnd_type())
 
         if isinstance(plain, EncParamIdf) or isinstance(plain, DecryptLocallyIdf):
             self.s.append(plain)
@@ -163,6 +163,7 @@ class CircuitHelper:
 
         from compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer
         rhs_expr = ZkayCircuitTransformer(self).visit(expr)
+
         sec_circ_var_idf = self.local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)
         self.phi.append(ExpressionToLocAssignment(sec_circ_var_idf, rhs_expr))
 
@@ -172,7 +173,7 @@ class CircuitHelper:
             self.p.append(new_param)
             self.phi.append(EqConstraint(sec_circ_var_idf, new_param))
 
-        return expr.replaced_with(IdentifierExpr(new_param))
+        return expr.replaced_with(IdentifierExpr(new_param, AnnotatedTypeName.uint_all()))
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
         new_var = self.add_temp_var(loc_expr, privacy)
@@ -185,5 +186,5 @@ class CircuitHelper:
             dec_loc_idf = DecryptLocallyIdf(new_idf_name, loc_expr.annotated_type.type_name, new_var)
             self.ensure_encryption(dec_loc_idf, Expression.me_expr(), new_var)
 
-        return loc_expr.replaced_with(IdentifierExpr(new_var))
+        return loc_expr.replaced_with(IdentifierExpr(new_var, AnnotatedTypeName.uint_all()))
 

@@ -366,9 +366,10 @@ class StringLiteralExpr(LiteralExpr):
 
 class IdentifierExpr(Expression):
 
-    def __init__(self, idf: Identifier):
+    def __init__(self, idf: Identifier, annotated_type: Optional['AnnotatedTypeName'] = None):
         super().__init__()
         self.idf = idf
+        self.annotated_type = annotated_type
         # set later by symbol table
         self.target: Union[
             VariableDeclaration,
