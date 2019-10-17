@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 import my_logging
-from compiler.privacy.zkay_compiler import compile_zkay
+from compiler.privacy.zkay_frontend import compile_zkay, package_zkay
 from compiler.solidity.compiler import SolcException
 from my_logging.log_context import log_context
 from utils.helpers import read_file, lines_of_code
@@ -55,7 +55,8 @@ def compile(file_location: str, d, count, get_binaries=False):
             exit(3)
 
         with print_step('Generating solidity code'):
-            compile_zkay(ast, d, filename)
+            cg = compile_zkay(ast, d, filename)
+            package_zkay(file_location, cg)
 
         #if get_binaries:
             # compilation of the solidity code is not required
