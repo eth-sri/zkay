@@ -266,11 +266,14 @@ class TypeCheckVisitor(AstVisitor):
         assert (isinstance(f, FunctionDefinition))
         expected_types = f.get_return_type()
 
-        instance = ast.expr.instanceof(expected_types)
-        if not instance:
-            raise TypeMismatchException(expected_types, ast.expr.annotated_type, ast)
-        elif instance == 'make-private':
-            ast.expr = self.make_private(ast.expr, expected_types.privacy_annotation)
+        if ast.expr is None and expected_types is not None:
+            raise TypeMismatchException(expected_types, None, ast)
+        elif ast.expr is not None:
+            instance = ast.expr.instanceof(expected_types)
+            if not instance:
+                raise TypeMismatchException(expected_types, ast.expr.annotated_type, ast)
+            elif instance == 'make-private':
+                ast.expr = self.make_private(ast.expr, expected_types.privacy_annotation)
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
         ast.annotated_type = AnnotatedTypeName.bool_all()
