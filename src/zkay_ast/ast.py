@@ -442,6 +442,10 @@ class Statement(AST):
         return repl
 
 
+class DummyStatement(Statement):
+    pass
+
+
 class IfStatement(Statement):
 
     def __init__(self, condition: Expression, then_branch: Statement, else_branch: Statement):
@@ -1222,6 +1226,9 @@ class CodeVisitor(AstVisitor):
         p = self.visit(ast.privacy)
         return f'reveal({e}, {p})'
 
+    def visitDummyStatement(self, ast: DummyStatement):
+        return ''
+
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)
         t = self.visit(ast.then_branch)
@@ -1251,7 +1258,8 @@ class CodeVisitor(AstVisitor):
         return f'{lhs} = {rhs};'
 
     def visitBlock(self, ast: Block):
-        s = self.visit_list(ast.statements)
+        ls = [s for s in ast.statements if not isinstance(s, DummyStatement)]
+        s = self.visit_list(ls)
         s = indent(s)
         return f'{{\n{s}\n}}'
 
