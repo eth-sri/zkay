@@ -76,12 +76,14 @@ class Comment(AST):
 
     @staticmethod
     def comment_wrap_block(text: str, block: List[AST]) -> List[AST]:
+        if not block:
+            return block
         return [
-            Comment('-' * 30),
+            Comment('-' * 31),
             Comment(text),
-            Comment('-' * 30),
+            Comment('-' * 31),
         ] + block + [
-            Comment('-' * 30),
+            Comment('-' * 31),
             Comment(),
         ]
 
@@ -529,6 +531,12 @@ class Block(Statement):
         return self.statements[key]
 
 
+class IndentBlock(Block):
+    def __init__(self, name: str, statements: List[Statement]):
+        super().__init__(statements)
+        self.name = name
+
+
 class TypeName(AST):
     __metaclass__ = abc.ABCMeta
 
@@ -607,10 +615,11 @@ class UserDefinedTypeName(TypeName):
 
 class AnnotatedTypeName(AST):
 
-    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression]):
+    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression], old_priv_text: str = ''):
         super().__init__()
         self.type_name = type_name
         self.had_privacy_annotation = privacy_annotation is not None
+        self.old_priv_text = old_priv_text
         if self.had_privacy_annotation:
             self.privacy_annotation = privacy_annotation
         else:
@@ -684,14 +693,15 @@ class Mapping(TypeName):
     def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: AnnotatedTypeName):
         super().__init__()
         self.key_type = key_type
-        self.key_label = key_label
+        self.key_label: Union[str, Optional[Identifier]] = key_label
         self.value_type = value_type
         # set by type checker: instantiation of the key by IndexExpr
         self.instantiated_key: Expression = None
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.key_type = f(self.key_type)
-        self.key_label = f(self.key_label)
+        if isinstance(self.key_label, Identifier):
+            self.key_label = f(self.key_label)
         self.value_type = f(self.value_type)
 
     def __eq__(self, other):
@@ -903,12 +913,14 @@ class ConstructorDefinition(ConstructorOrFunctionDefinition):
 
 class StateVariableDeclaration(AST):
 
-    def __init__(self, annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression]):
+    def __init__(self, annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression],
+                 storage_location: Optional[str] = None):
         super().__init__()
         self.annotated_type = annotated_type
         self.keywords = keywords
         self.idf = idf
         self.expr = expr
+        self.storage_location = storage_location
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
@@ -1257,11 +1269,18 @@ class CodeVisitor(AstVisitor):
         rhs = self.visit(ast.rhs)
         return f'{lhs} = {rhs};'
 
-    def visitBlock(self, ast: Block):
+    def handle_block(self, ast: Block):
         ls = [s for s in ast.statements if not isinstance(s, DummyStatement)]
         s = self.visit_list(ls)
         s = indent(s)
-        return f'{{\n{s}\n}}'
+        return s
+
+    def visitBlock(self, ast: Block):
+        return f'{{\n{self.handle_block(ast)}\n}}'
+
+    def visitIndentBlock(self, ast: IndentBlock):
+        fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"
+        return fstr.format('', 'BEGIN') + self.handle_block(ast) + fstr.format(' ', 'END ')
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
         return ast.name
@@ -1271,6 +1290,8 @@ class CodeVisitor(AstVisitor):
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         t = self.visit(ast.type_name)
+        if ast.old_priv_text != '':
+            t = f'{t}/*{ast.old_priv_text}*/'
         p = self.visit(ast.privacy_annotation)
         if ast.had_privacy_annotation:
             return f'{t}@{p}'
@@ -1279,7 +1300,10 @@ class CodeVisitor(AstVisitor):
 
     def visitMapping(self, ast: Mapping):
         k = self.visit(ast.key_type)
-        label = '!' + self.visit(ast.key_label) if ast.key_label else ''
+        if isinstance(ast.key_label, Identifier):
+            label = '!' + self.visit(ast.key_label)
+        else:
+            label = f'/*!{ast.key_label}*/' if ast.key_label is not None else ''
         v = self.visit(ast.value_type)
         return f"mapping({k}{label} => {v})"
 
@@ -1298,7 +1322,7 @@ class CodeVisitor(AstVisitor):
         s = self.visit_list(ast.types, ', ')
         return f'({s})'
 
-    def visitVariableDeclaration(self, ast: VariableDeclaration):
+    def visitVariableDeclaration(self, ast: Union[VariableDeclaration, StateVariableDeclaration]):
         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
         k = ' '.join(keywords)
         t = self.visit(ast.annotated_type)
@@ -1347,11 +1371,13 @@ class CodeVisitor(AstVisitor):
             definition = f'constructor'
         p = self.visit_list(parameters, ', ')
         m = ' '.join(modifiers)
+        if m != '':
+            m = f' {m}'
         r = self.visit_list(return_parameters, ' ')
         if r != '':
-            r = f'returns ({r})'
+            r = f' returns ({r})'
 
-        f = f"{definition}({p}) {m} {r} {body}"
+        f = f"{definition}({p}){m}{r} {body}"
         return f
 
     def visitConstructorDefinition(self, ast: ConstructorDefinition):
@@ -1365,8 +1391,9 @@ class CodeVisitor(AstVisitor):
         k = ' '.join([k for k in keywords if k != 'final'])
         if k != '':
             k = f'{k} '
+        s = '' if ast.storage_location is None else f'{ast.storage_location} '
         i = self.visit(ast.idf)
-        ret = f"{f}{t} {k}{i}".strip()
+        ret = f"{f}{t} {k}{s}{i}".strip()
         if ast.expr:
             ret += ' = ' + self.visit(ast.expr)
         return ret + ';'
