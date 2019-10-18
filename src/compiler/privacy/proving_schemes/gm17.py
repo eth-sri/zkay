@@ -75,11 +75,11 @@ class ProvingSchemeGm17(ProvingScheme):
                 vk.query[{idx}] = Pairing.G1Point({str(q)});''' for idx, q in enumerate(vk.query)]) + f'''
             }}
 
-            function check_verify(uint[8] memory proof_{self._get_uint_param(indata)}{self._get_uint_param(outdata)}) {{
-                Proof memory proof:
-                proof.A = Pairing.G1Point(proof_[0], proof_[1]);
-                proof.B = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
-                proof.C = Pairing.G1Point(proof_[6], proof_[7]);
+            function check_verify(uint[8] memory proof_{self._get_uint_param(indata)}{self._get_uint_param(outdata)}) public {{
+                Proof memory proof;
+                proof.a = Pairing.G1Point(proof_[0], proof_[1]);
+                proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
+                proof.c = Pairing.G1Point(proof_[6], proof_[7]);
 
                 uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
                 VerifyingKey memory vk = verifyingKey();
