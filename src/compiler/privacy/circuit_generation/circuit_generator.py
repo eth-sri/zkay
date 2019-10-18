@@ -46,6 +46,9 @@ class CircuitGenerator(metaclass=ABCMeta):
             paths += [vk, pk]
         return paths
 
+    def get_verification_contract_filenames(self) -> List[str]:
+        return [os.path.join(self.output_dir, circuit.verifier_contract.filename) for circuit in self.circuits]
+
     def _generate_offchain_code(self):
         # Generate python code corresponding to the off-chain computations for the circuit
         pass

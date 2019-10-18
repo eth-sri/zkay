@@ -9,10 +9,11 @@ from compiler.privacy.circuit_generation.circuit_generator import CircuitGenerat
 from compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
 from compiler.privacy.transformer.zkay_transformer import transform_ast, pki_contract_name
+from compiler.solidity.compiler import compile_solidity
 from zkay_ast.ast import AST
 
 
-def compile_zkay(ast: AST, output_dir: str, filename: str):
+def compile_zkay(ast: AST, output_dir: str, filename: str, get_binaries: bool = True):
     ast, zkt = transform_ast(deepcopy(ast))
 
     # Write public contract file
@@ -30,6 +31,12 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
     # Generate circuits and corresponding verification contracts
     cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ProvingSchemeGm17(), output_dir)
     cg.generate_circuits(import_keys=False)
+
+    if get_binaries:
+        compile_solidity(output_dir, filename)
+        for vc in cg.get_verification_contract_filenames():
+            compile_solidity(output_dir, os.path.split(vc)[1])
+
     return cg
 
 

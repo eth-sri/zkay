@@ -22,7 +22,7 @@ if 'ZOKRATES_ROOT' in os.environ:
 class ZokratesCodeVisitor(CodeVisitor):
     @staticmethod
     def as_bool(expr: Expression) -> Expression:
-        if not isinstance(expr, BooleanLiteralExpr) and expr.annotated_type.type_name == TypeName.uint_type():
+        if not isinstance(expr, BooleanLiteralExpr) and expr.annotated_type.type_name != TypeName.bool_type():
             expr = expr.replaced_with(FunctionCallExpr(BuiltinFunction('=='), [expr, NumberLiteralExpr(1)]))
         expr.annotated_type = AnnotatedTypeName.bool_all()
         return expr
