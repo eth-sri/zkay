@@ -98,6 +98,17 @@ class Expression(AST):
     def me_expr():
         return MeExpr()
 
+    def implicitly_converted(self, expected: 'TypeName'):
+        if expected == TypeName.bool_type() and not isinstance(self, BooleanLiteralExpr) and self.annotated_type.type_name != TypeName.bool_type():
+            ret = FunctionCallExpr(BuiltinFunction('=='), [self, NumberLiteralExpr(1)])
+        elif expected == TypeName.uint_type() and not isinstance(self, NumberLiteralExpr) and self.annotated_type == AnnotatedTypeName.bool_all():
+            ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
+        else:
+            assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
+            return self
+        ret.annotated_type = AnnotatedTypeName(expected, self.annotated_type.privacy_annotation)
+        return ret
+
     def __init__(self):
         super().__init__()
         # set later by type checker
@@ -176,10 +187,11 @@ class Expression(AST):
             else:
                 return False
 
-    def replaced_with(self, replacement: 'Expression') -> 'Expression':
+    def replaced_with(self, replacement: 'Expression', new_type: Optional['AnnotatedTypeName'] = None) -> 'Expression':
         repl = super().replaced_with(replacement)
         assert isinstance(repl, Expression)
         repl.statement = self.statement
+        repl.annotated_type = new_type
         return repl
 
     @property
@@ -442,10 +454,6 @@ class Statement(AST):
         repl.after_analysis = self.after_analysis
         repl.function = self.function
         return repl
-
-
-class DummyStatement(Statement):
-    pass
 
 
 class IfStatement(Statement):
@@ -1238,9 +1246,6 @@ class CodeVisitor(AstVisitor):
         p = self.visit(ast.privacy)
         return f'reveal({e}, {p})'
 
-    def visitDummyStatement(self, ast: DummyStatement):
-        return ''
-
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)
         t = self.visit(ast.then_branch)
@@ -1270,8 +1275,7 @@ class CodeVisitor(AstVisitor):
         return f'{lhs} = {rhs};'
 
     def handle_block(self, ast: Block):
-        ls = [s for s in ast.statements if not isinstance(s, DummyStatement)]
-        s = self.visit_list(ls)
+        s = self.visit_list(ast.statements)
         s = indent(s)
         return s
 

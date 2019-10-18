@@ -136,6 +136,10 @@ class CircuitHelper:
     def add_temp_var(self, expr: Expression, privacy: PrivacyLabelExpr, enc_param: bool) -> HybridArgumentIdf:
         te = self.expr_trafo.visit(expr)
         te_t = self.get_type(expr, privacy)
+
+        if te_t == TypeName.bool_type():
+            te = te.implicitly_converted(TypeName.uint_type())
+
         idf = self.temp_name_factory.get_new_idf(te_t)
         stmt = AssignmentStatement(IdentifierExpr(idf), te)
         if enc_param:
@@ -173,11 +177,11 @@ class CircuitHelper:
 
         if not new_privacy.is_all_expr():
             self.ensure_encryption(sec_circ_var_idf, new_privacy, new_param)
-            return expr.replaced_with(IdentifierExpr(new_param, AnnotatedTypeName.cipher_type()))
+            return expr.replaced_with(IdentifierExpr(new_param), AnnotatedTypeName.cipher_type())
         else:
             self.p.append(new_param)
             self.phi.append(EqConstraint(sec_circ_var_idf, new_param))
-            return expr.replaced_with(IdentifierExpr(new_param, AnnotatedTypeName.uint_all()))
+            return expr.replaced_with(IdentifierExpr(new_param), AnnotatedTypeName.uint_all()).implicitly_converted(new_param.t)
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
         new_var = self.add_temp_var(loc_expr, privacy, False)
@@ -190,5 +194,4 @@ class CircuitHelper:
             dec_loc_idf = DecryptLocallyIdf(new_idf_name, loc_expr.annotated_type.type_name, new_var)
             self.ensure_encryption(dec_loc_idf, Expression.me_expr(), new_var)
 
-        return loc_expr.replaced_with(IdentifierExpr(new_var, AnnotatedTypeName.cipher_type()))
-
+        return loc_expr.replaced_with(IdentifierExpr(new_var), AnnotatedTypeName.cipher_type())

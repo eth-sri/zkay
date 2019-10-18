@@ -10,12 +10,12 @@ from zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefini
     AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
     ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, DummyStatement, IndentBlock
+    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock
 
 pki_contract_name = 'PublicKeyInfrastructure'
-proof_param_name = '__proof'
+proof_param_name = 'proof__'
 verification_function_name = 'check_verify'
-default_return_var_name = '__return_value'
+default_return_var_name = 'return_value__'
 contract_var_suffix = 'inst'
 
 
@@ -60,7 +60,7 @@ class ZkayTransformer(AstTransformerVisitor):
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_children(f)
                 if self.current_generator.requires_verification():
-                    uc, sv = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls)-1}_{f.name}')
+                    uc, sv = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls) - 1}_{f.name}')
                     self.current_generator.verifier_contract = uc
                     self.used_contracts.append(uc)
                     ext_var_decls.append(sv)
@@ -103,6 +103,14 @@ class ZkayTransformer(AstTransformerVisitor):
         requires_proof = verifier is not None
 
         preamble: List[AST] = []
+        # Declare return variable if necessary
+        if isinstance(ast, FunctionDefinition) and ast.return_parameters:
+            assert len(ast.return_parameters) == 1  # for now
+            preamble += Comment.comment_list("Declare return variable", [
+                VariableDeclarationStatement(VariableDeclaration(
+                    [], ast.return_parameters[0].annotated_type, Identifier(default_return_var_name)
+                ), None)
+            ])
 
         # Add external contract initialization for constructor
         if isinstance(ast, ConstructorDefinition):
@@ -143,11 +151,12 @@ class ZkayTransformer(AstTransformerVisitor):
 
             # Call to verifier
             verify = ExpressionStatement(FunctionCallExpr(
-                MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf), Identifier(verification_function_name)), [
-                    IdentifierExpr(Identifier(proof_param_name)),
-                    IdentifierExpr(Identifier(circuit_generator.temp_name_factory.base_name)),
-                    IdentifierExpr(Identifier(circuit_generator.param_name_factory.base_name))
-                ]
+                MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf), Identifier(verification_function_name)),
+                [IdentifierExpr(Identifier(proof_param_name))] +
+                ([] if circuit_generator.temp_name_factory.count == 0 else [
+                    IdentifierExpr(Identifier(circuit_generator.temp_name_factory.base_name))]) +
+                ([] if circuit_generator.param_name_factory.count == 0 else [
+                    IdentifierExpr(Identifier(circuit_generator.param_name_factory.base_name))])
             ))
 
             # Assemble new body (public key requests, transformed statements, verification invocation)
@@ -155,7 +164,7 @@ class ZkayTransformer(AstTransformerVisitor):
                                   Comment.comment_wrap_block('Backup private arguments for verification',
                                                              circuit_generator.enc_param_check_stmts) + \
                                   Comment.comment_wrap_block('Request required public keys',
-                                                       list(circuit_generator.pk_for_label.values())) + \
+                                                             list(circuit_generator.pk_for_label.values())) + \
                                   [IndentBlock("BODY", ast.body.statements)] + \
                                   [Comment('Verify zk proof of execution'), verify]
 
@@ -174,7 +183,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name), None)
         if ast.is_private():
-            new_t.old_priv_text = f'@{ast.privacy_annotation.code()}'
+            new_t.old_priv_text = f'{ast.code()}' if ast.type_name != new_t.type_name else f'@{ast.privacy_annotation.code()}'
         return new_t
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
@@ -211,14 +220,9 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             return None
         assert self.gen.return_var is None
 
-        e = self.expr_trafo.visit(ast.expr)
-        if isinstance(e, IdentifierExpr):
-            self.gen.return_var = e.idf
-            return ast.replaced_with(DummyStatement())
-        else:
-            rv = Identifier(default_return_var_name)
-            self.gen.return_var = rv
-            return ast.replaced_with(AssignmentStatement(IdentifierExpr(rv), e))
+        rv = Identifier(default_return_var_name)
+        self.gen.return_var = rv
+        return ast.replaced_with(AssignmentStatement(IdentifierExpr(rv), self.expr_trafo.visit(ast.expr)))
 
     def visitBlock(self, ast: Block):
         """ Rule (1) """
@@ -230,7 +234,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             transformed_stmt = self.visit(stmt)
             if transformed_stmt is not None and not isinstance(transformed_stmt, Comment):
                 # If the transformed code looks the same, do not need to generate a comment block
-                old_code_wo_annotations = re.sub(r'(?=\b)me(?=\b)', 'msg.sender', re.sub(f'@{WS_PATTERN}*{ID_PATTERN}', '', code_tvdecls[0]))
+                old_code_wo_annotations = re.sub(r'(?=\b)me(?=\b)', 'msg.sender',
+                                                 re.sub(f'@{WS_PATTERN}*{ID_PATTERN}', '', code_tvdecls[0]))
                 new_code_wo_annotation_comments = re.sub(r'/\*.*?\*/', '', transformed_stmt.code())
                 code_eq = new_code_wo_annotation_comments == old_code_wo_annotations
                 if code_eq:
@@ -258,13 +263,10 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         return ast
 
     def process_statement_child(self, child: AST):
-        if child is None:
-            return
-
         if isinstance(child, Expression):
             return self.expr_trafo.visit(child)
-        else:
-            assert isinstance(child, VariableDeclaration), f'Child had unhandled type {type(child)}'
+        elif child is not None:
+            assert isinstance(child, VariableDeclaration)
             return self.var_decl_trafo.visit(child)
 
     def visitStatement(self, ast: Statement):
@@ -294,7 +296,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     @staticmethod
     def visitMeExpr(ast: MeExpr):
-        return ast.replaced_with(MemberAccessExpr(IdentifierExpr(Identifier('msg')), Identifier('sender')))
+        return ast.replaced_with(MemberAccessExpr(IdentifierExpr(Identifier('msg')), Identifier('sender')), AnnotatedTypeName.address_all())
 
     def visitLiteralExpr(self, ast: LiteralExpr):
         """ Rule (7) """
@@ -302,6 +304,10 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         """ Rule (8) """
+        if isinstance(ast.idf, HybridArgumentIdf):
+            return ast.implicitly_converted(ast.idf.t)
+        elif ast.target is not None:
+            ast.annotated_type = ast.target.annotated_type
         return ast
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
@@ -310,9 +316,8 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             return ast.replaced_with(FunctionCallExpr(
                 ast.func,
                 [self.visit(ast.args[0]), self.visit(ast.args[1])]
-            ))
-        else:
-            return self.visitExpression(ast)
+            ), ast.annotated_type)
+        return self.visitExpression(ast)
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (11) """
