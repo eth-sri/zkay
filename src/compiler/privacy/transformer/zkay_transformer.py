@@ -1,14 +1,16 @@
+import re
 from typing import Dict, Optional, List, Tuple
 
 from compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
 from compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from compiler.privacy.used_contract import UsedContract
+from compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
     BuiltinFunction, FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
     AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
     ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition
+    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, DummyStatement, IndentBlock
 
 pki_contract_name = 'PublicKeyInfrastructure'
 proof_param_name = '__proof'
@@ -111,7 +113,7 @@ class ZkayTransformer(AstTransformerVisitor):
                 c_assignments.append(AssignmentStatement(
                     lhs=IdentifierExpr(c.state_variable_idf), rhs=IdentifierExpr(pidf))
                 )
-            preamble += Comment.comment_list('Assigning contract instance variables', c_assignments)
+            preamble += Comment.comment_wrap_block('Assigning contract instance variables', c_assignments)
 
         if not requires_proof:
             if ast.body.statements and isinstance(ast.body.statements[-1], Comment):
@@ -139,13 +141,7 @@ class ZkayTransformer(AstTransformerVisitor):
             # Add proof parameter
             ast.parameters.append(Parameter([], AnnotatedTypeName.proof_type(), Identifier(proof_param_name), 'memory'))
 
-            # Prepend public key requests (and external contract assignments for constructor)
-            ast.body.statements = preamble + \
-                                  Comment.comment_list('Request required public keys',
-                                                       list(circuit_generator.pk_for_label.values())) + \
-                                  ast.body.statements
-
-            # Add call to verifier
+            # Call to verifier
             verify = ExpressionStatement(FunctionCallExpr(
                 MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf), Identifier(verification_function_name)), [
                     IdentifierExpr(Identifier(proof_param_name)),
@@ -153,7 +149,15 @@ class ZkayTransformer(AstTransformerVisitor):
                     IdentifierExpr(Identifier(circuit_generator.param_name_factory.base_name))
                 ]
             ))
-            ast.body.statements += [Comment('Verify zk proof of execution'), verify]
+
+            # Assemble new body (public key requests, transformed statements, verification invocation)
+            ast.body.statements = preamble + \
+                                  Comment.comment_wrap_block('Backup private arguments for verification',
+                                                             circuit_generator.enc_param_check_stmts) + \
+                                  Comment.comment_wrap_block('Request required public keys',
+                                                       list(circuit_generator.pk_for_label.values())) + \
+                                  [IndentBlock("BODY", ast.body.statements)] + \
+                                  [Comment('Verify zk proof of execution'), verify]
 
         # Add return statement at the end if necessary (was previously replaced by assignment to return_var by ZkayStatementTransformer)
         if circuit_generator.return_var is not None:
@@ -168,7 +172,10 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         self.expr_trafo = ZkayExpressionTransformer(None)
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
-        return AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name), None)
+        new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name), None)
+        if ast.is_private():
+            new_t.old_priv_text = f'@{ast.privacy_annotation.code()}'
+        return new_t
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.keywords = [k for k in ast.keywords if k != 'final']
@@ -180,13 +187,13 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
         if ast.annotated_type.type_name.code().startswith('<'):
             return None
-
         ast.keywords = [k for k in ast.keywords if k != 'final']
         ast.expr = self.expr_trafo.visit(ast.expr)
         return self.visit_children(ast)
 
     def visitMapping(self, ast: Mapping):
-        ast.key_label = None
+        if ast.key_label is not None:
+            ast.key_label = ast.key_label.name
         return self.visit_children(ast)
 
 
@@ -202,38 +209,49 @@ class ZkayStatementTransformer(AstTransformerVisitor):
     def visitReturnStatement(self, ast: ReturnStatement):
         if ast.expr is None:
             return None
+        assert self.gen.return_var is None
 
         e = self.expr_trafo.visit(ast.expr)
-        rv = e.idf if isinstance(e, IdentifierExpr) else Identifier(default_return_var_name)
-        assert self.gen.return_var is None
-        self.gen.return_var = rv
-
-        repl = ast.replaced_with(AssignmentStatement(rv, e))
-        if ast in self.gen.old_code_and_temp_var_decls_for_stmt:
-            self.gen.old_code_and_temp_var_decls_for_stmt[repl] = self.gen.old_code_and_temp_var_decls_for_stmt[ast]
-            del self.gen.old_code_and_temp_var_decls_for_stmt[ast]
-        return repl
+        if isinstance(e, IdentifierExpr):
+            self.gen.return_var = e.idf
+            return ast.replaced_with(DummyStatement())
+        else:
+            rv = Identifier(default_return_var_name)
+            self.gen.return_var = rv
+            return ast.replaced_with(AssignmentStatement(IdentifierExpr(rv), e))
 
     def visitBlock(self, ast: Block):
         """ Rule (1) """
-        for stmt in ast.statements:
-            # TODO don't add fully public statements
-            self.gen.old_code_and_temp_var_decls_for_stmt[stmt] = (stmt.code(), [])
+        code_and_tv_decls_for_stmt = self.gen.old_code_and_temp_var_decls_for_stmt
+        for idx, stmt in enumerate(ast.statements):
+            code_tvdecls = (stmt.code(), [])
+            code_and_tv_decls_for_stmt[stmt] = code_tvdecls
 
-        self.visit_children(ast)
+            transformed_stmt = self.visit(stmt)
+            if transformed_stmt is not None and not isinstance(transformed_stmt, Comment):
+                # If the transformed code looks the same, do not need to generate a comment block
+                old_code_wo_annotations = re.sub(r'(?=\b)me(?=\b)', 'msg.sender', re.sub(f'@{WS_PATTERN}*{ID_PATTERN}', '', code_tvdecls[0]))
+                new_code_wo_annotation_comments = re.sub(r'/\*.*?\*/', '', transformed_stmt.code())
+                code_eq = new_code_wo_annotation_comments == old_code_wo_annotations
+                if code_eq:
+                    assert not code_and_tv_decls_for_stmt[stmt][1]
+                    del code_and_tv_decls_for_stmt[stmt]
+                elif transformed_stmt != stmt:
+                    # move temp var decls list to new key
+                    del code_and_tv_decls_for_stmt[stmt]
+                    code_and_tv_decls_for_stmt[transformed_stmt] = code_tvdecls
+            ast.statements[idx] = transformed_stmt
 
         block_stmts = []
-        tv = self.gen.old_code_and_temp_var_decls_for_stmt
         last = True
         for stmt in ast.statements:
-            if stmt in tv:
+            if stmt in code_and_tv_decls_for_stmt:
                 if not last:
                     block_stmts.append(Comment())
-
                 last = True
-                old_code, new_stmts = tv[stmt]
+                old_code, new_stmts = code_and_tv_decls_for_stmt[stmt]
                 block_stmts += Comment.comment_wrap_block(old_code, new_stmts + [stmt])
-            else:
+            elif stmt is not None:
                 last = False
                 block_stmts.append(stmt)
         ast.statements = block_stmts + ([Comment()] if not last else [])
