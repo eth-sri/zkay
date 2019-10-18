@@ -33,7 +33,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         for idx, circuit in enumerate(self.circuits):
             # Generate prover and verifier keys and verification contract
             if not import_keys:
-                with print_step(f'Compiling proof circuit \'{circuit.verifier_contract.contract_type.type_name.names[0]}\' [{idx+1}/{c_count}]'):
+                with print_step(f'Compilation and key generation for circuit \'{circuit.verifier_contract.contract_type.type_name.names[0]}\' [{idx+1}/{c_count}]'):
                     self._generate_keys(circuit)
             vk = self._parse_verification_key(circuit)
             with open(os.path.join(self.output_dir, circuit.verifier_contract.filename), 'w') as f:

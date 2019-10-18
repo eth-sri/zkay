@@ -54,14 +54,8 @@ def compile(file_location: str, d, count, get_binaries=False):
         except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
             exit(3)
 
-        with print_step('Generating solidity code'):
-            cg = compile_zkay(ast, d, filename)
-            package_zkay(file_location, cg)
-
-        #if get_binaries:
-            # compilation of the solidity code is not required
-        #    with print_step("Compiling"):
-        #        compile_solidity(d, code_file)
+        cg = compile_zkay(ast, d, filename)
+        package_zkay(file_location, cg)
 
     if count:
         my_logging.data('nStatements', count_statements(ast))

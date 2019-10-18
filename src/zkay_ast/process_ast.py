@@ -50,7 +50,7 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
         ] + c.state_variable_declarations
 
     # Solc type checking
-    with print_step("Running through solc"):
+    with print_step("Type checking with solc"):
         from compiler.solidity.fake_solidity_compiler import fake_solidity_code
         fake_code = fake_solidity_code(str(code))
         check_solc_errors(code, fake_code)
@@ -78,7 +78,7 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
         if alias_analysis:
             a(ast)
     if type_check:
-        with print_step("Type checking"):
+        with print_step("Zkay type checking"):
             try:
                 t(ast)
             except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as te:
