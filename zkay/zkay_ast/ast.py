@@ -138,6 +138,10 @@ class Expression(AST):
     def instanceof_data_type(self, expected) -> bool:
         assert (isinstance(expected, TypeName))
 
+        # Implicit conversions
+        if isinstance(self.annotated_type.type_name, PayableAddress) and expected == TypeName.address_type():
+            return True
+
         # check data type
         actual = self.annotated_type.type_name
         return expected == actual
