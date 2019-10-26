@@ -5,8 +5,8 @@ from zkay import my_logging
 from zkay.compiler.privacy.legacy.compiler import compile_code, SolidityVisitor
 from zkay.compiler.privacy.legacy.proof_helper import FromZok, ParameterCheck, FromSolidity
 from zkay.compiler.zokrates.compiler import generate_proof
-from zkay.transaction.encoding_helper import hash_ints_to_split_int
-from zkay.transaction.simulate import Simulator
+from zkay.transaction.legacy.encoding_helper import hash_ints_to_split_int
+from zkay.transaction.legacy.simulate import Simulator
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, TypeName, Expression, Parameter, SourceUnit, \
     ConstructorDefinition

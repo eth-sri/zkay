@@ -1,7 +1,7 @@
 import hashlib
 from unittest import TestCase
 
-from zkay.transaction.encoding_helper import int_to_bytes, hash_ints_to_split_int, hash_ints_to_bytes
+from zkay.transaction.legacy.encoding_helper import int_to_bytes, hash_ints_to_split_int, hash_ints_to_bytes
 
 
 class TestEncodingHelper(TestCase):
