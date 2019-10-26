@@ -3,14 +3,16 @@ from abc import ABCMeta, abstractmethod
 from typing import List
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
 from zkay.utils.progress_printer import print_step
 from zkay.zkay_ast.ast import AST
 
 
 class CircuitGenerator(metaclass=ABCMeta):
-    def __init__(self, ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
-        self.ast = ast
+    def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
+        self.python_visitor = PythonOffchainVisitor(circuits)
+        self.sol_ast = transformed_ast
         self.circuits_to_prove = [c for c in circuits if c.requires_verification()]
         self.proving_scheme = proving_scheme
         self.output_dir = output_dir
@@ -54,7 +56,7 @@ class CircuitGenerator(metaclass=ABCMeta):
 
     def _generate_offchain_code(self):
         """ Generate python code corresponding to the off-chain computations for the circuit """
-        return ''
+        return self.python_visitor.visit(self.sol_ast)
 
     @abstractmethod
     def _generate_zkcircuit(self, circuit: CircuitHelper):
