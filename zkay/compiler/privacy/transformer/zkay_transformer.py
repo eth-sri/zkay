@@ -76,7 +76,7 @@ class ZkayTransformer(AstTransformerVisitor):
         return ast
 
     def transform_function_children(self, ast: ConstructorOrFunctionDefinition):
-        circuit_generator = CircuitHelper(self.used_contracts, ZkayExpressionTransformer)
+        circuit_generator = CircuitHelper(ast, self.used_contracts, ZkayExpressionTransformer)
         self.circuit_generators[ast] = circuit_generator
         self.current_generator = circuit_generator
 

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List, Dict, Optional, Tuple, Callable
 
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
@@ -12,6 +13,7 @@ class HybridArgumentIdf(Identifier):
         super().__init__(name)
         self.t = t
         self.offset = offset
+        self.corresponding_plaintext_circuit_input: Optional[HybridArgumentIdf] = None
 
     def get_loc_expr(self, t: Optional[AnnotatedTypeName] = None):
         if self.offset is None:
@@ -27,11 +29,6 @@ class HybridArgumentIdf(Identifier):
             return self.name
         else:
             return f'{self.name}{self.offset}'
-
-class DecryptLocallyIdf(HybridArgumentIdf):
-    def __init__(self, name: str, t: TypeName, idf: HybridArgumentIdf):
-        super().__init__(name, None, t)
-        self.idf = idf
 
 
 class EncParamIdf(HybridArgumentIdf):
@@ -85,8 +82,10 @@ class CircuitHelper:
     out_base_name = 'out__'
     in_base_name = 'in__'
 
-    def __init__(self, used_contracts: List[UsedContract], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
+    def __init__(self, fct: ConstructorOrFunctionDefinition,
+                 used_contracts: List[UsedContract], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
         super().__init__()
+        self.fct = fct
         self.used_contracts = used_contracts
         self.expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
         self.enc_param_check_stmts: List[AssignmentStatement] = []
@@ -166,10 +165,8 @@ class CircuitHelper:
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
         rnd = HybridArgumentIdf(f'{cipher.get_flat_name()}_R', None, TypeName.rnd_type())
 
-        if isinstance(plain, EncParamIdf) or isinstance(plain, DecryptLocallyIdf):
-            self.s.append(plain)
-
         if isinstance(plain, EncParamIdf):
+            self.s.append(plain)
             cipher = self.add_temp_var(cipher.get_loc_expr(AnnotatedTypeName.cipher_type()), Expression.me_expr(), True)
 
         self.s.append(rnd)
@@ -204,8 +201,9 @@ class CircuitHelper:
         if privacy.is_me_expr():
             # Instead of secret key, decrypt outside proof circuit (but locally), add plain value as secret param
             #  and prove encryption (because its not feasible to decrypt inside proof circuit)
-            new_idf_name = self.secret_input_name_factory.get_new_idf(TypeName.void_type()).name
-            dec_loc_idf = DecryptLocallyIdf(new_idf_name, loc_expr.annotated_type.type_name, new_var)
-            self.ensure_encryption(dec_loc_idf, Expression.me_expr(), new_var)
+            dec_loc_idf = self.secret_input_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
+            self.s.append(dec_loc_idf)
+            self.ensure_encryption(dec_loc_idf, Expression.me_expr(), deepcopy(new_var))
+            new_var.corresponding_plaintext_circuit_input = dec_loc_idf
 
         return loc_expr.replaced_with(new_var.get_loc_expr(), AnnotatedTypeName.cipher_type())

@@ -5,7 +5,7 @@ from textwrap import dedent
 
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, ExpressionToLocAssignment, EqConstraint, \
-    EncConstraint
+    EncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
 from zkay.utils.run_command import run_command
@@ -33,6 +33,13 @@ class ZokratesCodeVisitor(CodeVisitor):
             expr = expr.replaced_with(FunctionCallExpr(BuiltinFunction('ite'), [expr, NumberLiteralExpr(1), NumberLiteralExpr(0)]))
         expr.annotated_type = AnnotatedTypeName.uint_all()
         return expr
+
+    def visitIndexExpr(self, ast: IndexExpr):
+        if isinstance(ast.arr, IdentifierExpr) and isinstance(ast.arr.idf, HybridArgumentIdf):
+            corresponding_plain_input = ast.arr.idf.corresponding_plaintext_circuit_input
+            if corresponding_plain_input is not None:
+                return self.visit(corresponding_plain_input)
+        return super().visitIndexExpr(ast)
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
         return '(1 == 1)' if ast.value else '(0 == 1)'
