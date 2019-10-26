@@ -839,12 +839,14 @@ class Parameter(AST):
             keywords: List[str],
             annotated_type: AnnotatedTypeName,
             idf: Identifier,
-            storage_location: Optional[str] = None):
+            storage_location: Optional[str] = None,
+            original_type: Optional[TypeName] = None):
         super().__init__()
         self.keywords = keywords
         self.annotated_type = annotated_type
-        self.storage_location = storage_location
         self.idf = idf
+        self.storage_location = storage_location
+        self.original_type = original_type
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)

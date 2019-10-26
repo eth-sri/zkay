@@ -6,14 +6,15 @@ from zkay.compiler.privacy.library_contracts import pki_contract_name
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import UsedContract
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
-from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
-    FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
+from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, \
+    IfStatement, FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
     AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
     ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
+from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 proof_param_name = 'proof__'
 verification_function_name = 'check_verify'
@@ -198,6 +199,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         return self.visit_children(ast)
 
     def visitParameter(self, ast: Parameter):
+        ast.original_type = deep_copy(ast.annotated_type.type_name)
         return self.visit_children(ast)
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
