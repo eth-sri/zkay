@@ -11,6 +11,8 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionD
     VariableDeclarationStatement, Block, ExpressionStatement, \
     ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
 pki_contract_name = 'PublicKeyInfrastructure'
 proof_param_name = 'proof__'
@@ -22,6 +24,10 @@ contract_var_suffix = 'inst'
 def transform_ast(ast: AST) -> Tuple[AST, 'ZkayTransformer']:
     zt = ZkayTransformer()
     new_ast = zt.visit(ast)
+
+    # restore all parent pointers and identifier targets
+    set_parents(new_ast)
+    link_identifiers(new_ast)
     return new_ast, zt
 
 
@@ -40,7 +46,7 @@ class ZkayTransformer(AstTransformerVisitor):
         inst_idf = Identifier(f'{vname}_{contract_var_suffix}')
         c_type = AnnotatedTypeName(UserDefinedTypeName([Identifier(vname)]), None)
         uc = UsedContract(f'{vname}.sol', c_type, inst_idf)
-        sv = StateVariableDeclaration(c_type, [], inst_idf, None)
+        sv = StateVariableDeclaration(c_type, [], Identifier(inst_idf.name), None)
         ast.used_contracts.append(uc.filename)
         return uc, sv
 
@@ -116,10 +122,10 @@ class ZkayTransformer(AstTransformerVisitor):
         if isinstance(ast, ConstructorDefinition):
             c_assignments = []
             for c in self.used_contracts:
-                pidf = Identifier(f'{c.state_variable_idf.name}_')
-                ast.parameters.append(Parameter([], c.contract_type, pidf, None))
+                pidf_name = f'{c.state_variable_idf.name}_'
+                ast.parameters.append(Parameter([], c.contract_type, Identifier(pidf_name), None))
                 c_assignments.append(AssignmentStatement(
-                    lhs=IdentifierExpr(c.state_variable_idf), rhs=IdentifierExpr(pidf))
+                    lhs=IdentifierExpr(Identifier(c.state_variable_idf.name)), rhs=IdentifierExpr(Identifier(pidf_name)))
                 )
             preamble += Comment.comment_wrap_block('Assigning contract instance variables', c_assignments)
 
@@ -151,7 +157,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
             # Call to verifier
             verify = ExpressionStatement(FunctionCallExpr(
-                MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf), Identifier(verification_function_name)),
+                MemberAccessExpr(IdentifierExpr(Identifier(verifier.state_variable_idf.name)), Identifier(verification_function_name)),
                 [IdentifierExpr(Identifier(proof_param_name))] +
                 ([] if circuit_generator.in_name_factory.count == 0 else [
                     IdentifierExpr(Identifier(circuit_generator.in_name_factory.base_name))]) +
@@ -170,7 +176,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Add return statement at the end if necessary (was previously replaced by assignment to return_var by ZkayStatementTransformer)
         if circuit_generator.return_var is not None:
-            ast.body.statements.append(ReturnStatement(IdentifierExpr(circuit_generator.return_var)))
+            ast.body.statements.append(ReturnStatement(IdentifierExpr(Identifier(circuit_generator.return_var.name))))
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -257,7 +263,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             elif stmt is not None:
                 last = False
                 block_stmts.append(stmt)
-        ast.statements = block_stmts + ([Comment()] if not last else [])
+        ast.statements = block_stmts + ([Comment()] if not last and isinstance(ast.parent, ConstructorOrFunctionDefinition) else [])
         return ast
 
     def process_statement_child(self, child: AST):

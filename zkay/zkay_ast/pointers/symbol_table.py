@@ -69,7 +69,7 @@ class SymbolTableFiller(AstVisitor):
 
     def visitMapping(self, ast: Mapping):
         ast.names = {}
-        if ast.key_label:
+        if isinstance(ast.key_label, Identifier):
             ast.names = {ast.key_label.name: ast.key_label}
 
 
