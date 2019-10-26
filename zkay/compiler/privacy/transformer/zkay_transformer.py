@@ -199,7 +199,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         return self.visit_children(ast)
 
     def visitParameter(self, ast: Parameter):
-        ast.original_type = deep_copy(ast.annotated_type.type_name)
+        ast.original_type = deep_copy(ast.annotated_type)
         return self.visit_children(ast)
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):

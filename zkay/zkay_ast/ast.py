@@ -840,7 +840,7 @@ class Parameter(AST):
             annotated_type: AnnotatedTypeName,
             idf: Identifier,
             storage_location: Optional[str] = None,
-            original_type: Optional[TypeName] = None):
+            original_type: Optional[AnnotatedTypeName] = None):
         super().__init__()
         self.keywords = keywords
         self.annotated_type = annotated_type
