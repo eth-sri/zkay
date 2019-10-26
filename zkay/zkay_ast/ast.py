@@ -203,7 +203,6 @@ class Expression(AST):
 
 
 builtin_functions = {
-    'index': '{}[{}]',
     'parenthesis': '({})',
     'ite': '{} ? {} : {}'
 }
@@ -255,9 +254,6 @@ class BuiltinFunction(Expression):
     def is_bop(self):
         return self.op in bop
 
-    def is_index(self):
-        return self.op == 'index'
-
     def is_parenthesis(self):
         return self.op == 'parenthesis'
 
@@ -279,7 +275,7 @@ class BuiltinFunction(Expression):
         elif self.is_bop():
             t = TypeName.bool_type()
         else:
-            # eq, index, parenthesis, ite
+            # eq, parenthesis, ite
             return None
 
         return self.arity() * [t]
@@ -298,7 +294,7 @@ class BuiltinFunction(Expression):
         elif self.is_eq():
             return TypeName.bool_type()
         else:
-            # index, parenthesis, ite
+            # parenthesis, ite
             return None
 
     def can_be_private(self):
@@ -322,28 +318,14 @@ class FunctionCallExpr(Expression):
         self.func = func
         self.args = args
 
-    def is_location(self) -> bool:
-        return isinstance(self.func, BuiltinFunction) and self.func.is_index()
-
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.func = f(self.func)
         self.args = list(map(f, self.args))
 
 
-class MemberAccessExpr(Expression):
-    def __init__(self, expr: Expression, member: Identifier):
-        super().__init__()
-        self.expr = expr
-        self.member = member
-
-    def process_children(self, f: Callable[['AST'], 'AST']):
-        self.expr = f(self.expr)
-        self.member = f(self.member)
-
-
 class AssignmentExpr(Expression):
 
-    def __init__(self, lhs: Expression, rhs: Expression):
+    def __init__(self, lhs: 'LocationExpr', rhs: Expression):
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
@@ -378,7 +360,11 @@ class StringLiteralExpr(LiteralExpr):
         self.value = value
 
 
-class IdentifierExpr(Expression):
+class LocationExpr(Expression):
+    pass
+
+
+class IdentifierExpr(LocationExpr):
 
     def __init__(self, idf: Identifier, annotated_type: Optional['AnnotatedTypeName'] = None):
         super().__init__()
@@ -400,6 +386,28 @@ class IdentifierExpr(Expression):
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
+
+
+class MemberAccessExpr(LocationExpr):
+    def __init__(self, expr: Expression, member: Identifier):
+        super().__init__()
+        self.expr = expr
+        self.member = member
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.expr = f(self.expr)
+        self.member = f(self.member)
+
+
+class IndexExpr(LocationExpr):
+    def __init__(self, arr: Expression, index: Expression):
+        super().__init__()
+        self.arr = arr
+        self.index = index
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.arr = f(self.arr)
+        self.index = f(self.index)
 
 
 class MeExpr(Expression):
@@ -506,7 +514,7 @@ class RequireStatement(SimpleStatement):
 
 class AssignmentStatement(SimpleStatement):
 
-    def __init__(self, lhs: Expression, rhs: Expression):
+    def __init__(self, lhs: LocationExpr, rhs: Expression):
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
@@ -1002,8 +1010,6 @@ class SourceUnit(AST):
         assert (isinstance(c, ContractDefinition))
         return c
 
-
-LocationExpr = Union[IdentifierExpr, FunctionCallExpr]
 PrivacyLabelExpr = Union[MeExpr, AllExpr, IdentifierExpr]
 
 
@@ -1218,9 +1224,6 @@ class CodeVisitor(AstVisitor):
             a = self.visit_list(ast.args, ', ')
             return f'{f}({a})'
 
-    def visitMemberAccessExpr(self, ast: MemberAccessExpr):
-        return f'{self.visit(ast.expr)}.{self.visit(ast.member)}'
-
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         lhs = self.visit(ast.lhs)
         rhs = self.visit(ast.rhs)
@@ -1234,6 +1237,12 @@ class CodeVisitor(AstVisitor):
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return self.visit(ast.idf)
+
+    def visitMemberAccessExpr(self, ast: MemberAccessExpr):
+        return f'{self.visit(ast.expr)}.{self.visit(ast.member)}'
+
+    def visitIndexExpr(self, ast: IndexExpr):
+        return f'{self.visit(ast.arr)}[{self.visit(ast.index)}]'
 
     def visitMeExpr(self, _: MeExpr):
         return 'me'

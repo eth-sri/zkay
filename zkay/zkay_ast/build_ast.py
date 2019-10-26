@@ -8,7 +8,7 @@ from zkay.solidity_parser.parse import MyParser
 from zkay.type_check.type_exceptions import RequireException, ReclassifyException
 from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
     BooleanLiteralExpr, StringLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
-    ReclassifyExpr, BuiltinFunction, MemberAccessExpr
+    ReclassifyExpr, BuiltinFunction, IndexExpr
 
 
 def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream, code: str) -> ast.AST:
@@ -177,10 +177,9 @@ class BuildASTVisitor(SolidityVisitor):
         return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa)
 
     def visitIndexExpr(self, ctx: SolidityParser.IndexExprContext):
-        f = BuiltinFunction('index')
         arr = self.visit(ctx.arr)
         index = self.visit(ctx.index)
-        return FunctionCallExpr(f, [arr, index])
+        return IndexExpr(arr, index)
 
     def visitParenthesisExpr(self, ctx: SolidityParser.ParenthesisExprContext):
         f = BuiltinFunction('parenthesis')

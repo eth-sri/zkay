@@ -6,11 +6,11 @@ from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformer
 from zkay.compiler.privacy.used_contract import UsedContract
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
-    BuiltinFunction, FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
+    FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
     AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
     ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock
+    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr
 
 pki_contract_name = 'PublicKeyInfrastructure'
 proof_param_name = 'proof__'
@@ -310,14 +310,9 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             ast.annotated_type = ast.target.annotated_type
         return ast
 
-    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+    def visitIndexExpr(self, ast: IndexExpr):
         """ Rule (9) """
-        if isinstance(ast.func, BuiltinFunction) and ast.func.is_index():
-            return ast.replaced_with(FunctionCallExpr(
-                ast.func,
-                [self.visit(ast.args[0]), self.visit(ast.args[1])]
-            ), ast.annotated_type)
-        return self.visitExpression(ast)
+        return ast.replaced_with(IndexExpr(self.visit(ast.arr), self.visit(ast.index)))
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (11) """
@@ -342,11 +337,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         """ Rule (13) """
         return ast
 
-    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, BuiltinFunction) and ast.func.is_index():
-            return self.transform_location(ast)
-        else:
-            return self.visit_children(ast)
+    def visitIndexExpr(self, ast: IndexExpr):
+        return self.transform_location(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return self.transform_location(ast)

@@ -11,7 +11,7 @@ from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G
 from zkay.utils.run_command import run_command
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr, Expression, \
-    AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr
+    AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr, IndexExpr
 
 zok_bin = 'zokrates'
 if 'ZOKRATES_ROOT' in os.environ:
@@ -126,18 +126,18 @@ class ZokratesGenerator(CircuitGenerator):
 
     def __to_zok_code(self, stmt: CircuitStatement):
         if isinstance(stmt, ExpressionToLocAssignment):
-            lhs = IdentifierExpr(stmt.lhs, AnnotatedTypeName.uint_all())
+            lhs = stmt.lhs.get_loc_expr(AnnotatedTypeName.uint_all())
             return f'field {self.zkvisitor.visit(AssignmentStatement(lhs, stmt.expr))}'
         elif isinstance(stmt, EqConstraint):
             return self.zkvisitor.visit(FunctionCallExpr(BuiltinFunction('=='),
-                                                         [IdentifierExpr(e, AnnotatedTypeName.uint_all()) for e in [stmt.tgt, stmt.val]]))
+                                                         [e.get_loc_expr(AnnotatedTypeName.uint_all()) for e in [stmt.tgt, stmt.val]]))
         else:
             assert isinstance(stmt, EncConstraint)
             fcall = FunctionCallExpr(IdentifierExpr(Identifier('enc')),
-                                 [IdentifierExpr(e, AnnotatedTypeName.uint_all()) for e in [stmt.plain, stmt.rnd, stmt.pk]])
+                                     [e.get_loc_expr(AnnotatedTypeName.uint_all()) for e in [stmt.plain, stmt.rnd, stmt.pk]])
             fcall.annotated_type = AnnotatedTypeName.uint_all()
             return self.zkvisitor.visit(FunctionCallExpr(BuiltinFunction('=='),
-                                                         [fcall, IdentifierExpr(stmt.cipher, AnnotatedTypeName.uint_all())]))
+                                                         [fcall, stmt.cipher.get_loc_expr(AnnotatedTypeName.uint_all())]))
 
 
 lib_code = '''\

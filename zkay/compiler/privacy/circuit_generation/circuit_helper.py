@@ -4,7 +4,7 @@ from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformer
 from zkay.compiler.privacy.used_contract import UsedContract
 from zkay.zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
     LocationExpr, \
-    TypeName, AssignmentStatement, UserDefinedTypeName, AnnotatedTypeName
+    TypeName, AssignmentStatement, UserDefinedTypeName, AnnotatedTypeName, ConstructorOrFunctionDefinition, IndexExpr, NumberLiteralExpr
 
 
 class HybridArgumentIdf(Identifier):
@@ -13,6 +13,20 @@ class HybridArgumentIdf(Identifier):
         self.t = t
         self.offset = offset
 
+    def get_loc_expr(self, t: Optional[AnnotatedTypeName] = None):
+        if self.offset is None:
+            expr = IdentifierExpr(self)
+        else:
+            expr = IndexExpr(IdentifierExpr(self), NumberLiteralExpr(self.offset))
+        if t is not None:
+            expr.annotated_type = t
+        return expr
+
+    def get_flat_name(self):
+        if self.offset is None:
+            return self.name
+        else:
+            return f'{self.name}{self.offset}'
 
 class DecryptLocallyIdf(HybridArgumentIdf):
     def __init__(self, name: str, t: TypeName, idf: HybridArgumentIdf):
@@ -53,18 +67,18 @@ class NameFactory:
     def __init__(self, base_name: str):
         self.base_name = base_name
         self.count = 0
-        self.fstring = '{}_{}'
 
     def get_new_idf(self, t: TypeName) -> HybridArgumentIdf:
-        idf = HybridArgumentIdf(self.fstring.format(self.base_name, self.count), self.count, t)
+        idf = HybridArgumentIdf(f'{self.base_name}_{self.count}', None, t)
         self.count += 1
         return idf
 
 
 class ArrayBasedNameFactory(NameFactory):
-    def __init__(self, base_name: str):
-        super().__init__(base_name)
-        self.fstring = '{}[{}]'
+    def get_new_idf(self, t: TypeName) -> HybridArgumentIdf:
+        idf = HybridArgumentIdf(f'{self.base_name}', self.count, t)
+        self.count += 1
+        return idf
 
 
 class CircuitHelper:
@@ -117,14 +131,14 @@ class CircuitHelper:
     def request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         pname = privacy.idf.name
         if pname in self.pk_for_label:
-            return self.pk_for_label[pname].lhs.idf
+            return self.pk_for_label[pname].lhs.arr.idf
         else:
             idf = self.temp_name_factory.get_new_idf(TypeName.key_type())
             pki_idf = self.used_contracts[0].state_variable_idf
             assert pki_idf
             self.pk_for_label[pname] = AssignmentStatement(
-                IdentifierExpr(idf), FunctionCallExpr(MemberAccessExpr(IdentifierExpr(pki_idf), Identifier('getPk')),
-                                                      [self.expr_trafo.visit(privacy)])
+                idf.get_loc_expr(), FunctionCallExpr(MemberAccessExpr(IdentifierExpr(pki_idf), Identifier('getPk')),
+                                                     [self.expr_trafo.visit(privacy)])
             )
             return idf
 
@@ -141,7 +155,7 @@ class CircuitHelper:
             te = te.implicitly_converted(TypeName.uint_type())
 
         idf = self.temp_name_factory.get_new_idf(te_t)
-        stmt = AssignmentStatement(IdentifierExpr(idf), te)
+        stmt = AssignmentStatement(idf.get_loc_expr(), te)
         if enc_param:
             self.enc_param_check_stmts.append(stmt)
         else:
@@ -150,13 +164,13 @@ class CircuitHelper:
         return idf
 
     def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
-        rnd = HybridArgumentIdf(f'{cipher.name.replace("[", "").replace("]", "")}_R', None, TypeName.rnd_type())
+        rnd = HybridArgumentIdf(f'{cipher.get_flat_name()}_R', None, TypeName.rnd_type())
 
         if isinstance(plain, EncParamIdf) or isinstance(plain, DecryptLocallyIdf):
             self.s.append(plain)
 
         if isinstance(plain, EncParamIdf):
-            cipher = self.add_temp_var(IdentifierExpr(cipher, AnnotatedTypeName.cipher_type()), Expression.me_expr(), True)
+            cipher = self.add_temp_var(cipher.get_loc_expr(AnnotatedTypeName.cipher_type()), Expression.me_expr(), True)
 
         self.s.append(rnd)
 
@@ -177,11 +191,11 @@ class CircuitHelper:
 
         if not new_privacy.is_all_expr():
             self.ensure_encryption(sec_circ_var_idf, new_privacy, new_param)
-            return expr.replaced_with(IdentifierExpr(new_param), AnnotatedTypeName.cipher_type())
+            return expr.replaced_with(new_param.get_loc_expr(), AnnotatedTypeName.cipher_type())
         else:
             self.p.append(new_param)
             self.phi.append(EqConstraint(sec_circ_var_idf, new_param))
-            return expr.replaced_with(IdentifierExpr(new_param), AnnotatedTypeName.uint_all()).implicitly_converted(new_param.t)
+            return expr.replaced_with(new_param.get_loc_expr(), AnnotatedTypeName.uint_all()).implicitly_converted(new_param.t)
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
         new_var = self.add_temp_var(loc_expr, privacy, False)
@@ -194,4 +208,4 @@ class CircuitHelper:
             dec_loc_idf = DecryptLocallyIdf(new_idf_name, loc_expr.annotated_type.type_name, new_var)
             self.ensure_encryption(dec_loc_idf, Expression.me_expr(), new_var)
 
-        return loc_expr.replaced_with(IdentifierExpr(new_var), AnnotatedTypeName.cipher_type())
+        return loc_expr.replaced_with(new_var.get_loc_expr(), AnnotatedTypeName.cipher_type())

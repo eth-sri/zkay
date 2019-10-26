@@ -7,7 +7,7 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
-    AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType, Identifier
+    AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType, Identifier, IndexExpr, Array, LocationExpr
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -39,7 +39,7 @@ class TypeCheckVisitor(AstVisitor):
         #    if not ast.lhs.instanceof(expected_rhs_type):
         #        raise TypeException("Only owner can assign to its private variables", ast)
 
-        if not ast.lhs.is_location():
+        if not isinstance(ast.lhs, LocationExpr):
             raise TypeException("Assignment target is not a location", ast.lhs)
 
         expected_type = ast.lhs.annotated_type
@@ -88,9 +88,6 @@ class TypeCheckVisitor(AstVisitor):
         elif func.is_neg_sign():
             if isinstance(ast.args[0], NumberLiteralExpr):
                 raise TypeException("Negative number currently not supported", ast)
-
-        elif func.is_index():
-            return self.handle_index(ast)
         elif func.is_parenthesis():
             ast.annotated_type = ast.args[0].annotated_type
             return
@@ -132,36 +129,6 @@ class TypeCheckVisitor(AstVisitor):
         assert (isinstance(output_type, AnnotatedTypeName))
         ast.annotated_type = output_type
 
-    def handle_index(self, ast: FunctionCallExpr):
-        arr = ast.args[0]
-        index = ast.args[1]
-
-        map_t = arr.annotated_type
-        # should have already been checked
-        assert (map_t.privacy_annotation.is_all_expr())
-
-        # do actual type checking
-        if isinstance(map_t.type_name, Mapping):
-            key_type = map_t.type_name.key_type
-            expected = AnnotatedTypeName(key_type, Expression.all_expr())
-            instance = index.instanceof(expected)
-            if not instance:
-                raise TypeMismatchException(expected, index.annotated_type, ast)
-
-            # record indexing information
-            if index.privacy_annotation_label():
-                map_t.type_name.instantiated_key = index
-            else:
-                raise TypeException(f'Index cannot be used as a privacy type for array of type {map_t}', ast)
-
-            # determine value type
-            ast.annotated_type = map_t.type_name.value_type
-
-            if not self.is_accessible_by_invoker(ast):
-                raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
-        else:
-            raise TypeException('Indexing into non-mapping', ast)
-
     @staticmethod
     def is_accessible_by_invoker(ast: Expression):
         return ast.annotated_type.is_public() or ast.is_lvalue() or \
@@ -176,7 +143,7 @@ class TypeCheckVisitor(AstVisitor):
 
         pl = privacy.privacy_annotation_label()
         if isinstance(pl, Identifier):
-            pl = privacy.replaced_with(IdentifierExpr(pl))
+            pl = privacy.replaced_with(IdentifierExpr(Identifier(pl.name)))
         r = ReclassifyExpr(expr, pl)
 
         # set type
@@ -295,6 +262,43 @@ class TypeCheckVisitor(AstVisitor):
 
             if not self.is_accessible_by_invoker(ast):
                 raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
+
+    def visitIndexExpr(self, ast: IndexExpr):
+        arr = ast.arr
+        index = ast.index
+
+        map_t = arr.annotated_type
+        # should have already been checked
+        assert (map_t.privacy_annotation.is_all_expr())
+
+        # do actual type checking
+        if isinstance(map_t.type_name, Mapping):
+            key_type = map_t.type_name.key_type
+            expected = AnnotatedTypeName(key_type, Expression.all_expr())
+            instance = index.instanceof(expected)
+            if not instance:
+                raise TypeMismatchException(expected, index.annotated_type, ast)
+
+            # record indexing information
+            if map_t.type_name.key_label is not None: # TODO modification correct?
+                if index.privacy_annotation_label():
+                    map_t.type_name.instantiated_key = index
+                else:
+                    raise TypeException(f'Index cannot be used as a privacy type for array of type {map_t}', ast)
+
+            # determine value type
+            ast.annotated_type = map_t.type_name.value_type
+
+            if not self.is_accessible_by_invoker(ast):
+                raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
+        elif isinstance(map_t.type_name, Array):
+            if ast.index.annotated_type.is_private():
+                raise TypeException('No private array index', ast)
+            if not ast.index.instanceof_data_type(TypeName.uint_type()):
+                raise TypeException('Array index must be numeric', ast)
+            ast.annotated_type = map_t.type_name.value_type
+        else:
+            raise TypeException('Indexing into non-mapping', ast)
 
     def visitFunctionDefinition(self, ast: FunctionDefinition):
         for t in ast.get_parameter_types():
