@@ -2,6 +2,7 @@ import re
 from typing import Dict, Optional, List, Tuple
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
+from zkay.compiler.privacy.library_contracts import pki_contract_name
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import UsedContract
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
@@ -14,7 +15,6 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionD
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
-pki_contract_name = 'PublicKeyInfrastructure'
 proof_param_name = 'proof__'
 verification_function_name = 'check_verify'
 default_return_var_name = 'return_value__'

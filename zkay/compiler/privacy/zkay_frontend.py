@@ -6,12 +6,13 @@ import tempfile
 import pathlib
 import uuid
 
+from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.circuit_generation.backends.zokrates_generator import ZokratesGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
-from zkay.compiler.privacy.transformer.zkay_transformer import transform_ast, pki_contract_name
+from zkay.compiler.privacy.transformer.zkay_transformer import transform_ast
 from zkay.compiler.solidity.compiler import compile_solidity
 from zkay.utils.progress_printer import print_step
 from zkay.zkay_ast.ast import AST
@@ -26,12 +27,12 @@ def compile_zkay(ast: AST, output_dir: str, filename: str, get_binaries: bool = 
             f.write(ast.code())
 
         # Write pki contract
-        with open(os.path.join(output_dir, f'{pki_contract_name}.sol'), 'w') as f:
-            f.write(pki_contract)
+        with open(os.path.join(output_dir, f'{library_contracts.pki_contract_name}.sol'), 'w') as f:
+            f.write(library_contracts.pki_contract)
 
         # Write library contract
         with open(os.path.join(output_dir, ProvingScheme.verify_libs_contract_filename), 'w') as f:
-            f.write(ProvingScheme.get_library_code())
+            f.write(library_contracts.get_verify_libs_code())
 
     ps = ProvingSchemeGm17()
     cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
@@ -41,7 +42,7 @@ def compile_zkay(ast: AST, output_dir: str, filename: str, get_binaries: bool = 
         Manifest.uuid: uuid.uuid1().hex,
         Manifest.contract_filename: filename,
         Manifest.proving_scheme: ps.name,
-        Manifest.pki_lib: f'{pki_contract_name}.sol',
+        Manifest.pki_lib: f'{library_contracts.pki_contract_name}.sol',
         Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
         Manifest.verifier_names: {
             f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract.contract_type.type_name.names[0].name for cc in
@@ -93,23 +94,3 @@ def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):
 
 def import_pkg(filename: str):
     pass
-
-
-pki_contract = '''\
-pragma solidity ^0.5;
-
-contract PublicKeyInfrastructure {
-    mapping(address => uint) pks;
-    mapping(address => bool) hasAnnounced;
-
-    function announcePk(uint pk) public {
-        pks[msg.sender] = pk;
-        hasAnnounced[msg.sender] = true;
-    }
-
-    function getPk(address a) public view returns(uint) {
-        require(hasAnnounced[a]);
-        return pks[a];
-    }
-}\
-'''
