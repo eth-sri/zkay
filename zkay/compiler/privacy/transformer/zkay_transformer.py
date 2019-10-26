@@ -50,6 +50,7 @@ class ZkayTransformer(AstTransformerVisitor):
         ast.used_contracts.append(uc.filename)
         return uc, sv
 
+    # TODO, add dummy constructor for verifier contract initialization if there is no constructor in the zkay file
     def visitSourceUnit(self, ast: SourceUnit):
         # Include pki contract
         pki_uc, pki_sv = self.import_contract(ast, pki_contract_name)
@@ -200,7 +201,8 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         return self.visit_children(ast)
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
-        ast.keywords = [k for k in ast.keywords if k != 'final']
+        ast.keywords = [k for k in ast.keywords if k != 'final' and k != 'public']
+        ast.keywords.append('public') # make sure every state var gets a public getter (TODO maybe there is another solution)
         ast.expr = self.expr_trafo.visit(ast.expr)
         return self.visit_children(ast)
 
