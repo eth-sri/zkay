@@ -3,7 +3,6 @@ from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step, colored_print, TermColor
 from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
-from zkay.zkay_ast.ast import GlobalVars
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
@@ -42,12 +41,6 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
                 print("\n\nERROR: Syntax error")
                 print(f'{str(e)}\n')
             raise ParseExeception()
-
-    # Inject globals
-    for c in ast.contracts:
-        c.state_variable_declarations = [
-            getattr(GlobalVars, var) for var in vars(GlobalVars) if not var.startswith('__')
-        ] + c.state_variable_declarations
 
     # Solc type checking
     with print_step("Type checking with solc"):

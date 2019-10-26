@@ -1,5 +1,5 @@
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
-    SimpleStatement, IdentifierExpr, Block, Mapping, GlobalDefs
+    SimpleStatement, IdentifierExpr, Block, Mapping, GlobalDefs, Identifier, Comment, GlobalVars
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -47,7 +47,8 @@ class SymbolTableFiller(AstVisitor):
         })
 
     def visitContractDefinition(self, ast: ContractDefinition):
-        state_vars = {d.idf.name: d.idf for d in ast.state_variable_declarations}
+        state_vars = {d.idf.name: d.idf for d in ast.state_variable_declarations if not isinstance(d, Comment)}
+        state_vars.update({d.idf.name: d.idf for d in [getattr(GlobalVars, var) for var in vars(GlobalVars) if not var.startswith('__')]})
         funcs = {f.idf.name: f.idf for f in ast.function_definitions}
         ast.names = merge_dicts(state_vars, funcs)
 
