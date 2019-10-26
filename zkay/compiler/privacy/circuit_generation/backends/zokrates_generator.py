@@ -68,10 +68,10 @@ class ZokratesGenerator(CircuitGenerator):
     def _generate_zkcircuit(self, circuit: CircuitHelper):
         secret_args = ', '.join([f'private field {s.name}' for s in circuit.s])
 
-        pub_in_count = circuit.temp_name_factory.count
-        pub_out_count = circuit.param_name_factory.count
-        pub_args = ', '.join(([f'field[{pub_in_count}] {circuit.temp_base_name}'] if pub_in_count > 0 else []) +
-                             ([f'field[{pub_out_count}] {circuit.param_base_name}'] if pub_out_count > 0 else []))
+        pub_in_count = circuit.in_name_factory.count
+        pub_out_count = circuit.out_name_factory.count
+        pub_args = ', '.join(([f'field[{pub_in_count}] {circuit.in_base_name}'] if pub_in_count > 0 else []) +
+                             ([f'field[{pub_out_count}] {circuit.out_base_name}'] if pub_out_count > 0 else []))
 
         zok_code = lib_code + dedent(f'''\
             def main({", ".join([secret_args, pub_args])}) -> (field):\
@@ -148,5 +148,3 @@ def enc(field msg, field R, field key) -> (field):
     return msg + key
 
 '''
-
-

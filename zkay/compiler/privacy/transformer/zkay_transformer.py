@@ -130,21 +130,21 @@ class ZkayTransformer(AstTransformerVisitor):
             ast.body.statements = preamble + ast.body.statements
         else:
             # Declare array with temporary variables
-            if circuit_generator.temp_name_factory.count > 0:
+            if circuit_generator.in_name_factory.count > 0:
                 preamble += Comment.comment_list('Declare array to store public circuit inputs', [
                     VariableDeclarationStatement(VariableDeclaration(
                         [], AnnotatedTypeName.array_all(
-                            AnnotatedTypeName.uint_all(), circuit_generator.temp_name_factory.count
-                        ), Identifier(circuit_generator.temp_name_factory.base_name), 'memory'
+                            AnnotatedTypeName.uint_all(), circuit_generator.in_name_factory.count
+                        ), Identifier(circuit_generator.in_name_factory.base_name), 'memory'
                     ), None)
                 ])
 
             # Add new parameters with circuit out values
-            if circuit_generator.param_name_factory.count > 0:
+            if circuit_generator.out_name_factory.count > 0:
                 ast.parameters.append(Parameter([],
                                                 AnnotatedTypeName.array_all(AnnotatedTypeName.uint_all(),
-                                                                            circuit_generator.param_name_factory.count),
-                                                Identifier(circuit_generator.param_name_factory.base_name), 'memory'))
+                                                                            circuit_generator.out_name_factory.count),
+                                                Identifier(circuit_generator.out_name_factory.base_name), 'memory'))
 
             # Add proof parameter
             ast.parameters.append(Parameter([], AnnotatedTypeName.proof_type(), Identifier(proof_param_name), 'memory'))
@@ -153,10 +153,10 @@ class ZkayTransformer(AstTransformerVisitor):
             verify = ExpressionStatement(FunctionCallExpr(
                 MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf), Identifier(verification_function_name)),
                 [IdentifierExpr(Identifier(proof_param_name))] +
-                ([] if circuit_generator.temp_name_factory.count == 0 else [
-                    IdentifierExpr(Identifier(circuit_generator.temp_name_factory.base_name))]) +
-                ([] if circuit_generator.param_name_factory.count == 0 else [
-                    IdentifierExpr(Identifier(circuit_generator.param_name_factory.base_name))])
+                ([] if circuit_generator.in_name_factory.count == 0 else [
+                    IdentifierExpr(Identifier(circuit_generator.in_name_factory.base_name))]) +
+                ([] if circuit_generator.out_name_factory.count == 0 else [
+                    IdentifierExpr(Identifier(circuit_generator.out_name_factory.base_name))])
             ))
 
             # Assemble new body (public key requests, transformed statements, verification invocation)

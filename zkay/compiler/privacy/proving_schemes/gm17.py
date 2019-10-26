@@ -35,9 +35,9 @@ class ProvingSchemeGm17(ProvingScheme):
         vk = verification_key
         # Verification contract source (with some modifications by NB):
         # https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/gm17.rs#L199
-        indata = circuit.temp_name_factory
+        indata = circuit.in_name_factory
         inlen = indata.count
-        outdata = circuit.param_name_factory
+        outdata = circuit.out_name_factory
         outlen = outdata.count
 
         # TODO, perform input hashing to reduce query size

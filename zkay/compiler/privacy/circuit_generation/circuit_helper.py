@@ -82,8 +82,8 @@ class ArrayBasedNameFactory(NameFactory):
 
 
 class CircuitHelper:
-    param_base_name = 'out__'
-    temp_base_name = 'in__'
+    out_base_name = 'out__'
+    in_base_name = 'in__'
 
     def __init__(self, used_contracts: List[UsedContract], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
         super().__init__()
@@ -106,8 +106,8 @@ class CircuitHelper:
         self.secret_input_name_factory = NameFactory('secret_')
         self.local_expr_name_factory = NameFactory('tmp_')
 
-        self.param_name_factory = ArrayBasedNameFactory(CircuitHelper.param_base_name)
-        self.temp_name_factory = ArrayBasedNameFactory(CircuitHelper.temp_base_name)
+        self.out_name_factory = ArrayBasedNameFactory(CircuitHelper.out_base_name)
+        self.in_name_factory = ArrayBasedNameFactory(CircuitHelper.in_base_name)
 
         # Public contract elements
         self.pk_for_label: Dict[str, AssignmentStatement] = {}
@@ -133,7 +133,7 @@ class CircuitHelper:
         if pname in self.pk_for_label:
             return self.pk_for_label[pname].lhs.arr.idf
         else:
-            idf = self.temp_name_factory.get_new_idf(TypeName.key_type())
+            idf = self.in_name_factory.get_new_idf(TypeName.key_type())
             pki_idf = self.used_contracts[0].state_variable_idf
             assert pki_idf
             self.pk_for_label[pname] = AssignmentStatement(
@@ -144,7 +144,7 @@ class CircuitHelper:
 
     def add_param(self, expr: Expression, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         t = self.get_type(expr, privacy)
-        idf = self.param_name_factory.get_new_idf(t)
+        idf = self.out_name_factory.get_new_idf(t)
         return idf
 
     def add_temp_var(self, expr: Expression, privacy: PrivacyLabelExpr, enc_param: bool) -> HybridArgumentIdf:
@@ -154,7 +154,7 @@ class CircuitHelper:
         if te_t == TypeName.bool_type():
             te = te.implicitly_converted(TypeName.uint_type())
 
-        idf = self.temp_name_factory.get_new_idf(te_t)
+        idf = self.in_name_factory.get_new_idf(te_t)
         stmt = AssignmentStatement(idf.get_loc_expr(), te)
         if enc_param:
             self.enc_param_check_stmts.append(stmt)
