@@ -72,6 +72,7 @@ class ProvingSchemeGm17(ProvingScheme):
                 vk.h_gamma = Pairing.G2Point({str(vk.h_gamma)});
                 vk.query = new Pairing.G1Point[]({len(vk.query)});''' + ''.join([f'''
                 vk.query[{idx}] = Pairing.G1Point({str(q)});''' for idx, q in enumerate(vk.query)]) + f'''
+                return vk;
             }}
 
             function check_verify(uint[8] memory proof_{self._get_uint_param(indata)}{self._get_uint_param(outdata)}) public {{
@@ -82,20 +83,22 @@ class ProvingSchemeGm17(ProvingScheme):
 
                 uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
                 VerifyingKey memory vk = verifyingKey();
-                require(vk.query.length == {inlen + outlen + 1});
+                require(vk.query.length == {inlen + outlen + 2}, "Wrong input length");
                 Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);''' +
                 ('' if inlen == 0 else f'''
                 for (uint i = 0; i < {inlen}; i++) {{
-                    require({indata.base_name}[i] < snark_scalar_field);
+                    require({indata.base_name}[i] < snark_scalar_field, "in_ value outside snark field bounds");
                     vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + 1], {indata.base_name}[i]));
                 }}''') +
                 ('' if outlen == 0 else f'''
                 for (uint i = 0; i < {outlen}; i++) {{
-                    require({outdata.base_name}[i] < snark_scalar_field);
+                    require({outdata.base_name}[i] < snark_scalar_field, "out_ value outside snark field bounds");
                     vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + {inlen + 1}], {outdata.base_name}[i]));
-                }}''') + '''
-
+                }}''') + f'''
+                // Additional input corresponding to circuit return value
+                vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[{inlen + outlen + 1}], 1));''' + '''
                 vk_x = Pairing.addition(vk_x, vk.query[0]);
+
                 if (!Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta))) {
                     require(false, "Proof verification failed at first check");
                 }
