@@ -13,6 +13,7 @@ class HybridArgumentIdf(Identifier):
         super().__init__(name)
         self.t = t
         self.offset = offset
+        self.corresponding_expression: Optional[IdfValue] = None
         self.corresponding_plaintext_circuit_input: Optional[HybridArgumentIdf] = None
 
     def get_loc_expr(self, t: Optional[AnnotatedTypeName] = None):
@@ -44,6 +45,12 @@ class ExpressionToLocAssignment(CircuitStatement):
     def __init__(self, lhs: HybridArgumentIdf, expr: Expression):
         self.lhs = lhs
         self.expr = expr
+
+
+class IdfValue:
+    def __init__(self, privacy: Expression, val: Expression):
+        self.privacy = privacy
+        self.val = val
 
 
 class EncConstraint(CircuitStatement):
@@ -182,7 +189,7 @@ class CircuitHelper:
 
         from zkay.compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer
         rhs_expr = ZkayCircuitTransformer(self).visit(expr)
-
+        new_param.corresponding_expression = IdfValue(new_privacy, rhs_expr)
         sec_circ_var_idf = self.local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)
         self.phi.append(ExpressionToLocAssignment(sec_circ_var_idf, rhs_expr))
 
