@@ -1,9 +1,9 @@
-from zkay_ast.analysis.partition_state import PartitionState
-from zkay_ast.analysis.side_effects import has_side_effects
-from zkay_ast.ast import FunctionDefinition, VariableDeclarationStatement, IfStatement, \
+from zkay.zkay_ast.analysis.partition_state import PartitionState
+from zkay.zkay_ast.analysis.side_effects import has_side_effects
+from zkay.zkay_ast.ast import FunctionDefinition, VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     ConstructorDefinition, FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def alias_analysis(ast):

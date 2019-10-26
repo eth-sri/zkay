@@ -2,9 +2,9 @@ import json
 import time
 import unittest
 
-import my_logging
-from utils.helpers import read_file
-from utils.timer import Timer, time_measure
+from zkay import my_logging
+from zkay.utils.helpers import read_file
+from zkay.utils.timer import Timer, time_measure
 
 
 @Timer('mykey')

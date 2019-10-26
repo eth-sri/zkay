@@ -1,6 +1,6 @@
 from typing import List
 
-from zkay_ast.ast import AST
+from zkay.zkay_ast.ast import AST
 
 
 class AstTransformerVisitor:

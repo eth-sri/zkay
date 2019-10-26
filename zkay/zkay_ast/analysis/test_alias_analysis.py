@@ -3,13 +3,13 @@ from unittest import TestCase
 
 from parameterized import parameterized_class
 
-from examples.examples import analysis, all_examples
-from examples.test_examples import TestExamples
-from zkay_ast.analysis.alias_analysis import alias_analysis
-from zkay_ast.ast import Statement, CodeVisitor, AST
-from zkay_ast.build_ast import build_ast
-from zkay_ast.pointers.parent_setter import set_parents
-from zkay_ast.pointers.symbol_table import link_identifiers
+from zkay.examples.examples import analysis, all_examples
+from zkay.examples.test_examples import TestExamples
+from zkay.zkay_ast.analysis.alias_analysis import alias_analysis
+from zkay.zkay_ast.ast import Statement, CodeVisitor, AST
+from zkay.zkay_ast.build_ast import build_ast
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
 
 class TestAliasAnalysisDetail(TestCase):

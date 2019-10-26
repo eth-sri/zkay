@@ -5,6 +5,8 @@ FROM continuumio/miniconda3:4.7.12
 # - starts from image containing conda
 # - conda allows to keep the installation within docker and on host consistent
 
+RUN apt-get update && apt-get install -y build-essential
+
 ###################
 # PREPARE SCRIPTS #
 ###################
@@ -30,21 +32,6 @@ RUN conda init bash
 COPY scripts/environment.yml $SCRIPTS/environment.yml
 RUN conda env update -n root --file $SCRIPTS/environment.yml \
 	&& conda clean --all
-
-#########################
-# ENVIRONMENT VARIABLES #
-#########################
-# To install on host:
-# - No action necessary
-
-# zokrates
-ENV ZOKRATES_ROOT /zokrates
-ENV ZOKRATES_HOME $ZOKRATES_ROOT/zokrates_home
-
-# ZKAY
-ENV ZKAYDIR /zkay
-ENV ZKAYSRC $ZKAYDIR/src
-ENV PYTHONPATH $ZKAYSRC
 
 ##########################
 # INSTALL SOLCJS & TRUFFLE #
@@ -76,8 +63,17 @@ RUN wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-sta
 ############
 
 # Install dynamic lib dependency
-RUN apt-get update && apt-get install -y --no-install-recommends libgmp3-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y --no-install-recommends libgmp3-dev && rm -rf /var/lib/apt/lists/*
+
+# zokrates environment
+ENV ZOKRATES_ROOT /zokrates
+ENV ZOKRATES_HOME $ZOKRATES_ROOT/zokrates_home
 
 # copy zokrates binaries from zokrates image
 COPY --from=zok /home/zokrates $ZOKRATES_ROOT
 RUN mv $ZOKRATES_ROOT/.zokrates $ZOKRATES_HOME
+
+# ZKAY environment
+ENV ZKAYDIR /zkay
+ENV ZKAYSRC $ZKAYDIR/zkay
+ENV PYTHONPATH $ZKAYDIR

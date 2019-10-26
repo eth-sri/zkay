@@ -1,13 +1,13 @@
 import os
 import re
-import my_logging
+from zkay import my_logging
 from distutils import dir_util
 from typing import Dict, List
 from shutil import copyfile
 
-from my_logging.log_context import log_context, add_log_context, remove_log_context
-from utils.helpers import read_file, save_to_file, prepend_to_lines
-from transaction.run import get_runner, run_function, list_to_str
+from zkay.my_logging.log_context import log_context, add_log_context, remove_log_context
+from zkay.utils.helpers import read_file, save_to_file, prepend_to_lines
+from zkay.transaction.run import get_runner, run_function, list_to_str
 
 
 script_dir = os.path.dirname(os.path.realpath(__file__))

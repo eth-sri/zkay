@@ -1,4 +1,4 @@
-from zkay_ast.ast import AnnotatedTypeName, Identifier
+from zkay.zkay_ast.ast import AnnotatedTypeName, Identifier
 
 
 class UsedContractLegacy:

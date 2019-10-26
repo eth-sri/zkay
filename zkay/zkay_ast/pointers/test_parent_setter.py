@@ -1,11 +1,11 @@
 from parameterized import parameterized_class
 
-from examples.examples import all_examples
-from examples.test_examples import TestExamples
-from zkay_ast.ast import SourceUnit
-from zkay_ast.build_ast import build_ast
-from zkay_ast.pointers.parent_setter import set_parents
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.examples.examples import all_examples
+from zkay.examples.test_examples import TestExamples
+from zkay.zkay_ast.ast import SourceUnit
+from zkay.zkay_ast.build_ast import build_ast
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 class ParentChecker(AstVisitor):

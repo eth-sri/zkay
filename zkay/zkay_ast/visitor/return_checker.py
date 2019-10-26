@@ -1,5 +1,5 @@
-from zkay_ast.ast import ReturnStatement, Block, FunctionDefinition
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.ast import ReturnStatement, Block, FunctionDefinition
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def check_return(ast):

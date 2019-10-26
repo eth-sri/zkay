@@ -1,8 +1,8 @@
 from parameterized import parameterized_class
 
-from examples.examples import all_examples
-from examples.test_examples import TestExamples
-from zkay_ast.process_ast import get_processed_ast
+from zkay.examples.examples import all_examples
+from zkay.examples.test_examples import TestExamples
+from zkay.zkay_ast.process_ast import get_processed_ast
 
 
 @parameterized_class(('name', 'example'), all_examples)

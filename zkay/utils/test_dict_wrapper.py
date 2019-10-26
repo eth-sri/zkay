@@ -1,6 +1,6 @@
 import unittest
 
-from utils.dict_wrapper import DictWrapper
+from zkay.utils.dict_wrapper import DictWrapper
 
 
 class TestDictWrapoper(unittest.TestCase):

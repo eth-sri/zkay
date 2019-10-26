@@ -5,7 +5,7 @@ import os
 from logging import addLevelName
 
 # current time
-from my_logging.log_context import full_log_context
+from zkay.my_logging.log_context import full_log_context
 
 timestamp = '{:%Y-%m-%d_%H-%M-%S}'.format(datetime.datetime.now())
 

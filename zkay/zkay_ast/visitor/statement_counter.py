@@ -1,5 +1,5 @@
-from zkay_ast.ast import AST, Statement
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.ast import AST, Statement
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def count_statements(ast: AST, log_found=False):

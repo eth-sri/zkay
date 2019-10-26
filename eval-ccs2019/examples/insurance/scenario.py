@@ -1,6 +1,6 @@
 import os
 
-from examples.scenarios import ScenarioGenerator
+from zkay.examples.scenarios import ScenarioGenerator
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 

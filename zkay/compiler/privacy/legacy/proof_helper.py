@@ -1,6 +1,6 @@
 from typing import List, Union, Tuple
 
-from zkay_ast.ast import Parameter, Expression
+from zkay.zkay_ast.ast import Parameter, Expression
 
 
 class ProofArgument:

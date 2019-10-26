@@ -1,15 +1,15 @@
-from type_check.contains_private import contains_private
-from type_check.final_checker import check_final
-from type_check.type_exceptions import TypeMismatchException, TypeException
-from zkay_ast.analysis.side_effects import has_side_effects
-from zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
+from zkay.type_check.contains_private import contains_private
+from zkay.type_check.final_checker import check_final
+from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
+from zkay.zkay_ast.analysis.side_effects import has_side_effects
+from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
     AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType, Identifier
-from zkay_ast.visitor.deep_copy import deep_copy
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.visitor.deep_copy import deep_copy
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def type_check(ast):

@@ -1,11 +1,11 @@
 import re
 from typing import Dict, Optional, List, Tuple
 
-from compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
-from compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from compiler.privacy.used_contract import UsedContract
-from compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
-from zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
+from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
+from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
+from zkay.compiler.privacy.used_contract import UsedContract
+from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
+from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, IfStatement, \
     BuiltinFunction, FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
     AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \

@@ -1,5 +1,5 @@
-from zkay_ast.ast import FunctionCallExpr, BuiltinFunction
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def has_side_effects(ast):

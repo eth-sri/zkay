@@ -2,8 +2,8 @@ import json
 import unittest
 import warnings
 
-import my_logging
-from utils.helpers import read_file
+from zkay import my_logging
+from zkay.utils.helpers import read_file
 
 default_log_file = my_logging.get_log_file(label='TestLogger')
 

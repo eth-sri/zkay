@@ -1,9 +1,9 @@
 from typing import Set
 
-from type_check.type_exceptions import TypeException
-from zkay_ast.ast import StateVariableDeclaration, \
+from zkay.type_check.type_exceptions import TypeException
+from zkay.zkay_ast.ast import StateVariableDeclaration, \
     AssignmentStatement, IdentifierExpr, ContractDefinition
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def check_final(ast):

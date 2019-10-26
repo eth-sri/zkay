@@ -4,14 +4,14 @@ import shutil
 import tempfile
 import pathlib
 
-from compiler.privacy.circuit_generation.backends.zokrates_generator import ZokratesGenerator
-from compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
-from compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
-from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
-from compiler.privacy.transformer.zkay_transformer import transform_ast, pki_contract_name
-from compiler.solidity.compiler import compile_solidity
-from utils.progress_printer import print_step
-from zkay_ast.ast import AST
+from zkay.compiler.privacy.circuit_generation.backends.zokrates_generator import ZokratesGenerator
+from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
+from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
+from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
+from zkay.compiler.privacy.transformer.zkay_transformer import transform_ast, pki_contract_name
+from zkay.compiler.solidity.compiler import compile_solidity
+from zkay.utils.progress_printer import print_step
+from zkay.zkay_ast.ast import AST
 
 
 def compile_zkay(ast: AST, output_dir: str, filename: str, get_binaries: bool = True):

@@ -2,21 +2,21 @@ import os
 from shutil import copy
 from typing import List, Dict, Optional
 
-import my_logging
-from compiler.privacy.legacy.hash_function import hash_function
-from compiler.privacy.legacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
-from compiler.privacy.legacy.tags import tag, helper_tag, param_tag
-from compiler.privacy.used_contract import UsedContractLegacy
-from compiler.zokrates.compiler import compile_zokrates, n_proof_arguments, get_work_dir, get_zok_output_filename
-from my_logging.log_context import log_context
-from utils.helpers import save_to_file, prepend_to_lines, lines_of_code
-from zkay_ast.ast import AST, CodeVisitor, AnnotatedTypeName, MeExpr, ReclassifyExpr, \
+from zkay import my_logging
+from zkay.compiler.privacy.legacy.hash_function import hash_function
+from zkay.compiler.privacy.legacy.proof_helper import ProofHelper, FromZok, ParameterCheck, FromSolidity
+from zkay.compiler.privacy.legacy.tags import tag, helper_tag, param_tag
+from zkay.compiler.privacy.used_contract import UsedContractLegacy
+from zkay.compiler.zokrates.compiler import compile_zokrates, n_proof_arguments, get_work_dir, get_zok_output_filename
+from zkay.my_logging.log_context import log_context
+from zkay.utils.helpers import save_to_file, prepend_to_lines, lines_of_code
+from zkay.zkay_ast.ast import AST, CodeVisitor, AnnotatedTypeName, MeExpr, ReclassifyExpr, \
     FunctionDefinition, Parameter, RequireStatement, ExpressionStatement, SimpleStatement, \
     AssignmentStatement, Expression, Identifier, IdentifierExpr, indent, ReturnStatement, Mapping, \
     ConstructorDefinition, UserDefinedTypeName, ContractDefinition, StateVariableDeclaration, Block, \
     VariableDeclaration, VariableDeclarationStatement, TypeName, FunctionCallExpr, BuiltinFunction, BooleanLiteralExpr, \
     ConstructorOrFunctionDefinition
-from zkay_ast.process_ast import get_processed_ast
+from zkay.zkay_ast.process_ast import get_processed_ast
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 pki_contract_filename = 'pki.sol'
@@ -30,7 +30,7 @@ def compile_ast(ast: AST, output_directory: str, output_file: Optional[str], sim
     simulate (bool): Only simulate compilation to determine
                      how to translate transactions
     """
-    from utils.progress_printer import print_step
+    from zkay.utils.progress_printer import print_step
     with print_step("Transpiling zkay to solidity"):
         v = SolidityVisitor(output_directory, simulate)
         s = v.visit(ast)

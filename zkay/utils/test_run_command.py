@@ -1,7 +1,7 @@
 from subprocess import SubprocessError
 from unittest import TestCase
 
-from utils.run_command import run_command
+from zkay.utils.run_command import run_command
 
 
 class TestRunCommand(TestCase):

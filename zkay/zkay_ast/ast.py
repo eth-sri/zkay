@@ -3,8 +3,8 @@ import textwrap
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable
 
-from zkay_ast.analysis.partition_state import PartitionState
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.analysis.partition_state import PartitionState
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 class ChildListBuilder:

@@ -3,14 +3,14 @@ import re
 from subprocess import SubprocessError
 from textwrap import dedent
 
-from compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
-from compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, ExpressionToLocAssignment, EqConstraint, \
+from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, ExpressionToLocAssignment, EqConstraint, \
     EncConstraint
-from compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
-from compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
-from utils.run_command import run_command
-from utils.timer import time_measure
-from zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr, Expression, \
+from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
+from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
+from zkay.utils.run_command import run_command
+from zkay.utils.timer import time_measure
+from zkay.zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr, Expression, \
     AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr
 
 zok_bin = 'zokrates'

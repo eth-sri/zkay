@@ -2,9 +2,9 @@ import os
 import shutil
 from unittest import TestCase
 
-from compiler.privacy.legacy.compiler import compile_code
-from examples.examples import addition, private_addition, power_grid
-from transaction.run import get_runner
+from zkay.compiler.privacy.legacy.compiler import compile_code
+from zkay.examples.examples import addition, private_addition, power_grid
+from zkay.transaction.run import get_runner
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 output_dir = os.path.join(script_dir, 'output')

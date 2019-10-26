@@ -1,8 +1,8 @@
 from antlr4 import CommonTokenStream, Token
 from antlr4.Token import CommonToken
 
-from solidity_parser.generated.SolidityVisitor import SolidityVisitor
-from solidity_parser.parse import get_parse_tree
+from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
+from zkay.solidity_parser.parse import get_parse_tree
 
 
 class Emitter(SolidityVisitor):

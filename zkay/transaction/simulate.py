@@ -1,11 +1,11 @@
 from typing import Dict, Union, List
 
-from zkay_ast.ast import FunctionCallExpr, BuiltinFunction, BooleanLiteralExpr, NumberLiteralExpr, \
+from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, BooleanLiteralExpr, NumberLiteralExpr, \
     ReclassifyExpr, AllExpr, MeExpr, ReturnStatement, RequireStatement, AssignmentStatement, Block, TypeName, \
     VariableDeclaration, FunctionDefinition, IdentifierExpr, VariableDeclarationStatement, ConstructorDefinition, \
     Expression, AST, AnnotatedTypeName, StateVariableDeclaration, ContractDefinition, Mapping, \
     ConstructorOrFunctionDefinition, Parameter, Identifier
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 class Simulator(AstVisitor):

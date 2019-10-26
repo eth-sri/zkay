@@ -1,8 +1,8 @@
 from textwrap import dedent
 from typing import List
 
-from compiler.privacy.circuit_generation.circuit_generator import CircuitHelper
-from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
+from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitHelper
+from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
 
 
 class VerifyingKeyGm17(VerifyingKey):

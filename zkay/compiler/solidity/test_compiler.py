@@ -1,8 +1,8 @@
 import os
 from unittest import TestCase
 
-from compiler.solidity.compiler import compile_solidity_code, compile_solidity
-from examples.examples import others_dir
+from zkay.compiler.solidity.compiler import compile_solidity_code, compile_solidity
+from zkay.examples.examples import others_dir
 
 simple_storage = """
 pragma solidity ^0.5.0;

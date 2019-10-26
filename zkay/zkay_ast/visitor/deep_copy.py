@@ -1,9 +1,9 @@
 import inspect
 
-from zkay_ast.ast import AST
-from zkay_ast.pointers.parent_setter import set_parents
-from zkay_ast.pointers.symbol_table import link_identifiers
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.ast import AST
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.pointers.symbol_table import link_identifiers
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def deep_copy(ast: AST):

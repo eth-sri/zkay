@@ -2,10 +2,10 @@ import os
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
-from compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
-from utils.progress_printer import print_step
-from zkay_ast.ast import AST
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
+from zkay.utils.progress_printer import print_step
+from zkay.zkay_ast.ast import AST
 
 
 class CircuitGenerator(metaclass=ABCMeta):

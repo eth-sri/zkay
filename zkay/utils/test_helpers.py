@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from utils.helpers import lines_of_code
+from zkay.utils.helpers import lines_of_code
 
 example_code = """pragma solidity ^0.5.0;
 

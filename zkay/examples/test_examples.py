@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from parameterized import parameterized_class
 
-from examples.examples import all_examples, Example
+from zkay.examples.examples import all_examples, Example
 
 
 class TestExamples(TestCase):

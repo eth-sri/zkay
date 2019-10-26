@@ -5,11 +5,11 @@ from shutil import copy, rmtree
 from subprocess import SubprocessError
 from typing import List
 
-import my_logging
-from utils.helpers import read_file, prepend_to_lines, save_to_file, lines_of_code
-from utils.run_command import run_command
+from zkay import my_logging
+from zkay.utils.helpers import read_file, prepend_to_lines, save_to_file, lines_of_code
+from zkay.utils.run_command import run_command
 # get relevant paths
-from utils.timer import time_measure
+from zkay.utils.timer import time_measure
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 

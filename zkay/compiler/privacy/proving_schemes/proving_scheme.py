@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-from compiler.privacy.circuit_generation.circuit_helper import ArrayBasedNameFactory
-from compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+from zkay.compiler.privacy.circuit_generation.circuit_helper import ArrayBasedNameFactory
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 
 
 class G1Point:

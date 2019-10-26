@@ -3,15 +3,15 @@ import os
 import re
 from pathlib import Path
 
-import my_logging
-from compiler.privacy.zkay_frontend import compile_zkay, package_zkay
-from compiler.solidity.compiler import SolcException
-from my_logging.log_context import log_context
-from utils.helpers import read_file, lines_of_code
-from utils.progress_printer import print_step, TermColor, colored_print
-from utils.timer import time_measure
-from zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception
-from zkay_ast.visitor.statement_counter import count_statements
+from zkay import my_logging
+from zkay.compiler.privacy.zkay_frontend import compile_zkay, package_zkay
+from zkay.compiler.solidity.compiler import SolcException
+from zkay.my_logging.log_context import log_context
+from zkay.utils.helpers import read_file, lines_of_code
+from zkay.utils.progress_printer import print_step, TermColor, colored_print
+from zkay.utils.timer import time_measure
+from zkay.zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception
+from zkay.zkay_ast.visitor.statement_counter import count_statements
 
 
 def parse_arguments():

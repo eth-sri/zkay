@@ -1,12 +1,12 @@
 from antlr4.Token import CommonToken
 
-import zkay_ast.ast as ast
-from solidity_parser.emit import Emitter
-from solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
-from solidity_parser.generated.SolidityVisitor import SolidityVisitor
-from solidity_parser.parse import MyParser
-from type_check.type_exceptions import RequireException, ReclassifyException
-from zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
+import zkay.zkay_ast.ast as ast
+from zkay.solidity_parser.emit import Emitter
+from zkay.solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
+from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
+from zkay.solidity_parser.parse import MyParser
+from zkay.type_check.type_exceptions import RequireException, ReclassifyException
+from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
     BooleanLiteralExpr, StringLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
     ReclassifyExpr, BuiltinFunction, MemberAccessExpr
 
@@ -169,7 +169,7 @@ class BuildASTVisitor(SolidityVisitor):
             pa = self.visit(ctx.privacy_annotation)
 
             if not (isinstance(pa, ast.AllExpr) or isinstance(pa, ast.MeExpr) or isinstance(pa, IdentifierExpr)):
-                from solidity_parser.parse import SyntaxException
+                from zkay.solidity_parser.parse import SyntaxException
                 report = f'{ast.get_code_error_msg(pa.line, pa.column + 1, str(self.code).splitlines())}\n' \
                          f'Privacy annotation can only be me | all | Identifier'
                 raise SyntaxException(report)

@@ -1,14 +1,14 @@
-from compiler.solidity.compiler import check_solc_errors
-from type_check.type_checker import type_check as t
-from type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
-from utils.progress_printer import print_step, colored_print, TermColor
-from zkay_ast.analysis.alias_analysis import alias_analysis as a
-from zkay_ast.ast import GlobalVars
-from zkay_ast.build_ast import build_ast
-from zkay_ast.pointers.parent_setter import set_parents
-from zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
-from zkay_ast.pointers.symbol_table import link_identifiers as link
-from zkay_ast.visitor.return_checker import check_return as r
+from zkay.compiler.solidity.compiler import check_solc_errors
+from zkay.type_check.type_checker import type_check as t
+from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
+from zkay.utils.progress_printer import print_step, colored_print, TermColor
+from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
+from zkay.zkay_ast.ast import GlobalVars
+from zkay.zkay_ast.build_ast import build_ast
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
+from zkay.zkay_ast.pointers.symbol_table import link_identifiers as link
+from zkay.zkay_ast.visitor.return_checker import check_return as r
 
 
 class ParseExeception(Exception):
@@ -34,7 +34,7 @@ class TypeCheckException(Exception):
 
 def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True):
     with print_step("Parsing"):
-        from solidity_parser.parse import SyntaxException
+        from zkay.solidity_parser.parse import SyntaxException
         try:
             ast = build_ast(code)
         except SyntaxException as e:
@@ -51,7 +51,7 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
 
     # Solc type checking
     with print_step("Type checking with solc"):
-        from compiler.solidity.fake_solidity_compiler import fake_solidity_code
+        from zkay.compiler.solidity.fake_solidity_compiler import fake_solidity_code
         fake_code = fake_solidity_code(str(code))
         check_solc_errors(code, fake_code)
 

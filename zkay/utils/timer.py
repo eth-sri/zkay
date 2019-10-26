@@ -1,7 +1,7 @@
 import contextlib
 import time
 
-import my_logging
+from zkay import my_logging
 
 
 @contextlib.contextmanager

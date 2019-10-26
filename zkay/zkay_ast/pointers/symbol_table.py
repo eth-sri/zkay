@@ -1,7 +1,7 @@
-from zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
+from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
     SimpleStatement, IdentifierExpr, Block, Mapping, GlobalDefs
-from zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
-from zkay_ast.visitor.visitor import AstVisitor
+from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def fill_symbol_table(ast):

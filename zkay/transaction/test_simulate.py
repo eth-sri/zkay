@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from examples.examples import addition, simple_storage
-from transaction.simulate import Simulator
-from zkay_ast.process_ast import get_processed_ast
+from zkay.examples.examples import addition, simple_storage
+from zkay.transaction.simulate import Simulator
+from zkay.zkay_ast.process_ast import get_processed_ast
 
 
 class TestSimulator(TestCase):

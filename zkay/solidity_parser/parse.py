@@ -1,8 +1,8 @@
 from antlr4 import CommonTokenStream, InputStream
 from antlr4.error.ErrorListener import ErrorListener
 
-from solidity_parser.generated.SolidityLexer import SolidityLexer
-from solidity_parser.generated.SolidityParser import SolidityParser
+from zkay.solidity_parser.generated.SolidityLexer import SolidityLexer
+from zkay.solidity_parser.generated.SolidityParser import SolidityParser
 
 
 class SyntaxException(Exception):
@@ -19,7 +19,7 @@ class MyErrorListener(ErrorListener):
         self.code = code
 
     def syntaxError(self, recognizer, offending_symbol, line, column, msg, e):
-        from zkay_ast.ast import get_code_error_msg
+        from zkay.zkay_ast.ast import get_code_error_msg
         report = f'{get_code_error_msg(line, column + 1, str(self.code).splitlines())}\n{msg}'
         raise SyntaxException(report)
 

@@ -1,4 +1,4 @@
-from zkay_ast.ast import MeExpr, AnnotatedTypeName, CodeVisitor, AST
+from zkay.zkay_ast.ast import MeExpr, AnnotatedTypeName, CodeVisitor, AST
 
 
 def to_solidity(ast: AST):

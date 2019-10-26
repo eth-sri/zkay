@@ -1,8 +1,8 @@
 from typing import List, Dict, Optional, Tuple, Callable
 
-from compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from compiler.privacy.used_contract import UsedContract
-from zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
+from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
+from zkay.compiler.privacy.used_contract import UsedContract
+from zkay.zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
     LocationExpr, \
     TypeName, AssignmentStatement, UserDefinedTypeName, AnnotatedTypeName
 
@@ -169,7 +169,7 @@ class CircuitHelper:
     def move_out(self, expr: Expression, new_privacy: PrivacyLabelExpr):
         new_param = self.add_param(expr, new_privacy)
 
-        from compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer
+        from zkay.compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer
         rhs_expr = ZkayCircuitTransformer(self).visit(expr)
 
         sec_circ_var_idf = self.local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)

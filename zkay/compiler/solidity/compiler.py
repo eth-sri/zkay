@@ -4,8 +4,8 @@ import pathlib
 import tempfile
 
 # get relevant paths
-from utils.run_command import run_command
-from zkay_ast.ast import get_code_error_msg
+from zkay.utils.run_command import run_command
+from zkay.zkay_ast.ast import get_code_error_msg
 
 # could also be 'solc'
 solc = 'solc'
@@ -79,7 +79,7 @@ def check_solc_errors(original_code: str, stripped_code: str):
         errors = sorted(json_output['errors'], key=get_error_order_key)
 
         for error in errors:
-            from utils.progress_printer import colored_print, TermColor
+            from zkay.utils.progress_printer import colored_print, TermColor
             is_error = error['severity'] == 'error'
             had_error = had_error or is_error
 

@@ -1,9 +1,9 @@
 import os
 from unittest import TestCase
 
-from compiler.solidity.compiler import compile_solidity
-from compiler.zokrates.compiler import compile_zokrates, generate_proof
-from utils.helpers import read_file
+from zkay.compiler.solidity.compiler import compile_solidity
+from zkay.compiler.zokrates.compiler import compile_zokrates, generate_proof
+from zkay.utils.helpers import read_file
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 output_dir = os.path.join(script_dir, 'output')

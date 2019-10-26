@@ -2,13 +2,13 @@ from unittest import TestCase
 
 from parameterized import parameterized_class
 
-from examples.examples import simple, simple_storage, all_examples
-from examples.test_examples import TestExamples
-from zkay_ast.ast import SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
+from zkay.examples.examples import simple, simple_storage, all_examples
+from zkay.examples.test_examples import TestExamples
+from zkay.zkay_ast.ast import SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
     AssignmentStatement
-from zkay_ast.build_ast import build_ast
-from zkay_ast.pointers.parent_setter import set_parents
-from zkay_ast.pointers.symbol_table import fill_symbol_table, link_identifiers
+from zkay.zkay_ast.build_ast import build_ast
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.pointers.symbol_table import fill_symbol_table, link_identifiers
 
 
 class TestSimpleAST(TestCase):
