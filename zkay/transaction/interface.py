@@ -93,7 +93,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Announcing public key "{pk.val}" for address "{address.val}"')
         self._announce_public_key(address, pk)
 
-    def req_state_var(self, contract_handle, name: str, encrypted: bool, *indices) -> Union[int, CipherValue, AddressValue]:
+    def req_state_var(self, contract_handle, name: str, encrypted: bool, *indices) -> Union[int, str, CipherValue]:
         assert contract_handle is not None
         debug_print(f'Requesting state variable "{name}"')
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)))

@@ -117,7 +117,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _announce_public_key(self, address: AddressValue, pk: PublicKeyValue):
         return self._transact(self.pki_contract, 'announcePk', pk.val)
 
-    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[int, CipherValue, AddressValue]:
+    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[int, str, CipherValue]:
         return contract_handle.functions[name](*indices).call({'from': self.my_address.val})
 
     def _transact(self, contract_handle, function: str, *actual_params) -> Any:
@@ -136,7 +136,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
 class Web3TesterBlockchain(Web3Blockchain):
     def _create_w3_instance(self) -> Web3:
-        genesis_overrides = {'gas_limit': max_gas_limit * 1.2}
+        genesis_overrides = {'gas_limit': int(max_gas_limit * 1.2)}
         custom_genesis_params = PyEVMBackend._generate_genesis_params(overrides=genesis_overrides)
         w3 = Web3(Web3.EthereumTesterProvider(EthereumTester(backend=PyEVMBackend(genesis_parameters=custom_genesis_params))))
         w3.eth.defaultAccount = w3.eth.accounts[0]
