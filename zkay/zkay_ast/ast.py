@@ -630,7 +630,7 @@ class UserDefinedTypeName(TypeName):
         self.definition = definition
 
     def __eq__(self, other):
-        return isinstance(other, UserDefinedTypeName) and self.names == other.names
+        return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
 
 
 class AnnotatedTypeName(AST):
@@ -1200,7 +1200,7 @@ class CodeVisitor(AstVisitor):
             else:
                 return self.visit(e)
 
-        s = [handle(e) for e in l]
+        s = filter(None.__ne__, [handle(e) for e in l])
         s = sep.join(s)
         return s
 
@@ -1238,6 +1238,9 @@ class CodeVisitor(AstVisitor):
 
     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
         return str(ast.value)
+
+    def visitStringLiteralExpr(self, ast: StringLiteralExpr):
+        return f'\'{ast.value}\''
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return self.visit(ast.idf)
