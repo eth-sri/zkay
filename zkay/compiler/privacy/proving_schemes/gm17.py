@@ -23,8 +23,7 @@ class ProofGm17(Proof):
 
 
 class ProvingSchemeGm17(ProvingScheme):
-    def __init__(self):
-        super().__init__('gm17')
+    name = 'gm17'
 
     def dummy_vk(self) -> VerifyingKeyGm17:
         p1 = G1Point('0', '0')

@@ -20,8 +20,8 @@ class G1Point:
 
 class G2Point:
     def __init__(self, x1: str, x2: str, y1: str, y2: str):
-        self.x = [x1, x2]
-        self.y = [y1, y2]
+        self.x = (x1, x2)
+        self.y = (y1, y2)
 
     @staticmethod
     def from_seq(seq):
@@ -42,9 +42,7 @@ class Proof:
 
 class ProvingScheme(metaclass=ABCMeta):
     verify_libs_contract_filename = "./verify_libs.sol"
-
-    def __init__(self, name: str):
-        self.name = name
+    name = 'none'
 
     @staticmethod
     def _get_uint_param(name_factory: ArrayBasedNameFactory) -> str:
