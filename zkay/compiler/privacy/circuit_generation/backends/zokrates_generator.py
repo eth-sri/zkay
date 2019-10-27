@@ -56,7 +56,7 @@ class ZokratesCodeVisitor(CodeVisitor):
                 return f'if ({cond}) then ({t}) else ({e}) fi'
             elif ast.func.op == '!=':
                 ast.func.op = '=='
-                return f'(! {self.visitFunctionCallExpr(ast)})'
+                return f'! ({self.visitFunctionCallExpr(ast)})'
             elif ast.func.is_bop():
                 ast.args = [self.as_bool(arg) for arg in ast.args]
             elif ast.func.op == '==' or ast.func.is_comp():
