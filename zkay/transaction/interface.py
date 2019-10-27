@@ -1,6 +1,7 @@
 import json
 import os
 from abc import ABCMeta, abstractmethod
+from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict
 
 from zkay.compiler.privacy.manifest import Manifest
@@ -157,14 +158,16 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
     def local_keys(self):
         return self.__my_keys
 
-    def enc(self, plain: int, pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
+    def enc(self, plain: int, pk: PublicKeyValue, rnd: Optional[RandomnessValue] = None) -> Tuple[CipherValue, RandomnessValue]:
         """
         Encrypts plain with the provided public key
         :param plain: plain text to encrypt
         :param pk: public key
+        :param rnd: if specified, this particular randomness will be used for encryption
         :return: Tuple(cipher text, randomness which was used to encrypt plain)
         """
-        assert not isinstance(plain, Value) and isinstance(pk, PublicKeyValue)
+        assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
+        assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk.val}"')
         return self._enc(int(plain), pk)
 
@@ -175,7 +178,8 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         :param sk: secret key
         :return: Tuple(plain text, randomness which was used to encrypt plain)
         """
-        assert isinstance(cipher, CipherValue) and isinstance(sk, PrivateKeyValue)
+        assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
+        assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
         debug_print(f'Decrypting value {cipher.val} with secret key "{sk}"')
         return self._dec(cipher, sk)
 
