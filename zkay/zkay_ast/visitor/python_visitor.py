@@ -2,12 +2,13 @@ import keyword
 from textwrap import dedent
 from typing import Union, List
 
+from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf
 from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, Statement, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
-    SourceUnit, ContractDefinition, PayableAddress
+    SourceUnit, ContractDefinition, PayableAddress, IdentifierExpr, IndexExpr
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help']}
 
@@ -17,6 +18,10 @@ def sanitized(name):
 
 
 class PythonCodeVisitor(CodeVisitor):
+    def __init__(self, replace_with_corresponding_private=False):
+        super().__init__(False)
+        self.follow_private = replace_with_corresponding_private
+
     def visitSourceUnit(self, ast: SourceUnit):
         return self.visit_list(ast.contracts)
 
@@ -94,7 +99,7 @@ class PythonCodeVisitor(CodeVisitor):
         t = ast.variable_declaration.annotated_type.type_name
         s = self.visit(ast.variable_declaration)
         e = self.get_default_value(t) if ast.expr is None else self.visit(ast.expr)
-        return f'{s} = {e}'
+        return self.handle_stmt(ast, f'{s} = {e}')
 
     def visitVariableDeclaration(self, ast: Union[VariableDeclaration, Parameter]):
         return f'{self.visit(ast.idf)}: {self.visit(ast.annotated_type)}'
@@ -146,6 +151,13 @@ class PythonCodeVisitor(CodeVisitor):
 
     def visitArray(self, ast: Array):
         return f'List[{self.visit(ast.value_type)}]'
+
+    def visitIndexExpr(self, ast: IndexExpr):
+        if self.follow_private and isinstance(ast.arr, IdentifierExpr) and isinstance(ast.arr.idf, HybridArgumentIdf):
+            corresponding_plain_input = ast.arr.idf.corresponding_plaintext_circuit_input
+            if corresponding_plain_input is not None:
+                return self.visit(corresponding_plain_input.get_loc_expr())
+        return super().visitIndexExpr(ast)
 
     def visitIdentifier(self, ast: Identifier):
         return sanitized(ast.name)

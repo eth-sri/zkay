@@ -30,10 +30,7 @@ class Value:
         return self.val.__hash__()
 
     @staticmethod
-    def unwrap_values(v: Optional[Union[int, bool, 'Value', List]]) -> Union[int, List]:
-        if v is None:
-            return []
-
+    def unwrap_values(v: Union[int, bool, 'Value', List]) -> Union[int, List]:
         if isinstance(v, List):
             return list(map(Value.unwrap_values, v))
         else:
@@ -227,7 +224,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
     def __init__(self, proving_scheme: str = default_proving_scheme):
         self.proving_scheme = proving_scheme
 
-    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List[int], in_vals: Optional[List], out_vals: Optional[List[Union[int, CipherValue]]]) -> List[int]:
+    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List[int], in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
         for arg in priv_values:
             assert not isinstance(arg, Value) or isinstance(arg, RandomnessValue)
         manifest = parse_manifest(project_dir)

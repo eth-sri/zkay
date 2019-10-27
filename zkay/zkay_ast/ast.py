@@ -99,9 +99,9 @@ class Expression(AST):
         return MeExpr()
 
     def implicitly_converted(self, expected: 'TypeName'):
-        if expected == TypeName.bool_type() and not isinstance(self, BooleanLiteralExpr) and self.annotated_type.type_name != TypeName.bool_type():
+        if expected == TypeName.bool_type() and not isinstance(self, BooleanLiteralExpr) and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('=='), [self, NumberLiteralExpr(1)])
-        elif expected == TypeName.uint_type() and not isinstance(self, NumberLiteralExpr) and self.annotated_type == AnnotatedTypeName.bool_all():
+        elif expected == TypeName.uint_type() and not isinstance(self, NumberLiteralExpr) and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
             assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
@@ -135,7 +135,7 @@ class Expression(AST):
         else:
             return None
 
-    def instanceof_data_type(self, expected) -> bool:
+    def instanceof_data_type(self, expected: 'TypeName') -> bool:
         assert (isinstance(expected, TypeName))
 
         # Implicit conversions

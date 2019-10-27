@@ -2,7 +2,8 @@ from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
 
-from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
+    ExpressionToLocAssignment, EncConstraint, EqConstraint
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, \
@@ -29,6 +30,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         super().__init__(False)
         self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {cg.fct: cg for cg in circuits}
 
+        self.py = PythonCodeVisitor(True)
         self.current_f: Optional[ConstructorOrFunctionDefinition] = None
         self.current_params: Optional[List[Parameter]] = None
         self.current_circ: Optional[CircuitHelper] = None
@@ -120,7 +122,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         with CircuitContext(self, ast):
-            return super().visitConstructorOrFunctionDefinition(ast)
+            fct = super().visitConstructorOrFunctionDefinition(ast)
+            if self.current_circ.requires_verification():
+                fct = f'{fct}\n{self.build_proof_check_fct()}'
+            return fct
 
     def visitParameter(self, ast: Parameter):
         t = 'Any' if ast.original_type is None else self.visit(ast.original_type.type_name)
@@ -143,12 +148,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             msg.sender = {CONN_OBJ_NAME}.my_address
         '''
 
-        in_var_decl = '' if has_in else f'{CircuitHelper.in_base_name} = None'
+        in_var_decl = '' if has_in else f'{CircuitHelper.in_base_name} = []'
 
         if has_out:
             out_var_decl = f'{CircuitHelper.out_base_name}: List[Optional[Union[int, CipherValue]]] = [None for _ in range({circuit.out_name_factory.count})]'
         else:
-            out_var_decl = f'{CircuitHelper.out_base_name} = None'
+            out_var_decl = f'{CircuitHelper.out_base_name} = []'
 
         # Encrypt parameters and add private circuit inputs (plain + randomness)
         enc_param_str = ''
@@ -171,12 +176,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         # Add out__, in__ and proof to actual argument list (when required)
         add_pub_arg_str = ''
+
         if has_out:
             add_pub_arg_str += f'\nactual_params.append({CircuitHelper.out_base_name})\n'
         if circuit.requires_verification():
             add_pub_arg_str += dedent(f'''
             # Generate proof
             priv_arg_list = [{PRIV_VALUES_NAME}[arg] for arg in [{", ".join([f"'{s.name}'" for s in circuit.s])}]]
+            self.{ast.name}_check_proof(priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
             proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
             actual_params.append(proof)''')
 
@@ -192,7 +199,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, '{ast.name}', actual_params, [{should_encrypt}])
             '''
 
-        # TODO simulate proof circuit for debugging (so we can check locally if / where the circuit fails)
         code = '\n'.join(dedent(s) for s in filter(bool, [
             preamble,
             in_var_decl,
@@ -208,6 +214,27 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         ]))
         return code
 
+    def build_proof_check_fct(self) -> str:
+        circuit = self.current_circ
+        stmts = [f"{', '.join(s.name for s in circuit.s)} = {'tuple(priv_args)'}"]
+        stmts.append(f"print(f'Circuit arguments: {{list(map(str, priv_args + {CircuitHelper.in_base_name} + {CircuitHelper.out_base_name}))}}')")
+        assert_str = 'assert {0} == {1}, f"check failed for lhs={{{0}}} and rhs={{{1}}}"'
+        for stmt in circuit.phi:
+            if isinstance(stmt, ExpressionToLocAssignment):
+                stmts.append(self.py.visit(AssignmentStatement(stmt.lhs.get_loc_expr(), stmt.expr)))
+            elif isinstance(stmt, EncConstraint):
+                stmts.append(f'__cipher, __rnd = {CRYPTO_OBJ_NAME}.enc({self.py.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())})')
+                stmts.append(assert_str.format('__rnd', self.py.visit(stmt.rnd.get_loc_expr())))
+                stmts.append(assert_str.format('__cipher', self.py.visit(stmt.cipher.get_loc_expr())))
+            else:
+                assert isinstance(stmt, EqConstraint)
+                stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))
+        stmts.append('print(\'Proof soundness verified\')')
+
+        params = f'self, priv_args: List, {CircuitHelper.in_base_name}: List, {CircuitHelper.out_base_name}: List'
+        body = '\n'.join(stmts)
+        return f'def {self.current_f.name}_check_proof({params}):\n{indent(body)}\n'
+
     def handle_stmt(self, ast: Statement, stmt_txt: str):
         if not stmt_txt:
             return None
@@ -218,7 +245,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             out_val = out_idf.corresponding_expression
             loc_str = self.visit(out_idf.get_loc_expr())
             if out_val.privacy.is_all_expr():
-                s = f'{loc_str} = {self.visit(out_val.val)}'
+                s = f'{loc_str} = {self.visit(out_val.val.implicitly_converted(TypeName.uint_type()))}' # TODO (in the future maybe not uint)
             else:
                 priv_str = 'msg.sender' if out_val.privacy.is_me_expr() else f'{self.visit(deep_copy(out_val.privacy))}'
                 pk_str = f'{KEYSTORE_OBJ_NAME}.getPk({priv_str})'
@@ -232,9 +259,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if isinstance(ast, AssignmentStatement) and isinstance(ast.lhs, IndexExpr) and isinstance(ast.lhs.arr, IdentifierExpr):
             lhsidf = ast.lhs.arr.idf
             if lhsidf.name == CircuitHelper.in_base_name and lhsidf.corresponding_plaintext_circuit_input is not None:
+                assert isinstance(lhsidf, HybridArgumentIdf)
+                plain_idf = f'{PRIV_VALUES_NAME}["{lhsidf.corresponding_plaintext_circuit_input.name}"]'
                 in_decrypt = f'\n'\
-                    f'{PRIV_VALUES_NAME}["{lhsidf.corresponding_plaintext_circuit_input.name}"], {PRIV_VALUES_NAME}["{lhsidf.get_flat_name()}_R"]'\
+                    f'{plain_idf}, {PRIV_VALUES_NAME}["{lhsidf.get_flat_name()}_R"]'\
                     f' = {CRYPTO_OBJ_NAME}.dec({lhsidf.get_loc_expr().code()}, {SK_OBJ_NAME})'
+                # TODO convert decrypted value to boolean if the plain type is bool
 
         return f'{out_initializations}{stmt_txt}{in_decrypt}'
 
