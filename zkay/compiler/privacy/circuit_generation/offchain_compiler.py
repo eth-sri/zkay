@@ -280,6 +280,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 in_decrypt = f'\n'\
                     f'{plain_idf}, {PRIV_VALUES_NAME}["{lhsidf.get_flat_name()}_R"]'\
                     f' = {CRYPTO_OBJ_NAME}.dec({lhsidf.get_loc_expr().code()}, {SK_OBJ_NAME})'
+                ridf = IdentifierExpr(Identifier(plain_idf), AnnotatedTypeName.uint_all())
+                conv = self.visit(ridf.implicitly_converted(lhsidf.corresponding_plaintext_circuit_input.t))
+                if conv != self.visit(ridf):
+                    in_decrypt += f'\n{plain_idf} = {conv}'
 
         return f'{out_initializations}{stmt_txt}{in_decrypt}'
 
