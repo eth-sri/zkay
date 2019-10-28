@@ -170,9 +170,9 @@ class ZkayTransformer(AstTransformerVisitor):
             ast.body.statements = preamble + \
                                   Comment.comment_wrap_block('Backup private arguments for verification',
                                                              circuit_generator.enc_param_check_stmts) + \
+                                  [IndentBlock("BODY", ast.body.statements)] + \
                                   Comment.comment_wrap_block('Request required public keys',
                                                              list(circuit_generator.pk_for_label.values())) + \
-                                  [IndentBlock("BODY", ast.body.statements)] + \
                                   [Comment('Verify zk proof of execution'), verify]
 
         # Add return statement at the end if necessary (was previously replaced by assignment to return_var by ZkayStatementTransformer)

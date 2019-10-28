@@ -7,7 +7,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, \
-    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName
+    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier
 from zkay.zkay_ast.ast import ElementaryTypeName
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
@@ -110,6 +110,21 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 return {CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, False, *indices)
 
         '''))
+
+    @staticmethod
+    def get_state_value(idf: Identifier, val_type: AnnotatedTypeName, indices: List[str]) -> str:
+        idxvals = ''.join([f'[{{{idx}}}]' for idx in indices])
+        is_encrypted = bool(val_type.old_priv_text)
+        req = f'{CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, "{idf.name}", {is_encrypted}, {", ".join(indices)})'
+        if val_type.type_name == TypeName.address_type() or val_type.type_name == TypeName.address_payable_type():
+            req = f'AddressValue({req})'
+        loc = f"\'{idf.name}{idxvals}\'"
+        return f'{STATE_VALUES_NAME}[{loc}] if {loc} in {STATE_VALUES_NAME} else {STATE_VALUES_NAME}.setdefault({loc}, {req})'
+
+    @staticmethod
+    def set_state_value(idf: Identifier, indices: List[str]):
+        idxvals = ''.join([f'[{{{idx}}}]' for idx in indices])
+        return f'{STATE_VALUES_NAME}[f"{idf.name}{idxvals}"]'
 
     def visitContractDefinition(self, ast: ContractDefinition):
         constr = self.visit_list(ast.constructor_definitions)
@@ -248,9 +263,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 s = f'{loc_str} = {self.visit(out_val.val.implicitly_converted(TypeName.uint_type()))}' # TODO (in the future maybe not uint)
             else:
                 priv_str = 'msg.sender' if out_val.privacy.is_me_expr() else f'{self.visit(deep_copy(out_val.privacy))}'
-                pk_str = f'{KEYSTORE_OBJ_NAME}.getPk({priv_str})'
+                pk_str = f'{KEYSTORE_OBJ_NAME}.getPk(__addr)'
                 enc_str = f'{CRYPTO_OBJ_NAME}.enc({self.visit(out_val.val)}, {pk_str})'
-                s = f'{loc_str}, {PRIV_VALUES_NAME}["{out_idf.get_flat_name()}_R"] = {enc_str}'
+                s = f'__addr = {priv_str}\n' \
+                    f'{loc_str}, {PRIV_VALUES_NAME}["{out_idf.get_flat_name()}_R"] = {enc_str}'
 
             out_initializations += f'{s}\n'
         self.current_outs: List[HybridArgumentIdf] = []
@@ -264,7 +280,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 in_decrypt = f'\n'\
                     f'{plain_idf}, {PRIV_VALUES_NAME}["{lhsidf.get_flat_name()}_R"]'\
                     f' = {CRYPTO_OBJ_NAME}.dec({lhsidf.get_loc_expr().code()}, {SK_OBJ_NAME})'
-                # TODO convert decrypted value to boolean if the plain type is bool
 
         return f'{out_initializations}{stmt_txt}{in_decrypt}'
 
@@ -288,14 +303,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return 'msg'
         elif isinstance(ast.target, StateVariableDeclaration):
             if ast.is_rvalue():
-                t = ast.target.annotated_type
-                is_encrypted = bool(t.old_priv_text)
-                req = f'{CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, "{ast.idf.name}", {is_encrypted})'
-                if t.type_name == TypeName.address_type() or t.type_name == TypeName.address_payable_type():
-                    req = f'AddressValue({req})'
-                return f'{STATE_VALUES_NAME}.get("{ast.idf.name}", {req})'
+                return self.get_state_value(ast.idf, ast.target.annotated_type, [])
             else:
-                return f'{STATE_VALUES_NAME}["{ast.idf.name}"]'
+                return self.set_state_value(ast.idf, [])
         else:
             return super().visitIdentifierExpr(ast)
 
@@ -307,7 +317,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 ret = f'{PRIV_VALUES_NAME}["{ast.arr.idf.corresponding_plaintext_circuit_input.name}"]'
             else:
                 self.current_index = list(reversed(self.current_index))
-                idxvals = ''.join([f'[{{{idx}}}]' for idx in self.current_index])
                 if isinstance(ast.arr.target, StateVariableDeclaration):
                     if ast.is_rvalue():
                         map_t = ast.arr.target.annotated_type
@@ -318,13 +327,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                             map_t = t.value_type
                             idx += 1
 
-                        is_encrypted = bool(map_t.old_priv_text)
-                        req = f'{CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, "{ast.arr.idf.name}", {is_encrypted}, {", ".join(self.current_index)})'
-                        if map_t.type_name == TypeName.address_type() or map_t.type_name == TypeName.address_payable_type():
-                            req = f'AddressValue({req})'
-                        ret = f'{STATE_VALUES_NAME}.get(f"{ast.arr.idf.name}{idxvals}", {req})'
+                        ret = self.get_state_value(ast.arr.idf, map_t, self.current_index)
                     else:
-                        ret = f'{STATE_VALUES_NAME}[f"{ast.arr.idf.name}{idxvals}"]'
+                        ret = self.set_state_value(ast.arr.idf, self.current_index)
                 else:
                     if len(self.current_index) > 1:
                         ret = ''
