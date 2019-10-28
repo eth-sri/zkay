@@ -11,7 +11,7 @@ from zkay.zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier,
 class HybridArgumentIdf(Identifier):
     def __init__(self, name: str, offset: Optional[int], t: TypeName):
         super().__init__(name)
-        self.t = t
+        self.t = t # transformed type of this idf
         self.offset = offset
         self.corresponding_expression: Optional[IdfValue] = None
         self.corresponding_plaintext_circuit_input: Optional[HybridArgumentIdf] = None

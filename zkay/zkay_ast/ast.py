@@ -63,6 +63,9 @@ class Identifier(AST):
         super().__init__()
         self.name = name
 
+    def clone(self) -> 'Identifier':
+        return Identifier(self.name)
+
 
 class Comment(AST):
 
@@ -106,7 +109,7 @@ class Expression(AST):
         else:
             assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
             return self
-        ret.annotated_type = AnnotatedTypeName(expected, self.annotated_type.privacy_annotation)
+        ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation)
         return ret
 
     def __init__(self):
@@ -606,6 +609,9 @@ class TypeName(AST):
     def can_be_private(self):
         return self == TypeName.bool_type() or self == TypeName.uint_type()
 
+    def clone(self) -> 'TypeName':
+        raise NotImplementedError()
+
     def __eq__(self, other):
         raise NotImplementedError()
 
@@ -615,6 +621,9 @@ class ElementaryTypeName(TypeName):
     def __init__(self, name: str):
         super().__init__()
         self.name = name
+
+    def clone(self) -> 'ElementaryTypeName':
+        return ElementaryTypeName(self.name)
 
     def __eq__(self, other):
         if isinstance(other, ElementaryTypeName):
@@ -629,8 +638,117 @@ class UserDefinedTypeName(TypeName):
         self.names = names
         self.definition = definition
 
+    def clone(self) -> 'UserDefinedTypeName':
+        return UserDefinedTypeName(self.names.copy(), self.definition)
+
     def __eq__(self, other):
         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
+
+
+class Mapping(TypeName):
+
+    def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: 'AnnotatedTypeName'):
+        super().__init__()
+        self.key_type = key_type
+        self.key_label: Union[str, Optional[Identifier]] = key_label
+        self.value_type = value_type
+        # set by type checker: instantiation of the key by IndexExpr
+        self.instantiated_key: Expression = None
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.key_type = f(self.key_type)
+        if isinstance(self.key_label, Identifier):
+            self.key_label = f(self.key_label)
+        self.value_type = f(self.value_type)
+
+    def clone(self) -> 'Mapping':
+        return Mapping(self.key_type.clone(), self.key_label, self.value_type.clone())
+
+    def __eq__(self, other):
+        if isinstance(other, Mapping):
+            return self.key_type == other.key_type and self.value_type == other.value_type
+        else:
+            return False
+
+
+class PayableAddress(TypeName):
+
+    def clone(self) -> 'PayableAddress':
+        return PayableAddress()
+
+    def __eq__(self, other):
+        return isinstance(other, PayableAddress)
+
+
+class Array(TypeName):
+
+    def __init__(self, value_type: 'AnnotatedTypeName', expr: Expression = None):
+        super().__init__()
+        self.value_type = value_type
+        self.expr = expr
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.value_type = f(self.value_type)
+        self.expr = f(self.expr)
+
+    def clone(self) -> 'Array':
+        return Array(self.value_type.clone(), self.expr)
+
+    def __eq__(self, other):
+        return self == other
+
+
+class TupleType(TypeName):
+    """
+    Does not appear in the syntax, but is necessary for type checking
+    """
+
+    @staticmethod
+    def ensure_tuple(t: 'AnnotatedTypeName'):
+        if isinstance(t.type_name, TupleType):
+            return t
+        else:
+            return TupleType([t])
+
+    def __init__(self, types: List['AnnotatedTypeName']):
+        super().__init__()
+        self.types = types
+
+    def __len__(self):
+        return len(self.types)
+
+    def __iter__(self):
+        """
+        Make this class iterable, by iterating over its types
+        """
+        return self.types.__iter__()
+
+    def __getitem__(self, i: int):
+        return self.types[i]
+
+    def check_component_wise(self, other, f):
+        if isinstance(other, TupleType):
+            if len(self) != len(other):
+                return False
+            else:
+                for i in range(len(self)):
+                    if not f(self[i], other[i]):
+                        return False
+                return True
+        else:
+            return False
+
+    def perfect_privacy_match(self, other):
+        def privacy_match(self: AnnotatedTypeName, other: AnnotatedTypeName):
+            return self.privacy_annotation == other.privacy_annotation
+
+        self.check_component_wise(other, privacy_match)
+
+    def clone(self) -> 'TupleType':
+        return TupleType(list(map(AnnotatedTypeName.clone, self.types)))
+
+    def __eq__(self, other):
+        return self.check_component_wise(other, lambda x, y: x == y)
 
 
 class AnnotatedTypeName(AST):
@@ -648,6 +766,12 @@ class AnnotatedTypeName(AST):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.type_name = f(self.type_name)
         self.privacy_annotation = f(self.privacy_annotation)
+
+    def clone(self) -> 'AnnotatedTypeName':
+        from zkay_ast.visitor.deep_copy import deep_copy
+        at = AnnotatedTypeName(self.type_name.clone(), deep_copy(self.privacy_annotation), self.old_priv_text)
+        at.had_privacy_annotation = self.had_privacy_annotation
+        return at
 
     def __eq__(self, other):
         if isinstance(other, AnnotatedTypeName):
@@ -706,99 +830,6 @@ class AnnotatedTypeName(AST):
         for l in length:
             t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)), None)
         return t
-
-
-class Mapping(TypeName):
-
-    def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: AnnotatedTypeName):
-        super().__init__()
-        self.key_type = key_type
-        self.key_label: Union[str, Optional[Identifier]] = key_label
-        self.value_type = value_type
-        # set by type checker: instantiation of the key by IndexExpr
-        self.instantiated_key: Expression = None
-
-    def process_children(self, f: Callable[['AST'], 'AST']):
-        self.key_type = f(self.key_type)
-        if isinstance(self.key_label, Identifier):
-            self.key_label = f(self.key_label)
-        self.value_type = f(self.value_type)
-
-    def __eq__(self, other):
-        if isinstance(other, Mapping):
-            return self.key_type == other.key_type and self.value_type == other.value_type
-        else:
-            return False
-
-
-class PayableAddress(TypeName):
-    def __eq__(self, other):
-        return isinstance(other, PayableAddress)
-
-
-class Array(TypeName):
-
-    def __init__(self, value_type: AnnotatedTypeName, expr: Expression = None):
-        super().__init__()
-        self.value_type = value_type
-        self.expr = expr
-
-    def process_children(self, f: Callable[['AST'], 'AST']):
-        self.value_type = f(self.value_type)
-        self.expr = f(self.expr)
-
-    def __eq__(self, other):
-        return self == other
-
-
-class TupleType(TypeName):
-    """
-    Does not appear in the syntax, but is necessary for type checking
-    """
-
-    @staticmethod
-    def ensure_tuple(t: AnnotatedTypeName):
-        if isinstance(t.type_name, TupleType):
-            return t
-        else:
-            return TupleType([t])
-
-    def __init__(self, types: List[AnnotatedTypeName]):
-        super().__init__()
-        self.types = types
-
-    def __len__(self):
-        return len(self.types)
-
-    def __iter__(self):
-        """
-        Make this class iterable, by iterating over its types
-        """
-        return self.types.__iter__()
-
-    def __getitem__(self, i: int):
-        return self.types[i]
-
-    def check_component_wise(self, other, f):
-        if isinstance(other, TupleType):
-            if len(self) != len(other):
-                return False
-            else:
-                for i in range(len(self)):
-                    if not f(self[i], other[i]):
-                        return False
-                return True
-        else:
-            return False
-
-    def perfect_privacy_match(self, other):
-        def privacy_match(self: AnnotatedTypeName, other: AnnotatedTypeName):
-            return self.privacy_annotation == other.privacy_annotation
-
-        self.check_component_wise(other, privacy_match)
-
-    def __eq__(self, other):
-        return self.check_component_wise(other, lambda x, y: x == y)
 
 
 class VariableDeclaration(AST):

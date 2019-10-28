@@ -14,7 +14,6 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionD
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
-from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 proof_param_name = 'proof__'
 verification_function_name = 'check_verify'
@@ -47,7 +46,7 @@ class ZkayTransformer(AstTransformerVisitor):
         inst_idf = Identifier(f'{vname}_{contract_var_suffix}')
         c_type = AnnotatedTypeName(UserDefinedTypeName([Identifier(vname)]), None)
         uc = UsedContract(f'{vname}.sol', c_type, inst_idf)
-        sv = StateVariableDeclaration(c_type, [], Identifier(inst_idf.name), None)
+        sv = StateVariableDeclaration(c_type, [], inst_idf.clone(), None)
         ast.used_contracts.append(uc.filename)
         return uc, sv
 
@@ -127,7 +126,7 @@ class ZkayTransformer(AstTransformerVisitor):
                 pidf_name = f'{c.state_variable_idf.name}_'
                 ast.parameters.append(Parameter([], c.contract_type, Identifier(pidf_name), None))
                 c_assignments.append(AssignmentStatement(
-                    lhs=IdentifierExpr(Identifier(c.state_variable_idf.name)), rhs=IdentifierExpr(Identifier(pidf_name)))
+                    lhs=IdentifierExpr(c.state_variable_idf.clone()), rhs=IdentifierExpr(Identifier(pidf_name)))
                 )
             preamble += Comment.comment_wrap_block('Assigning contract instance variables', c_assignments)
 
@@ -159,7 +158,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
             # Call to verifier
             verify = ExpressionStatement(FunctionCallExpr(
-                MemberAccessExpr(IdentifierExpr(Identifier(verifier.state_variable_idf.name)), Identifier(verification_function_name)),
+                MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf.clone()), Identifier(verification_function_name)),
                 [IdentifierExpr(Identifier(proof_param_name))] +
                 ([] if circuit_generator.in_name_factory.count == 0 else [
                     IdentifierExpr(Identifier(circuit_generator.in_name_factory.base_name))]) +
@@ -178,7 +177,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Add return statement at the end if necessary (was previously replaced by assignment to return_var by ZkayStatementTransformer)
         if circuit_generator.return_var is not None:
-            ast.body.statements.append(ReturnStatement(IdentifierExpr(Identifier(circuit_generator.return_var.name))))
+            ast.body.statements.append(ReturnStatement(IdentifierExpr(circuit_generator.return_var.clone())))
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -189,7 +188,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         self.expr_trafo = ZkayExpressionTransformer(None)
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
-        new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name), None)
+        new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name.clone()), None)
         if ast.is_private():
             new_t.old_priv_text = f'{ast.code()}' if ast.type_name != new_t.type_name else f'@{ast.privacy_annotation.code()}'
         return new_t
@@ -199,7 +198,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         return self.visit_children(ast)
 
     def visitParameter(self, ast: Parameter):
-        ast.original_type = deep_copy(ast.annotated_type)
+        ast.original_type = ast.annotated_type
         return self.visit_children(ast)
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
@@ -314,8 +313,6 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         """ Rule (8) """
         if isinstance(ast.idf, HybridArgumentIdf):
             return ast.implicitly_converted(ast.idf.t)
-        elif ast.target is not None:
-            ast.annotated_type = ast.target.annotated_type
         return ast
 
     def visitIndexExpr(self, ast: IndexExpr):
