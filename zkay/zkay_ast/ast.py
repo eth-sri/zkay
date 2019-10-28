@@ -330,6 +330,17 @@ class FunctionCallExpr(Expression):
         self.args = list(map(f, self.args))
 
 
+class CastExpr(Expression):
+    def __init__(self, t: 'TypeName', expr: 'Expression'):
+        super().__init__()
+        self.t = t
+        self.expr = expr
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.t = f(self.t)
+        self.expr = f(self.expr)
+
+
 class AssignmentExpr(Expression):
 
     def __init__(self, lhs: 'LocationExpr', rhs: Expression):
@@ -966,14 +977,12 @@ class ConstructorDefinition(ConstructorOrFunctionDefinition):
 
 class StateVariableDeclaration(AST):
 
-    def __init__(self, annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression],
-                 storage_location: Optional[str] = None):
+    def __init__(self, annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression]):
         super().__init__()
         self.annotated_type = annotated_type
         self.keywords = keywords
         self.idf = idf
         self.expr = expr
-        self.storage_location = storage_location
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
@@ -1261,6 +1270,9 @@ class CodeVisitor(AstVisitor):
             a = self.visit_list(ast.args, ', ')
             return f'{f}({a})'
 
+    def visitCastExpr(self, ast: CastExpr):
+        return f'{self.visit(ast.t)}({self.visit(ast.expr)})'
+
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         lhs = self.visit(ast.lhs)
         rhs = self.visit(ast.rhs)
@@ -1375,7 +1387,7 @@ class CodeVisitor(AstVisitor):
         s = self.visit_list(ast.types, ', ')
         return f'({s})'
 
-    def visitVariableDeclaration(self, ast: Union[VariableDeclaration, StateVariableDeclaration]):
+    def visitVariableDeclaration(self, ast: VariableDeclaration):
         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
         k = ' '.join(keywords)
         t = self.visit(ast.annotated_type)
@@ -1444,9 +1456,8 @@ class CodeVisitor(AstVisitor):
         k = ' '.join([k for k in keywords if k != 'final'])
         if k != '':
             k = f'{k} '
-        s = '' if ast.storage_location is None else f'{ast.storage_location} '
         i = self.visit(ast.idf)
-        ret = f"{f}{t} {k}{s}{i}".strip()
+        ret = f"{f}{t} {k}{i}".strip()
         if ast.expr:
             ret += ' = ' + self.visit(ast.expr)
         return ret + ';'
