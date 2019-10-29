@@ -1,4 +1,4 @@
-from zkay.compiler.solidity.compiler import check_solc_errors
+from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step, colored_print, TermColor
@@ -46,7 +46,7 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
     with print_step("Type checking with solc"):
         from zkay.compiler.solidity.fake_solidity_compiler import fake_solidity_code
         fake_code = fake_solidity_code(str(code))
-        check_solc_errors(code, fake_code)
+        check_for_zkay_solc_errors(code, fake_code)
 
     # Zkay preprocessing and type checking
     process_ast(ast, parents, link_identifiers, check_return, alias_analysis, type_check)

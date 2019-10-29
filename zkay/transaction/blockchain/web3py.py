@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import List, Union, Any, Dict, Optional
 
 from eth_tester import PyEVMBackend, EthereumTester
-from solcx import compile_standard
 from web3 import Web3
 
+from compiler.solidity.compiler import compile_solidity_json
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name
 from zkay.transaction.interface import CipherValue, PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
@@ -45,33 +45,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
     @staticmethod
     def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
         solp = Path(sol_filename)
-        json_in = {
-            'language': 'Solidity',
-            'sources': {
-                solp.name: {
-                    'urls': [
-                        str(solp.absolute())
-                    ]
-                }
-            },
-            'settings': {
-                'outputSelection': {
-                    '*': {'*': ['metadata', 'evm.bytecode', 'evm.bytecode.sourceMap']}
-                },
-                'optimizer': {
-                    'enabled': True,
-                    'runs': 10 # TODO adjust
-                }
-            }
-        }
-
-        if libs is not None:
-            json_in['settings']['libraries'] = {
-                solp.name: libs
-            }
-
-        jout = compile_standard(json_in, allow_paths=str(solp.absolute().parent))['contracts'][solp.name][contract_name]
-
+        jout = compile_solidity_json(sol_filename, libs, optimizer_runs=10)['contracts'][solp.name][contract_name]
         return {
             'abi': json.loads(jout['metadata'])['output']['abi'],
             'bin': jout['evm']['bytecode']['object']
