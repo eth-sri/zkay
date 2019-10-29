@@ -3,6 +3,7 @@ import re
 from subprocess import SubprocessError
 from textwrap import dedent
 
+from compiler.privacy.library_contracts import should_use_hash
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, ExpressionToLocAssignment, EqConstraint, \
     EncConstraint, HybridArgumentIdf
@@ -11,7 +12,7 @@ from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G
 from zkay.utils.run_command import run_command
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr, Expression, \
-    AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr, IndexExpr
+    AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr, IndexExpr, indent
 
 zok_bin = 'zokrates'
 if 'ZOKRATES_ROOT' in os.environ:
@@ -75,17 +76,58 @@ class ZokratesGenerator(CircuitGenerator):
     def _generate_zkcircuit(self, circuit: CircuitHelper):
         secret_args = ', '.join([f'private field {s.name}' for s in circuit.s])
 
-        pub_in_count = circuit.in_name_factory.count
-        pub_out_count = circuit.out_name_factory.count
-        pub_args = ', '.join(([f'field[{pub_in_count}] {circuit.in_base_name}'] if pub_in_count > 0 else []) +
-                             ([f'field[{pub_out_count}] {circuit.out_base_name}'] if pub_out_count > 0 else []))
+        n_in, n_out = circuit.in_base_name, circuit.out_base_name
+        pub_in_count, pub_out_count = circuit.in_name_factory.count, circuit.out_name_factory.count
+        should_hash = should_use_hash(pub_in_count + pub_out_count)
 
-        zok_code = lib_code + dedent(f'''\
-            def main({", ".join([secret_args, pub_args])}) -> (field):\
-                ''' + ''.join([f'''
-                {self.__to_zok_code(stmt)}''' for stmt in circuit.phi]) + f'''
+        pub_type = 'private field' if should_hash else 'field'
+        pub_args = ', '.join(([f'{pub_type}[{pub_in_count}] {n_in}'] if pub_in_count > 0 else []) +
+                             ([f'{pub_type}[{pub_out_count}] {n_out}'] if pub_out_count > 0 else []))
+
+        zok_code = 'import "hashes/sha256/512bitPacked" as sha256packed\n\n' if should_hash else ''
+
+        zok_code += lib_code
+
+        if should_hash > 0:
+            check_hash_body = '\n'.join(dedent(e) for e in filter(bool, [
+                f'field[2] hash = [0, {n_in if pub_in_count > 0 else n_out}[0]]',
+                '' if pub_in_count <= 1 else f'''\
+                for field i in 1..{pub_in_count} do
+                    field[4] toHash = [hash[0], hash[1], 0, {n_in}[i]]
+                    hash = sha256packed(toHash)
+                endfor''',
+                '' if pub_out_count == 0 or (pub_out_count == 1 and pub_in_count == 0) else f'''\
+                for field i in {1 if pub_in_count == 0 else 0}..{pub_out_count} do
+                    field[4] toHash = [hash[0], hash[1], 0, {n_out}[i]]
+                    hash = sha256packed(toHash)
+                endfor''',
+                '''\
+                hash[0] == expectedHash[0]
+                hash[1] == expectedHash[1]
                 return 1
-            ''')
+
+                '''
+            ]))
+
+            zok_code += dedent(f'''\
+            def checkHash({pub_args}, field[2] expectedHash) -> (field):
+            ''') + indent(dedent(check_hash_body))
+
+        check_hash_str = ''
+        if should_hash:
+            check_hash_str = 'checkHash('
+            if pub_in_count > 0:
+                check_hash_str += f'{n_in}, '
+            if pub_out_count > 0:
+                check_hash_str += f'{n_out}, '
+            check_hash_str += 'zk_hash) == 1'
+
+        zok_code += dedent(f'''def main({", ".join([secret_args, pub_args])}{', field[2] zk_hash' if should_hash else ''}) -> (field):''')
+        zok_code += indent(dedent('\n'.join(dedent(e) for e in filter(bool, [
+            check_hash_str,
+            *[self.__to_zok_code(stmt) for stmt in circuit.phi],
+            'return 1'
+        ]))))
 
         dirname = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
         if not os.path.exists(dirname):

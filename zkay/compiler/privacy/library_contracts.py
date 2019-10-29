@@ -2,6 +2,10 @@ def get_verify_libs_code():
     return f'pragma solidity ^0.5.0;\n\n{bn256_lib}\n\n{pairing_lib}'
 
 
+def should_use_hash(pub_arg_count: int):
+    return pub_arg_count > 2 and False
+
+
 pki_contract_name = 'PublicKeyInfrastructure'
 
 pki_contract = f'''\
