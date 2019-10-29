@@ -796,6 +796,9 @@ class AnnotatedTypeName(AST):
     def is_private(self):
         return not self.is_public()
 
+    def is_address(self) -> bool:
+        return self.type_name == TypeName.address_type() or self.type_name == TypeName.address_payable_type()
+
     @staticmethod
     def uint_all():
         return AnnotatedTypeName(TypeName.uint_type(), None)

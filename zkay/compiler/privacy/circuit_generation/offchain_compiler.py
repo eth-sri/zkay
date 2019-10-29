@@ -9,7 +9,8 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
-    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier
+    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier, \
+    ReturnStatement
 from zkay.zkay_ast.ast import ElementaryTypeName
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
@@ -143,7 +144,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         is_encrypted = bool(val_type.old_priv_text)
         name_str = f"'{idf.name}'"
         constr = ''
-        if val_type.type_name == TypeName.address_type() or val_type.type_name == TypeName.address_payable_type():
+        if val_type.is_address():
             constr = ', val_constructor=AddressValue'
         val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, is_encrypted={is_encrypted}{constr})"
         return val_str
@@ -170,13 +171,23 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return fct
 
     def visitParameter(self, ast: Parameter):
-        t = 'Any' if ast.original_type is None else self.visit(ast.original_type.type_name)
+        if ast.original_type is None:
+            t = 'Any'
+        elif ast.original_type.is_address():
+            t = 'str'
+        else:
+            t = self.visit(ast.original_type.type_name)
         return f'{self.visit(ast.idf)}: {t}'
 
     def handle_function_params(self, params: List[Parameter]):
         return super().handle_function_params(self.current_params)
 
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
+        address_params = [self.visit(param.idf) for param in self.current_params if param.original_type.is_address()]
+        address_wrap_str = ''
+        if address_params:
+            address_wrap_str = f"{', '.join(address_params)} = {', '.join([f'AddressValue({p})' for p in address_params])}\n"
+
         circuit = self.current_circ
         all_params = ', '.join([f'{self.visit(param.idf)}' for param in self.current_params])
         has_in = self.current_circ.in_name_factory.count > 0
@@ -233,15 +244,18 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if isinstance(ast, ConstructorDefinition):
             invoke_transact_str = f'''
             # Deploy contract
+            {STATE_VALUES_NAME}.clear()
             return {CONN_OBJ_NAME}.deploy({PROJECT_DIR_NAME}, {CONTRACT_NAME}, actual_params, [{should_encrypt}])
             '''
         else:
             invoke_transact_str = f'''
             # Invoke public transaction
+            {STATE_VALUES_NAME}.clear()
             return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, '{ast.name}', actual_params, [{should_encrypt}])
             '''
 
         code = '\n'.join(dedent(s) for s in filter(bool, [
+            address_wrap_str,
             preamble,
             in_var_decl,
             out_var_decl,
@@ -315,6 +329,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     in_decrypt += f'\n{plain_idf} = {conv}'
 
         return f'{out_initializations}{stmt_txt}{in_decrypt}'
+
+    def visitReturnStatement(self, ast: ReturnStatement):
+        return None
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if self.current_circ.requires_verification() and isinstance(ast.func, MemberAccessExpr) and isinstance(ast.func.expr, IdentifierExpr):
