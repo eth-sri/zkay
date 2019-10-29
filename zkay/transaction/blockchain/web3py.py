@@ -120,6 +120,13 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         return self.deploy_contract(cout, *actual_args)
 
+    def _connect(self, manifest, contract: str, address: str) -> Any:
+        filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
+        cout = self.compile_contract(filename, contract)
+        return self.w3.eth.contract(
+            address=address, abi=cout['abi']
+        )
+
 
 class Web3TesterBlockchain(Web3Blockchain):
     def _create_w3_instance(self) -> Web3:

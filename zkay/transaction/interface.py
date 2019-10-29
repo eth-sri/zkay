@@ -117,6 +117,10 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Deploying contract {contract}[{Value.list_to_string(actual_args)}]')
         return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args))
 
+    def connect(self, project_dir: str, contract: str, address: AddressValue) -> Any:
+        debug_print(f'Connecting to contract {contract}@{address.val}')
+        return self._connect(parse_manifest(project_dir), contract, address.val)
+
     @abstractmethod
     def _my_address(self) -> AddressValue:
         pass
@@ -143,6 +147,10 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def _deploy(self, manifest, contract: str, *actual_args) -> Any:
+        pass
+
+    @abstractmethod
+    def _connect(self, manifest, contract: str, address: str) -> Any:
         pass
 
     @staticmethod

@@ -67,6 +67,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return {self.visit(ast.contracts[0].idf)}.deploy(os.path.dirname(os.path.realpath(__file__)), *args)
 
 
+        def connect(address: str):
+            return {self.visit(ast.contracts[0].idf)}.connect(os.path.dirname(os.path.realpath(__file__)), address)
+
+
         def help():
             print('\\n'.join([f"{{f[0]}}{{inspect.signature(f[1])}}" for f in inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction)]))
 
@@ -99,10 +103,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 {CONTRACT_NAME} = '{ast.idf.name}'
                 {CONTRACT_HANDLE} = None
 
+            @property
+            def address(self):
+                return {CONTRACT_HANDLE}.address
+
             @staticmethod
             def connect(project_dir: str, address: str) -> '{name}':
                 c = {name}(project_dir)
-                # TODO connect
+                c.contract_handle = c.conn.connect(project_dir, '{ast.idf.name}', AddressValue(address))
                 return c
 
             @staticmethod
