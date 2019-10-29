@@ -302,7 +302,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             out_val = out_idf.corresponding_expression
             loc_str = self.visit(out_idf.get_loc_expr())
             if out_val.privacy.is_all_expr():
-                s = f'{loc_str} = {self.visit(out_val.val.implicitly_converted(TypeName.uint_type()))}' # TODO (in the future maybe not uint)
+                s = f'{loc_str} = int({self.visit(out_val.val)})' # TODO (in the future maybe not uint)
             else:
                 priv_str = 'msg.sender' if out_val.privacy.is_me_expr() else f'{self.visit(deep_copy(out_val.privacy))}'
                 pk_str = f'{KEYSTORE_OBJ_NAME}.getPk(__addr)'

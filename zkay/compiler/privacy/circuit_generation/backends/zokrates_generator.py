@@ -23,7 +23,7 @@ class ZokratesCodeVisitor(CodeVisitor):
     @staticmethod
     def as_bool(expr: Expression) -> Expression:
         if not isinstance(expr, BooleanLiteralExpr) and expr.annotated_type.type_name != TypeName.bool_type():
-            expr = expr.replaced_with(FunctionCallExpr(BuiltinFunction('=='), [expr, NumberLiteralExpr(1)]))
+            expr = expr.replaced_with(FunctionCallExpr(BuiltinFunction('!='), [expr, NumberLiteralExpr(0)]))
         expr.annotated_type = AnnotatedTypeName.bool_all()
         return expr
 

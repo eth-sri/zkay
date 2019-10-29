@@ -103,7 +103,7 @@ class Expression(AST):
 
     def implicitly_converted(self, expected: 'TypeName'):
         if expected == TypeName.bool_type() and not isinstance(self, BooleanLiteralExpr) and not self.instanceof_data_type(TypeName.bool_type()):
-            ret = FunctionCallExpr(BuiltinFunction('=='), [self, NumberLiteralExpr(1)])
+            ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
         elif expected == TypeName.uint_type() and not isinstance(self, NumberLiteralExpr) and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
