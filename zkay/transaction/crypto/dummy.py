@@ -13,7 +13,7 @@ class DummyCrypto(ZkayCryptoInterface):
         if rnd is not None:
             assert rnd == 69, f'rnd was {rnd}'
         cipher = (plain + pk) % bn256_scalar_field
-        return cipher, rnd if rnd is not None else 69
+        return cipher, 69
 
     def _dec(self, cipher: int, sk: int) -> Tuple[int, int]:
         if cipher == 0:

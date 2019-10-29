@@ -183,6 +183,8 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk.val}"')
         cipher, rnd = self._enc(int(plain), pk.val, None if rnd is None else rnd.val)
+        if cipher == 0:
+            raise Exception("Encryption resulted in cipher text 0 which is a reserved value. Please try again.")
         return CipherValue(cipher), RandomnessValue(rnd)
 
     def dec(self, cipher: CipherValue, sk: PrivateKeyValue) -> Tuple[int, RandomnessValue]:

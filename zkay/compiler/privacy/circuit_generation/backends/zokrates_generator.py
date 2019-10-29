@@ -152,6 +152,8 @@ def enc(field msg, field R, field key) -> (field):
     // artificial constraints ensuring every variable is used
     field impossible = if R == 0 && R == 1 then 1 else 0 fi
     impossible == 0
-    return msg + key
+    field cipher = msg + key
+    if cipher == 0 then 1 else 0 fi == 0
+    return cipher
 
 '''
