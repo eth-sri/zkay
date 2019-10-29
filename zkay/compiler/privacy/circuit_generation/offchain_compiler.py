@@ -2,8 +2,8 @@ from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
 
-from compiler.privacy.used_contract import get_contract_instance_idf
-from transaction.interface import bn256_scalar_field, uint256_max
+from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.transaction.interface import bn256_scalar_field, uint256_max
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     ExpressionToLocAssignment, EncConstraint, EqConstraint
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name

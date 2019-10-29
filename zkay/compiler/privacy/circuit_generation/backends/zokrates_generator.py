@@ -3,7 +3,7 @@ import re
 from subprocess import SubprocessError
 from textwrap import dedent
 
-from compiler.privacy.library_contracts import should_use_hash
+from zkay.compiler.privacy.library_contracts import should_use_hash
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, ExpressionToLocAssignment, EqConstraint, \
     EncConstraint, HybridArgumentIdf

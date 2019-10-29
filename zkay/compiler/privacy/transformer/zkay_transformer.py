@@ -1,7 +1,7 @@
 import re
 from typing import Dict, Optional, List, Tuple
 
-from compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
 from zkay.compiler.privacy.library_contracts import pki_contract_name
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor

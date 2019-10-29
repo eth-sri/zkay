@@ -9,7 +9,7 @@ from typing import Union, Any, Dict, Optional
 from eth_tester import PyEVMBackend, EthereumTester
 from web3 import Web3
 
-from compiler.solidity.compiler import compile_solidity_json
+from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name
 from zkay.transaction.interface import PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
