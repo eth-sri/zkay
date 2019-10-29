@@ -1,5 +1,6 @@
 import os
 from abc import ABCMeta, abstractmethod
+from multiprocessing import Pool, Value
 from typing import List
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
@@ -34,15 +35,23 @@ class CircuitGenerator(metaclass=ABCMeta):
             self._generate_zkcircuit(circuit)
 
         c_count = len(self.circuits_to_prove)
-        for idx, circuit in enumerate(self.circuits_to_prove):
-            # Generate prover and verifier keys and verification contract
-            if not import_keys:
-                with print_step(f'Compilation and key generation for circuit '
-                                f'\'{circuit.verifier_contract_type.code()}\' [{idx + 1}/{c_count}]'):
-                    self._generate_keys(circuit)
-            vk = self._parse_verification_key(circuit)
-            with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
-                f.write(self.proving_scheme.generate_verification_contract(vk, circuit))
+
+        if import_keys:
+            # Import TODO
+            pass
+        else:
+            # Generate keys in parallel
+            print(f'Generating keys for {c_count} circuits...')
+            counter = Value('i', 0)
+            p_count = min(os.cpu_count(), c_count)
+            with Pool(processes=p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
+                pool.map(self._generate_circuit, self.circuits_to_prove)
+
+        with print_step('Write verification contracts'):
+            for circuit in self.circuits_to_prove:
+                vk = self._parse_verification_key(circuit)
+                with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
+                    f.write(self.proving_scheme.generate_verification_contract(vk, circuit))
 
     def get_all_key_paths(self) -> List[str]:
         paths = []
@@ -53,6 +62,21 @@ class CircuitGenerator(metaclass=ABCMeta):
 
     def get_verification_contract_filenames(self) -> List[str]:
         return [os.path.join(self.output_dir, circuit.verifier_contract_filename) for circuit in self.circuits_to_prove]
+
+    @staticmethod
+    def __init_worker(counter, total_count):
+        global finish_counter
+        global c_count
+
+        finish_counter = counter
+        c_count = total_count
+
+    def _generate_circuit(self, circuit: CircuitHelper):
+        self._generate_keys(circuit)
+        with finish_counter.get_lock():
+            finish_counter.value += 1
+            print(f'Generated keys for circuit '
+                  f'\'{circuit.verifier_contract_type.code()}\' [{finish_counter.value}/{c_count}]')
 
     def _generate_offchain_code(self):
         """ Generate python code corresponding to the off-chain computations for the circuit """
