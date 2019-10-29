@@ -1491,7 +1491,7 @@ class CodeVisitor(AstVisitor):
     def visitSourceUnit(self, ast: SourceUnit):
         p = ast.pragma_directive
         contracts = self.visit_list(ast.contracts)
-        lfstr = 'import "./{}";'
+        lfstr = 'import "{}";'
         return f'{p}\n\n' \
                f'{linesep.join([lfstr.format(uc) for uc in ast.used_contracts])}\n\n' \
                f'{contracts}'

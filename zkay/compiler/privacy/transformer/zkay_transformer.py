@@ -1,24 +1,23 @@
 import re
 from typing import Dict, Optional, List, Tuple
 
+from compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
 from zkay.compiler.privacy.library_contracts import pki_contract_name
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from zkay.compiler.privacy.used_contract import UsedContract
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, \
     IfStatement, FunctionCallExpr, IdentifierExpr, Parameter, VariableDeclaration, \
     AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
-    ConstructorDefinition, UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr
+    UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, TypeName, AST, \
+    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, CastExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
 proof_param_name = 'proof__'
 verification_function_name = 'check_verify'
 default_return_var_name = 'return_value__'
-contract_var_suffix = 'inst'
 
 
 def transform_ast(ast: AST) -> Tuple[AST, 'ZkayTransformer']:
@@ -38,26 +37,26 @@ class ZkayTransformer(AstTransformerVisitor):
         super().__init__()
         self.circuit_generators: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {}
         self.current_generator: Optional[CircuitHelper] = None
-        self.used_contracts: List[UsedContract] = []
         self.var_decl_trafo = ZkayVarDeclTransformer()
 
-    @staticmethod
-    def import_contract(ast: SourceUnit, vname: str) -> (UsedContract, StateVariableDeclaration):
-        inst_idf = Identifier(f'{vname}_{contract_var_suffix}')
-        c_type = AnnotatedTypeName(UserDefinedTypeName([Identifier(vname)]), None)
-        uc = UsedContract(f'{vname}.sol', c_type, inst_idf)
-        sv = StateVariableDeclaration(c_type, [], inst_idf.clone(), None)
-        ast.used_contracts.append(uc.filename)
-        return uc, sv
+    def import_contract(self, ast: SourceUnit, vname: str) -> StateVariableDeclaration:
+        inst_idf = get_contract_instance_idf(vname)
+        c_type = UserDefinedTypeName([Identifier(vname)])
+        fname = f'./{vname}.sol'
 
-    # TODO, add dummy constructor for verifier contract initialization if there is no constructor in the zkay file
+        if self.current_generator:
+            self.current_generator.verifier_contract_type = c_type
+            self.current_generator.verifier_contract_filename = fname
+        ast.used_contracts.append(fname)
+
+        return StateVariableDeclaration(AnnotatedTypeName(c_type, None), ['constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0)))
+
     def visitSourceUnit(self, ast: SourceUnit):
         # Include pki contract
-        pki_uc, pki_sv = self.import_contract(ast, pki_contract_name)
+        pki_sv = self.import_contract(ast, pki_contract_name)
 
         for c in ast.contracts:
             # Ref pki contract
-            self.used_contracts = [pki_uc]
             ext_var_decls = [pki_sv]
 
             # Transform types of normal state variables
@@ -67,10 +66,8 @@ class ZkayTransformer(AstTransformerVisitor):
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_children(f)
                 if self.current_generator.requires_verification():
-                    uc, sv = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls) - 1}_{f.name}')
-                    self.current_generator.verifier_contract = uc
-                    self.used_contracts.append(uc)
-                    ext_var_decls.append(sv)
+                    contract_state_var_decl = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls) - 1}_{f.name}')
+                    ext_var_decls.append(contract_state_var_decl)
 
             # Add external contract state variables
             c.state_variable_declarations = Comment.comment_list('External contracts', ext_var_decls) + \
@@ -83,7 +80,7 @@ class ZkayTransformer(AstTransformerVisitor):
         return ast
 
     def transform_function_children(self, ast: ConstructorOrFunctionDefinition):
-        circuit_generator = CircuitHelper(ast, self.used_contracts, ZkayExpressionTransformer)
+        circuit_generator = CircuitHelper(ast, ZkayExpressionTransformer)
         self.circuit_generators[ast] = circuit_generator
         self.current_generator = circuit_generator
 
@@ -106,8 +103,6 @@ class ZkayTransformer(AstTransformerVisitor):
 
     def transform_function_definition(self, ast: ConstructorOrFunctionDefinition):
         circuit_generator = self.circuit_generators[ast]
-        verifier = circuit_generator.verifier_contract
-        requires_proof = verifier is not None
 
         preamble: List[AST] = []
         # Declare return variable if necessary
@@ -119,18 +114,7 @@ class ZkayTransformer(AstTransformerVisitor):
                 ), None)
             ])
 
-        # Add external contract initialization for constructor
-        if isinstance(ast, ConstructorDefinition):
-            c_assignments = []
-            for c in self.used_contracts:
-                pidf_name = f'{c.state_variable_idf.name}_'
-                ast.parameters.append(Parameter([], c.contract_type, Identifier(pidf_name), None))
-                c_assignments.append(AssignmentStatement(
-                    lhs=IdentifierExpr(c.state_variable_idf.clone()), rhs=IdentifierExpr(Identifier(pidf_name)))
-                )
-            preamble += Comment.comment_wrap_block('Assigning contract instance variables', c_assignments)
-
-        if not requires_proof:
+        if not circuit_generator.requires_verification():
             if ast.body.statements and isinstance(ast.body.statements[-1], Comment):
                 # Remove superfluous empty line
                 ast.body.statements.pop()
@@ -157,14 +141,13 @@ class ZkayTransformer(AstTransformerVisitor):
             ast.parameters.append(Parameter([], AnnotatedTypeName.proof_type(), Identifier(proof_param_name), 'memory'))
 
             # Call to verifier
-            verify = ExpressionStatement(FunctionCallExpr(
-                MemberAccessExpr(IdentifierExpr(verifier.state_variable_idf.clone()), Identifier(verification_function_name)),
-                [IdentifierExpr(Identifier(proof_param_name))] +
-                ([] if circuit_generator.in_name_factory.count == 0 else [
-                    IdentifierExpr(Identifier(circuit_generator.in_name_factory.base_name))]) +
-                ([] if circuit_generator.out_name_factory.count == 0 else [
-                    IdentifierExpr(Identifier(circuit_generator.out_name_factory.base_name))])
-            ))
+            verifier = IdentifierExpr(get_contract_instance_idf(circuit_generator.verifier_contract_type.code()))
+            verifier_args = [IdentifierExpr(Identifier(proof_param_name))]
+            if circuit_generator.in_name_factory.count > 0:
+                verifier_args.append(IdentifierExpr(Identifier(circuit_generator.in_name_factory.base_name)))
+            if circuit_generator.out_name_factory.count > 0:
+                verifier_args.append(IdentifierExpr(Identifier(circuit_generator.out_name_factory.base_name)))
+            verify = ExpressionStatement(FunctionCallExpr(MemberAccessExpr(verifier, Identifier(verification_function_name)), verifier_args))
 
             # Assemble new body (public key requests, transformed statements, verification invocation)
             ast.body.statements = preamble + \
@@ -203,7 +186,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
         ast.keywords = [k for k in ast.keywords if k != 'final' and k != 'public']
-        ast.keywords.append('public') # make sure every state var gets a public getter (TODO maybe there is another solution)
+        ast.keywords.append('public')  # make sure every state var gets a public getter (TODO maybe there is another solution)
         ast.expr = self.expr_trafo.visit(ast.expr)
         return self.visit_children(ast)
 

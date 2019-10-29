@@ -50,7 +50,7 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
         Manifest.pki_lib: f'{library_contracts.pki_contract_name}.sol',
         Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
         Manifest.verifier_names: {
-            f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract.contract_type.type_name.names[0].name for cc in
+            f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract_type.code() for cc in
             cg.circuits_to_prove
         }
     }

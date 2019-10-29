@@ -1,8 +1,9 @@
 from copy import deepcopy
 from typing import List, Dict, Optional, Tuple, Callable
 
+from compiler.privacy.library_contracts import pki_contract_name
+from compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from zkay.compiler.privacy.used_contract import UsedContract
 from zkay.zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
     LocationExpr, \
     TypeName, AssignmentStatement, UserDefinedTypeName, AnnotatedTypeName, ConstructorOrFunctionDefinition, IndexExpr, NumberLiteralExpr
@@ -89,15 +90,14 @@ class CircuitHelper:
     out_base_name = 'out__'
     in_base_name = 'in__'
 
-    def __init__(self, fct: ConstructorOrFunctionDefinition,
-                 used_contracts: List[UsedContract], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
+    def __init__(self, fct: ConstructorOrFunctionDefinition, expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
         super().__init__()
         self.fct = fct
-        self.used_contracts = used_contracts
         self.expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
         self.enc_param_check_stmts: List[AssignmentStatement] = []
         self.return_var: Optional[Identifier] = None
-        self.verifier_contract: Optional[UsedContract] = None
+        self.verifier_contract_filename: Optional[str] = None
+        self.verifier_contract_type: Optional[UserDefinedTypeName] = None
 
         # Circuit elements
         self.p: List[HybridArgumentIdf] = []
@@ -120,11 +120,7 @@ class CircuitHelper:
         self.old_code_and_temp_var_decls_for_stmt: Dict[Statement, Tuple[str, List[AssignmentStatement]]] = {}
 
     def get_circuit_name(self) -> str:
-        if self.verifier_contract is None:
-            return ''
-        else:
-            assert isinstance(self.verifier_contract.contract_type.type_name, UserDefinedTypeName)
-            return self.verifier_contract.contract_type.type_name.names[0]
+        return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
 
     @staticmethod
     def get_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
@@ -132,7 +128,7 @@ class CircuitHelper:
 
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
-        return self.p or self.s
+        return bool(self.p or self.s)
 
     def request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         pname = privacy.idf.name
@@ -140,11 +136,9 @@ class CircuitHelper:
             return self.pk_for_label[pname].lhs.arr.idf
         else:
             idf = self.in_name_factory.get_new_idf(TypeName.key_type())
-            pki_idf = self.used_contracts[0].state_variable_idf
-            assert pki_idf
+            pki = IdentifierExpr(get_contract_instance_idf(pki_contract_name))
             self.pk_for_label[pname] = AssignmentStatement(
-                idf.get_loc_expr(), FunctionCallExpr(MemberAccessExpr(IdentifierExpr(pki_idf), Identifier('getPk')),
-                                                     [self.expr_trafo.visit(privacy)])
+                idf.get_loc_expr(), FunctionCallExpr(MemberAccessExpr(pki, Identifier('getPk')), [self.expr_trafo.visit(privacy)])
             )
             return idf
 

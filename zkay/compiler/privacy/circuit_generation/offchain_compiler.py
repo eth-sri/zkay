@@ -78,7 +78,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if not ast.constructor_definitions:
             deploy_cmd = f'c.conn.deploy(project_dir, {ast.idf.name}, [], [])'
         else:
-            deploy_cmd = f'c.constructor(*constructor_args, *[str(vc.val) for vc in c.conn.pki_verifier_addresses(project_dir)])'
+            deploy_cmd = f'c.constructor(*constructor_args)'
 
         return indent(dedent(f'''\
             def __init__(self, project_dir: str):

@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union, Any, Dict, Optional
+from typing import Union, Any, Dict, Optional
 
 from eth_tester import PyEVMBackend, EthereumTester
 from web3 import Web3
@@ -12,7 +12,7 @@ from web3 import Web3
 from compiler.solidity.compiler import compile_solidity_json
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name
-from zkay.transaction.interface import CipherValue, PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
+from zkay.transaction.interface import PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
 
 max_gas_limit = 10000000
 
@@ -40,7 +40,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         }
         shutil.rmtree(tmpdir)
 
-        self.verifiers_for_uuid: Dict[str, List[AddressValue]] = {}
+        self.verifiers_for_uuid: Dict[str, Dict[str, AddressValue]] = {}
 
     @staticmethod
     def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
@@ -70,17 +70,19 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _create_w3_instance(self) -> Web3:
         pass
 
-    def _pki_verifier_addresses(self, manifest) -> List[AddressValue]:
+    def _pki_verifier_addresses(self, manifest) -> Dict[str, AddressValue]:
         uuid = manifest[Manifest.uuid]
         if uuid not in self.verifiers_for_uuid:
             # Deploy verification contracts if not already done
-            vf = []
+            vf = {}
             for verifier_name in manifest[Manifest.verifier_names].values():
                 filename = os.path.join(manifest[Manifest.project_dir], f'{verifier_name}.sol')
                 cout = self.compile_contract(filename, verifier_name, self.lib_addresses)
-                vf.append(AddressValue(self.deploy_contract(cout).address))
+                vf[verifier_name] = AddressValue(self.deploy_contract(cout).address)
             self.verifiers_for_uuid[uuid] = vf
-        return [AddressValue(self.pki_contract.address)] + self.verifiers_for_uuid[uuid]
+        ret = self.verifiers_for_uuid[uuid].copy()
+        ret[pki_contract_name] = AddressValue(self.pki_contract.address)
+        return ret
 
     def _my_address(self) -> AddressValue:
         return AddressValue(self.w3.eth.defaultAccount)
@@ -91,7 +93,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _announce_public_key(self, address: AddressValue, pk: PublicKeyValue):
         return self._transact(self.pki_contract, 'announcePk', pk.val)
 
-    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[int, str, CipherValue]:
+    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         return contract_handle.functions[name](*indices).call({'from': self.my_address.val})
 
     def _transact(self, contract_handle, function: str, *actual_params) -> Any:
@@ -104,7 +106,18 @@ class Web3Blockchain(ZkayBlockchainInterface):
         return tx_receipt
 
     def _deploy(self, manifest, contract: str, *actual_args):
-        cout = self.compile_contract(os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename]), contract)
+        filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
+        with open(filename) as f:
+            c = f.read()
+        ext_contracts = self._pki_verifier_addresses(manifest)
+        for key, val in ext_contracts.items():
+            c = c.replace(f'{key}(0)', f'{key}({val.val})')
+
+        filename += '.inst.sol'
+        with open(filename, 'w') as f:
+            f.write(c)
+        cout = self.compile_contract(filename, contract)
+
         return self.deploy_contract(cout, *actual_args)
 
 

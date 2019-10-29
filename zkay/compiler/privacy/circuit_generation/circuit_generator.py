@@ -38,10 +38,10 @@ class CircuitGenerator(metaclass=ABCMeta):
             # Generate prover and verifier keys and verification contract
             if not import_keys:
                 with print_step(f'Compilation and key generation for circuit '
-                                f'\'{circuit.verifier_contract.contract_type.type_name.names[0]}\' [{idx + 1}/{c_count}]'):
+                                f'\'{circuit.verifier_contract_type.code()}\' [{idx + 1}/{c_count}]'):
                     self._generate_keys(circuit)
             vk = self._parse_verification_key(circuit)
-            with open(os.path.join(self.output_dir, circuit.verifier_contract.filename), 'w') as f:
+            with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
                 f.write(self.proving_scheme.generate_verification_contract(vk, circuit))
 
     def get_all_key_paths(self) -> List[str]:
@@ -52,7 +52,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         return paths
 
     def get_verification_contract_filenames(self) -> List[str]:
-        return [os.path.join(self.output_dir, circuit.verifier_contract.filename) for circuit in self.circuits_to_prove]
+        return [os.path.join(self.output_dir, circuit.verifier_contract_filename) for circuit in self.circuits_to_prove]
 
     def _generate_offchain_code(self):
         """ Generate python code corresponding to the off-chain computations for the circuit """
