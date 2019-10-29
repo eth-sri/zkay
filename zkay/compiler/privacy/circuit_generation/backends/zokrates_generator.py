@@ -123,6 +123,7 @@ class ZokratesGenerator(CircuitGenerator):
             check_hash_str += 'zk_hash) == 1'
 
         zok_code += dedent(f'''def main({", ".join([secret_args, pub_args])}{', field[2] zk_hash' if should_hash else ''}) -> (field):''')
+        zok_code += '\n'
         zok_code += indent(dedent('\n'.join(dedent(e) for e in filter(bool, [
             check_hash_str,
             *[self.__to_zok_code(stmt) for stmt in circuit.phi],
