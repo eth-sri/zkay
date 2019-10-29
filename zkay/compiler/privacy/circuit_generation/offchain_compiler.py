@@ -2,11 +2,13 @@ from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
 
+from compiler.privacy.used_contract import get_contract_instance_idf
+from transaction.interface import bn256_scalar_field, uint256_max
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     ExpressionToLocAssignment, EncConstraint, EqConstraint
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
-    ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, \
+    ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier
 from zkay.zkay_ast.ast import ElementaryTypeName
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -23,6 +25,7 @@ PRIV_VALUES_NAME = 'self.priv_values'
 STATE_VALUES_NAME = 'self.state_values'
 CONTRACT_NAME = 'self.contract_name'
 CONTRACT_HANDLE = 'self.contract_handle'
+GET_STATE = 'self.get_state'
 
 
 class PythonOffchainVisitor(PythonCodeVisitor):
@@ -36,6 +39,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         self.current_circ: Optional[CircuitHelper] = None
         self.current_index: List[str] = []
         self.current_outs: List[HybridArgumentIdf] = []
+
+        self.inside_circuit: bool = False
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
         if ast == TypeName.address_type():
@@ -53,7 +58,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         import os
         import code
         import inspect
-        from typing import Dict, List, Optional, Union, Any
+        from typing import Dict, List, Optional, Union, Any, Callable
         from zkay.transaction import Runtime, CipherValue, AddressValue
 
 
@@ -106,25 +111,39 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 c.contract_handle = {deploy_cmd}
                 return c
 
-            def get_state(self, name: str, *indices):
-                return {CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, False, *indices)
+            @staticmethod
+            def comp_overflow_checked(val: int):
+                assert val < (1 << 252), f'Value {{val}} is too large for comparison'
+                return val
+
+            def get_state(self, name: str, *indices, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
+                idxvals = ''.join([f'[{{idx}}]' for idx in indices])
+                loc = f'{{name}}{{idxvals}}'
+                if loc in {STATE_VALUES_NAME}:
+                    return {STATE_VALUES_NAME}[loc]
+                else:
+                    val = val_constructor({CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, *indices))
+                    if is_encrypted:
+                        val = CipherValue(val)
+                    {STATE_VALUES_NAME}[loc] = val
+                    return val
 
         '''))
 
     @staticmethod
     def get_state_value(idf: Identifier, val_type: AnnotatedTypeName, indices: List[str]) -> str:
-        idxvals = ''.join([f'[{{{idx}}}]' for idx in indices])
         is_encrypted = bool(val_type.old_priv_text)
-        req = f'{CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, "{idf.name}", {is_encrypted}, {", ".join(indices)})'
+        name_str = f"'{idf.name}'"
+        constr = ''
         if val_type.type_name == TypeName.address_type() or val_type.type_name == TypeName.address_payable_type():
-            req = f'AddressValue({req})'
-        loc = f"\'{idf.name}{idxvals}\'"
-        return f'{STATE_VALUES_NAME}[{loc}] if {loc} in {STATE_VALUES_NAME} else {STATE_VALUES_NAME}.setdefault({loc}, {req})'
+            constr = ', val_constructor=AddressValue'
+        val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, is_encrypted={is_encrypted}{constr})"
+        return val_str
 
     @staticmethod
     def set_state_value(idf: Identifier, indices: List[str]):
         idxvals = ''.join([f'[{{{idx}}}]' for idx in indices])
-        return f'{STATE_VALUES_NAME}[f"{idf.name}{idxvals}"]'
+        return f"{STATE_VALUES_NAME}[f'{idf.name}{idxvals}']"
 
     def visitContractDefinition(self, ast: ContractDefinition):
         constr = self.visit_list(ast.constructor_definitions)
@@ -236,11 +255,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         assert_str = 'assert {0} == {1}, f"check failed for lhs={{{0}}} and rhs={{{1}}}"'
         for stmt in circuit.phi:
             if isinstance(stmt, ExpressionToLocAssignment):
-                stmts.append(self.py.visit(AssignmentStatement(stmt.lhs.get_loc_expr(), stmt.expr)))
+                with CircuitComputation(self):
+                    stmts.append(f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}')
             elif isinstance(stmt, EncConstraint):
-                stmts.append(f'__cipher, __rnd = {CRYPTO_OBJ_NAME}.enc({self.py.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())})')
-                stmts.append(assert_str.format('__rnd', self.py.visit(stmt.rnd.get_loc_expr())))
-                stmts.append(assert_str.format('__cipher', self.py.visit(stmt.cipher.get_loc_expr())))
+                enc_str = f'{CRYPTO_OBJ_NAME}.enc({self.py.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())}, {self.py.visit(stmt.rnd.get_loc_expr())})[0]'
+                stmts.append(assert_str.format(enc_str, self.py.visit(stmt.cipher.get_loc_expr())))
             else:
                 assert isinstance(stmt, EqConstraint)
                 stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))
@@ -264,7 +283,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             else:
                 priv_str = 'msg.sender' if out_val.privacy.is_me_expr() else f'{self.visit(deep_copy(out_val.privacy))}'
                 pk_str = f'{KEYSTORE_OBJ_NAME}.getPk(__addr)'
-                enc_str = f'{CRYPTO_OBJ_NAME}.enc({self.visit(out_val.val)}, {pk_str})'
+                with CircuitComputation(self):
+                    enc_str = f'{CRYPTO_OBJ_NAME}.enc({self.visit(out_val.val)}, {pk_str})'
                 s = f'__addr = {priv_str}\n' \
                     f'{loc_str}, {PRIV_VALUES_NAME}["{out_idf.get_flat_name()}_R"] = {enc_str}'
 
@@ -288,13 +308,18 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return f'{out_initializations}{stmt_txt}{in_decrypt}'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if self.current_circ.verifier_contract is not None and \
-                isinstance(ast.func, MemberAccessExpr) and isinstance(ast.func.expr, IdentifierExpr) and \
-                ast.func.expr.idf.name == self.current_circ.verifier_contract.state_variable_idf.name:
-            # Skip call to verifier
-            return None
-        else:
-            return super().visitFunctionCallExpr(ast)
+        if self.current_circ.requires_verification() and isinstance(ast.func, MemberAccessExpr) and isinstance(ast.func.expr, IdentifierExpr):
+            if ast.func.expr.idf.name == get_contract_instance_idf(self.current_circ.verifier_contract_type.code()).name:
+                # Skip call to verifier
+                return None
+        elif isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
+            modulo = bn256_scalar_field if self.inside_circuit else uint256_max
+            return f'({super().visitFunctionCallExpr(ast)}) % {modulo}'
+        elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
+            args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
+            return ast.func.format_string().format(*args)
+
+        return super().visitFunctionCallExpr(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         if ast.statement is not None and ast.idf.name == CircuitHelper.out_base_name:
@@ -364,3 +389,14 @@ class CircuitContext:
         self.v.current_f = None
         self.v.current_circ = None
         self.v.current_params = None
+
+
+class CircuitComputation:
+    def __init__(self, v: PythonOffchainVisitor):
+        self.v = v
+
+    def __enter__(self):
+        self.v.inside_circuit = True
+
+    def __exit__(self, t, value, traceback):
+        self.v.inside_circuit = False

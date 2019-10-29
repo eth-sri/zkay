@@ -9,7 +9,8 @@ from zkay.compiler.privacy.manifest import Manifest
 __debug_print = True
 default_proving_scheme = 'gm17'
 bn256_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
-
+bn256_comp_max = (1 << 252) - 1
+uint256_max = (1 << 256) - 1
 
 def debug_print(*args):
     if __debug_print:
@@ -35,6 +36,13 @@ class Value:
             return list(map(Value.unwrap_values, v))
         else:
             return v.val if isinstance(v, Value) else v
+
+    @staticmethod
+    def list_to_string(v: Union[int, bool, 'Value', List]) -> str:
+        if isinstance(v, List):
+            return f"[{', '.join(map(Value.list_to_string, v))}]"
+        else:
+            return str(v)
 
 
 class CipherValue(Value):
@@ -77,7 +85,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         #debug_print(f'Requesting own address ("{self._my_address().val}")')
         return self._my_address()
 
-    def pki_verifier_addresses(self, project_dir: str) -> List[AddressValue]:
+    def pki_verifier_addresses(self, project_dir: str) -> Dict[str, AddressValue]:
         return self._pki_verifier_addresses(parse_manifest(project_dir))
 
     def req_public_key(self, address: AddressValue) -> PublicKeyValue:
@@ -91,22 +99,22 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Announcing public key "{pk.val}" for address "{address.val}"')
         self._announce_public_key(address, pk)
 
-    def req_state_var(self, contract_handle, name: str, encrypted: bool, *indices) -> Union[int, str, CipherValue]:
+    def req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         assert contract_handle is not None
         debug_print(f'Requesting state variable "{name}"')
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)))
         debug_print(f'Got value {val} for state variable "{name}"')
-        return CipherValue(val) if encrypted else val
+        return val
 
     def transact(self, contract_handle, function: str, actual_args: List, should_encrypt: List[bool]) -> Any:
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
-        debug_print(f'Issuing transaction for function "{function}"{str(actual_args)})')
+        debug_print(f'Issuing transaction for function "{function}"{Value.list_to_string(actual_args)})')
         return self._transact(contract_handle, function, *Value.unwrap_values(actual_args))
 
     def deploy(self, project_dir: str, contract: str, actual_args: List, should_encrypt: List[bool]) -> Any:
         self.__check_args(actual_args, should_encrypt)
-        debug_print(f'Deploying contract {contract}[{str(actual_args)}]')
+        debug_print(f'Deploying contract {contract}[{Value.list_to_string(actual_args)}]')
         return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args))
 
     @abstractmethod
@@ -114,7 +122,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _pki_verifier_addresses(self, manifest) -> List[AddressValue]:
+    def _pki_verifier_addresses(self, manifest) -> Dict[str, AddressValue]:
         pass
 
     @abstractmethod
@@ -126,7 +134,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[int, CipherValue, AddressValue]:
+    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         pass
 
     @abstractmethod
@@ -166,7 +174,8 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk.val}"')
-        return self._enc(int(plain), pk)
+        cipher, rnd = self._enc(int(plain), pk.val, None if rnd is None else rnd.val)
+        return CipherValue(cipher), RandomnessValue(rnd)
 
     def dec(self, cipher: CipherValue, sk: PrivateKeyValue) -> Tuple[int, RandomnessValue]:
         """
@@ -177,19 +186,20 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
-        debug_print(f'Decrypting value {cipher.val} with secret key "{sk}"')
-        return self._dec(cipher, sk)
+        debug_print(f'Decrypting value {cipher.val} with secret key "{sk.val}"')
+        plain, rnd = self._dec(cipher.val, sk.val)
+        return plain, RandomnessValue(rnd)
 
     @abstractmethod
     def _generate_or_load_key_pair(self) -> KeyPair:
         pass
 
     @abstractmethod
-    def _enc(self, plain: int, pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
+    def _enc(self, plain: int, pk: int, rnd: Optional[int]) -> Tuple[int, int]:
         pass
 
     @abstractmethod
-    def _dec(self, cipher: CipherValue, sk: PrivateKeyValue) -> Tuple[int, RandomnessValue]:
+    def _dec(self, cipher: int, sk: int) -> Tuple[int, int]:
         pass
 
 
