@@ -16,4 +16,9 @@ class DummyCrypto(ZkayCryptoInterface):
         return cipher, rnd if rnd is not None else 69
 
     def _dec(self, cipher: int, sk: int) -> Tuple[int, int]:
-        return (cipher - sk) % bn256_scalar_field, 69
+        if cipher == 0:
+            # uninitialized value
+            plain = cipher
+        else:
+            plain = (cipher - sk) % bn256_scalar_field
+        return plain, 69

@@ -266,8 +266,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 with CircuitComputation(self):
                     stmts.append(f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}')
             elif isinstance(stmt, EncConstraint):
-                enc_str = f'{CRYPTO_OBJ_NAME}.enc({self.py.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())}, {self.py.visit(stmt.rnd.get_loc_expr())})[0]'
-                stmts.append(assert_str.format(enc_str, self.py.visit(stmt.cipher.get_loc_expr())))
+                cipher_str = self.py.visit(stmt.cipher.get_loc_expr())
+                enc_str = f'(CipherValue(0) if {cipher_str}.val == 0 else {CRYPTO_OBJ_NAME}.enc({self.py.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())}, {self.py.visit(stmt.rnd.get_loc_expr())})[0])'
+                stmts.append(assert_str.format(enc_str, cipher_str))
             else:
                 assert isinstance(stmt, EqConstraint)
                 stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))

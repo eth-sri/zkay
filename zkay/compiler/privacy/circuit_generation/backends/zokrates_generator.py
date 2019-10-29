@@ -143,8 +143,8 @@ class ZokratesGenerator(CircuitGenerator):
             fcall = FunctionCallExpr(IdentifierExpr(Identifier('enc')),
                                      [e.get_loc_expr(AnnotatedTypeName.uint_all()) for e in [stmt.plain, stmt.rnd, stmt.pk]])
             fcall.annotated_type = AnnotatedTypeName.uint_all()
-            return self.zkvisitor.visit(FunctionCallExpr(BuiltinFunction('=='),
-                                                         [fcall, stmt.cipher.get_loc_expr(AnnotatedTypeName.uint_all())]))
+            cipher = self.zkvisitor.visit(stmt.cipher.get_loc_expr(AnnotatedTypeName.uint_all()))
+            return f'(if {cipher} == 0 then 0 else {self.zkvisitor.visit(fcall)} fi) == {cipher}'
 
 
 lib_code = '''\
