@@ -254,7 +254,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, '{ast.name}', actual_params, [{should_encrypt}])
             '''
 
-        code = '\n'.join(dedent(s) for s in filter(bool, [
+        code = '\n'.join(dedent(s) for s in [
             address_wrap_str,
             preamble,
             in_var_decl,
@@ -267,7 +267,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             end_body_comment_str,
             add_pub_arg_str,
             invoke_transact_str
-        ]))
+        ] if s)
         return code
 
     def build_proof_check_fct(self) -> str:

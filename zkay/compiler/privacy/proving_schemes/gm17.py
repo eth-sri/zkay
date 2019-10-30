@@ -33,28 +33,26 @@ class ProvingSchemeGm17(ProvingScheme):
 
     def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper) -> str:
         vk = verification_key
-        inputs = tuple((e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0)
+        inputs = [(e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0]
         tot_count = sum(map(lambda x: x[1], inputs))
 
         if should_use_hash(tot_count):
             query_length = 2
             body = f'''\
-                uint hash = uint(sha256(abi.encodePacked({', '.join(i[0] for i in inputs)}))) % snark_scalar_field;
+                uint256 hash = uint256(sha256(abi.encodePacked({', '.join([n for n, _ in inputs])}))) % snark_scalar_field;
                 vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[1], hash));'''
         else:
             query_length = tot_count + 2
             body = ''
             done_count = 0
-            for input in inputs:
+            for var, count in inputs:
                 body += f'''\
-                for (uint i = 0; i < {input[1]}; i++) {{
-                    require({input[0]}[i] < snark_scalar_field, "in_ value outside snark field bounds");
-                    vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + {1 + done_count}], {input[0]}[i]));
-                }}
-                '''
-                done_count += input[1]
+                for (uint i = 0; i < {count}; i++) {{
+                    require({var}[i] < snark_scalar_field, "in_ value outside snark field bounds");
+                    vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + {1 + done_count}], {var}[i]));
+                }}\n'''
+                done_count += count
             body += f'''\
-                // Additional input corresponding to circuit return value
                 vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[{tot_count + 1}], 1));'''
 
         # Verification contract based on (with some modifications by NB):
@@ -89,12 +87,12 @@ class ProvingSchemeGm17(ProvingScheme):
                 vk.g_alpha = Pairing.G1Point({str(vk.g_alpha)});
                 vk.h_beta = Pairing.G2Point({str(vk.h_beta)});
                 vk.g_gamma = Pairing.G1Point({str(vk.g_gamma)});
-                vk.h_gamma = Pairing.G2Point({str(vk.h_gamma)});''' * (
-                f'vk.query[{idx}] = Pairing.G1Point({str(q)});''' for idx, q in enumerate(vk.query)) * f'''\
+                vk.h_gamma = Pairing.G2Point({str(vk.h_gamma)});''' * [
+                f'vk.query[{idx}] = Pairing.G1Point({str(q)});''' for idx, q in enumerate(vk.query)] * f'''\
                 return vk;''' // f'''\
             }}
 
-            function check_verify(uint[8] memory proof_, {', '.join(f'uint[{e[1]}] memory {e[0]}' for e in inputs)}) public {{''' / '''\
+            function check_verify(uint[8] memory proof_, {', '.join([f'uint[{count}] memory {var}' for var, count in inputs])}) public {{''' / '''\
                 Proof memory proof;
                 proof.a = Pairing.G1Point(proof_[0], proof_[1]);
                 proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);

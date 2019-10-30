@@ -102,9 +102,9 @@ class Expression(AST):
         return MeExpr()
 
     def implicitly_converted(self, expected: 'TypeName'):
-        if expected == TypeName.bool_type() and not isinstance(self, BooleanLiteralExpr) and not self.instanceof_data_type(TypeName.bool_type()):
+        if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
-        elif expected == TypeName.uint_type() and not isinstance(self, NumberLiteralExpr) and self.instanceof_data_type(TypeName.bool_type()):
+        elif expected == TypeName.uint_type() and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
             assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
@@ -362,6 +362,7 @@ class BooleanLiteralExpr(LiteralExpr):
     def __init__(self, value: bool):
         super().__init__()
         self.value = value
+        self.annotated_type = AnnotatedTypeName.bool_all()
 
 
 class NumberLiteralExpr(LiteralExpr):
@@ -369,6 +370,7 @@ class NumberLiteralExpr(LiteralExpr):
     def __init__(self, value: int):
         super().__init__()
         self.value = value
+        self.annotated_type = AnnotatedTypeName.uint_all()
 
 
 class StringLiteralExpr(LiteralExpr):
