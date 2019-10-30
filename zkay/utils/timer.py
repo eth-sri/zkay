@@ -5,12 +5,14 @@ from zkay import my_logging
 
 
 @contextlib.contextmanager
-def time_measure(key):
+def time_measure(key, should_print=False):
     start = time.time()
     yield
     end = time.time()
     elapsed = end - start
 
+    if should_print:
+        print(f"Took {elapsed} s")
     my_logging.data(key, elapsed)
 
 

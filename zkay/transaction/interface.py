@@ -5,6 +5,7 @@ from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict
 
 from zkay.compiler.privacy.manifest import Manifest
+from zkay.utils.timer import time_measure
 
 __debug_print = True
 default_proving_scheme = 'gm17'
@@ -249,8 +250,9 @@ class ZkayProverInterface(metaclass=ABCMeta):
             assert not isinstance(arg, Value) or isinstance(arg, RandomnessValue)
         manifest = parse_manifest(project_dir)
         debug_print(f'Generating proof for {contract}.{function}')
-        return self._generate_proof(os.path.join(manifest[Manifest.verifier_names][f'{contract}.{function}']),
-                                    Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
+        with time_measure(f'generate_proof_{contract}.{function}', True):
+            return self._generate_proof(os.path.join(manifest[Manifest.verifier_names][f'{contract}.{function}']),
+                                        Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
 
     @abstractmethod
     def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:

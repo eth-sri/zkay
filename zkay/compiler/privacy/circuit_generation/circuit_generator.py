@@ -7,6 +7,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
 from zkay.utils.progress_printer import print_step
+from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import AST
 
 
@@ -42,10 +43,11 @@ class CircuitGenerator(metaclass=ABCMeta):
         else:
             # Generate keys in parallel
             print(f'Generating keys for {c_count} circuits...')
-            counter = Value('i', 0)
-            p_count = min(os.cpu_count(), c_count)
-            with Pool(processes=p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
-                pool.map(self._generate_circuit, self.circuits_to_prove)
+            with time_measure('circuit_generation', True):
+                counter = Value('i', 0)
+                p_count = min(os.cpu_count(), c_count)
+                with Pool(processes=p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
+                    pool.map(self._generate_circuit, self.circuits_to_prove)
 
         with print_step('Write verification contracts'):
             for circuit in self.circuits_to_prove:
