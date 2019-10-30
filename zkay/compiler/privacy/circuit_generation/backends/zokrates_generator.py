@@ -14,6 +14,7 @@ from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, NumberLiteralExpr, Expression, \
     AnnotatedTypeName, AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr, IndexExpr, indent
 
+expected_hash_name = 'zk_expected_hash'
 zok_bin = 'zokrates'
 if 'ZOKRATES_ROOT' in os.environ:
     # could also be a path
@@ -74,61 +75,34 @@ class ZokratesGenerator(CircuitGenerator):
     g2_point_pattern = f'\\[{g1_point_pattern}\\], \\[{g1_point_pattern}\\]'
 
     def _generate_zkcircuit(self, circuit: CircuitHelper):
-        secret_args = ', '.join([f'private field {s.name}' for s in circuit.s])
-
         n_in, n_out = circuit.in_base_name, circuit.out_base_name
         pub_in_count, pub_out_count = circuit.in_name_factory.count, circuit.out_name_factory.count
         should_hash = should_use_hash(pub_in_count + pub_out_count)
 
-        pub_type = 'private field' if should_hash else 'field'
-        pub_args = ', '.join(([f'{pub_type}[{pub_in_count}] {n_in}'] if pub_in_count > 0 else []) +
-                             ([f'{pub_type}[{pub_out_count}] {n_out}'] if pub_out_count > 0 else []))
+        sec_args = [s.name for s in circuit.s]
+        pub_args = []
+        if pub_in_count > 0:
+            pub_args.append((n_in, pub_in_count))
+        if pub_out_count > 0:
+            pub_args.append((n_out, pub_out_count))
 
-        zok_code = 'import "hashes/sha256/512bitPacked" as sha256packed\n\n' if should_hash else ''
-
-        zok_code += lib_code
-
-        if should_hash > 0:
-            check_hash_body = '\n'.join(dedent(e) for e in filter(bool, [
-                f'field[2] hash = [0, {n_in if pub_in_count > 0 else n_out}[0]]',
-                '' if pub_in_count <= 1 else f'''\
-                for field i in 1..{pub_in_count} do
-                    field[4] toHash = [hash[0], hash[1], 0, {n_in}[i]]
-                    hash = sha256packed(toHash)
-                endfor''',
-                '' if pub_out_count == 0 or (pub_out_count == 1 and pub_in_count == 0) else f'''\
-                for field i in {1 if pub_in_count == 0 else 0}..{pub_out_count} do
-                    field[4] toHash = [hash[0], hash[1], 0, {n_out}[i]]
-                    hash = sha256packed(toHash)
-                endfor''',
-                '''\
-                hash[0] == expectedHash[0]
-                hash[1] == expectedHash[1]
-                return 1
-
-                '''
-            ]))
-
-            zok_code += dedent(f'''\
-            def checkHash({pub_args}, field[2] expectedHash) -> (field):
-            ''') + indent(dedent(check_hash_body))
-
-        check_hash_str = ''
         if should_hash:
-            check_hash_str = 'checkHash('
-            if pub_in_count > 0:
-                check_hash_str += f'{n_in}, '
-            if pub_out_count > 0:
-                check_hash_str += f'{n_out}, '
-            check_hash_str += 'zk_hash) == 1'
+            actual_sec_args = [f'private field {arg}' for arg in sec_args] + [f'private field[{arg[1]}] {arg[0]}' for arg in pub_args]
+            actual_pub_args = []
+            imports = hash_imports
+            return_code = get_hash_code(n_in, pub_in_count, n_out, pub_out_count)
+        else:
+            actual_sec_args = [f'private field {arg}' for arg in sec_args]
+            actual_pub_args = [f'field[{arg[1]}] {arg[0]}' for arg in pub_args]
+            imports = ''
+            return_code = 'return 1'
+        argstr = ', '.join(actual_sec_args + actual_pub_args)
 
-        zok_code += dedent(f'''def main({", ".join([secret_args, pub_args])}{', field[2] zk_hash' if should_hash else ''}) -> (field):''')
-        zok_code += '\n'
-        zok_code += indent(dedent('\n'.join(dedent(e) for e in filter(bool, [
-            check_hash_str,
-            *[self.__to_zok_code(stmt) for stmt in circuit.phi],
-            'return 1'
-        ]))))
+        zok_code = imports + lib_code
+        zok_code += f'def main({argstr}) -> (field):\n'
+        zok_code += indent('// Zkay constraints\n')
+        zok_code += indent('\n'.join(dedent(e) for e in [self.__to_zok_code(stmt) for stmt in circuit.phi]) + '\n\n')
+        zok_code += indent(return_code)
 
         dirname = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
         if not os.path.exists(dirname):
@@ -190,6 +164,14 @@ class ZokratesGenerator(CircuitGenerator):
             return f'(if {cipher} == 0 then 0 else {self.zkvisitor.visit(fcall)} fi) == {cipher}'
 
 
+hash_imports = '''\
+import "hashes/sha256/IVconstants" as IVconstants
+import "hashes/sha256/shaRoundNoBoolCheck" as sha256
+import "utils/pack/nonStrictUnpack256" as unpack
+import "utils/pack/pack256" as pack
+
+'''
+
 lib_code = '''\
 def enc(field msg, field R, field key) -> (field):
     // artificial constraints ensuring every variable is used
@@ -200,3 +182,38 @@ def enc(field msg, field R, field key) -> (field):
     return cipher
 
 '''
+
+
+def get_hash_code(in_n: str, in_count: int, out_n: str, out_count: int):
+    """ Generate code to perform standard conform sha256 merkle-damgard hashing of the full input sequence """
+    bit_msg_len = (in_count + out_count) * 256
+    msg_len_64_bits_big_endian = [int(bool(bit_msg_len & (1 << bit))) for bit in range(63, -1, -1)]
+
+    if (in_count + out_count) % 2 == 0:
+        # two padding blocks (size in second block)
+        count_with_padding = in_count + out_count + 2
+        padding_block_args = f"[1{', 0' * 255}], \n"
+        padding_block_args += f"[0{', 0' * 191}, {', '.join(map(str, msg_len_64_bits_big_endian))}]"
+    else:
+        # padding block + another block with size
+        count_with_padding = in_count + out_count + 1
+        padding_block_args = f"[1{', 0' * 191}, {', '.join(map(str, msg_len_64_bits_big_endian))}]"
+    assert count_with_padding % 2 == 0
+
+    unpack_args = ', '.join(filter(bool, [
+                            ', '.join([f'unpack({in_n}[{i}])' for i in range(in_count)]),
+                            ', '.join([f'unpack({out_n}[{i}])' for i in range(out_count)])]))
+
+    return f"// Prepare hash input blocks\n" \
+           f"field[{count_with_padding}][256] zk_hash_input = [" \
+           f"{unpack_args},\n" \
+           f"{indent(padding_block_args)}\n" \
+           f"]\n" + dedent(f'''
+            // Compute input hash
+            digest =  IVconstants()
+            for field i in 0..{count_with_padding // 2} do
+                digest = sha256(zk_hash_input[2*i], zk_hash_input[2*i+1], digest)
+            endfor
+
+            return pack(digest)
+           ''')

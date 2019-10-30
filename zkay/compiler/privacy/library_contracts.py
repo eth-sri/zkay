@@ -3,7 +3,7 @@ def get_verify_libs_code():
 
 
 def should_use_hash(pub_arg_count: int):
-    return pub_arg_count > 2 and False
+    return True
 
 
 pki_contract_name = 'PublicKeyInfrastructure'
