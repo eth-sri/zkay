@@ -29,7 +29,11 @@ class PythonCodeVisitor(CodeVisitor):
         raise NotImplementedError("This needs to be implemented in child class")
 
     def handle_function_params(self, params: List[Parameter]):
-        return f'self, {self.visit_list(params, ", ")}'
+        params = self.visit_list(params, ", ")
+        if params:
+            return f'self, {params}'
+        else:
+            return 'self'
 
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
         return self.visit(ast.body)
@@ -74,7 +78,7 @@ class PythonCodeVisitor(CodeVisitor):
         c = self.visit(ast.condition)
         return self.handle_stmt(ast, dedent(f'''\
             if not ({c}):
-                raise Exception("Require failed")'''))
+                raise Exception("{ast.code()[:-1]} failed")'''))
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         lhs = self.visit(ast.lhs)

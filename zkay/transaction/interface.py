@@ -9,9 +9,7 @@ from zkay.utils.timer import time_measure
 
 __debug_print = True
 default_proving_scheme = 'gm17'
-bn256_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
-bn256_comp_max = (1 << 252) - 1
-uint256_max = (1 << 256) - 1
+bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
 def debug_print(*args):
     if __debug_print:

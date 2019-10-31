@@ -2,11 +2,11 @@ from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
 
-from zkay.compiler.privacy.used_contract import get_contract_instance_idf
-from zkay.transaction.interface import bn256_scalar_field, uint256_max
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     ExpressionToLocAssignment, EncConstraint, EqConstraint
 from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name
+from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.transaction.interface import bn128_scalar_field
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier, \
@@ -27,6 +27,10 @@ STATE_VALUES_NAME = 'self.state_values'
 CONTRACT_NAME = 'self.contract_name'
 CONTRACT_HANDLE = 'self.contract_handle'
 GET_STATE = 'self.get_state'
+
+UINT256_MAX_NAME = '_uint256_scalar_field'
+SCALAR_FIELD_NAME = '_bn128_scalar_field'
+SCALAR_FIELD_COMP_MAX_NAME = '_bn128_comp_scalar_field'
 
 
 class PythonOffchainVisitor(PythonCodeVisitor):
@@ -62,6 +66,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from typing import Dict, List, Optional, Union, Any, Callable
         from zkay.transaction import Runtime, CipherValue, AddressValue
 
+        {UINT256_MAX_NAME} = {1 << 256}
+        {SCALAR_FIELD_NAME} = {bn128_scalar_field}
+        {SCALAR_FIELD_COMP_MAX_NAME} = {1 << 252}
+
 
         ''') + ctrcs + (dedent(f'''
         def deploy(*args):
@@ -73,7 +81,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
 
         def help():
-            print('\\n'.join([f"{{f[0]}}{{inspect.signature(f[1])}}" for f in inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction)]))
+            members = inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction)
+            signatures = [(fname, str(inspect.signature(sig))) for fname, sig in members]
+            print('\\n'.join([f'{{fname}}({{sig[5:] if not sig[5:].startswith(",") else sig[7:]}}'
+                             for fname, sig in signatures
+                             if sig.startswith('(self') and not fname.endswith('_check_proof') and not fname.startswith('_')]))
 
         ''') if len(ast.contracts) == 1 else '') + dedent('''
         if __name__ == '__main__':
@@ -86,7 +98,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         name = self.visit(ast.idf)
 
         if not ast.constructor_definitions:
-            deploy_cmd = f'c.conn.deploy(project_dir, {ast.idf.name}, [], [])'
+            deploy_cmd = f'c.conn.deploy(project_dir, \'{ast.idf.name}\', [], [])'
         else:
             deploy_cmd = f'c.constructor(*constructor_args)'
 
@@ -122,7 +134,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
             @staticmethod
             def comp_overflow_checked(val: int):
-                assert val < (1 << 252), f'Value {{val}} is too large for comparison'
+                assert val < {SCALAR_FIELD_COMP_MAX_NAME}, f'Value {{val}} is too large for comparison'
                 return val
 
             def get_state(self, name: str, *indices, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
@@ -159,9 +171,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         fcts = self.visit_list(ast.function_definitions)
 
         return f'class {self.visit(ast.idf)}:\n' \
-               f'{self.generate_constructors(ast)}' \
-               f'{indent(constr)}\n' \
-               f'{indent(fcts)}\n'
+               f'{self.generate_constructors(ast)}' + \
+               (f'{indent(constr)}\n' if constr else '') + \
+               (f'{indent(fcts)}\n' if fcts else '')
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         with CircuitContext(self, ast):
@@ -236,7 +248,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             add_pub_arg_str += dedent(f'''
             # Generate proof
             priv_arg_list = [{PRIV_VALUES_NAME}[arg] for arg in [{", ".join([f"'{s.name}'" for s in circuit.s])}]]
-            self.{ast.name}_check_proof(priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
+            self._{ast.name}_check_proof(priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
             proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
             actual_params.append(proof)''')
 
@@ -272,7 +284,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def build_proof_check_fct(self) -> str:
         circuit = self.current_circ
-        stmts = [f"{', '.join(s.name for s in circuit.s)} = {'tuple(priv_args)'}"]
+        stmts = [f"({', '.join(s.name for s in circuit.s)}, ) = {'tuple(priv_args)'}"]
         stmts.append(f"print(f'Circuit arguments: {{list(map(str, priv_args + {CircuitHelper.in_base_name} + {CircuitHelper.out_base_name}))}}')")
         assert_str = 'assert {0} == {1}, f"check failed for lhs={{{0}}} and rhs={{{1}}}"'
         for stmt in circuit.phi:
@@ -290,7 +302,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         params = f'self, priv_args: List, {CircuitHelper.in_base_name}: List, {CircuitHelper.out_base_name}: List'
         body = '\n'.join(stmts)
-        return f'def {self.current_f.name}_check_proof({params}):\n{indent(body)}\n'
+        return f'def _{self.current_f.name}_check_proof({params}):\n{indent(body)}\n'
 
     def handle_stmt(self, ast: Statement, stmt_txt: str):
         if not stmt_txt:
@@ -339,7 +351,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 # Skip call to verifier
                 return None
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
-            modulo = bn256_scalar_field if self.inside_circuit else uint256_max
+            modulo = SCALAR_FIELD_NAME if self.inside_circuit else UINT256_MAX_NAME
             return f'({super().visitFunctionCallExpr(ast)}) % {modulo}'
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]

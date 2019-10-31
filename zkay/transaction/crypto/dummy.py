@@ -1,7 +1,7 @@
 from typing import Tuple, Optional
 
 from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair
-from zkay.transaction.interface import ZkayCryptoInterface, bn256_scalar_field
+from zkay.transaction.interface import ZkayCryptoInterface, bn128_scalar_field
 
 
 class DummyCrypto(ZkayCryptoInterface):
@@ -12,7 +12,7 @@ class DummyCrypto(ZkayCryptoInterface):
     def _enc(self, plain: int, pk: int, rnd: Optional[int]) -> Tuple[int, int]:
         if rnd is not None:
             assert rnd == 69, f'rnd was {rnd}'
-        cipher = (plain + pk) % bn256_scalar_field
+        cipher = (plain + pk) % bn128_scalar_field
         return cipher, 69
 
     def _dec(self, cipher: int, sk: int) -> Tuple[int, int]:
@@ -20,5 +20,5 @@ class DummyCrypto(ZkayCryptoInterface):
             # uninitialized value
             plain = cipher
         else:
-            plain = (cipher - sk) % bn256_scalar_field
+            plain = (cipher - sk) % bn128_scalar_field
         return plain, 69
