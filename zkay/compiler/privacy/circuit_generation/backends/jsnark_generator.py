@@ -6,6 +6,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey
 from zkay.jsnark_interface.jsnark_interface import jWire, jCircuitGenerator, jEncGadget, jBigint, jCondAssignmentGadget, run_jsnark
+from zkay.jsnark_interface.libsnark_interface import libsnark_generate_keys
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
     IndexExpr, NumberLiteralExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -114,7 +115,7 @@ class JsnarkVisitor(AstVisitor):
 
 class JsnarkGenerator(CircuitGenerator):
     def _generate_zkcircuit(self, circuit: CircuitHelper):
-        output_dir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
+        output_dir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
@@ -123,10 +124,12 @@ class JsnarkGenerator(CircuitGenerator):
         print("Done")
 
     def _generate_keys(self, circuit: CircuitHelper):
-        raise NotImplementedError()
+        output_dir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
+        libsnark_generate_keys(output_dir, self.proving_scheme.name)
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper):
-        raise NotImplementedError()
+        odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
+        return os.path.join(odir, 'verification.key'), os.path.join(odir, 'proving.key')
 
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         raise NotImplementedError()
