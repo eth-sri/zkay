@@ -7,6 +7,7 @@ import uuid
 from copy import deepcopy
 
 from zkay.compiler.privacy import library_contracts
+from zkay.compiler.privacy.circuit_generation.backends.jsnark_generator import JsnarkGenerator
 from zkay.compiler.privacy.circuit_generation.backends.zokrates_generator import ZokratesGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.manifest import Manifest
@@ -40,7 +41,8 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
             f.write(ast.code())
 
     ps = ProvingSchemeGm17()
-    cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
+    cg = JsnarkGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
+    #ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
 
     # Generate manifest
     manifest = {
