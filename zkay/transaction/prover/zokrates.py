@@ -1,7 +1,8 @@
 from typing import List
 
 from zkay.compiler.zokrates.compiler import generate_proof
-from zkay.transaction.interface import ZkayProverInterface, bn128_scalar_field
+from zkay.transaction.interface import ZkayProverInterface
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 
 
 class ZokratesProver(ZkayProverInterface):

@@ -4,9 +4,10 @@ from typing import Dict, List, Optional
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     ExpressionToLocAssignment, EncConstraint, EqConstraint
-from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name, proof_param_name
+from zkay.compiler.privacy.transformer.zkay_transformer import proof_param_name
+from zkay.config import pki_contract_name
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
-from zkay.transaction.interface import bn128_scalar_field
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier, \

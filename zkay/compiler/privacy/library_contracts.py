@@ -1,12 +1,11 @@
+from zkay.config import pki_contract_name
+
+
 def get_verify_libs_code():
     return f'pragma solidity ^0.5.0;\n\n{bn256_lib}\n\n{pairing_lib}'
 
 
-def should_use_hash(pub_arg_count: int):
-    return True
-
-
-pki_contract_name = 'PublicKeyInfrastructure'
+bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
 pki_contract = f'''\
 pragma solidity ^0.5;

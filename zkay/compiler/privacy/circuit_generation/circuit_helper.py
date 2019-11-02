@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import List, Dict, Optional, Tuple, Callable
 
-from zkay.compiler.privacy.library_contracts import pki_contract_name
+from zkay.config import pki_contract_name
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \

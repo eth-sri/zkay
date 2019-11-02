@@ -5,11 +5,11 @@ from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict
 
 from zkay.compiler.privacy.manifest import Manifest
+from zkay.config import default_proving_scheme
 from zkay.utils.timer import time_measure
 
 __debug_print = True
-default_proving_scheme = 'gm17'
-bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+
 
 def debug_print(*args):
     if __debug_print:
@@ -249,7 +249,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
         manifest = parse_manifest(project_dir)
         debug_print(f'Generating proof for {contract}.{function}')
         with time_measure(f'generate_proof_{contract}.{function}', True):
-            return self._generate_proof(os.path.join(manifest[Manifest.verifier_names][f'{contract}.{function}']),
+            return self._generate_proof(os.path.join(project_dir, manifest[Manifest.verifier_names][f'{contract}.{function}']),
                                         Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
 
     @abstractmethod

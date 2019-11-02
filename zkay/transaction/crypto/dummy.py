@@ -1,7 +1,8 @@
 from typing import Tuple, Optional
 
 from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair
-from zkay.transaction.interface import ZkayCryptoInterface, bn128_scalar_field
+from zkay.transaction.interface import ZkayCryptoInterface
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 
 
 class DummyCrypto(ZkayCryptoInterface):

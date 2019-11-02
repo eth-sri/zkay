@@ -6,6 +6,7 @@ import tempfile
 import uuid
 from copy import deepcopy
 
+import zkay.config
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.circuit_generation.backends.jsnark_generator import JsnarkGenerator
 from zkay.compiler.privacy.circuit_generation.backends.zokrates_generator import ZokratesGenerator
@@ -15,6 +16,7 @@ from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformer.zkay_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation
+from zkay.config import default_snark_backend
 from zkay.utils.progress_printer import print_step
 from zkay.zkay_ast.ast import AST
 
@@ -25,7 +27,7 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
 
     with print_step("Write library contract files"):
         # Write pki contract
-        pki_filename = os.path.join(output_dir, f'{library_contracts.pki_contract_name}.sol')
+        pki_filename = os.path.join(output_dir, f'{zkay.config.pki_contract_name}.sol')
         with open(pki_filename, 'w') as f:
             f.write(library_contracts.pki_contract)
 
@@ -41,15 +43,19 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
             f.write(ast.code())
 
     ps = ProvingSchemeGm17()
-    cg = JsnarkGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
-    #ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
+    if default_snark_backend == 'zokrates':
+        cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
+    elif default_snark_backend == 'jsnark':
+        cg = JsnarkGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
+    else:
+        raise ValueError(f"Selected invalid backend {default_snark_backend}")
 
     # Generate manifest
     manifest = {
         Manifest.uuid: uuid.uuid1().hex,
         Manifest.contract_filename: filename,
         Manifest.proving_scheme: ps.name,
-        Manifest.pki_lib: f'{library_contracts.pki_contract_name}.sol',
+        Manifest.pki_lib: f'{zkay.config.pki_contract_name}.sol',
         Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
         Manifest.verifier_names: {
             f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract_type.code() for cc in

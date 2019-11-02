@@ -11,7 +11,7 @@ from web3 import Web3
 
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.compiler.privacy import library_contracts
-from zkay.compiler.privacy.transformer.zkay_transformer import pki_contract_name
+from zkay.config import pki_contract_name
 from zkay.transaction.interface import PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
 
 max_gas_limit = 10000000
