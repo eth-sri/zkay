@@ -6,7 +6,7 @@ from typing import Tuple, List
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
-from zkay.compiler.privacy.library_contracts import should_use_hash
+from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
 from zkay.utils.multiline_formatter import MultiLineFormatter
@@ -191,3 +191,9 @@ class ZokratesGenerator(CircuitGenerator):
         else:
             raise NotImplementedError('Other proving schemes are currently not supported')
         return key
+
+    def _get_primary_inputs(self, should_hash: bool, circuit: CircuitHelper) -> List[str]:
+        inputs = super()._get_primary_inputs(should_hash, circuit)
+        if not should_hash:
+            inputs.append(1)
+        return inputs

@@ -5,6 +5,7 @@ from typing import List
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
+from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
@@ -53,7 +54,9 @@ class CircuitGenerator(metaclass=ABCMeta):
             for circuit in self.circuits_to_prove:
                 vk = self._parse_verification_key(circuit)
                 with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
-                    f.write(self.proving_scheme.generate_verification_contract(vk, circuit))
+                    should_hash = should_use_hash(circuit.out_name_factory.count + circuit.in_name_factory.count)
+                    primary_inputs = self._get_primary_inputs(should_hash, circuit)
+                    f.write(self.proving_scheme.generate_verification_contract(vk, circuit, should_hash, primary_inputs))
 
     def get_all_key_paths(self) -> List[str]:
         paths = []
@@ -99,3 +102,14 @@ class CircuitGenerator(metaclass=ABCMeta):
     @abstractmethod
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         return self.proving_scheme.dummy_vk()
+
+    def _get_primary_inputs(self, should_hash: bool, circuit: CircuitHelper) -> List[str]:
+        inputs = [(e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0]
+
+        if should_hash:
+            return [self.proving_scheme.hash_var_name]
+        else:
+            primary_inputs = []
+            for name, count in inputs:
+                primary_inputs += [f'{name}[{i}]' for i in range(count)]
+            return primary_inputs

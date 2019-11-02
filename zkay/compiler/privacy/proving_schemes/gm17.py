@@ -1,7 +1,7 @@
 from typing import List
 
-from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitHelper
-from zkay.compiler.privacy.library_contracts import should_use_hash
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
 from zkay.utils.multiline_formatter import MultiLineFormatter
 
@@ -31,29 +31,12 @@ class ProvingSchemeGm17(ProvingScheme):
         p2 = G2Point('0', '0', '0', '0')
         return VerifyingKeyGm17(p2, p1, p2, p1, p2, [p1, p1])
 
-    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper) -> str:
+    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper, should_hash: bool, primary_inputs: List[str]) -> str:
         vk = verification_key
         inputs = [(e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0]
-        tot_count = sum(map(lambda x: x[1], inputs))
 
-        if should_use_hash(tot_count):
-            query_length = 2
-            body = f'''\
-                uint256 hash = uint256(sha256(abi.encodePacked({', '.join([n for n, _ in inputs])}))) % snark_scalar_field;
-                vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[1], hash));'''
-        else:
-            query_length = tot_count + 2
-            body = ''
-            done_count = 0
-            for var, count in inputs:
-                body += f'''\
-                for (uint i = 0; i < {count}; i++) {{
-                    require({var}[i] < snark_scalar_field, "in_ value outside snark field bounds");
-                    vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[i + {1 + done_count}], {var}[i]));
-                }}\n'''
-                done_count += count
-            body += f'''\
-                vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[{tot_count + 1}], 1));'''
+        query_length = len(vk.query)
+        assert query_length == len(primary_inputs) + 1
 
         # Verification contract based on (with some modifications by NB):
         # https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/gm17.rs#L199
@@ -65,7 +48,7 @@ class ProvingSchemeGm17(ProvingScheme):
         contract {circuit.get_circuit_name()} {{''' / f'''\
             using Pairing for *;
 
-            uint256 constant snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+            uint256 constant {self.snark_scalar_field_var_name} = {bn128_scalar_field};
 
             struct VerifyingKey {{
                 Pairing.G2Point h;
@@ -97,19 +80,16 @@ class ProvingSchemeGm17(ProvingScheme):
                 proof.a = Pairing.G1Point(proof_[0], proof_[1]);
                 proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
                 proof.c = Pairing.G1Point(proof_[6], proof_[7]);
-                VerifyingKey memory vk = verifyingKey();
-
-                Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);''' * \
-                body * '''\
+                VerifyingKey memory vk = verifyingKey();''' * (
+                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({", ".join([n for n, _ in inputs])}))) % {self.snark_scalar_field_var_name};' if should_hash else '') * '''\
+                Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);''' * [\
+                f'require({pi} < {self.snark_scalar_field_var_name}, "{pi} outside snark field bounds");\n'
+                f'vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[{idx + 1}], {pi}));' for idx, pi in enumerate(primary_inputs)] * '''\
                 vk_x = Pairing.addition(vk_x, vk.query[0]);
 
                 // Check if proof is correct
-                if (!Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta))) {
-                    require(false, "Proof verification failed at first check");
-                }
-                if (!Pairing.pairingProd2(proof.a, vk.h_gamma, Pairing.negate(vk.g_gamma), proof.b)) {
-                    require(false, "Proof verification failed at second check");
-                }''' // \
+                require(Pairing.pairingProd4(vk.g_alpha, vk.h_beta, vk_x, vk.h_gamma, proof.c, vk.h, Pairing.negate(Pairing.addition(proof.a, vk.g_alpha)), Pairing.addition(proof.b, vk.h_beta)));
+                require(Pairing.pairingProd2(proof.a, vk.h_gamma, Pairing.negate(vk.g_gamma), proof.b));''' // \
             '}' // \
         '}'
 

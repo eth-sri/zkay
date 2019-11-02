@@ -4,7 +4,8 @@ from typing import Dict, List, Optional
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
-from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey
+from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
+from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
 from zkay.jsnark_interface.jsnark_interface import jWire, jCircuitGenerator, jEncGadget, jBigint, jCondAssignmentGadget, run_jsnark
 from zkay.jsnark_interface.libsnark_interface import libsnark_generate_keys
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
@@ -121,15 +122,31 @@ class JsnarkGenerator(CircuitGenerator):
 
         visitor = JsnarkVisitor(circuit)
         run_jsnark(visitor, circuit, output_dir)
-        print("Done")
 
     def _generate_keys(self, circuit: CircuitHelper):
         output_dir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
         libsnark_generate_keys(output_dir, self.proving_scheme.name)
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper):
-        odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
+        odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
         return os.path.join(odir, 'verification.key'), os.path.join(odir, 'proving.key')
 
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
-        raise NotImplementedError()
+        with open(self._get_vk_and_pk_paths(circuit)[0]) as f:
+            data = iter(f.read().splitlines())
+        if isinstance(self.proving_scheme, ProvingSchemeGm17):
+            h = G2Point(next(data), next(data), next(data), next(data))
+            g_alpha = G1Point(next(data), next(data))
+            h_beta = G2Point(next(data), next(data), next(data), next(data))
+            g_gamma = G1Point(next(data), next(data))
+            h_gamma = G2Point(next(data), next(data), next(data), next(data))
+            query_len = int(next(data))
+            query: List[Optional[G1Point]] = [None for _ in range(query_len)]
+            for idx in range(query_len):
+                query[idx] = G1Point(next(data), next(data))
+            return VerifyingKeyGm17(h, g_alpha, h_beta, g_gamma, h_gamma, query)
+        else:
+            raise NotImplementedError()
+
+    def _get_primary_inputs(self, should_hash: bool, circuit: CircuitHelper) -> List[str]:
+        return ['1'] + super()._get_primary_inputs(should_hash, circuit)
