@@ -1,9 +1,12 @@
 import os
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
-from zkay.compiler.privacy.library_contracts import should_use_hash
+from zkay.config import should_use_hash
 
 import jnius_config
+
+from zkay.utils.output_suppressor import output_suppressed
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 jnius_config.add_classpath(os.path.join(dir_path, 'JsnarkCircuitBuilder.jar'))
 
@@ -50,11 +53,10 @@ def run_jsnark(jsnark_visitor, circuit: CircuitHelper, output_dir: str):
         pub_list.append(jCircuitInput(circuit.out_base_name, circuit.out_name_factory.count))
 
     should_hash = should_use_hash(circuit.in_name_factory.count + circuit.out_name_factory.count)
-
     cwd = os.getcwd()
     os.chdir(output_dir)
-    zkay_gen = jZkayCircuitGenerator(circuit.get_circuit_name(), should_hash, cg, priv_list, pub_list)
-    zkay_gen.generateCircuit()
-    zkay_gen.evalCircuit()
-    zkay_gen.prepFiles()
+    with output_suppressed('jsnark'):
+        zkay_gen = jZkayCircuitGenerator(circuit.get_circuit_name(), should_hash, cg, priv_list, pub_list)
+        zkay_gen.generateCircuit()
+        zkay_gen.prepFiles()
     os.chdir(cwd)
