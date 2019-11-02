@@ -1,8 +1,10 @@
+from zkay.config import default_snark_backend
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
 from zkay.transaction.blockchain import Web3TesterBlockchain
 from zkay.transaction.crypto import DummyCrypto
 from zkay.transaction.keystore import SimpleKeystore
 from zkay.transaction.prover import ZokratesProver
+from zkay.transaction.prover.jsnark import JsnarkProver
 
 
 class Runtime:
@@ -32,5 +34,10 @@ class Runtime:
     @staticmethod
     def prover() -> ZkayProverInterface:
         if Runtime.__prover is None:
-            Runtime.__prover = ZokratesProver()
+            if default_snark_backend == 'zokrates':
+                Runtime.__prover = ZokratesProver()
+            elif default_snark_backend == 'jsnark':
+                Runtime.__prover = JsnarkProver()
+            else:
+                raise ValueError(f'Invalid prover backend {default_snark_backend}')
         return Runtime.__prover
