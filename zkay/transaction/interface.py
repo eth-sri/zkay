@@ -249,7 +249,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
         manifest = parse_manifest(project_dir)
         debug_print(f'Generating proof for {contract}.{function}')
         with time_measure(f'generate_proof_{contract}.{function}', True):
-            return self._generate_proof(os.path.join(project_dir, manifest[Manifest.verifier_names][f'{contract}.{function}']),
+            return self._generate_proof(os.path.join(project_dir, f"{manifest[Manifest.verifier_names][f'{contract}.{function}']}_out"),
                                         Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
 
     @abstractmethod

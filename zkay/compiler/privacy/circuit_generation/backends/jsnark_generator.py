@@ -116,7 +116,7 @@ class JsnarkVisitor(AstVisitor):
 
 class JsnarkGenerator(CircuitGenerator):
     def _generate_zkcircuit(self, circuit: CircuitHelper):
-        output_dir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
+        output_dir = self._get_circuit_output_dir(circuit)
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
@@ -124,12 +124,12 @@ class JsnarkGenerator(CircuitGenerator):
         run_jsnark(visitor, circuit, output_dir)
 
     def _generate_keys(self, circuit: CircuitHelper):
-        output_dir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
+        output_dir = self._get_circuit_output_dir(circuit)
         libsnark_generate_keys(output_dir, self.proving_scheme.name)
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper):
-        odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}')
-        return os.path.join(odir, 'verification.key'), os.path.join(odir, 'proving.key')
+        output_dir = self._get_circuit_output_dir(circuit)
+        return os.path.join(output_dir, 'verification.key'), os.path.join(output_dir, 'proving.key')
 
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         with open(self._get_vk_and_pk_paths(circuit)[0]) as f:

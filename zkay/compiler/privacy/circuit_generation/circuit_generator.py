@@ -87,6 +87,9 @@ class CircuitGenerator(metaclass=ABCMeta):
         """ Generate python code corresponding to the off-chain computations for the circuit """
         return self.python_visitor.visit(self.sol_ast)
 
+    def _get_circuit_output_dir(self, circuit: CircuitHelper):
+        return os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
+
     @abstractmethod
     def _generate_zkcircuit(self, circuit: CircuitHelper):
         pass

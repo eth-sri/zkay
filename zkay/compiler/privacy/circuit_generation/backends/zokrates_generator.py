@@ -114,11 +114,11 @@ class ZokratesGenerator(CircuitGenerator):
             [self.zkvisitor.visitCircuitStatement(stmt) for stmt in circuit.phi] * '' * \
             after_body_code
 
-        dirname = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
-        if not os.path.exists(dirname):
-            os.mkdir(dirname)
+        output_dir = self._get_circuit_output_dir(circuit)
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
 
-        with open(os.path.join(dirname, f'{circuit.get_circuit_name()}.zok'), 'w') as f:
+        with open(os.path.join(output_dir, f'{circuit.get_circuit_name()}.zok'), 'w') as f:
             f.write(str(zok_code))
 
     @staticmethod
@@ -156,20 +156,20 @@ class ZokratesGenerator(CircuitGenerator):
         return str(code)
 
     def _generate_keys(self, circuit: CircuitHelper):
-        odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
+        output_dir = self._get_circuit_output_dir(circuit)
         code_file_name = f'{circuit.get_circuit_name()}.zok'
         with time_measure('compileZokrates'):
             try:
-                run_command([zok_bin, 'compile', '-i', code_file_name], cwd=odir)
+                run_command([zok_bin, 'compile', '-i', code_file_name], cwd=output_dir)
             except SubprocessError as e:
                 print(e)
                 raise ValueError(f'Error compiling {code_file_name}') from e
         with time_measure('generatingKeyPair'):
-            run_command([zok_bin, 'setup', '--proving-scheme', self.proving_scheme.name], cwd=odir)
+            run_command([zok_bin, 'setup', '--proving-scheme', self.proving_scheme.name], cwd=output_dir)
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper):
-        odir = os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
-        return os.path.join(odir, 'verification.key'), os.path.join(odir, 'proving.key')
+        output_dir = self._get_circuit_output_dir(circuit)
+        return os.path.join(output_dir, 'verification.key'), os.path.join(output_dir, 'proving.key')
 
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         if isinstance(self.proving_scheme, ProvingSchemeGm17):
