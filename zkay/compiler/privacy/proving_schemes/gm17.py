@@ -40,6 +40,10 @@ class ProvingSchemeGm17(ProvingScheme):
 
         # Verification contract based on (with some modifications by NB):
         # https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/gm17.rs#L199
+        assert primary_inputs, "No public inputs"
+        first_pi = primary_inputs[0]
+        potentially_overflowing_pi = [pi for pi in primary_inputs if pi not in ['1', self.hash_var_name]]
+
         x = MultiLineFormatter() * f'''\
         pragma solidity ^0.5.0;
 
@@ -79,12 +83,13 @@ class ProvingSchemeGm17(ProvingScheme):
                 Proof memory proof;
                 proof.a = Pairing.G1Point(proof_[0], proof_[1]);
                 proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
-                proof.c = Pairing.G1Point(proof_[6], proof_[7]);
-                VerifyingKey memory vk = verifyingKey();''' * (
-                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({", ".join([n for n, _ in inputs])}))) % {self.snark_scalar_field_var_name};' if should_hash else '') * '''\
-                Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);''' * [\
-                f'require({pi} < {self.snark_scalar_field_var_name}, "{pi} outside snark field bounds");\n'
-                f'vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.query[{idx + 1}], {pi}));' for idx, pi in enumerate(primary_inputs)] * '''\
+                proof.c = Pairing.G1Point(proof_[6], proof_[7]);''' * (
+                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({", ".join([n for n, _ in inputs])}))) % {self.snark_scalar_field_var_name};' if should_hash else '') * ((
+                ['// Check that inputs do not overflow'] +
+                [f'require({pi} < {self.snark_scalar_field_var_name}, "{pi} outside snark field bounds");\n' for pi in potentially_overflowing_pi]) if potentially_overflowing_pi else '') * \
+                'VerifyingKey memory vk = verifyingKey();' * \
+                f"Pairing.G1Point memory vk_x = {(f'Pairing.scalar_mul(vk.query[1], {first_pi})' if first_pi != '1' else f'vk.query[1]')};" * [
+                f"vk_x = Pairing.addition(vk_x, {(f'Pairing.scalar_mul(vk.query[{idx + 2}], {pi})' if pi != '1' else f'vk.query[{idx + 2}]')});" for idx, pi in enumerate(primary_inputs[1:])] * '''\
                 vk_x = Pairing.addition(vk_x, vk.query[0]);
 
                 // Check if proof is correct
