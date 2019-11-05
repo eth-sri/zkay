@@ -1,7 +1,7 @@
 import os
 
+import zkay.config as cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
-from zkay.config import should_use_hash
 
 import jnius_config
 
@@ -43,16 +43,12 @@ def run_jsnark(jsnark_visitor, circuit: CircuitHelper, output_dir: str):
     cg.jsnark_visitor = jsnark_visitor
 
     priv_list = []
-    for priv in circuit.s:
-        priv_list.append(jCircuitInput(priv.name, 1))
+    for sec_param in circuit.secret_param_names:
+        priv_list.append(jCircuitInput(sec_param, 1))
 
-    pub_list = []
-    if circuit.in_name_factory.count > 0:
-        pub_list.append(jCircuitInput(circuit.in_base_name, circuit.in_name_factory.count))
-    if circuit.out_name_factory.count > 0:
-        pub_list.append(jCircuitInput(circuit.out_base_name, circuit.out_name_factory.count))
+    pub_list = [jCircuitInput(name, count) for name, count in circuit.public_arg_arrays]
 
-    should_hash = should_use_hash(circuit.in_name_factory.count + circuit.out_name_factory.count)
+    should_hash = cfg.should_use_hash(circuit.num_public_args)
     cwd = os.getcwd()
     os.chdir(output_dir)
     with output_suppressed('jsnark'):

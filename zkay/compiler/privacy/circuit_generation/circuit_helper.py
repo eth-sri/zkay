@@ -1,210 +1,178 @@
-from copy import deepcopy
 from typing import List, Dict, Optional, Tuple, Callable
 
-from zkay.config import pki_contract_name
-from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+import zkay.config as cfg
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, EncConstraint, ExpressionToLocAssignment, \
+    EqConstraint
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from zkay.zkay_ast.ast import Expression, Statement, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
-    LocationExpr, \
-    TypeName, AssignmentStatement, UserDefinedTypeName, AnnotatedTypeName, ConstructorOrFunctionDefinition, IndexExpr, NumberLiteralExpr
-
-
-class HybridArgumentIdf(Identifier):
-    def __init__(self, name: str, offset: Optional[int], t: TypeName):
-        super().__init__(name)
-        self.t = t # transformed type of this idf
-        self.offset = offset
-        self.corresponding_expression: Optional[IdfValue] = None
-        self.corresponding_plaintext_circuit_input: Optional[HybridArgumentIdf] = None
-
-    def get_loc_expr(self, t: Optional[AnnotatedTypeName] = None):
-        if self.offset is None:
-            expr = IdentifierExpr(self)
-        else:
-            expr = IndexExpr(IdentifierExpr(self), NumberLiteralExpr(self.offset))
-        if t is not None:
-            expr.annotated_type = t
-        return expr
-
-    def get_flat_name(self):
-        if self.offset is None:
-            return self.name
-        else:
-            return f'{self.name}{self.offset}'
-
-
-class EncParamIdf(HybridArgumentIdf):
-    def __init__(self, name: str, t: TypeName):
-        super().__init__(name, None, t)
-
-
-class CircuitStatement:
-    pass
-
-
-class ExpressionToLocAssignment(CircuitStatement):
-    def __init__(self, lhs: HybridArgumentIdf, expr: Expression):
-        self.lhs = lhs
-        self.expr = expr
-
-
-class IdfValue:
-    def __init__(self, privacy: Expression, val: Expression):
-        self.privacy = privacy
-        self.val = val
-
-
-class EncConstraint(CircuitStatement):
-    def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf):
-        self.plain = plain
-        self.rnd = rnd
-        self.pk = pk
-        self.cipher = cipher
-
-
-class EqConstraint(CircuitStatement):
-    def __init__(self, tgt: HybridArgumentIdf, val: HybridArgumentIdf):
-        self.tgt = tgt
-        self.val = val
+from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.zkay_ast.ast import Expression, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
+    LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
+    HybridArgumentIdf, EncryptionExpression
 
 
 class NameFactory:
     def __init__(self, base_name: str):
         self.base_name = base_name
         self.count = 0
+        self.size = 0
+        self.idfs = []
 
-    def get_new_idf(self, t: TypeName) -> HybridArgumentIdf:
-        idf = HybridArgumentIdf(f'{self.base_name}_{self.count}', None, t)
+    def get_new_idf(self, t: TypeName, priv_expr: Optional[Expression] = None) -> HybridArgumentIdf:
+        if t == TypeName.key_type():
+            postfix = 'key'
+        elif t == TypeName.cipher_type():
+            postfix = 'cipher'
+        else:
+            postfix = 'plain'
+        name = f'{self.base_name}_{self.count}_{postfix}'
+
+        idf = HybridArgumentIdf(name, t, priv_expr)
         self.count += 1
+        self.size += t.size_in_uints
+        self.idfs.append(idf)
         return idf
 
-
-class ArrayBasedNameFactory(NameFactory):
-    def get_new_idf(self, t: TypeName) -> HybridArgumentIdf:
-        idf = HybridArgumentIdf(f'{self.base_name}', self.count, t)
+    def add_idf(self, name: str, t: TypeName):
+        idf = HybridArgumentIdf(name, t)
         self.count += 1
+        self.size += t.size_in_uints
+        self.idfs.append(idf)
         return idf
 
 
 class CircuitHelper:
-    out_base_name = 'out__'
-    in_base_name = 'in__'
-
-    def __init__(self, fct: ConstructorOrFunctionDefinition, expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
+    def __init__(self, fct: ConstructorOrFunctionDefinition,
+                 expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
+                 circ_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
         super().__init__()
         self.fct = fct
-        self.expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
-        self.enc_param_check_stmts: List[AssignmentStatement] = []
+        self._expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
+        self._circ_trafo: AstTransformerVisitor = circ_trafo_constructor(self)
+
         self.return_var: Optional[Identifier] = None
         self.verifier_contract_filename: Optional[str] = None
         self.verifier_contract_type: Optional[UserDefinedTypeName] = None
 
-        # Circuit elements
-        self.p: List[HybridArgumentIdf] = []
-        """ Public arguments for proof circuit """
-
-        self.s: List[HybridArgumentIdf] = []
-        """ Secret argument for proof circuit """
-
-        self.phi: List[CircuitStatement] = []
+        self._phi: List[CircuitStatement] = []
         """ List of proof circuit statements (assertions and assignments) """
 
-        self.secret_input_name_factory = NameFactory('secret_')
-        self.local_expr_name_factory = NameFactory('tmp_')
+        # Private inputs
+        self._secret_input_name_factory = NameFactory('secret_')
 
-        self.out_name_factory = ArrayBasedNameFactory(CircuitHelper.out_base_name)
-        self.in_name_factory = ArrayBasedNameFactory(CircuitHelper.in_base_name)
+        # Public inputs
+        self._out_name_factory = NameFactory(cfg.zk_out_name)
+        self._in_name_factory = NameFactory(cfg.zk_in_name)
+
+        # Circuit internal
+        self._local_expr_name_factory = NameFactory('tmp_')
 
         # Public contract elements
-        self.pk_for_label: Dict[str, AssignmentStatement] = {}
-        self.old_code_and_temp_var_decls_for_stmt: Dict[Statement, Tuple[str, List[AssignmentStatement]]] = {}
+        self._pk_for_label: Dict[str, AssignmentStatement] = {}
+        self._param_to_in_assignments: List[AssignmentStatement] = []
 
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
 
     @staticmethod
-    def get_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
+    def get_transformed_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
         return expr.annotated_type.type_name if privacy.is_all_expr() else TypeName.cipher_type()
+
+    @property
+    def num_public_args(self) -> int:
+        return self._out_name_factory.count + self._in_name_factory.count
+
+    @property
+    def has_out_args(self) -> bool:
+        return self._out_name_factory.count > 0
+
+    @property
+    def has_in_args(self) -> bool:
+        return self._in_name_factory.count > 0
+
+    @property
+    def public_out_array(self) -> Tuple[str, int]:
+        return self._out_name_factory.base_name, self._out_name_factory.count
+
+    @property
+    def input_idfs(self) -> List[HybridArgumentIdf]:
+        return self._in_name_factory.idfs
+
+    @property
+    def secret_param_names(self) -> List[str]:
+        return [idf.name for idf in self._secret_input_name_factory.idfs]
+
+    @property
+    def phi(self) -> List[CircuitStatement]:
+        return self._phi
+
+    @property
+    def public_key_requests(self) -> List[AssignmentStatement]:
+        return list(self._pk_for_label.values())
+
+    @property
+    def param_to_in_assignments(self) -> List[AssignmentStatement]:
+        return self._param_to_in_assignments
+
+    @property
+    def public_arg_arrays(self) -> List[Tuple[str, int]]:
+        """ Returns names and lengths of all public parameter uint256 arrays which go into the verifier"""
+        return [(e.base_name, e.count) for e in (self._in_name_factory, self._out_name_factory) if e.count > 0]
 
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
-        return bool(self.p or self.s)
+        return self.has_in_args or self.has_out_args or self._secret_input_name_factory.count
 
-    def request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
-        pname = privacy.idf.name
-        if pname in self.pk_for_label:
-            return self.pk_for_label[pname].lhs.arr.idf
-        else:
-            idf = self.in_name_factory.get_new_idf(TypeName.key_type())
-            pki = IdentifierExpr(get_contract_instance_idf(pki_contract_name))
-            self.pk_for_label[pname] = AssignmentStatement(
-                idf.get_loc_expr(), FunctionCallExpr(MemberAccessExpr(pki, Identifier('getPk')), [self.expr_trafo.visit(privacy)])
-            )
-            return idf
-
-    def add_param(self, expr: Expression, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
-        t = self.get_type(expr, privacy)
-        idf = self.out_name_factory.get_new_idf(t)
-        return idf
-
-    def add_temp_var(self, expr: Expression, privacy: PrivacyLabelExpr, enc_param: bool) -> HybridArgumentIdf:
-        te = self.expr_trafo.visit(expr)
-        te_t = self.get_type(expr, privacy)
-
-        if te_t == TypeName.bool_type():
-            te = te.implicitly_converted(TypeName.uint_type())
-
-        idf = self.in_name_factory.get_new_idf(te_t)
-        stmt = AssignmentStatement(idf.get_loc_expr(), te)
-        if enc_param:
-            self.enc_param_check_stmts.append(stmt)
-        else:
-            assert expr.statement is not None and expr.statement in self.old_code_and_temp_var_decls_for_stmt
-            self.old_code_and_temp_var_decls_for_stmt[expr.statement][1].append(stmt)
-        return idf
-
-    def ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
-        rnd = HybridArgumentIdf(f'{cipher.get_flat_name()}_R', None, TypeName.rnd_type())
-
-        if isinstance(plain, EncParamIdf):
-            self.s.append(plain)
-            cipher = self.add_temp_var(cipher.get_loc_expr(AnnotatedTypeName.cipher_type()), Expression.me_expr(), True)
-
-        self.s.append(rnd)
-
-        pk = self.request_public_key(new_privacy)
-        self.p.append(pk)
-
-        self.p.append(cipher)
-        self.phi.append(EncConstraint(plain, rnd, pk, cipher))
+    def encrypt_parameter(self, param: Parameter):
+        plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.type_name)
+        cipher_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type())
+        self._ensure_encryption(plain_idf, Expression.me_expr(), cipher_idf)
+        self.param_to_in_assignments.append(AssignmentStatement(cipher_idf.get_loc_expr(), IdentifierExpr(param.idf.clone())))
 
     def move_out(self, expr: Expression, new_privacy: PrivacyLabelExpr):
-        new_param = self.add_param(expr, new_privacy)
+        plain_result_idf, priv_expr = self._evaluate_private_expression(expr)
 
-        from zkay.compiler.privacy.transformer.zkay_transformer import ZkayCircuitTransformer
-        rhs_expr = ZkayCircuitTransformer(self).visit(expr)
-        new_param.corresponding_expression = IdfValue(new_privacy, rhs_expr)
-        sec_circ_var_idf = self.local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)
-        self.phi.append(ExpressionToLocAssignment(sec_circ_var_idf, rhs_expr))
-
-        if not new_privacy.is_all_expr():
-            self.ensure_encryption(sec_circ_var_idf, new_privacy, new_param)
-            return expr.replaced_with(new_param.get_loc_expr(), AnnotatedTypeName.cipher_type())
+        if new_privacy.is_all_expr():
+            new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
+            self._phi.append(EqConstraint(plain_result_idf, new_out_param))
         else:
-            self.p.append(new_param)
-            self.phi.append(EqConstraint(sec_circ_var_idf, new_param))
-            return expr.replaced_with(new_param.get_loc_expr(), AnnotatedTypeName.uint_all()).implicitly_converted(new_param.t)
+            new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(priv_expr, new_privacy))
+            self._ensure_encryption(plain_result_idf, new_privacy, new_out_param)
+
+        expr.statement.out_refs.append(new_out_param)
+        return new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
-        new_var = self.add_temp_var(loc_expr, privacy, False)
-        self.p.append(new_var)
+        input_expr = self._expr_trafo.visit(loc_expr)
+        if privacy.is_all_expr():
+            input_idf = self._in_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
+        else:
+            locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
+            input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
+            self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf)
 
-        if privacy.is_me_expr():
-            # Instead of secret key, decrypt outside proof circuit (but locally), add plain value as secret param
-            #  and prove encryption (because its not feasible to decrypt inside proof circuit)
-            dec_loc_idf = self.secret_input_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
-            self.s.append(dec_loc_idf)
-            self.ensure_encryption(dec_loc_idf, Expression.me_expr(), deepcopy(new_var))
-            new_var.corresponding_plaintext_circuit_input = dec_loc_idf
+        loc_expr.statement.in_assignments.append(AssignmentStatement(input_idf.get_loc_expr(), input_expr))
+        return input_idf.get_loc_expr()
 
-        return loc_expr.replaced_with(new_var.get_loc_expr(), AnnotatedTypeName.cipher_type())
+    def _evaluate_private_expression(self, expr: Expression):
+        priv_expr = self._circ_trafo.visit(expr)
+        sec_circ_var_idf = self._local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)
+        stmt = ExpressionToLocAssignment(sec_circ_var_idf, priv_expr)
+        self.phi.append(stmt)
+        return sec_circ_var_idf, priv_expr
+
+    def _ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf):
+        rnd = self._secret_input_name_factory.add_idf(f'{cipher.name}_R', TypeName.rnd_type())
+        pk = self._request_public_key(new_privacy)
+        self._phi.append(EncConstraint(plain, rnd, pk, cipher))
+
+    def _request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
+        pname = privacy.idf.name
+        if pname in self._pk_for_label:
+            return self._pk_for_label[pname].lhs.arr.idf
+        else:
+            idf = self._in_name_factory.get_new_idf(TypeName.key_type())
+            pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
+            self._pk_for_label[pname] = AssignmentStatement(
+                idf.get_loc_expr(), FunctionCallExpr(MemberAccessExpr(pki, Identifier('getPk')), [self._expr_trafo.visit(privacy)])
+            )
+            return idf

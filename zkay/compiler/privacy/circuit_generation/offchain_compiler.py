@@ -2,10 +2,11 @@ from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
 
+import zkay.config as cfg
+
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     ExpressionToLocAssignment, EncConstraint, EqConstraint
 from zkay.compiler.privacy.transformer.zkay_transformer import proof_param_name
-from zkay.config import pki_contract_name
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
@@ -39,7 +40,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         super().__init__(False)
         self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {cg.fct: cg for cg in circuits}
 
-        self.py = PythonCodeVisitor(True)
+        self.py_plain = PythonCodeVisitor(True)
+        self.py = PythonCodeVisitor(False)
         self.current_f: Optional[ConstructorOrFunctionDefinition] = None
         self.current_params: Optional[List[Parameter]] = None
         self.current_circ: Optional[CircuitHelper] = None
@@ -203,8 +205,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         circuit = self.current_circ
         all_params = ', '.join([f'{self.visit(param.idf)}' for param in self.current_params])
-        has_in = self.current_circ.in_name_factory.count > 0
-        has_out = self.current_circ.out_name_factory.count > 0
+        has_in = self.current_circ.has_in_args
+        has_out = self.current_circ.has_out_args
 
         preamble = f'''\
             {STATE_VALUES_NAME}.clear()
@@ -214,12 +216,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             msg.sender = {CONN_OBJ_NAME}.my_address
         '''
 
-        in_var_decl = '' if has_in else f'{CircuitHelper.in_base_name} = []'
+        in_var_decl = '' if has_in else f'{cfg.zk_in_name} = []'
 
         if has_out:
-            out_var_decl = f'{CircuitHelper.out_base_name}: List[Optional[Union[int, CipherValue]]] = [None for _ in range({circuit.out_name_factory.count})]'
+            out_var_decl = f'{cfg.zk_out_name}: List[Optional[Union[int, CipherValue]]] = [None for _ in range({circuit.public_out_array[1]})]'
         else:
-            out_var_decl = f'{CircuitHelper.out_base_name} = []'
+            out_var_decl = f'{cfg.zk_out_name} = []'
 
         # Encrypt parameters and add private circuit inputs (plain + randomness)
         enc_param_str = ''
@@ -244,13 +246,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         add_pub_arg_str = ''
 
         if has_out:
-            add_pub_arg_str += f'\nactual_params.append({CircuitHelper.out_base_name})\n'
+            add_pub_arg_str += f'\nactual_params.append({cfg.zk_out_name})\n'
         if circuit.requires_verification():
             add_pub_arg_str += dedent(f'''
             # Generate proof
-            priv_arg_list = [{PRIV_VALUES_NAME}[arg] for arg in [{", ".join([f"'{s.name}'" for s in circuit.s])}]]
-            self._{ast.name}_check_proof(priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
-            proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {CircuitHelper.in_base_name}, {CircuitHelper.out_base_name})
+            priv_arg_list = [{PRIV_VALUES_NAME}[arg] for arg in [{", ".join([f"'{s}'" for s in circuit.secret_param_names])}]]
+            self._{ast.name}_check_proof(priv_arg_list, {cfg.zk_in_name}, {cfg.zk_out_name})
+            proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {cfg.zk_in_name}, {cfg.zk_out_name})
             actual_params.append(proof)''')
 
         should_encrypt = ", ".join([str(bool(p.annotated_type.old_priv_text)) for p in self.current_f.parameters])
@@ -285,8 +287,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def build_proof_check_fct(self) -> str:
         circuit = self.current_circ
-        stmts = [f"({', '.join(s.name for s in circuit.s)}, ) = {'tuple(priv_args)'}"]
-        stmts.append(f"print(f'Circuit arguments: {{list(map(str, priv_args + {CircuitHelper.in_base_name} + {CircuitHelper.out_base_name}))}}')")
+        stmts = [f"({', '.join(circuit.secret_param_names)}, ) = {'tuple(priv_args)'}",
+                 f"print(f'Circuit arguments: {{list(map(str, priv_args + {cfg.zk_in_name} + {cfg.zk_out_name}))}}')"]
         assert_str = 'assert {0} == {1}, f"check failed for lhs={{{0}}} and rhs={{{1}}}"'
         for stmt in circuit.phi:
             if isinstance(stmt, ExpressionToLocAssignment):
@@ -294,14 +296,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     stmts.append(f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}')
             elif isinstance(stmt, EncConstraint):
                 cipher_str = self.py.visit(stmt.cipher.get_loc_expr())
-                enc_str = f'(CipherValue(0) if {cipher_str}.val == 0 else {CRYPTO_OBJ_NAME}.enc({self.py.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())}, {self.py.visit(stmt.rnd.get_loc_expr())})[0])'
+                enc_str = f'(CipherValue(0) if {cipher_str}.val == 0 else {CRYPTO_OBJ_NAME}.enc({self.py_plain.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())}, {self.py.visit(stmt.rnd.get_loc_expr())})[0])'
                 stmts.append(assert_str.format(enc_str, cipher_str))
             else:
                 assert isinstance(stmt, EqConstraint)
-                stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))
+                stmts.append(assert_str.format(self.py.visit(stmt.tgt.get_loc_expr()), self.py.visit(stmt.val.get_loc_expr())))
         stmts.append('print(\'Proof soundness verified\')')
 
-        params = f'self, priv_args: List, {CircuitHelper.in_base_name}: List, {CircuitHelper.out_base_name}: List'
+        params = f'self, priv_args: List, {cfg.zk_in_name}: List, {cfg.zk_out_name}: List'
         body = '\n'.join(stmts)
         return f'def _{self.current_f.name}_check_proof({params}):\n{indent(body)}\n'
 
@@ -330,7 +332,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         in_decrypt = ''
         if isinstance(ast, AssignmentStatement) and isinstance(ast.lhs, IndexExpr) and isinstance(ast.lhs.arr, IdentifierExpr):
             lhsidf = ast.lhs.arr.idf
-            if lhsidf.name == CircuitHelper.in_base_name and lhsidf.corresponding_plaintext_circuit_input is not None:
+            if lhsidf.name == cfg.zk_in_name and lhsidf.corresponding_plaintext_circuit_input is not None:
                 assert isinstance(lhsidf, HybridArgumentIdf)
                 plain_idf = f'{PRIV_VALUES_NAME}["{lhsidf.corresponding_plaintext_circuit_input.name}"]'
                 in_decrypt = f'\n'\
@@ -361,11 +363,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return super().visitFunctionCallExpr(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        if ast.statement is not None and ast.idf.name == CircuitHelper.out_base_name:
+        if ast.statement is not None and ast.idf.name == cfg.zk_out_name:
             assert isinstance(ast.idf, HybridArgumentIdf) and ast.idf.corresponding_expression is not None
             self.current_outs.append(ast.idf)
 
-        if ast.idf.name == f'{pki_contract_name}_inst' and not ast.is_lvalue():
+        if ast.idf.name == f'{cfg.pki_contract_name}_inst' and not ast.is_lvalue():
             return f'{KEYSTORE_OBJ_NAME}'
         elif ast.idf.name == 'msg':
             return 'msg'
@@ -422,7 +424,7 @@ class CircuitContext:
     def __enter__(self):
         self.v.current_f = self.f
         self.v.current_circ = self.v.circuits[self.f]
-        self.v.current_params = [p for p in self.f.parameters if p.idf.name != CircuitHelper.out_base_name and p.idf.name != proof_param_name]
+        self.v.current_params = [p for p in self.f.parameters if p.idf.name != cfg.zk_out_name and p.idf.name != proof_param_name]
 
     def __exit__(self, t, value, traceback):
         self.v.current_f = None

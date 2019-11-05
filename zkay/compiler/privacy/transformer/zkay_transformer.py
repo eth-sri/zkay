@@ -1,9 +1,10 @@
 import re
 from typing import Dict, Optional, List, Tuple
 
+import zkay.config as cfg
+
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, EncParamIdf
-from zkay.config import pki_contract_name
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, \
@@ -53,7 +54,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
     def visitSourceUnit(self, ast: SourceUnit):
         # Include pki contract
-        pki_sv = self.import_contract(ast, pki_contract_name)
+        pki_sv = self.import_contract(ast, cfg.pki_contract_name)
 
         for c in ast.contracts:
             # Ref pki contract
@@ -73,6 +74,8 @@ class ZkayTransformer(AstTransformerVisitor):
             c.state_variable_declarations = Comment.comment_list('External contracts', ext_var_decls) + \
                                             [Comment('User state variables')] + c.state_variable_declarations
 
+            # TODO add zk_data struct declaration for this function
+
             # Transform function definitions
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_definition(f)
@@ -80,7 +83,7 @@ class ZkayTransformer(AstTransformerVisitor):
         return ast
 
     def transform_function_children(self, ast: ConstructorOrFunctionDefinition):
-        circuit_generator = CircuitHelper(ast, ZkayExpressionTransformer)
+        circuit_generator = CircuitHelper(ast, ZkayExpressionTransformer, ZkayCircuitTransformer)
         self.circuit_generators[ast] = circuit_generator
         self.current_generator = circuit_generator
 
@@ -88,9 +91,7 @@ class ZkayTransformer(AstTransformerVisitor):
         for p in ast.parameters:
             """ * of T_e rule 8 """
             if p.annotated_type.is_private():
-                circuit_generator.ensure_encryption(EncParamIdf(p.idf.name, p.annotated_type.type_name),
-                                                    Expression.me_expr(),
-                                                    HybridArgumentIdf(p.idf.name, None, TypeName.cipher_type()))
+                circuit_generator.encrypt_parameter(p)
 
         # Transform parameters
         ast.parameters = list(map(self.var_decl_trafo.visit, ast.parameters))
@@ -115,47 +116,56 @@ class ZkayTransformer(AstTransformerVisitor):
             ])
 
         if not circuit_generator.requires_verification():
-            if ast.body.statements and isinstance(ast.body.statements[-1], Comment):
+            #if ast.body.statements and isinstance(ast.body.statements[-1], Comment):
                 # Remove superfluous empty line
-                ast.body.statements.pop()
+             #   ast.body.statements.pop()
             ast.body.statements = preamble + ast.body.statements
         else:
+            # TODO initialize zk_data struct (deserialize out_ array into it)
+
             # Declare array with temporary variables
-            if circuit_generator.in_name_factory.count > 0:
+            if circuit_generator._in_name_factory.count > 0:
                 preamble += Comment.comment_list('Declare array to store public circuit inputs', [
                     VariableDeclarationStatement(VariableDeclaration(
                         [], AnnotatedTypeName.array_all(
-                            AnnotatedTypeName.uint_all(), circuit_generator.in_name_factory.count
-                        ), Identifier(circuit_generator.in_name_factory.base_name), 'memory'
+                            AnnotatedTypeName.uint_all(), circuit_generator._in_name_factory.count
+                        ), Identifier(circuit_generator._in_name_factory.base_name), 'memory'
                     ), None)
                 ])
 
             # Add new parameters with circuit out values
-            if circuit_generator.out_name_factory.count > 0:
+            if circuit_generator.has_out_args:
+                out_name, out_count = circuit_generator.public_out_array
                 ast.parameters.append(Parameter([],
-                                                AnnotatedTypeName.array_all(AnnotatedTypeName.uint_all(),
-                                                                            circuit_generator.out_name_factory.count),
-                                                Identifier(circuit_generator.out_name_factory.base_name), 'memory'))
+                                                AnnotatedTypeName.array_all(AnnotatedTypeName.uint_all(), out_count),
+                                                Identifier(out_name), 'memory'))
 
             # Add proof parameter
             ast.parameters.append(Parameter([], AnnotatedTypeName.proof_type(), Identifier(proof_param_name), 'memory'))
 
+            # TODO deserialize zk_data into in_ array
+            offset = 0
+            for s in circuit_generator.input_idfs:
+                if s.t.size_in_uints == 1:
+                    AssignmentStatement(IndexExpr(IdentifierExpr(Identifier(cfg.zk_in_name)), NumberLiteralExpr(offset)),
+                                        s.get_loc_expr().implicitly_converted(AnnotatedTypeName.uint_all()))
+                else:
+                    # TODO
+                    pass
+
             # Call to verifier
             verifier = IdentifierExpr(get_contract_instance_idf(circuit_generator.verifier_contract_type.code()))
             verifier_args = [IdentifierExpr(Identifier(proof_param_name))]
-            if circuit_generator.in_name_factory.count > 0:
-                verifier_args.append(IdentifierExpr(Identifier(circuit_generator.in_name_factory.base_name)))
-            if circuit_generator.out_name_factory.count > 0:
-                verifier_args.append(IdentifierExpr(Identifier(circuit_generator.out_name_factory.base_name)))
+            verifier_args += [IdentifierExpr(Identifier(name)) for name, _ in circuit_generator.public_arg_arrays]
             verify = ExpressionStatement(FunctionCallExpr(MemberAccessExpr(verifier, Identifier(verification_function_name)), verifier_args))
 
             # Assemble new body (public key requests, transformed statements, verification invocation)
             ast.body.statements = preamble + \
                                   Comment.comment_wrap_block('Backup private arguments for verification',
-                                                             circuit_generator.enc_param_check_stmts) + \
+                                                             circuit_generator.param_to_in_assignments) + \
                                   [IndentBlock("BODY", ast.body.statements)] + \
                                   Comment.comment_wrap_block('Request required public keys',
-                                                             list(circuit_generator.pk_for_label.values())) + \
+                                                             circuit_generator.public_key_requests) + \
                                   [Comment('Verify zk proof of execution'), verify]
 
         # Add return statement at the end if necessary (was previously replaced by assignment to return_var by ZkayStatementTransformer)
@@ -216,40 +226,26 @@ class ZkayStatementTransformer(AstTransformerVisitor):
 
     def visitBlock(self, ast: Block):
         """ Rule (1) """
-        code_and_tv_decls_for_stmt = self.gen.old_code_and_temp_var_decls_for_stmt
+        new_statements = []
+        first = True
         for idx, stmt in enumerate(ast.statements):
-            code_tvdecls = (stmt.code(), [])
-            code_and_tv_decls_for_stmt[stmt] = code_tvdecls
-
+            old_code = stmt.code()
             transformed_stmt = self.visit(stmt)
-            if transformed_stmt is not None and not isinstance(transformed_stmt, Comment):
-                # If the transformed code looks the same, do not need to generate a comment block
-                old_code_wo_annotations = re.sub(r'(?=\b)me(?=\b)', 'msg.sender',
-                                                 re.sub(f'@{WS_PATTERN}*{ID_PATTERN}', '', code_tvdecls[0]))
-                new_code_wo_annotation_comments = re.sub(r'/\*.*?\*/', '', transformed_stmt.code())
-                code_eq = new_code_wo_annotation_comments == old_code_wo_annotations
-                if code_eq:
-                    assert not code_and_tv_decls_for_stmt[stmt][1]
-                    del code_and_tv_decls_for_stmt[stmt]
-                elif transformed_stmt != stmt:
-                    # move temp var decls list to new key
-                    del code_and_tv_decls_for_stmt[stmt]
-                    code_and_tv_decls_for_stmt[transformed_stmt] = code_tvdecls
-            ast.statements[idx] = transformed_stmt
+            if transformed_stmt is None:
+                continue
 
-        block_stmts = []
-        last = True
-        for stmt in ast.statements:
-            if stmt in code_and_tv_decls_for_stmt:
-                if not last:
-                    block_stmts.append(Comment())
-                last = True
-                old_code, new_stmts = code_and_tv_decls_for_stmt[stmt]
-                block_stmts += Comment.comment_wrap_block(old_code, new_stmts + [stmt])
-            elif stmt is not None:
-                last = False
-                block_stmts.append(stmt)
-        ast.statements = block_stmts + ([Comment()] if not last and isinstance(ast.parent, ConstructorOrFunctionDefinition) else [])
+            old_code_wo_annotations = re.sub(r'(?=\b)me(?=\b)', 'msg.sender',
+                                             re.sub(f'@{WS_PATTERN}*{ID_PATTERN}', '', old_code))
+            new_code_wo_annotation_comments = re.sub(r'/\*.*?\*/', '', transformed_stmt.code())
+            if old_code_wo_annotations == new_code_wo_annotation_comments:
+                new_statements.append(transformed_stmt)
+            else:
+                if not first:
+                    new_statements.append(Comment())
+                new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.in_assignments + [transformed_stmt])
+            first = False
+
+        ast.statements = new_statements
         return ast
 
     def process_statement_child(self, child: AST):

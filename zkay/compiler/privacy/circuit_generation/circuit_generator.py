@@ -54,7 +54,7 @@ class CircuitGenerator(metaclass=ABCMeta):
             for circuit in self.circuits_to_prove:
                 vk = self._parse_verification_key(circuit)
                 with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
-                    should_hash = should_use_hash(circuit.out_name_factory.count + circuit.in_name_factory.count)
+                    should_hash = should_use_hash(circuit.num_public_args)
                     primary_inputs = self._get_primary_inputs(should_hash, circuit)
                     f.write(self.proving_scheme.generate_verification_contract(vk, circuit, should_hash, primary_inputs))
 
@@ -107,7 +107,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         return self.proving_scheme.dummy_vk()
 
     def _get_primary_inputs(self, should_hash: bool, circuit: CircuitHelper) -> List[str]:
-        inputs = [(e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0]
+        inputs = circuit.public_arg_arrays
 
         if should_hash:
             return [self.proving_scheme.hash_var_name]

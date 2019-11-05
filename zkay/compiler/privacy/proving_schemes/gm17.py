@@ -33,7 +33,7 @@ class ProvingSchemeGm17(ProvingScheme):
 
     def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper, should_hash: bool, primary_inputs: List[str]) -> str:
         vk = verification_key
-        inputs = [(e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0]
+        inputs = circuit.public_arg_arrays
 
         query_length = len(vk.query)
         assert query_length == len(primary_inputs) + 1

@@ -83,8 +83,8 @@ class ZokratesGenerator(CircuitGenerator):
     '''
 
     def _generate_zkcircuit(self, circuit: CircuitHelper):
-        sec_args = [s.name for s in circuit.s]
-        pub_args = [(e.base_name, e.count) for e in (circuit.in_name_factory, circuit.out_name_factory) if e.count > 0]
+        sec_args = circuit.secret_param_names
+        pub_args = circuit.public_arg_arrays
         tot_count = sum(map(lambda x: x[1], pub_args))
 
         if should_use_hash(tot_count):
