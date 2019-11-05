@@ -3,6 +3,7 @@ import textwrap
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable
 
+import zkay.config as cfg
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -465,6 +466,24 @@ class ReclassifyExpr(Expression):
         self.privacy = f(self.privacy)
 
 
+class HybridArgumentIdf(Identifier):
+    def __init__(self, name: str, t: 'TypeName', corresponding_priv_expression: Optional[Expression] = None):
+        super().__init__(name)
+        self.t = t # transformed type of this idf
+        self.corresponding_priv_expression = corresponding_priv_expression
+
+    def get_loc_expr(self):
+        expr = MemberAccessExpr(IdentifierExpr(Identifier(cfg.zk_data_var_name)), Identifier(self.name))
+        expr.annotated_type = self.t
+        return expr
+
+
+class EncryptionExpression(ReclassifyExpr):
+    def __init__(self, expr: Expression, privacy: Expression):
+        super().__init__(expr, privacy)
+        self.annotated_type = AnnotatedTypeName.cipher_type()
+
+
 class Statement(AST):
 
     def __init__(self):
@@ -475,12 +494,18 @@ class Statement(AST):
         # set by parent setter
         self.function: ConstructorOrFunctionDefinition = None
 
+        # set by circuit helper
+        self.out_refs: List['HybridArgumentIdf'] = []
+        self.in_assignments: List[AssignmentStatement] = []
+
     def replaced_with(self, replacement: 'Statement') -> 'Statement':
         repl = super().replaced_with(replacement)
         assert isinstance(repl, Statement)
         repl.before_analysis = self.before_analysis
         repl.after_analysis = self.after_analysis
         repl.function = self.function
+        repl.out_refs = self.out_refs
+        repl.in_assignments = self.in_assignments
         return repl
 
 
@@ -610,11 +635,15 @@ class TypeName(AST):
     @staticmethod
     def proof_type():
         # TODO correct type
-        return TypeName.uint_type()
+        return Array(AnnotatedTypeName.uint_all(), NumberLiteralExpr(8))
 
     @staticmethod
     def address_payable_type():
         return PayableAddress()
+
+    @property
+    def size_in_uints(self):
+        return 1
 
     def is_primitive_type(self):
         return self == TypeName.bool_type() or self == TypeName.uint_type() or self == TypeName.address_type()
@@ -707,8 +736,53 @@ class Array(TypeName):
     def clone(self) -> 'Array':
         return Array(self.value_type.clone(), self.expr)
 
+    @property
+    def size_in_uints(self):
+        if self.expr is None or not isinstance(self.expr, NumberLiteralExpr):
+            return -1
+        else:
+            return self.expr.value
+
     def __eq__(self, other):
-        return self == other
+        if not isinstance(other, Array):
+            return False
+        if self.value_type == other.value_type and isinstance(self.expr, NumberLiteralExpr) and isinstance(other.expr, NumberLiteralExpr) and self.expr.value == other.expr.value:
+            return True
+        if self.value_type == other.value_type and self.expr is None and other.expr is None:
+            return True
+        return False
+
+
+class CipherText(Array):
+    def __init__(self):
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(9))
+
+    def __eq__(self, other):
+        return isinstance(other, CipherText)
+
+
+class Randomness(Array):
+    def __init__(self):
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(9))
+
+    def __eq__(self, other):
+        return isinstance(other, Randomness)
+
+
+class Key(Array):
+    def __init__(self):
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(9))
+
+    def __eq__(self, other):
+        return isinstance(other, Key)
+
+
+class Proof(Array):
+    def __init__(self):
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(8))
+
+    def __eq__(self, other):
+        return isinstance(other, Proof)
 
 
 class TupleType(TypeName):
@@ -830,7 +904,7 @@ class AnnotatedTypeName(AST):
     @staticmethod
     def proof_type():
         # TODO correct type (depends on proving scheme)
-        return AnnotatedTypeName.array_all(AnnotatedTypeName.uint_all(), 8)
+        return AnnotatedTypeName(TypeName.proof_type(), None)
 
     @staticmethod
     def all(type: TypeName):
@@ -1012,19 +1086,22 @@ class ContractDefinition(AST):
             self,
             idf: Identifier,
             state_variable_declarations: List[StateVariableDeclaration],
-            constructor_definitions: List,
-            function_definitions: List[FunctionDefinition]):
+            constructor_definitions: List[ConstructorDefinition],
+            function_definitions: List[FunctionDefinition],
+            struct_definitions: Optional[List[StructDefinition]] = None):
         super().__init__()
         self.idf = idf
         self.state_variable_declarations = state_variable_declarations
         self.constructor_definitions = constructor_definitions
         self.function_definitions = function_definitions
+        self.struct_definitions = [] if struct_definitions is None else struct_definitions
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
         self.state_variable_declarations = list(map(f, self.state_variable_declarations))
         self.constructor_definitions = list(map(f, self.constructor_definitions))
         self.function_definitions = list(map(f, self.function_definitions))
+        self.struct_definitions = list(map(f, self.struct_definitions))
 
     def __getitem__(self, key: str):
         if key == 'constructor':
@@ -1429,7 +1506,7 @@ class CodeVisitor(AstVisitor):
 
     def function_definition_to_str(
             self,
-            idf: Identifier,
+            idf: Optional[Identifier],
             parameters: List[Union[Parameter, str]],
             modifiers: List[str],
             return_parameters: List[Parameter],
@@ -1454,6 +1531,11 @@ class CodeVisitor(AstVisitor):
         b = self.visit(ast.body)
         return self.function_definition_to_str(None, ast.parameters, ast.modifiers, [], b)
 
+    def visitStructDefinition(self, ast: StructDefinition):
+        # Define struct with members in order of descending size (to get maximum space savings through packing)
+        members_by_descending_size = sorted(ast.members, key=lambda x: x.annotated_type.type_name.size_in_uints, reverse=True)
+        return f'struct {self.visit(ast.idf)} {{\n{indent(self.visit_list(members_by_descending_size))}\n}}'
+
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
         f = 'final ' if 'final' in keywords else ''
@@ -1472,13 +1554,15 @@ class CodeVisitor(AstVisitor):
             idf: Identifier,
             state_vars: List[str],
             constructors: List[str],
-            functions: List[str]):
+            functions: List[str],
+            structs: List[str]):
 
         i = str(idf)
+        structs = '\n'.join(structs)
         state_vars = '\n'.join(state_vars)
         constructors = '\n\n'.join(constructors)
         functions = '\n\n'.join(functions)
-        body = '\n\n'.join([state_vars, constructors, functions])
+        body = '\n\n'.join([structs, state_vars, constructors, functions])
         body = indent(body)
         return f"contract {i} {{\n{body}\n}}"
 
@@ -1486,12 +1570,14 @@ class CodeVisitor(AstVisitor):
         state_vars = [self.visit(e) for e in ast.state_variable_declarations]
         constructors = [self.visit(e) for e in ast.constructor_definitions]
         functions = [self.visit(e) for e in ast.function_definitions]
+        structs = [self.visit(e) for e in ast.struct_definitions]
 
         return self.contract_definition_to_str(
             ast.idf,
             state_vars,
             constructors,
-            functions)
+            functions,
+            structs)
 
     def visitSourceUnit(self, ast: SourceUnit):
         p = ast.pragma_directive
