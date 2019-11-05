@@ -380,7 +380,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return super().visitIdentifierExpr(ast)
 
     def visitIndexExpr(self, ast: IndexExpr):
-        self.current_index.append(self.visit(ast.index))
+        self.current_index.append(self.visit(ast.key))
         if isinstance(ast.arr, IdentifierExpr):
             if ast.is_rvalue() and isinstance(ast.arr.idf, HybridArgumentIdf) and ast.arr.idf.corresponding_plaintext_circuit_input is not None:
                 # TODO correct?

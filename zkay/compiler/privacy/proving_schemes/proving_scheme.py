@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from zkay.compiler.privacy.circuit_generation.circuit_helper import ArrayBasedNameFactory
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 
 
@@ -46,13 +45,6 @@ class ProvingScheme(metaclass=ABCMeta):
     snark_scalar_field_var_name = 'snark_scalar_field'
     hash_var_name = 'hash'
     name = 'none'
-
-    @staticmethod
-    def _get_uint_param(name_factory: ArrayBasedNameFactory) -> str:
-        if name_factory.count == 0:
-            return ''
-        else:
-            return f', uint[{name_factory.count}] memory {name_factory.base_name}'
 
     @abstractmethod
     def generate_verification_contract(self, verification_key: VerifyingKey, circuit: CircuitHelper, should_hash: bool, primary_inputs: List[str]) -> str:

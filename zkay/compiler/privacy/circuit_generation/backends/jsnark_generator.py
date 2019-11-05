@@ -63,8 +63,8 @@ class JsnarkVisitor(AstVisitor):
             if corresponding_plain_input is not None:
                 return self.visit(corresponding_plain_input.get_loc_expr())
 
-        assert isinstance(ast.arr, IdentifierExpr) and isinstance(ast.index, NumberLiteralExpr)
-        return self.local_vars[ast.arr.idf.name][ast.index.value]
+        assert isinstance(ast.arr, IdentifierExpr) and isinstance(ast.key, NumberLiteralExpr)
+        return self.local_vars[ast.arr.idf.name][ast.key.value]
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):

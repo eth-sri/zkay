@@ -265,7 +265,7 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitIndexExpr(self, ast: IndexExpr):
         arr = ast.arr
-        index = ast.index
+        index = ast.key
 
         map_t = arr.annotated_type
         # should have already been checked
@@ -292,9 +292,9 @@ class TypeCheckVisitor(AstVisitor):
             if not self.is_accessible_by_invoker(ast):
                 raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
         elif isinstance(map_t.type_name, Array):
-            if ast.index.annotated_type.is_private():
+            if ast.key.annotated_type.is_private():
                 raise TypeException('No private array index', ast)
-            if not ast.index.instanceof_data_type(TypeName.uint_type()):
+            if not ast.key.instanceof_data_type(TypeName.uint_type()):
                 raise TypeException('Array index must be numeric', ast)
             ast.annotated_type = map_t.type_name.value_type
         else:

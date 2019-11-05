@@ -67,6 +67,12 @@ class Identifier(AST):
     def clone(self) -> 'Identifier':
         return Identifier(self.name)
 
+    def decl_var(self, t: Union['TypeName', 'AnnotatedTypeName'], expr: Optional['Expression'] = None):
+        if isinstance(t, TypeName):
+            t = AnnotatedTypeName(t)
+        storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
+        return VariableDeclarationStatement(VariableDeclaration([], t, self.clone(), storage_loc), expr)
+
 
 class Comment(AST):
 
@@ -156,10 +162,6 @@ class Expression(AST):
     def is_rvalue(self) -> bool:
         return not self.is_lvalue()
 
-    def is_location(self) -> bool:
-        """True if this expression can be used as an lvalue"""
-        return False
-
     def is_parent_of(self, child):
         e = child
         while e != self and isinstance(e.parent, Expression):
@@ -195,12 +197,15 @@ class Expression(AST):
             else:
                 return False
 
-    def replaced_with(self, replacement: 'Expression', new_type: Optional['AnnotatedTypeName'] = None) -> 'Expression':
+    def replaced_with(self, replacement: 'Expression') -> 'Expression':
         repl = super().replaced_with(replacement)
         assert isinstance(repl, Expression)
         repl.statement = self.statement
-        repl.annotated_type = new_type
         return repl
+
+    def as_type(self, t: Union['TypeName', 'AnnotatedTypeName']):
+        self.annotated_type = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
+        return self
 
     @property
     def analysis(self):
@@ -382,14 +387,29 @@ class StringLiteralExpr(LiteralExpr):
 
 
 class LocationExpr(Expression):
-    pass
+    def call(self, member: Union[str, Identifier], args: List[Expression]) -> 'FunctionCallExpr':
+        member = Identifier(member) if isinstance(member, str) else member.clone()
+        return FunctionCallExpr(MemberAccessExpr(self, member), args)
+
+    def dot(self, member: Union[str, Identifier]) -> 'MemberAccessExpr':
+        member = Identifier(member) if isinstance(member, str) else member.clone()
+        return MemberAccessExpr(self, member)
+
+    def index(self, item: Union[int, Expression]) -> 'IndexExpr':
+        assert isinstance(self.annotated_type.type_name, (Array, Mapping))
+        if isinstance(item, int):
+            item = NumberLiteralExpr(item)
+        return IndexExpr(self, item).as_type(self.annotated_type.type_name.value_type)
+
+    def assign(self, val: Expression):
+        return AssignmentStatement(self, val)
 
 
 class IdentifierExpr(LocationExpr):
 
-    def __init__(self, idf: Identifier, annotated_type: Optional['AnnotatedTypeName'] = None):
+    def __init__(self, idf: Union[str, Identifier], annotated_type: Optional['AnnotatedTypeName'] = None):
         super().__init__()
-        self.idf = idf
+        self.idf = idf if isinstance(idf, Identifier) else Identifier(idf)
         self.annotated_type = annotated_type
         # set later by symbol table
         self.target: Union[
@@ -402,11 +422,13 @@ class IdentifierExpr(LocationExpr):
     def get_annotated_type(self):
         return self.target.annotated_type
 
-    def is_location(self) -> bool:
-        return True
-
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
+
+    def clone(self):
+        idf = IdentifierExpr(self.idf.clone()).as_type(self.annotated_type)
+        idf.target = self.target
+        return idf
 
 
 class MemberAccessExpr(LocationExpr):
@@ -421,14 +443,14 @@ class MemberAccessExpr(LocationExpr):
 
 
 class IndexExpr(LocationExpr):
-    def __init__(self, arr: Expression, index: Expression):
+    def __init__(self, arr: Expression, key: Expression):
         super().__init__()
         self.arr = arr
-        self.index = index
+        self.key = key
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.arr = f(self.arr)
-        self.index = f(self.index)
+        self.key = f(self.key)
 
 
 class MeExpr(Expression):
@@ -472,10 +494,24 @@ class HybridArgumentIdf(Identifier):
         self.t = t # transformed type of this idf
         self.corresponding_priv_expression = corresponding_priv_expression
 
-    def get_loc_expr(self):
-        expr = MemberAccessExpr(IdentifierExpr(Identifier(cfg.zk_data_var_name)), Identifier(self.name))
-        expr.annotated_type = self.t
-        return expr
+    def get_loc_expr(self) -> MemberAccessExpr:
+        return IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
+
+    def deserialize(self, source_idf: str, start_idx: int) -> List['AssignmentStatement']:
+        src = IdentifierExpr(source_idf).as_type(Array(AnnotatedTypeName.uint_all()))
+        if self.t.size_in_uints == 1:
+            return [self.get_loc_expr().assign(src.index(start_idx).implicitly_converted(self.t))]
+
+        return [self.get_loc_expr().index(idx).assign(src.clone().index(start_idx + idx))
+                for idx in range(self.t.size_in_uints)]
+
+    def serialize(self, target_idf: str, start_idx: int) -> List['AssignmentStatement']:
+        tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName.uint_all()))
+        if self.t.size_in_uints == 1:
+            return [tgt.clone().index(start_idx).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))]
+
+        return [tgt.clone().index(start_idx + idx).assign(self.get_loc_expr().index(idx))
+                for idx in range(self.t.size_in_uints)]
 
 
 class EncryptionExpression(ReclassifyExpr):
@@ -620,22 +656,22 @@ class TypeName(AST):
     @staticmethod
     def cipher_type():
         # TODO correct type
-        return TypeName.uint_type()
+        return CipherText()
 
     @staticmethod
     def rnd_type():
         # TODO correct type
-        return TypeName.uint_type()
+        return Randomness()
 
     @staticmethod
     def key_type():
         # TODO correct type
-        return TypeName.uint_type()
+        return Key()
 
     @staticmethod
     def proof_type():
         # TODO correct type
-        return Array(AnnotatedTypeName.uint_all(), NumberLiteralExpr(8))
+        return Proof()
 
     @staticmethod
     def address_payable_type():
@@ -724,10 +760,10 @@ class PayableAddress(TypeName):
 
 class Array(TypeName):
 
-    def __init__(self, value_type: 'AnnotatedTypeName', expr: Expression = None):
+    def __init__(self, value_type: 'AnnotatedTypeName', expr: Union[int, Expression] = None):
         super().__init__()
         self.value_type = value_type
-        self.expr = expr
+        self.expr = NumberLiteralExpr(expr) if isinstance(expr, int) else expr
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.value_type = f(self.value_type)
@@ -840,7 +876,7 @@ class TupleType(TypeName):
 
 class AnnotatedTypeName(AST):
 
-    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression], old_priv_text: str = ''):
+    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, old_priv_text: str = ''):
         super().__init__()
         self.type_name = type_name
         self.had_privacy_annotation = privacy_annotation is not None
@@ -855,7 +891,7 @@ class AnnotatedTypeName(AST):
         self.privacy_annotation = f(self.privacy_annotation)
 
     def clone(self) -> 'AnnotatedTypeName':
-        from zkay_ast.visitor.deep_copy import deep_copy
+        from zkay.zkay_ast.visitor.deep_copy import deep_copy
         at = AnnotatedTypeName(self.type_name.clone(), deep_copy(self.privacy_annotation), self.old_priv_text)
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
@@ -938,7 +974,7 @@ class VariableDeclaration(AST):
 
 class VariableDeclarationStatement(SimpleStatement):
 
-    def __init__(self, variable_declaration: VariableDeclaration, expr: Optional[Expression]):
+    def __init__(self, variable_declaration: VariableDeclaration, expr: Optional[Expression] = None):
         """
 
         :param variable_declaration:
@@ -1000,6 +1036,13 @@ class ConstructorOrFunctionDefinition(AST):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
         self.body = f(self.body)
+
+    def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier]):
+        t = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
+        idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
+        storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
+        self.parameters.append(Parameter([], t, idf, storage_loc))
+
 
     @property
     def name(self):
@@ -1376,7 +1419,7 @@ class CodeVisitor(AstVisitor):
         return f'{self.visit(ast.expr)}.{self.visit(ast.member)}'
 
     def visitIndexExpr(self, ast: IndexExpr):
-        return f'{self.visit(ast.arr)}[{self.visit(ast.index)}]'
+        return f'{self.visit(ast.arr)}[{self.visit(ast.key)}]'
 
     def visitMeExpr(self, _: MeExpr):
         return 'me'
@@ -1534,7 +1577,8 @@ class CodeVisitor(AstVisitor):
     def visitStructDefinition(self, ast: StructDefinition):
         # Define struct with members in order of descending size (to get maximum space savings through packing)
         members_by_descending_size = sorted(ast.members, key=lambda x: x.annotated_type.type_name.size_in_uints, reverse=True)
-        return f'struct {self.visit(ast.idf)} {{\n{indent(self.visit_list(members_by_descending_size))}\n}}'
+        body = '\n'.join([f'{self.visit(member)};' for member in members_by_descending_size])
+        return f'struct {self.visit(ast.idf)} {{\n{indent(body)}\n}}'
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
