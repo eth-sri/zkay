@@ -24,7 +24,7 @@ class NameFactory:
             postfix = 'cipher'
         else:
             postfix = 'plain'
-        name = f'{self.base_name}_{self.count}_{postfix}'
+        name = f'{self.base_name}{self.count}_{postfix}'
 
         idf = HybridArgumentIdf(name, t, priv_expr)
         self.count += 1
@@ -49,7 +49,7 @@ class CircuitHelper:
         self._expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
         self._circ_trafo: AstTransformerVisitor = circ_trafo_constructor(self)
 
-        self.return_var: Optional[Identifier] = None
+        self.has_return_var = False
         self.verifier_contract_filename: Optional[str] = None
         self.verifier_contract_type: Optional[UserDefinedTypeName] = None
 
@@ -57,14 +57,14 @@ class CircuitHelper:
         """ List of proof circuit statements (assertions and assignments) """
 
         # Private inputs
-        self._secret_input_name_factory = NameFactory('secret_')
+        self._secret_input_name_factory = NameFactory('secret')
 
         # Public inputs
         self._out_name_factory = NameFactory(cfg.zk_out_name)
         self._in_name_factory = NameFactory(cfg.zk_in_name)
 
         # Circuit internal
-        self._local_expr_name_factory = NameFactory('tmp_')
+        self._local_expr_name_factory = NameFactory('tmp')
 
         # Public contract elements
         self._pk_for_label: Dict[str, AssignmentStatement] = {}
@@ -92,6 +92,10 @@ class CircuitHelper:
     @property
     def public_out_array(self) -> Tuple[str, int]:
         return self._out_name_factory.base_name, self._out_name_factory.count
+
+    @property
+    def output_idfs(self) -> List[HybridArgumentIdf]:
+        return self._out_name_factory.idfs
 
     @property
     def input_idfs(self) -> List[HybridArgumentIdf]:
@@ -126,7 +130,7 @@ class CircuitHelper:
         plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.type_name)
         cipher_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type())
         self._ensure_encryption(plain_idf, Expression.me_expr(), cipher_idf)
-        self.param_to_in_assignments.append(AssignmentStatement(cipher_idf.get_loc_expr(), IdentifierExpr(param.idf.clone())))
+        self.param_to_in_assignments.append(cipher_idf.get_loc_expr().assign(IdentifierExpr(param.idf.name)))
 
     def move_out(self, expr: Expression, new_privacy: PrivacyLabelExpr):
         plain_result_idf, priv_expr = self._evaluate_private_expression(expr)
@@ -134,12 +138,14 @@ class CircuitHelper:
         if new_privacy.is_all_expr():
             new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
             self._phi.append(EqConstraint(plain_result_idf, new_out_param))
+            out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
         else:
             new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(priv_expr, new_privacy))
             self._ensure_encryption(plain_result_idf, new_privacy, new_out_param)
+            out_var = new_out_param.get_loc_expr()
 
         expr.statement.out_refs.append(new_out_param)
-        return new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
+        return out_var
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
         input_expr = self._expr_trafo.visit(loc_expr)
@@ -150,7 +156,7 @@ class CircuitHelper:
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
             self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf)
 
-        loc_expr.statement.in_assignments.append(AssignmentStatement(input_idf.get_loc_expr(), input_expr))
+        loc_expr.statement.in_assignments.append(input_idf.get_loc_expr().assign(input_expr))
         return input_idf.get_loc_expr()
 
     def _evaluate_private_expression(self, expr: Expression):
@@ -168,11 +174,9 @@ class CircuitHelper:
     def _request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         pname = privacy.idf.name
         if pname in self._pk_for_label:
-            return self._pk_for_label[pname].lhs.arr.idf
+            return self._pk_for_label[pname].lhs.member
         else:
             idf = self._in_name_factory.get_new_idf(TypeName.key_type())
             pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
-            self._pk_for_label[pname] = AssignmentStatement(
-                idf.get_loc_expr(), FunctionCallExpr(MemberAccessExpr(pki, Identifier('getPk')), [self._expr_trafo.visit(privacy)])
-            )
+            self._pk_for_label[pname] = idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy)]))
             return idf

@@ -4,8 +4,8 @@ pki_contract_name = 'PublicKeyInfrastructure'
 
 zk_out_name = 'out__'
 zk_in_name = 'in__'
-zk_data_var_name = '__zk_data'
-zk_param_name = f'{zk_data_var_name}_'
+zk_struct_suffix = 'zk_data'
+zk_data_var_name = f'{zk_struct_suffix}__'
 
 debug_output_whitelist = [
     #'jsnark',
