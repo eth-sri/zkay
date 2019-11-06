@@ -45,12 +45,7 @@ class JsnarkVisitor(AstVisitor):
             expected_cipher = self.local_vars[stmt.cipher.name]
 
             assert len(expected_cipher) == len(computed_cipher), "length mismatch"
-            cipher_concat = self.generator.getZeroWire()
-            for w in expected_cipher:
-                orf = getattr(cipher_concat, 'or')
-                cipher_concat = orf(w)
-
-            computed_cipher_with_default = jCondAssignmentGadget(cipher_concat, computed_cipher, [self.generator.getZeroWire()]*len(computed_cipher), 'check_enc').getOutputWires()
+            computed_cipher_with_default = jCondAssignmentGadget(expected_cipher, computed_cipher, [self.generator.getZeroWire()]*len(computed_cipher), 'check_enc').getOutputWires()
             assert len(computed_cipher) == len(computed_cipher_with_default), "length mismatch"
             for i in range(len(computed_cipher)):
                 self.generator.addEqualityAssertion(expected_cipher[i], computed_cipher_with_default[i])
@@ -82,7 +77,7 @@ class JsnarkVisitor(AstVisitor):
             args = list(map(self.visit, ast.args))
 
             if op == 'ite':
-                return jCondAssignmentGadget(args[0], [args[1]], [args[2]], 'ite').getOutputWires()[0]
+                return jCondAssignmentGadget([args[0]], [args[1]], [args[2]], 'ite').getOutputWires()[0]
             elif op == 'parenthesis':
                 return args[0]
 
