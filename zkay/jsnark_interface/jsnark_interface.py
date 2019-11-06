@@ -43,10 +43,12 @@ def run_jsnark(jsnark_visitor, circuit: CircuitHelper, output_dir: str):
     cg.jsnark_visitor = jsnark_visitor
 
     priv_list = []
-    for sec_param in circuit.secret_param_names:
-        priv_list.append(jCircuitInput(sec_param, 1))
+    for sec_param in circuit.sec_idfs:
+        priv_list.append(jCircuitInput(sec_param.name, sec_param.t.size_in_uints))
 
-    pub_list = [jCircuitInput(name, count) for name, count in circuit.public_arg_arrays]
+    pub_list = []
+    for pub_param in circuit.input_idfs + circuit.output_idfs:
+        pub_list.append(jCircuitInput(pub_param.name, pub_param.t.size_in_uints))
 
     should_hash = cfg.should_use_hash(circuit.num_public_args)
     cwd = os.getcwd()

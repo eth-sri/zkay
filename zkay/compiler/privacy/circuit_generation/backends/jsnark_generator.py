@@ -9,7 +9,7 @@ from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G
 from zkay.jsnark_interface.jsnark_interface import jWire, jCircuitGenerator, jEncGadget, jBigint, jCondAssignmentGadget, run_jsnark
 from zkay.jsnark_interface.libsnark_interface import libsnark_generate_keys
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
-    IndexExpr, NumberLiteralExpr
+    IndexExpr, NumberLiteralExpr, MemberAccessExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -28,22 +28,32 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircuitStatement(self, stmt: CircuitStatement):
         if isinstance(stmt, ExpressionToLocAssignment):
-            lhs = self.visit(stmt.expr)
-            self.local_vars[stmt.lhs.name] = [lhs]
+            assert stmt.lhs.t.size_in_uints == 1
+            self.local_vars[stmt.lhs.name] = [self.visit(stmt.expr)]
         elif isinstance(stmt, EqConstraint):
-            lhs = self.local_vars[stmt.tgt.name][0 if stmt.tgt.offset is None else stmt.tgt.offset]
-            rhs = self.local_vars[stmt.val.name][0 if stmt.val.offset is None else stmt.val.offset]
-            self.generator.addEqualityAssertion(lhs, rhs)
+            lhs = self.local_vars[stmt.tgt.name]
+            rhs = self.local_vars[stmt.val.name]
+            assert len(lhs) == len(rhs), "length mismatch"
+            for i in range(len(lhs)):
+                self.generator.addEqualityAssertion(lhs[i], rhs[i])
         else:
             assert isinstance(stmt, EncConstraint)
-            plain = self.local_vars[stmt.plain.name][0 if stmt.plain.offset is None else stmt.plain.offset]
-            pk = self.local_vars[stmt.pk.name][0 if stmt.pk.offset is None else stmt.pk.offset]
-            rnd = self.local_vars[stmt.rnd.name][0 if stmt.rnd.offset is None else stmt.rnd.offset]
-            expected_cipher = self.local_vars[stmt.cipher.name][0 if stmt.cipher.offset is None else stmt.cipher.offset]
+            plain = self.local_vars[stmt.plain.name]
+            pk = self.local_vars[stmt.pk.name]
+            rnd = self.local_vars[stmt.rnd.name]
+            computed_cipher = jEncGadget(plain, pk, rnd, f'enc({stmt.plain.name}, {stmt.pk.name}, {stmt.rnd.name})').getOutputWires()
+            expected_cipher = self.local_vars[stmt.cipher.name]
 
-            computed_cipher = jEncGadget(plain, pk, rnd, f'enc({stmt.plain.name}, {stmt.pk.name}, {stmt.rnd.name})').getOutputWires()[0]
-            computed_cipher_with_default = jCondAssignmentGadget(expected_cipher, computed_cipher, self.generator.getZeroWire(), 'check_enc').getOutputWires()[0]
-            self.generator.addEqualityAssertion(expected_cipher, computed_cipher_with_default)
+            assert len(expected_cipher) == len(computed_cipher), "length mismatch"
+            cipher_concat = self.generator.getZeroWire()
+            for w in expected_cipher:
+                orf = getattr(cipher_concat, 'or')
+                cipher_concat = orf(w)
+
+            computed_cipher_with_default = jCondAssignmentGadget(cipher_concat, computed_cipher, [self.generator.getZeroWire()]*len(computed_cipher), 'check_enc').getOutputWires()
+            assert len(computed_cipher) == len(computed_cipher_with_default), "length mismatch"
+            for i in range(len(computed_cipher)):
+                self.generator.addEqualityAssertion(expected_cipher[i], computed_cipher_with_default[i])
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
         if ast.value:
@@ -55,16 +65,16 @@ class JsnarkVisitor(AstVisitor):
         return self.generator.createConstantWire(jBigint(str(ast.value)))
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        return self.local_vars[ast.idf.name][0]
+        w = self.local_vars[ast.idf.name]
+        assert len(w) == 1
+        return w[0]
+
+    def visitMemberAccessExpr(self, ast: MemberAccessExpr):
+        assert isinstance(ast.member, HybridArgumentIdf) and ast.member.t.size_in_uints == 1
+        return self.local_vars[ast.member.name][0]
 
     def visitIndexExpr(self, ast: IndexExpr):
-        if isinstance(ast.arr, IdentifierExpr) and isinstance(ast.arr.idf, HybridArgumentIdf):
-            corresponding_plain_input = ast.arr.idf.corresponding_plaintext_circuit_input
-            if corresponding_plain_input is not None:
-                return self.visit(corresponding_plain_input.get_loc_expr())
-
-        assert isinstance(ast.arr, IdentifierExpr) and isinstance(ast.key, NumberLiteralExpr)
-        return self.local_vars[ast.arr.idf.name][ast.key.value]
+        raise NotImplementedError()
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
@@ -72,7 +82,7 @@ class JsnarkVisitor(AstVisitor):
             args = list(map(self.visit, ast.args))
 
             if op == 'ite':
-                return jCondAssignmentGadget(args[0], args[1], args[2], 'ite').getOutputWires()[0]
+                return jCondAssignmentGadget(args[0], [args[1]], [args[2]], 'ite').getOutputWires()[0]
             elif op == 'parenthesis':
                 return args[0]
 
