@@ -7,6 +7,11 @@ zk_in_name = 'in__'
 zk_struct_suffix = 'zk_data'
 zk_data_var_name = f'{zk_struct_suffix}__'
 
+cipher_len = 2
+key_len = 2
+randomness_len = 2
+proof_len = 8
+
 debug_output_whitelist = [
     #'jsnark',
     #'libsnark',

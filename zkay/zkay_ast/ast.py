@@ -387,6 +387,16 @@ class StringLiteralExpr(LiteralExpr):
 
 
 class LocationExpr(Expression):
+    def __init__(self):
+        super().__init__()
+        # set later by symbol table
+        self.target: Union[
+            VariableDeclaration,
+            Parameter,
+            FunctionDefinition,
+            StateVariableDeclaration,
+            ContractDefinition] = None
+
     def call(self, member: Union[str, Identifier], args: List[Expression]) -> 'FunctionCallExpr':
         member = Identifier(member) if isinstance(member, str) else member.clone()
         return FunctionCallExpr(MemberAccessExpr(self, member), args)
@@ -411,13 +421,6 @@ class IdentifierExpr(LocationExpr):
         super().__init__()
         self.idf = idf if isinstance(idf, Identifier) else Identifier(idf)
         self.annotated_type = annotated_type
-        # set later by symbol table
-        self.target: Union[
-            VariableDeclaration,
-            Parameter,
-            FunctionDefinition,
-            StateVariableDeclaration,
-            ContractDefinition] = None
 
     def get_annotated_type(self):
         return self.target.annotated_type
@@ -451,6 +454,14 @@ class IndexExpr(LocationExpr):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.arr = f(self.arr)
         self.key = f(self.key)
+
+
+class SliceExpr(LocationExpr):
+    def __init__(self, arr: LocationExpr, start: int, end: int):
+        super().__init__()
+        self.arr = arr
+        self.start = start
+        self.end = end
 
 
 class MeExpr(Expression):
@@ -489,29 +500,47 @@ class ReclassifyExpr(Expression):
 
 
 class HybridArgumentIdf(Identifier):
-    def __init__(self, name: str, t: 'TypeName', corresponding_priv_expression: Optional[Expression] = None):
+    def __init__(self, name: str, t: 'TypeName', is_private: bool, corresponding_priv_expression: Optional[Expression] = None):
         super().__init__(name)
         self.t = t # transformed type of this idf
+        self.is_private = is_private
         self.corresponding_priv_expression = corresponding_priv_expression
+        self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), -1, -1)
 
-    def get_loc_expr(self) -> MemberAccessExpr:
-        return IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
+    def get_loc_expr(self) -> LocationExpr:
+        if self.is_private:
+            return IdentifierExpr(self.clone()).as_type(self.t)
+        else:
+            return IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
 
-    def deserialize(self, source_idf: str, start_idx: int) -> List['AssignmentStatement']:
+    def clone(self):
+        ha = HybridArgumentIdf(self.name, self.t, self.is_private, self.corresponding_priv_expression)
+        ha.serialized_loc = self.serialized_loc
+        return ha
+
+    def deserialize(self, source_idf: str, start_idx: int) -> 'AssignmentStatement':
+        assert self.serialized_loc.start == -1
+        self.serialized_loc.arr = IdentifierExpr(source_idf)
+        self.serialized_loc.start = start_idx
+        self.serialized_loc.end = start_idx + self.t.size_in_uints
+
         src = IdentifierExpr(source_idf).as_type(Array(AnnotatedTypeName.uint_all()))
         if self.t.size_in_uints == 1:
-            return [self.get_loc_expr().assign(src.index(start_idx).implicitly_converted(self.t))]
+            return self.get_loc_expr().assign(src.index(start_idx).implicitly_converted(self.t))
+        else:
+            return SliceExpr(self.get_loc_expr(), 0, self.t.size_in_uints).assign(self.serialized_loc)
 
-        return [self.get_loc_expr().index(idx).assign(src.clone().index(start_idx + idx))
-                for idx in range(self.t.size_in_uints)]
+    def serialize(self, target_idf: str, start_idx: int) -> 'AssignmentStatement':
+        assert self.serialized_loc.start == -1
+        self.serialized_loc.arr = IdentifierExpr(target_idf)
+        self.serialized_loc.start = start_idx
+        self.serialized_loc.end = start_idx + self.t.size_in_uints
 
-    def serialize(self, target_idf: str, start_idx: int) -> List['AssignmentStatement']:
         tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName.uint_all()))
         if self.t.size_in_uints == 1:
-            return [tgt.clone().index(start_idx).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))]
-
-        return [tgt.clone().index(start_idx + idx).assign(self.get_loc_expr().index(idx))
-                for idx in range(self.t.size_in_uints)]
+            return tgt.clone().index(start_idx).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
+        else:
+            return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), 0, self.t.size_in_uints))
 
 
 class EncryptionExpression(ReclassifyExpr):
@@ -628,6 +657,12 @@ class Block(Statement):
         return self.statements[key]
 
 
+class LabeledBlock(Block):
+    def __init__(self, statements: List[Statement], label: str):
+        super().__init__(statements)
+        self.label = label
+
+
 class IndentBlock(Block):
     def __init__(self, name: str, statements: List[Statement]):
         super().__init__(statements)
@@ -711,13 +746,13 @@ class ElementaryTypeName(TypeName):
 
 class UserDefinedTypeName(TypeName):
 
-    def __init__(self, names: List[Identifier], definition=None):
+    def __init__(self, names: List[Identifier], target: Optional[Union['ContractDefinition', 'StructDefinition']] = None):
         super().__init__()
         self.names = names
-        self.definition = definition
+        self.target = target
 
     def clone(self) -> 'UserDefinedTypeName':
-        return UserDefinedTypeName(self.names.copy(), self.definition)
+        return UserDefinedTypeName(self.names.copy(), self.target)
 
     def __eq__(self, other):
         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
@@ -791,7 +826,7 @@ class Array(TypeName):
 
 class CipherText(Array):
     def __init__(self):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(9))
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.cipher_len))
 
     def __eq__(self, other):
         return isinstance(other, CipherText)
@@ -799,7 +834,7 @@ class CipherText(Array):
 
 class Randomness(Array):
     def __init__(self):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(9))
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.randomness_len))
 
     def __eq__(self, other):
         return isinstance(other, Randomness)
@@ -807,7 +842,7 @@ class Randomness(Array):
 
 class Key(Array):
     def __init__(self):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(9))
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.key_len))
 
     def __eq__(self, other):
         return isinstance(other, Key)
@@ -815,7 +850,7 @@ class Key(Array):
 
 class Proof(Array):
     def __init__(self):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(8))
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.proof_len))
 
     def __eq__(self, other):
         return isinstance(other, Proof)
@@ -1213,14 +1248,14 @@ class AddressPayableMembers(AddressMembers):
 
 
 class GlobalDefs:
-    gasleft: FunctionDefinition = FunctionDefinition(
-        idf=Identifier('gasleft'),
-        parameters=[],
-        modifiers=[],
-        return_parameters=[Parameter([], annotated_type=AnnotatedTypeName.uint_all(), idf=Identifier(''))],
-        body=Block([])
-    )
-    gasleft.idf.parent = gasleft
+    # gasleft: FunctionDefinition = FunctionDefinition(
+    #     idf=Identifier('gasleft'),
+    #     parameters=[],
+    #     modifiers=[],
+    #     return_parameters=[Parameter([], annotated_type=AnnotatedTypeName.uint_all(), idf=Identifier(''))],
+    #     body=Block([])
+    # )
+    # gasleft.idf.parent = gasleft
 
     msg_struct: StructDefinition = StructDefinition(
         Identifier('<msg>'), [
@@ -1456,9 +1491,18 @@ class CodeVisitor(AstVisitor):
         return f'require({c});'
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        lhs = self.visit(ast.lhs)
-        rhs = self.visit(ast.rhs)
-        return f'{lhs} = {rhs};'
+        if isinstance(ast.lhs, SliceExpr) and isinstance(ast.rhs, SliceExpr):
+            sz = ast.lhs.end - ast.lhs.start
+            assert sz == ast.rhs.end - ast.rhs.start, "Slice ranges don't have same size"
+            s = ''
+            lexpr, rexpr = self.visit(ast.lhs.arr), self.visit(ast.rhs.arr)
+            for i in range(sz):
+                s += f'{lexpr}[{ast.lhs.start + i}] = {rexpr}[{ast.rhs.start + i}];\n'
+            return s[:-1]
+        else:
+            lhs = self.visit(ast.lhs)
+            rhs = self.visit(ast.rhs)
+            return f'{lhs} = {rhs};'
 
     def handle_block(self, ast: Block):
         s = self.visit_list(ast.statements)
@@ -1471,6 +1515,9 @@ class CodeVisitor(AstVisitor):
     def visitIndentBlock(self, ast: IndentBlock):
         fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"
         return fstr.format('', 'BEGIN') + self.handle_block(ast) + fstr.format(' ', 'END ')
+
+    def visitLabeledBlock(self, ast: LabeledBlock):
+        return self.visit_list(ast.statements)
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
         return ast.name
@@ -1602,7 +1649,7 @@ class CodeVisitor(AstVisitor):
             structs: List[str]):
 
         i = str(idf)
-        structs = '\n'.join(structs)
+        structs = '\n\n'.join(structs)
         state_vars = '\n'.join(state_vars)
         constructors = '\n\n'.join(constructors)
         functions = '\n\n'.join(functions)

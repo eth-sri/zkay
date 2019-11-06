@@ -5,14 +5,15 @@ from zkay.compiler.privacy.circuit_generation.circuit_constraints import Circuit
     EqConstraint
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
-from zkay.zkay_ast.ast import Expression, IdentifierExpr, Identifier, FunctionCallExpr, MemberAccessExpr, PrivacyLabelExpr, \
+from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression
 
 
 class NameFactory:
-    def __init__(self, base_name: str):
+    def __init__(self, base_name: str, is_private: bool):
         self.base_name = base_name
+        self.is_private = is_private
         self.count = 0
         self.size = 0
         self.idfs = []
@@ -26,14 +27,14 @@ class NameFactory:
             postfix = 'plain'
         name = f'{self.base_name}{self.count}_{postfix}'
 
-        idf = HybridArgumentIdf(name, t, priv_expr)
+        idf = HybridArgumentIdf(name, t, self.is_private, priv_expr)
         self.count += 1
         self.size += t.size_in_uints
         self.idfs.append(idf)
         return idf
 
     def add_idf(self, name: str, t: TypeName):
-        idf = HybridArgumentIdf(name, t)
+        idf = HybridArgumentIdf(name, t, self.is_private)
         self.count += 1
         self.size += t.size_in_uints
         self.idfs.append(idf)
@@ -57,14 +58,13 @@ class CircuitHelper:
         """ List of proof circuit statements (assertions and assignments) """
 
         # Private inputs
-        self._secret_input_name_factory = NameFactory('secret')
+        self._secret_input_name_factory = NameFactory('secret', is_private=True)
+        # Circuit internal
+        self._local_expr_name_factory = NameFactory('tmp', is_private=True)
 
         # Public inputs
-        self._out_name_factory = NameFactory(cfg.zk_out_name)
-        self._in_name_factory = NameFactory(cfg.zk_in_name)
-
-        # Circuit internal
-        self._local_expr_name_factory = NameFactory('tmp')
+        self._out_name_factory = NameFactory(cfg.zk_out_name, is_private=False)
+        self._in_name_factory = NameFactory(cfg.zk_in_name, is_private=False)
 
         # Public contract elements
         self._pk_for_label: Dict[str, AssignmentStatement] = {}
@@ -102,6 +102,10 @@ class CircuitHelper:
         return self._in_name_factory.idfs
 
     @property
+    def sec_idfs(self) -> List[HybridArgumentIdf]:
+        return self._secret_input_name_factory.idfs
+
+    @property
     def secret_param_names(self) -> List[str]:
         return [idf.name for idf in self._secret_input_name_factory.idfs]
 
@@ -120,7 +124,7 @@ class CircuitHelper:
     @property
     def public_arg_arrays(self) -> List[Tuple[str, int]]:
         """ Returns names and lengths of all public parameter uint256 arrays which go into the verifier"""
-        return [(e.base_name, e.count) for e in (self._in_name_factory, self._out_name_factory) if e.count > 0]
+        return [(e.base_name, e.size) for e in (self._in_name_factory, self._out_name_factory) if e.count > 0]
 
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
@@ -151,13 +155,14 @@ class CircuitHelper:
         input_expr = self._expr_trafo.visit(loc_expr)
         if privacy.is_all_expr():
             input_idf = self._in_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
+            locally_decrypted_idf = input_idf
         else:
             locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
             self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf)
 
         loc_expr.statement.in_assignments.append(input_idf.get_loc_expr().assign(input_expr))
-        return input_idf.get_loc_expr()
+        return locally_decrypted_idf.get_loc_expr()
 
     def _evaluate_private_expression(self, expr: Expression):
         priv_expr = self._circ_trafo.visit(expr)
