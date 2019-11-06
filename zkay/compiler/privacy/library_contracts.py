@@ -1,4 +1,4 @@
-from zkay.config import pki_contract_name
+import zkay.config as cfg
 
 
 def get_verify_libs_code():
@@ -10,16 +10,16 @@ bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698
 pki_contract = f'''\
 pragma solidity ^0.5;
 
-contract {pki_contract_name} {{
-    mapping(address => uint) pks;
+contract {cfg.pki_contract_name} {{
+    mapping(address => uint[{cfg.key_len}]) pks;
     mapping(address => bool) hasAnnounced;
 
-    function announcePk(uint pk) public {{
+    function announcePk(uint[{cfg.key_len}] calldata pk) external {{
         pks[msg.sender] = pk;
         hasAnnounced[msg.sender] = true;
     }}
 
-    function getPk(address a) public view returns(uint) {{
+    function getPk(address a) public view returns(uint[{cfg.key_len}] memory) {{
         require(hasAnnounced[a]);
         return pks[a];
     }}
