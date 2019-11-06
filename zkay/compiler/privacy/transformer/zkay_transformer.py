@@ -6,13 +6,12 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgume
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
-from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AssignmentStatement, \
-    IfStatement, IdentifierExpr, Parameter, VariableDeclaration, \
-    AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, MemberAccessExpr, Identifier, \
+from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, IfStatement, \
+    IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
     UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, \
-    CastExpr, StructDefinition, Array
+    CastExpr, StructDefinition, Array, LabeledBlock
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
@@ -77,11 +76,12 @@ class ZkayTransformer(AstTransformerVisitor):
             # Transform function definitions
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_definition(f)
-
-                c.struct_definitions.append(StructDefinition(Identifier(f'{f.name}_{cfg.zk_struct_suffix}'), [
-                    VariableDeclaration([], AnnotatedTypeName(idf.t, None), idf.clone(), '')
-                    for idf in self.current_generator.output_idfs + self.current_generator.input_idfs
-                ]))
+                circuit = self.circuit_generators[f]
+                if circuit.requires_verification():
+                    c.struct_definitions.append(StructDefinition(Identifier(f'{f.name}_{cfg.zk_struct_suffix}'), [
+                        VariableDeclaration([], AnnotatedTypeName(idf.t, None), idf.clone(), '')
+                        for idf in circuit.output_idfs + circuit.input_idfs
+                    ]))
 
         return ast
 
@@ -127,22 +127,26 @@ class ZkayTransformer(AstTransformerVisitor):
 
             # Deserialize out array (if any)
             deserialize_stmts = []
+            offset = 0
             for s in circuit_generator.output_idfs:
-                deserialize_stmts += s.deserialize(cfg.zk_out_name, len(deserialize_stmts))
+                deserialize_stmts += [s.deserialize(cfg.zk_out_name, offset)]
+                offset += s.t.size_in_uints
             if deserialize_stmts:
-                ast.add_param(Array(AnnotatedTypeName.uint_all(), len(deserialize_stmts)), cfg.zk_out_name)
-                deserialize_stmts = Comment.comment_wrap_block("Deserialize output values", deserialize_stmts)
+                ast.add_param(Array(AnnotatedTypeName.uint_all(), offset), cfg.zk_out_name)
+                deserialize_stmts = [LabeledBlock(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), 'exclude')]
 
             # Add proof parameter
             ast.add_param(AnnotatedTypeName.proof_type(), proof_param_name)
 
             # Serialize in parameters to in array (if any)
             serialize_stmts = []
+            offset = 0
             for s in circuit_generator.input_idfs:
-                serialize_stmts += s.serialize(cfg.zk_in_name, len(serialize_stmts))
+                serialize_stmts += [s.serialize(cfg.zk_in_name, offset)]
+                offset += s.t.size_in_uints
             if serialize_stmts:
                 serialize_stmts = Comment.comment_wrap_block('Serialize input values', [
-                    Identifier(cfg.zk_in_name).decl_var(Array(AnnotatedTypeName.uint_all(), len(serialize_stmts)))
+                    Identifier(cfg.zk_in_name).decl_var(Array(AnnotatedTypeName.uint_all(), offset))
                 ] + serialize_stmts)
 
             # Call to verifier
@@ -160,7 +164,7 @@ class ZkayTransformer(AstTransformerVisitor):
                                   Comment.comment_wrap_block('Request required public keys',
                                                              circuit_generator.public_key_requests) + \
                                   serialize_stmts + \
-                                  [Comment('Verify zk proof of execution'), verify]
+                                  [LabeledBlock([Comment('Verify zk proof of execution'), verify], 'exclude')]
 
         # Add return statement at the end if necessary
         # (was previously replaced by assignment to return_var by ZkayStatementTransformer)
@@ -183,10 +187,14 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.keywords = [k for k in ast.keywords if k != 'final']
+        if ast.annotated_type.is_private():
+            ast.storage_location = 'memory'
         return self.visit_children(ast)
 
     def visitParameter(self, ast: Parameter):
         ast.original_type = ast.annotated_type
+        if ast.annotated_type.is_private():
+            ast.storage_location = 'memory'
         return self.visit_children(ast)
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
