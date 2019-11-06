@@ -9,8 +9,10 @@ from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.transformer.zkay_transformer import proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
-    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
-    ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness
+    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, \
+    Identifier, \
+    ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness, SliceExpr, \
+    Array, Comment
 from zkay.zkay_ast.ast import ElementaryTypeName
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
@@ -137,13 +139,16 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 assert val < {SCALAR_FIELD_COMP_MAX_NAME}, f'Value {{val}} is too large for comparison'
                 return val
 
-            def get_state(self, name: str, *indices, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
+            def get_state(self, name: str, *indices, count=1, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
                 idxvals = ''.join([f'[{{idx}}]' for idx in indices])
                 loc = f'{{name}}{{idxvals}}'
                 if loc in {STATE_VALUES_NAME}:
                     return {STATE_VALUES_NAME}[loc]
                 else:
-                    val = val_constructor({CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, *indices))
+                    if count == 1:
+                        val = val_constructor({CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, *indices))
+                    else:
+                        val = val_constructor([{CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, *indices, i) for i in range(count)])
                     if is_encrypted:
                         val = CipherValue(val)
                     {STATE_VALUES_NAME}[loc] = val
@@ -153,7 +158,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def get_loc_value(self, arr: Identifier, indices: List[str]) -> str:
         if isinstance(arr, HybridArgumentIdf) and arr.is_private and not arr.name.startswith('tmp'):
-            return f'{PRIV_VALUES_NAME}[\'{arr.name}\']'
+            return f'{PRIV_VALUES_NAME}["{arr.name}"]'
         else:
             idxvals = ''.join([f'[{idx}]' for idx in indices])
             return f'{self.visit(arr)}{idxvals}'
@@ -165,7 +170,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             constr = ''
             if val_type.is_address():
                 constr = ', val_constructor=AddressValue'
-            val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, is_encrypted={is_encrypted}{constr})"
+            val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, count={val_type.type_name.size_in_uints}, is_encrypted={is_encrypted}{constr})"
             return val_str
         else:
             return self.get_loc_value(idf.idf, indices)
@@ -224,12 +229,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             msg.sender = {CONN_OBJ_NAME}.my_address
         '''
 
-        in_var_decl = '' if has_in else f'{cfg.zk_in_name} = []'
-
-        if has_out:
-            out_var_decl = f'{cfg.zk_out_name}: List[Optional[Union[int, CipherValue]]] = [None for _ in range({circuit.public_out_array[1]})]'
-        else:
-            out_var_decl = f'{cfg.zk_out_name} = []'
+        in_var_decl = None if has_in else f'{cfg.zk_in_name} = []'
 
         # Encrypt parameters and add private circuit inputs (plain + randomness)
         enc_param_str = ''
@@ -248,18 +248,27 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         # the corresponding private expressions)
         begin_body_comment_str = f'\n## BEGIN Simulate body'
         body_str = self.visit(ast.body)
+        body_str = body_str[:-1] if body_str.endswith('\n') else body_str
         end_body_comment_str = '## END Simulate body'
 
         # Add out__, in__ and proof to actual argument list (when required)
-        add_pub_arg_str = ''
+        generate_proof_str = ''
 
         if has_out:
-            add_pub_arg_str += f'\nactual_params.append({cfg.zk_out_name})\n'
+            out_stmts = [Comment()] + Comment.comment_wrap_block('Serialize output values', [
+                Identifier(cfg.zk_out_name).decl_var(Array(AnnotatedTypeName.uint_all(), circuit.public_out_array[1]))]
+                + [out_idf.serialized_loc.assign(SliceExpr(out_idf.get_loc_expr(), 0, out_idf.t.size_in_uints)) if out_idf.t.size_in_uints > 1 else \
+                   IdentifierExpr(f'{cfg.zk_out_name}[{out_idf.serialized_loc.start}]').assign(out_idf.get_loc_expr()) for out_idf in circuit.output_idfs]
+                + [Identifier(f'actual_params.append({cfg.zk_out_name})')])
+            out_var_decl = self.visit_list(out_stmts)[:-1]
+        else:
+            out_var_decl = cfg.zk_out_name + ' = []'
+
         if circuit.requires_verification():
-            add_pub_arg_str += dedent(f'''
+            generate_proof_str += dedent(f'''
             # Generate proof
             priv_arg_list = [{PRIV_VALUES_NAME}[arg] for arg in [{", ".join([f"'{s}'" for s in circuit.secret_param_names])}]]
-            self._{ast.name}_check_proof(priv_arg_list, {cfg.zk_in_name}, {cfg.zk_out_name})
+            self._{ast.name}_check_proof({cfg.zk_data_var_name}, priv_arg_list)
             proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {cfg.zk_in_name}, {cfg.zk_out_name})
             actual_params.append(proof)''')
 
@@ -281,22 +290,23 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             address_wrap_str,
             preamble,
             in_var_decl,
-            out_var_decl,
             enc_param_comment_str,
             enc_param_str,
             actual_params_assign_str,
             begin_body_comment_str,
             body_str,
             end_body_comment_str,
-            add_pub_arg_str,
+            out_var_decl,
+            generate_proof_str,
             invoke_transact_str
         ] if s)
         return code
 
     def build_proof_check_fct(self) -> str:
         circuit = self.current_circ
-        stmts = [f"print(f'Circuit arguments: {{list(map(str, priv_args + {cfg.zk_in_name} + {cfg.zk_out_name}))}}')"]
-        assert_str = 'assert {0} == {1}, f"check failed for lhs={{{0}}} and rhs={{{1}}}"'
+        pnames = ', '.join([f'{{{cfg.zk_data_var_name}["{p.name}"]}}' for p in circuit.input_idfs + circuit.output_idfs])
+        stmts = [f"print(f'Circuit arguments: {{list(map(str, priv_args))}}, {pnames}')"]
+        assert_str = 'assert {0} == {1}, f\'check failed for lhs={{{0}}} and rhs={{{1}}}\''
 
         with CircuitComputation(self):
             for stmt in circuit.phi:
@@ -311,7 +321,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))
         stmts.append('print(\'Proof soundness verified\')')
 
-        params = f'self, priv_args: List, {cfg.zk_in_name}: List, {cfg.zk_out_name}: List'
+        params = f'self, {cfg.zk_data_var_name}: Dict, priv_args: List'
         body = '\n'.join(stmts)
         return f'def _{self.current_f.name}_check_proof({params}):\n{indent(body)}\n'
 
@@ -325,12 +335,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             assert isinstance(in_idf, HybridArgumentIdf)
             if in_idf.corresponding_priv_expression is not None:
                 plain_idf_name = f'{PRIV_VALUES_NAME}["{in_idf.corresponding_priv_expression.idf.name}"]'
-                in_decrypt = f'{plain_idf_name}, {PRIV_VALUES_NAME}["{in_idf.name}_R"]' \
-                             f' = {CRYPTO_OBJ_NAME}.dec({in_idf.get_loc_expr().code()}, {SK_OBJ_NAME})'
+                in_decrypt += f'{plain_idf_name}, {PRIV_VALUES_NAME}["{in_idf.name}_R"]' \
+                              f' = {CRYPTO_OBJ_NAME}.dec({self.visit(in_idf.get_loc_expr())}, {SK_OBJ_NAME})\n'
                 plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
                 conv = self.visit(plain_idf.implicitly_converted(in_idf.corresponding_priv_expression.idf.t))
                 if conv != plain_idf_name:
-                    in_decrypt += f'\n{plain_idf_name} = {conv}'
+                    in_decrypt += f'{plain_idf_name} = {conv}\n'
+        if in_decrypt:
+            in_decrypt = in_decrypt[:-1]
 
         out_initializations = ''
         for out_idf in ast.out_refs:
@@ -377,10 +389,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             indices = []
 
         if isinstance(ast.member, HybridArgumentIdf):
-            if self.inside_circuit:
-                e = self.visit(ast.member.serialized_loc)
-            else:
-                e = f'{self.visit(ast.expr)}["{ast.member.name}"]'
+            e = f'{self.visit(ast.expr)}["{ast.member.name}"]'
         else:
             e = super().visitMemberAccessExpr(ast)
         return self.get_loc_value(Identifier(e), indices)

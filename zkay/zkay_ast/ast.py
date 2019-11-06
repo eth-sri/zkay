@@ -411,7 +411,7 @@ class LocationExpr(Expression):
             item = NumberLiteralExpr(item)
         return IndexExpr(self, item).as_type(self.annotated_type.type_name.value_type)
 
-    def assign(self, val: Expression):
+    def assign(self, val: Expression) -> 'AssignmentStatement':
         return AssignmentStatement(self, val)
 
 

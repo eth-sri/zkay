@@ -2,7 +2,7 @@ import json
 import os
 from abc import ABCMeta, abstractmethod
 from builtins import type
-from typing import Tuple, List, Optional, Union, Any, Dict
+from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 import zkay.config as cfg
 
@@ -18,7 +18,7 @@ def debug_print(*args):
 
 
 class Value(tuple):
-    def __new__(cls, contents: List):
+    def __new__(cls, contents: Collection):
         return super(Value, cls).__new__(cls, contents)
 
     def __str__(self):
@@ -40,6 +40,16 @@ class Value(tuple):
             return v[:] if isinstance(v, Value) else v
 
     @staticmethod
+    def flatten(v: List) -> List:
+        out = []
+        for elem in v:
+            if isinstance(elem, Collection):
+                out += elem
+            else:
+                out.append(elem)
+        return out
+
+    @staticmethod
     def list_to_string(v: Union[int, bool, 'Value', List]) -> str:
         if isinstance(v, List):
             return f"[{', '.join(map(Value.list_to_string, v))}]"
@@ -48,38 +58,38 @@ class Value(tuple):
 
 
 class CipherValue(Value):
-    def __new__(cls, contents: Optional[List] = None):
+    def __new__(cls, contents: Optional[Collection] = None):
         if contents is None:
-            return super(CipherValue, cls).__new__(cls, [0] * 9)
+            return super(CipherValue, cls).__new__(cls, [0] * cfg.cipher_len)
         else:
-            assert len(contents) == 9
+            assert len(contents) == cfg.cipher_len
             return super(CipherValue, cls).__new__(cls, contents)
 
 
 class PrivateKeyValue(Value):
-    def __new__(cls, contents: Optional[List] = None):
+    def __new__(cls, contents: Optional[Collection] = None):
         if contents is None:
-            return super(PrivateKeyValue, cls).__new__(cls, [0] * 9)
+            return super(PrivateKeyValue, cls).__new__(cls, [0] * cfg.key_len)
         else:
-            assert len(contents) == 9
+            assert len(contents) == cfg.key_len
             return super(PrivateKeyValue, cls).__new__(cls, contents)
 
 
 class PublicKeyValue(Value):
-    def __new__(cls, contents: Optional[List] = None):
+    def __new__(cls, contents: Optional[Collection] = None):
         if contents is None:
-            return super(PublicKeyValue, cls).__new__(cls, [0] * 9)
+            return super(PublicKeyValue, cls).__new__(cls, [0] * cfg.key_len)
         else:
-            assert len(contents) == 9
+            assert len(contents) == cfg.key_len
             return super(PublicKeyValue, cls).__new__(cls, contents)
 
 
 class RandomnessValue(Value):
-    def __new__(cls, contents: Optional[List] = None):
+    def __new__(cls, contents: Optional[Collection] = None):
         if contents is None:
-            return super(RandomnessValue, cls).__new__(cls, [0] * 9)
+            return super(RandomnessValue, cls).__new__(cls, [0] * cfg.key_len)
         else:
-            assert len(contents) == 9
+            assert len(contents) == cfg.randomness_len
             return super(RandomnessValue, cls).__new__(cls, contents)
 
 
@@ -209,7 +219,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk}"')
         cipher, rnd = self._enc(int(plain), pk[:], None if rnd is None else rnd[:])
-        cipher, rnd = CipherValue(*cipher), RandomnessValue(*rnd)
+        cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
         if cipher == CipherValue():
             raise Exception("Encryption resulted in cipher text 0 which is a reserved value. Please try again.")
         return cipher, rnd
@@ -225,7 +235,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
         debug_print(f'Decrypting value {cipher} with secret key "{sk}"')
         plain, rnd = self._dec(cipher[:], sk[:])
-        return plain, RandomnessValue(*rnd)
+        return plain, RandomnessValue(rnd)
 
     @abstractmethod
     def _generate_or_load_key_pair(self) -> KeyPair:
@@ -278,7 +288,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
         debug_print(f'Generating proof for {contract}.{function}')
         with time_measure(f'generate_proof_{contract}.{function}', True):
             return self._generate_proof(os.path.join(project_dir, f"{manifest[Manifest.verifier_names][f'{contract}.{function}']}_out"),
-                                        Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
+                                        Value.flatten(Value.unwrap_values(priv_values)), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
 
     @abstractmethod
     def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:

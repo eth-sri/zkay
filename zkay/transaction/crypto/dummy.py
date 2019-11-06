@@ -17,7 +17,7 @@ class DummyCrypto(ZkayCryptoInterface):
         return (cipher, 0), (69, 0)
 
     def _dec(self, cipher: Tuple[int, ...], sk: Tuple[int, ...]) -> Tuple[int, Tuple[int, ...]]:
-        if cipher == CipherValue():
+        if cipher == CipherValue()[:]:
             # uninitialized value
             plain = 0
         else:
