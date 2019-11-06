@@ -196,9 +196,9 @@ class TypeCheckVisitor(AstVisitor):
             ast.annotated_type = getattr(AddressPayableMembers, name, None)
         elif not t.is_primitive_type() or isinstance(t, Mapping):
             assert isinstance(t, UserDefinedTypeName)
-            if isinstance(t.definition, StructDefinition):
+            if isinstance(t.target, StructDefinition):
                 # Handle struct access
-                matches = [x.annotated_type for x in t.definition.members if x.idf.name == ast.member.name]
+                matches = [x.annotated_type for x in t.target.members if x.idf.name == ast.member.name]
                 if len(matches) != 1:
                     raise TypeException(f'Member {name} not found', ast.member)
                 ast.annotated_type = matches[0]

@@ -1,5 +1,6 @@
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
-    SimpleStatement, IdentifierExpr, Block, Mapping, GlobalDefs, Identifier, Comment, GlobalVars
+    SimpleStatement, IdentifierExpr, Block, Mapping, GlobalDefs, Identifier, Comment, GlobalVars, MemberAccessExpr, IndexExpr, LocationExpr, \
+    StructDefinition, Array, UserDefinedTypeName
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -42,21 +43,26 @@ class SymbolTableFiller(AstVisitor):
 
     def visitSourceUnit(self, ast: SourceUnit):
         ast.names = {c.idf.name: c.idf for c in ast.contracts}
-        ast.names.update({
-            'gasleft': GlobalDefs.gasleft.idf,
-        })
+        global_defs = [d for d in [getattr(GlobalDefs, var) for var in vars(GlobalDefs) if not var.startswith('__')]]
+        for d in global_defs:
+            self.visit(d)
+        ast.names.update({d.idf.name: d.idf for d in global_defs})
 
     def visitContractDefinition(self, ast: ContractDefinition):
         state_vars = {d.idf.name: d.idf for d in ast.state_variable_declarations if not isinstance(d, Comment)}
         state_vars.update({d.idf.name: d.idf for d in [getattr(GlobalVars, var) for var in vars(GlobalVars) if not var.startswith('__')]})
         funcs = {f.idf.name: f.idf for f in ast.function_definitions}
-        ast.names = merge_dicts(state_vars, funcs)
+        structs = {s.idf.name: s.idf for s in ast.struct_definitions}
+        ast.names = merge_dicts(state_vars, funcs, structs)
 
     def visitFunctionDefinition(self, ast: FunctionDefinition):
         ast.names = {p.idf.name: p.idf for p in ast.parameters}
 
     def visitConstructorDefinition(self, ast):
         self.visitFunctionDefinition(ast)
+
+    def visitStructDefinition(self, ast: StructDefinition):
+        ast.names = {m.idf.name: m.idf for m in ast.members}
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.names = {ast.idf.name: ast.idf}
@@ -89,3 +95,24 @@ class SymbolTableLinker(AstVisitor):
         idf = self.find_identifier_declaration(ast, ast.idf.name)
         ast.target = idf.parent
         assert (ast.target is not None)
+
+    def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
+        try:
+            idf = self.find_identifier_declaration(ast, ast.names[0].name).parent
+            for name in ast.names[1:]:
+                idf = idf.names[name].parent
+            ast.target = idf
+        except UnknownIdentifierException as e:
+            pass
+
+    def visitMemberAccessExpr(self, ast: MemberAccessExpr):
+        assert isinstance(ast.expr, LocationExpr), "Function call return value member access not yet supported"
+        type = ast.expr.target.annotated_type.type_name
+        assert isinstance(type, UserDefinedTypeName)
+        if type.target is not None:
+            ast.target = type.target.names[ast.member.name].parent
+
+    def visitIndexExpr(self, ast: IndexExpr):
+        assert isinstance(ast.arr, LocationExpr), "Function call return value indexing not yet supported"
+        source_t = ast.arr.target.annotated_type.type_name
+        ast.target = VariableDeclaration([], source_t.value_type, Identifier(''))
