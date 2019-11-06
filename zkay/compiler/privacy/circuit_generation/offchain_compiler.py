@@ -3,18 +3,15 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 import zkay.config as cfg
-
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     ExpressionToLocAssignment, EncConstraint, EqConstraint
-from zkay.compiler.privacy.transformer.zkay_transformer import proof_param_name
-from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
+from zkay.compiler.privacy.transformer.zkay_transformer import proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
-    ConstructorDefinition, AssignmentStatement, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
-    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, Mapping, Array, TypeName, AnnotatedTypeName, Identifier, \
-    ReturnStatement
+    ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
+    StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
+    ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness
 from zkay.zkay_ast.ast import ElementaryTypeName
-from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -45,8 +42,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         self.current_f: Optional[ConstructorOrFunctionDefinition] = None
         self.current_params: Optional[List[Parameter]] = None
         self.current_circ: Optional[CircuitHelper] = None
-        self.current_index: List[str] = []
-        self.current_outs: List[HybridArgumentIdf] = []
+        self.current_index: List[Expression] = []
+        self.current_index_t: Optional[AnnotatedTypeName] = None
 
         self.inside_circuit: bool = False
 
@@ -67,7 +64,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         import code
         import inspect
         from typing import Dict, List, Optional, Union, Any, Callable
-        from zkay.transaction import Runtime, CipherValue, AddressValue
+        from zkay.transaction import Runtime, CipherValue, AddressValue, RandomnessValue, PublicKeyValue
 
         {UINT256_MAX_NAME} = {1 << 256}
         {SCALAR_FIELD_NAME} = {bn128_scalar_field}
@@ -113,7 +110,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 {KEYSTORE_OBJ_NAME} = Runtime.keystore()
                 {PROVER_OBJ_NAME} = Runtime.prover()
 
-                {PRIV_VALUES_NAME}: Dict[str, Union[int, bool]] = {{}}
+                {PRIV_VALUES_NAME}: Dict[str, Union[int, bool, RandomnessValue]] = {{}}
                 {STATE_VALUES_NAME}: Dict[str, Union[int, bool, CipherValue, AddressValue]] = {{}}
 
                 {CONTRACT_NAME} = '{ast.idf.name}'
@@ -154,20 +151,31 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         '''))
 
-    @staticmethod
-    def get_state_value(idf: Identifier, val_type: AnnotatedTypeName, indices: List[str]) -> str:
-        is_encrypted = bool(val_type.old_priv_text)
-        name_str = f"'{idf.name}'"
-        constr = ''
-        if val_type.is_address():
-            constr = ', val_constructor=AddressValue'
-        val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, is_encrypted={is_encrypted}{constr})"
-        return val_str
+    def get_loc_value(self, arr: Identifier, indices: List[str]) -> str:
+        if isinstance(arr, HybridArgumentIdf) and arr.is_private and not arr.name.startswith('tmp'):
+            return f'{PRIV_VALUES_NAME}[\'{arr.name}\']'
+        else:
+            idxvals = ''.join([f'[{idx}]' for idx in indices])
+            return f'{self.visit(arr)}{idxvals}'
 
-    @staticmethod
-    def set_state_value(idf: Identifier, indices: List[str]):
-        idxvals = ''.join([f'[{{{idx}}}]' for idx in indices])
-        return f"{STATE_VALUES_NAME}[f'{idf.name}{idxvals}']"
+    def get_rvalue(self, idf: IdentifierExpr, val_type: AnnotatedTypeName, indices: List[str]) -> str:
+        if isinstance(idf.target, StateVariableDeclaration):
+            is_encrypted = bool(val_type.old_priv_text)
+            name_str = f"'{idf.idf.name}'"
+            constr = ''
+            if val_type.is_address():
+                constr = ', val_constructor=AddressValue'
+            val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, is_encrypted={is_encrypted}{constr})"
+            return val_str
+        else:
+            return self.get_loc_value(idf.idf, indices)
+
+    def get_lvalue(self, idf: IdentifierExpr, indices: List[str]):
+        if isinstance(idf.target, StateVariableDeclaration):
+            idxvals = ''.join([f'[{{{idx}}}]' for idx in indices])
+            return f"{STATE_VALUES_NAME}[f'{idf.idf.name}{idxvals}']"
+        else:
+            return self.get_loc_value(idf.idf, indices)
 
     def visitContractDefinition(self, ast: ContractDefinition):
         constr = self.visit_list(ast.constructor_definitions)
@@ -287,20 +295,20 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def build_proof_check_fct(self) -> str:
         circuit = self.current_circ
-        stmts = [f"({', '.join(circuit.secret_param_names)}, ) = {'tuple(priv_args)'}",
-                 f"print(f'Circuit arguments: {{list(map(str, priv_args + {cfg.zk_in_name} + {cfg.zk_out_name}))}}')"]
+        stmts = [f"print(f'Circuit arguments: {{list(map(str, priv_args + {cfg.zk_in_name} + {cfg.zk_out_name}))}}')"]
         assert_str = 'assert {0} == {1}, f"check failed for lhs={{{0}}} and rhs={{{1}}}"'
-        for stmt in circuit.phi:
-            if isinstance(stmt, ExpressionToLocAssignment):
-                with CircuitComputation(self):
+
+        with CircuitComputation(self):
+            for stmt in circuit.phi:
+                if isinstance(stmt, ExpressionToLocAssignment):
                     stmts.append(f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}')
-            elif isinstance(stmt, EncConstraint):
-                cipher_str = self.py.visit(stmt.cipher.get_loc_expr())
-                enc_str = f'(CipherValue(0) if {cipher_str}.val == 0 else {CRYPTO_OBJ_NAME}.enc({self.py_plain.visit(stmt.plain.get_loc_expr())}, {self.py.visit(stmt.pk.get_loc_expr())}, {self.py.visit(stmt.rnd.get_loc_expr())})[0])'
-                stmts.append(assert_str.format(enc_str, cipher_str))
-            else:
-                assert isinstance(stmt, EqConstraint)
-                stmts.append(assert_str.format(self.py.visit(stmt.tgt.get_loc_expr()), self.py.visit(stmt.val.get_loc_expr())))
+                elif isinstance(stmt, EncConstraint):
+                    cipher_str = self.visit(stmt.cipher.get_loc_expr())
+                    enc_str = f'(CipherValue() if {cipher_str} == CipherValue() else {CRYPTO_OBJ_NAME}.enc({self.visit(stmt.plain.get_loc_expr())}, {self.visit(stmt.pk.get_loc_expr())}, {self.visit(stmt.rnd.get_loc_expr())})[0])'
+                    stmts.append(assert_str.format(enc_str, cipher_str))
+                else:
+                    assert isinstance(stmt, EqConstraint)
+                    stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))
         stmts.append('print(\'Proof soundness verified\')')
 
         params = f'self, priv_args: List, {cfg.zk_in_name}: List, {cfg.zk_out_name}: List'
@@ -311,49 +319,46 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if not stmt_txt:
             return None
 
-        out_initializations = ''
-        for out_idf in self.current_outs:
-            # For each out, simulate corresponding ExpressionToLocAssignment (and encrypt and store rnd if necessary)
-            out_val = out_idf.corresponding_expression
-            loc_str = self.visit(out_idf.get_loc_expr())
-            if out_val.privacy.is_all_expr():
-                s = f'{loc_str} = int({self.visit(out_val.val)})' # TODO (in the future maybe not uint)
-            else:
-                priv_str = 'msg.sender' if out_val.privacy.is_me_expr() else f'{self.visit(deep_copy(out_val.privacy))}'
-                pk_str = f'{KEYSTORE_OBJ_NAME}.getPk(__addr)'
-                with CircuitComputation(self):
-                    enc_str = f'{CRYPTO_OBJ_NAME}.enc({self.visit(out_val.val)}, {pk_str})'
-                s = f'__addr = {priv_str}\n' \
-                    f'{loc_str}, {PRIV_VALUES_NAME}["{out_idf.get_flat_name()}_R"] = {enc_str}'
-
-            out_initializations += f'{s}\n'
-        self.current_outs: List[HybridArgumentIdf] = []
-
         in_decrypt = ''
-        if isinstance(ast, AssignmentStatement) and isinstance(ast.lhs, IndexExpr) and isinstance(ast.lhs.arr, IdentifierExpr):
-            lhsidf = ast.lhs.arr.idf
-            if lhsidf.name == cfg.zk_in_name and lhsidf.corresponding_plaintext_circuit_input is not None:
-                assert isinstance(lhsidf, HybridArgumentIdf)
-                plain_idf = f'{PRIV_VALUES_NAME}["{lhsidf.corresponding_plaintext_circuit_input.name}"]'
-                in_decrypt = f'\n'\
-                    f'{plain_idf}, {PRIV_VALUES_NAME}["{lhsidf.get_flat_name()}_R"]'\
-                    f' = {CRYPTO_OBJ_NAME}.dec({lhsidf.get_loc_expr().code()}, {SK_OBJ_NAME})'
-                ridf = IdentifierExpr(Identifier(plain_idf), AnnotatedTypeName.uint_all())
-                conv = self.visit(ridf.implicitly_converted(lhsidf.corresponding_plaintext_circuit_input.t))
-                if conv != self.visit(ridf):
-                    in_decrypt += f'\n{plain_idf} = {conv}'
+        for in_assign in ast.in_assignments:
+            in_idf = in_assign.lhs.member
+            assert isinstance(in_idf, HybridArgumentIdf)
+            if in_idf.corresponding_priv_expression is not None:
+                plain_idf_name = f'{PRIV_VALUES_NAME}["{in_idf.corresponding_priv_expression.idf.name}"]'
+                in_decrypt = f'{plain_idf_name}, {PRIV_VALUES_NAME}["{in_idf.name}_R"]' \
+                             f' = {CRYPTO_OBJ_NAME}.dec({in_idf.get_loc_expr().code()}, {SK_OBJ_NAME})'
+                plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
+                conv = self.visit(plain_idf.implicitly_converted(in_idf.corresponding_priv_expression.idf.t))
+                if conv != plain_idf_name:
+                    in_decrypt += f'\n{plain_idf_name} = {conv}'
 
-        return f'{out_initializations}{stmt_txt}{in_decrypt}'
+        out_initializations = ''
+        for out_idf in ast.out_refs:
+            # For each out, simulate corresponding ExpressionToLocAssignment (and encrypt and store rnd if necessary)
+            out_val = out_idf.corresponding_priv_expression
+            if isinstance(out_val, EncryptionExpression):
+                s = f'{self.visit(out_idf.get_loc_expr())}, {PRIV_VALUES_NAME}["{out_idf.name}_R"] = {self.visit(out_val)}'
+            else:
+                s = f'{self.visit(out_idf.get_loc_expr())} = {self.visit(out_val)}'
+            out_initializations += f'\n{s}\n'
+
+        return f'{in_decrypt}{out_initializations}{stmt_txt}'
+
+    def visitLabeledBlock(self, ast: LabeledBlock):
+        return None
+
+    def visitEncryptionExpression(self, ast: EncryptionExpression):
+        from zkay.zkay_ast.visitor.deep_copy import deep_copy
+        priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(deep_copy(ast.privacy))
+        plain = self.visit(ast.expr)
+        with CircuitComputation(self):
+            return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'
 
     def visitReturnStatement(self, ast: ReturnStatement):
         return None
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if self.current_circ.requires_verification() and isinstance(ast.func, MemberAccessExpr) and isinstance(ast.func.expr, IdentifierExpr):
-            if ast.func.expr.idf.name == get_contract_instance_idf(self.current_circ.verifier_contract_type.code()).name:
-                # Skip call to verifier
-                return None
-        elif isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
+        if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
             modulo = SCALAR_FIELD_NAME if self.inside_circuit else UINT256_MAX_NAME
             return f'({super().visitFunctionCallExpr(ast)}) % {modulo}'
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
@@ -362,58 +367,58 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         return super().visitFunctionCallExpr(ast)
 
-    def visitIdentifierExpr(self, ast: IdentifierExpr):
-        if ast.statement is not None and ast.idf.name == cfg.zk_out_name:
-            assert isinstance(ast.idf, HybridArgumentIdf) and ast.idf.corresponding_expression is not None
-            self.current_outs.append(ast.idf)
+    def visitMemberAccessExpr(self, ast: MemberAccessExpr):
+        assert not isinstance(ast.target, StateVariableDeclaration), "State member accesses not handled"
+        if self.current_index:
+            indices = list(reversed(self.current_index))
+            self.current_index, self.current_index_t = [], None
+            indices = [self.visit(idx) for idx in indices]
+        else:
+            indices = []
 
+        if isinstance(ast.member, HybridArgumentIdf):
+            if self.inside_circuit:
+                e = self.visit(ast.member.serialized_loc)
+            else:
+                e = f'{self.visit(ast.expr)}["{ast.member.name}"]'
+        else:
+            e = super().visitMemberAccessExpr(ast)
+        return self.get_loc_value(Identifier(e), indices)
+
+    def visitIdentifierExpr(self, ast: IdentifierExpr):
         if ast.idf.name == f'{cfg.pki_contract_name}_inst' and not ast.is_lvalue():
             return f'{KEYSTORE_OBJ_NAME}'
-        elif ast.idf.name == 'msg':
+
+        if ast.idf.name == 'msg':
             return 'msg'
-        elif isinstance(ast.target, StateVariableDeclaration):
-            if ast.is_rvalue():
-                return self.get_state_value(ast.idf, ast.target.annotated_type, [])
-            else:
-                return self.set_state_value(ast.idf, [])
+
+        if self.current_index:
+            indices, t = list(reversed(self.current_index)), self.current_index_t
+            self.current_index, self.current_index_t = [], None
+            indices = [self.visit(idx) for idx in indices]
         else:
-            return super().visitIdentifierExpr(ast)
+            indices, t = [], ast.target.annotated_type if isinstance(ast.target, StateVariableDeclaration) else None
+
+        if ast.is_rvalue():
+            return self.get_rvalue(ast, t, indices)
+        else:
+            return self.get_lvalue(ast, indices)
 
     def visitIndexExpr(self, ast: IndexExpr):
-        self.current_index.append(self.visit(ast.key))
-        if isinstance(ast.arr, IdentifierExpr):
-            if ast.is_rvalue() and isinstance(ast.arr.idf, HybridArgumentIdf) and ast.arr.idf.corresponding_plaintext_circuit_input is not None:
-                # TODO correct?
-                ret = f'{PRIV_VALUES_NAME}["{ast.arr.idf.corresponding_plaintext_circuit_input.name}"]'
-            else:
-                self.current_index = list(reversed(self.current_index))
-                if isinstance(ast.arr.target, StateVariableDeclaration):
-                    if ast.is_rvalue():
-                        map_t = ast.arr.target.annotated_type
-                        idx = 0
-                        while idx < len(self.current_index):
-                            t = map_t.type_name
-                            assert isinstance(t, Mapping) or isinstance(t, Array)
-                            map_t = t.value_type
-                            idx += 1
+        if self.current_index_t is None:
+            self.current_index_t = ast.target.annotated_type
+        self.current_index.append(ast.key)
 
-                        ret = self.get_state_value(ast.arr.idf, map_t, self.current_index)
-                    else:
-                        ret = self.set_state_value(ast.arr.idf, self.current_index)
-                else:
-                    if len(self.current_index) > 1:
-                        ret = ''
-                    else:
-                        ret = super().visitIndexExpr(ast)
-            self.current_index = []
-            return ret
-        else:
-            assert isinstance(ast.arr, IndexExpr)
-            ret = self.visitIndexExpr(ast.arr)
-            if ret:
-                return ret
-            else:
-                return super().visitIndexExpr(ast)
+        return self.visit(ast.arr)
+
+    def visitCipherText(self, ast: CipherText):
+        return 'CipherValue'
+
+    def visitKey(self, ast: Key):
+        return 'PublicKeyValue'
+
+    def visitRandomness(self, ast: Randomness):
+        return 'RandomnessValue'
 
 
 class CircuitContext:

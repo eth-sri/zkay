@@ -2,13 +2,12 @@ import keyword
 from textwrap import dedent
 from typing import Union, List
 
-from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf
 from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, Statement, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
-    SourceUnit, ContractDefinition, PayableAddress, IdentifierExpr, IndexExpr
+    SourceUnit, ContractDefinition, PayableAddress, Randomness, Key, CipherText, SliceExpr
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help']}
 
@@ -85,8 +84,11 @@ class PythonCodeVisitor(CodeVisitor):
         rhs = self.visit(ast.rhs)
         return self.handle_stmt(ast, f'{lhs} = {rhs}')
 
+    def visitSliceExpr(self, ast: SliceExpr):
+        return f'{self.visit(ast.arr)}[{ast.start}:{ast.end}]'
+
     def get_default_value(self, t: TypeName):
-        if isinstance(t, Array):
+        if isinstance(t, Array) and not isinstance(t, (CipherText, Key, Randomness)):
             expr = t.expr
             if expr is None:
                 return '[]'
@@ -95,7 +97,7 @@ class PythonCodeVisitor(CodeVisitor):
         elif isinstance(t, Mapping):
             return '{}'
         elif isinstance(t, UserDefinedTypeName):
-            return 'None'
+            return '{}'
         else:
             return f'{self.visit(t)}()'
 
@@ -155,13 +157,6 @@ class PythonCodeVisitor(CodeVisitor):
 
     def visitArray(self, ast: Array):
         return f'List[{self.visit(ast.value_type)}]'
-
-    def visitIndexExpr(self, ast: IndexExpr):
-        if self.follow_private and isinstance(ast.arr, IdentifierExpr) and isinstance(ast.arr.idf, HybridArgumentIdf):
-            corresponding_plain_input = ast.arr.idf.corresponding_plaintext_circuit_input
-            if corresponding_plain_input is not None:
-                return self.visit(corresponding_plain_input.get_loc_expr())
-        return super().visitIndexExpr(ast)
 
     def visitIdentifier(self, ast: Identifier):
         return sanitized(ast.name)
