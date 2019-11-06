@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from abc import abstractmethod
 from pathlib import Path
-from typing import Union, Any, Dict, Optional
+from typing import Union, Any, Dict, Optional, List, Tuple
 
 from eth_tester import PyEVMBackend, EthereumTester
 from web3 import Web3
@@ -90,8 +90,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _req_public_key(self, address: AddressValue) -> PublicKeyValue:
         return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address.val))
 
-    def _announce_public_key(self, address: AddressValue, pk: PublicKeyValue):
-        return self._transact(self.pki_contract, 'announcePk', pk.val)
+    def _announce_public_key(self, address: AddressValue, pk: Tuple[int, ...]):
+        return self._transact(self.pki_contract, 'announcePk', pk)
 
     def _req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         return contract_handle.functions[name](*indices).call({'from': self.my_address.val})

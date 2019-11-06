@@ -4,8 +4,9 @@ from abc import ABCMeta, abstractmethod
 from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict
 
+import zkay.config as cfg
+
 from zkay.compiler.privacy.manifest import Manifest
-from zkay.config import default_proving_scheme
 from zkay.utils.timer import time_measure
 
 __debug_print = True
@@ -16,25 +17,27 @@ def debug_print(*args):
         print(*args)
 
 
-class Value:
-    def __init__(self, val):
-        self.val = val
+class Value(tuple):
+    def __new__(cls, contents: List):
+        return super(Value, cls).__new__(cls, contents)
 
     def __str__(self):
-        return f'{type(self).__name__}({self.val})'
+        return f'{type(self).__name__}({super().__str__()})'
 
     def __eq__(self, other):
-        return isinstance(other, type(self)) and self.val == other.val
+        return isinstance(other, type(self)) and super().__eq__(other)
 
     def __hash__(self):
-        return self.val.__hash__()
+        return self[:].__hash__()
 
     @staticmethod
     def unwrap_values(v: Union[int, bool, 'Value', List]) -> Union[int, List]:
         if isinstance(v, List):
             return list(map(Value.unwrap_values, v))
+        elif isinstance(v, AddressValue):
+            return v.val
         else:
-            return v.val if isinstance(v, Value) else v
+            return v[:] if isinstance(v, Value) else v
 
     @staticmethod
     def list_to_string(v: Union[int, bool, 'Value', List]) -> str:
@@ -45,24 +48,48 @@ class Value:
 
 
 class CipherValue(Value):
-    pass
+    def __new__(cls, contents: Optional[List] = None):
+        if contents is None:
+            return super(CipherValue, cls).__new__(cls, [0] * 9)
+        else:
+            assert len(contents) == 9
+            return super(CipherValue, cls).__new__(cls, contents)
 
 
 class PrivateKeyValue(Value):
-    pass
+    def __new__(cls, contents: Optional[List] = None):
+        if contents is None:
+            return super(PrivateKeyValue, cls).__new__(cls, [0] * 9)
+        else:
+            assert len(contents) == 9
+            return super(PrivateKeyValue, cls).__new__(cls, contents)
 
 
 class PublicKeyValue(Value):
-    pass
+    def __new__(cls, contents: Optional[List] = None):
+        if contents is None:
+            return super(PublicKeyValue, cls).__new__(cls, [0] * 9)
+        else:
+            assert len(contents) == 9
+            return super(PublicKeyValue, cls).__new__(cls, contents)
 
 
 class RandomnessValue(Value):
-    pass
+    def __new__(cls, contents: Optional[List] = None):
+        if contents is None:
+            return super(RandomnessValue, cls).__new__(cls, [0] * 9)
+        else:
+            assert len(contents) == 9
+            return super(RandomnessValue, cls).__new__(cls, contents)
 
 
 class AddressValue(Value):
-    def __init__(self, val: str):
-        super().__init__(val)
+    def __new__(cls, val: str):
+        return super(AddressValue, cls).__new__(cls, [val])
+
+    @property
+    def val(self):
+        return self[0]
 
 
 class KeyPair:
@@ -89,14 +116,14 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     def req_public_key(self, address: AddressValue) -> PublicKeyValue:
         assert isinstance(address, AddressValue)
-        debug_print(f'Requesting public key for address "{address.val}"')
-        return self._req_public_key(address)
+        debug_print(f'Requesting public key for address "{address}"')
+        return self._req_public_key(address.val)
 
     def announce_public_key(self, address: AddressValue, pk: PublicKeyValue):
         assert isinstance(address, AddressValue)
         assert isinstance(pk, PublicKeyValue)
-        debug_print(f'Announcing public key "{pk.val}" for address "{address.val}"')
-        self._announce_public_key(address, pk)
+        debug_print(f'Announcing public key "{pk}" for address "{address}"')
+        self._announce_public_key(address, pk[:])
 
     def req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         assert contract_handle is not None
@@ -117,7 +144,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args))
 
     def connect(self, project_dir: str, contract: str, address: AddressValue) -> Any:
-        debug_print(f'Connecting to contract {contract}@{address.val}')
+        debug_print(f'Connecting to contract {contract}@{address}')
         return self._connect(parse_manifest(project_dir), contract, address.val)
 
     @abstractmethod
@@ -133,7 +160,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _announce_public_key(self, address: AddressValue, pk: PublicKeyValue) -> PublicKeyValue:
+    def _announce_public_key(self, address: AddressValue, pk: Tuple[int, ...]) -> PublicKeyValue:
         pass
 
     @abstractmethod
@@ -180,11 +207,12 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
-        debug_print(f'Encrypting value {plain} with public key "{pk.val}"')
-        cipher, rnd = self._enc(int(plain), pk.val, None if rnd is None else rnd.val)
-        if cipher == 0:
+        debug_print(f'Encrypting value {plain} with public key "{pk}"')
+        cipher, rnd = self._enc(int(plain), pk[:], None if rnd is None else rnd[:])
+        cipher, rnd = CipherValue(*cipher), RandomnessValue(*rnd)
+        if cipher == CipherValue():
             raise Exception("Encryption resulted in cipher text 0 which is a reserved value. Please try again.")
-        return CipherValue(cipher), RandomnessValue(rnd)
+        return cipher, rnd
 
     def dec(self, cipher: CipherValue, sk: PrivateKeyValue) -> Tuple[int, RandomnessValue]:
         """
@@ -195,20 +223,20 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
-        debug_print(f'Decrypting value {cipher.val} with secret key "{sk.val}"')
-        plain, rnd = self._dec(cipher.val, sk.val)
-        return plain, RandomnessValue(rnd)
+        debug_print(f'Decrypting value {cipher} with secret key "{sk}"')
+        plain, rnd = self._dec(cipher[:], sk[:])
+        return plain, RandomnessValue(*rnd)
 
     @abstractmethod
     def _generate_or_load_key_pair(self) -> KeyPair:
         pass
 
     @abstractmethod
-    def _enc(self, plain: int, pk: int, rnd: Optional[int]) -> Tuple[int, int]:
+    def _enc(self, plain: int, pk: int, rnd: Optional[Tuple[int, ...]]) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
         pass
 
     @abstractmethod
-    def _dec(self, cipher: int, sk: int) -> Tuple[int, int]:
+    def _dec(self, cipher: Tuple[int, ...], sk: Tuple[int, ...]) -> Tuple[int, Tuple[int, ...]]:
         pass
 
 
@@ -240,7 +268,7 @@ class ZkayKeystoreInterface:
 
 
 class ZkayProverInterface(metaclass=ABCMeta):
-    def __init__(self, proving_scheme: str = default_proving_scheme):
+    def __init__(self, proving_scheme: str = cfg.default_proving_scheme):
         self.proving_scheme = proving_scheme
 
     def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List[int], in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
