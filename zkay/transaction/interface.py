@@ -67,12 +67,12 @@ class CipherValue(Value):
 
 
 class PrivateKeyValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
-        if contents is None:
-            return super(PrivateKeyValue, cls).__new__(cls, [0] * cfg.key_len)
-        else:
-            assert len(contents) == cfg.key_len
-            return super(PrivateKeyValue, cls).__new__(cls, contents)
+    def __new__(cls, sk: Optional[Any] = None):
+        return super(PrivateKeyValue, cls).__new__(cls, [sk])
+
+    @property
+    def val(self):
+        return self[0]
 
 
 class PublicKeyValue(Value):
@@ -87,7 +87,7 @@ class PublicKeyValue(Value):
 class RandomnessValue(Value):
     def __new__(cls, contents: Optional[Collection] = None):
         if contents is None:
-            return super(RandomnessValue, cls).__new__(cls, [0] * cfg.key_len)
+            return super(RandomnessValue, cls).__new__(cls, [0] * cfg.randomness_len)
         else:
             assert len(contents) == cfg.randomness_len
             return super(RandomnessValue, cls).__new__(cls, contents)
@@ -218,7 +218,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk}"')
-        cipher, rnd = self._enc(int(plain), pk[:], None if rnd is None else rnd[:])
+        cipher, rnd = self._enc(int(plain), self.deserialize_bigint(pk[:]), None if rnd is None else rnd[:])
         cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
         if cipher == CipherValue():
             raise Exception("Encryption resulted in cipher text 0 which is a reserved value. Please try again.")
@@ -234,19 +234,42 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
         debug_print(f'Decrypting value {cipher} with secret key "{sk}"')
-        plain, rnd = self._dec(cipher[:], sk[:])
+        plain, rnd = self._dec(cipher[:], sk.val)
         return plain, RandomnessValue(rnd)
+
+    @staticmethod
+    def serialize_bigint(key: int, total_bytes: int) -> List[int]:
+        bin = key.to_bytes(total_bytes, byteorder='big')
+        return ZkayCryptoInterface.pack_byte_array(bin)
+
+    @staticmethod
+    def pack_byte_array(bin: bytes) -> List[int]:
+        total_bytes = len(bin)
+        first_chunk_size = total_bytes % cfg.pack_chunk_size
+        arr = [int.from_bytes(bin[:first_chunk_size], byteorder='big')]
+        for i in range(first_chunk_size, total_bytes - first_chunk_size, cfg.pack_chunk_size):
+            arr.append(int.from_bytes(bin[i:i + cfg.pack_chunk_size], byteorder='big'))
+        return list(reversed(arr))
+
+    @staticmethod
+    def deserialize_bigint(arr: Collection[int]) -> int:
+        bin = ZkayCryptoInterface.unpack_to_byte_array(arr)
+        return int.from_bytes(bin, byteorder='big')
+
+    @staticmethod
+    def unpack_to_byte_array(arr: Collection[int]) -> bytes:
+        return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))
 
     @abstractmethod
     def _generate_or_load_key_pair(self) -> KeyPair:
         pass
 
     @abstractmethod
-    def _enc(self, plain: int, pk: int, rnd: Optional[Tuple[int, ...]]) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
+    def _enc(self, plain: int, pk: int, rnd: Optional[Tuple[int, ...]]) -> Tuple[List[int], List[int]]:
         pass
 
     @abstractmethod
-    def _dec(self, cipher: Tuple[int, ...], sk: Tuple[int, ...]) -> Tuple[int, Tuple[int, ...]]:
+    def _dec(self, cipher: Tuple[int, ...], sk: Any) -> Tuple[int, List[int]]:
         pass
 
 
