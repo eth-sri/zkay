@@ -14,6 +14,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness, SliceExpr, \
     Array, Comment
 from zkay.zkay_ast.ast import ElementaryTypeName
+from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -139,13 +140,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 assert val < {SCALAR_FIELD_COMP_MAX_NAME}, f'Value {{val}} is too large for comparison'
                 return val
 
-            def get_state(self, name: str, *indices, count=1, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
+            def get_state(self, name: str, *indices, count=0, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
                 idxvals = ''.join([f'[{{idx}}]' for idx in indices])
                 loc = f'{{name}}{{idxvals}}'
                 if loc in {STATE_VALUES_NAME}:
                     return {STATE_VALUES_NAME}[loc]
                 else:
-                    if count == 1:
+                    if count == 0:
                         val = val_constructor({CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, *indices))
                     else:
                         val = val_constructor([{CONN_OBJ_NAME}.req_state_var({CONTRACT_HANDLE}, name, *indices, i) for i in range(count)])
@@ -170,7 +171,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             constr = ''
             if val_type.is_address():
                 constr = ', val_constructor=AddressValue'
-            val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, count={val_type.type_name.size_in_uints}, is_encrypted={is_encrypted}{constr})"
+            size = 0 if not isinstance(val_type.type_name, Array) else val_type.type_name.size_in_uints
+            val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, count={size}, is_encrypted={is_encrypted}{constr})"
             return val_str
         else:
             return self.get_loc_value(idf.idf, indices)
@@ -257,8 +259,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if has_out:
             out_stmts = [Comment()] + Comment.comment_wrap_block('Serialize output values', [
                 Identifier(cfg.zk_out_name).decl_var(Array(AnnotatedTypeName.uint_all(), circuit.public_out_array[1]))]
-                + [out_idf.serialized_loc.assign(SliceExpr(out_idf.get_loc_expr(), 0, out_idf.t.size_in_uints)) if out_idf.t.size_in_uints > 1 else \
-                   IdentifierExpr(f'{cfg.zk_out_name}[{out_idf.serialized_loc.start}]').assign(out_idf.get_loc_expr()) for out_idf in circuit.output_idfs]
+                + [out_idf.serialized_loc.assign(SliceExpr(out_idf.get_loc_expr(), 0, out_idf.t.size_in_uints)) if isinstance(out_idf.t, Array) else \
+                   IdentifierExpr(f'{cfg.zk_out_name}[{out_idf.serialized_loc.start}]').assign(out_idf.get_loc_expr().implicitly_converted(TypeName.uint_type())) for out_idf in circuit.output_idfs]
                 + [Identifier(f'actual_params.append({cfg.zk_out_name})')])
             out_var_decl = self.visit_list(out_stmts)[:-1]
         else:
@@ -360,7 +362,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return None
 
     def visitEncryptionExpression(self, ast: EncryptionExpression):
-        from zkay.zkay_ast.visitor.deep_copy import deep_copy
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(deep_copy(ast.privacy))
         plain = self.visit(ast.expr)
         with CircuitComputation(self):
