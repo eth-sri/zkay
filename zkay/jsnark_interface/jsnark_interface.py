@@ -19,7 +19,8 @@ jWire = autoclass('circuit.structure.Wire')
 jCircuitGenerator = autoclass('circuit.structure.CircuitGenerator')
 jZkayCircuitGenerator = autoclass('zkay.ZkayCircuitGenerator')
 jCircuitInput = autoclass('zkay.ZkayCircuitGenerator$CircuitInput')
-jEncGadget = autoclass('zkay.DummyEncryptionGadget')
+# jEncGadget = autoclass('zkay.DummyEncryptionGadget')
+jEncGadget = autoclass('zkay.RSAEncryptionGadget')
 jCondAssignmentGadget = autoclass('zkay.ConditionalAssignmentGadget')
 
 

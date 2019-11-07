@@ -1,6 +1,8 @@
 import os
 from typing import Dict, List, Optional
 
+import zkay.config as cfg
+
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
@@ -41,7 +43,7 @@ class JsnarkVisitor(AstVisitor):
             plain = self.local_vars[stmt.plain.name]
             pk = self.local_vars[stmt.pk.name]
             rnd = self.local_vars[stmt.rnd.name]
-            computed_cipher = jEncGadget(plain, pk, rnd, f'enc({stmt.plain.name}, {stmt.pk.name}, {stmt.rnd.name})').getOutputWires()
+            computed_cipher = jEncGadget(plain, pk, rnd, cfg.rsa_key_bits, f'enc({stmt.plain.name}, {stmt.pk.name}, {stmt.rnd.name})').getOutputWires()
             expected_cipher = self.local_vars[stmt.cipher.name]
 
             assert len(expected_cipher) == len(computed_cipher), "length mismatch"

@@ -23,5 +23,5 @@ class DummyCrypto(ZkayCryptoInterface):
             # uninitialized value
             plain = 0
         else:
-            plain = (int.from_bytes(self.unpack_to_byte_array(cipher), byteorder='big') - sk) % bn128_scalar_field
+            plain = (int.from_bytes(self.unpack_to_byte_array(cipher, cfg.rsa_key_bytes), byteorder='big') - sk) % bn128_scalar_field
         return plain, list(RandomnessValue()[:])

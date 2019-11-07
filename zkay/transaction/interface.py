@@ -253,12 +253,12 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
 
     @staticmethod
     def deserialize_bigint(arr: Collection[int]) -> int:
-        bin = ZkayCryptoInterface.unpack_to_byte_array(arr)
+        bin = ZkayCryptoInterface.unpack_to_byte_array(arr, 0)
         return int.from_bytes(bin, byteorder='big')
 
     @staticmethod
-    def unpack_to_byte_array(arr: Collection[int]) -> bytes:
-        return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))
+    def unpack_to_byte_array(arr: Collection[int], desired_length: int) -> bytes:
+        return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
 
     @abstractmethod
     def _generate_or_load_key_pair(self) -> KeyPair:

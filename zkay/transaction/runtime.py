@@ -1,10 +1,9 @@
 from zkay.config import default_snark_backend
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
 from zkay.transaction.blockchain import Web3TesterBlockchain
-from zkay.transaction.crypto import DummyCrypto
+from zkay.transaction.crypto import DummyCrypto, RSACrypto
 from zkay.transaction.keystore import SimpleKeystore
-from zkay.transaction.prover import ZokratesProver
-from zkay.transaction.prover.jsnark import JsnarkProver
+from zkay.transaction.prover import ZokratesProver, JsnarkProver
 
 
 class Runtime:
@@ -22,7 +21,7 @@ class Runtime:
     @staticmethod
     def crypto() -> ZkayCryptoInterface:
         if Runtime.__crypto is None:
-            Runtime.__crypto = DummyCrypto(Runtime.blockchain())
+            Runtime.__crypto = RSACrypto(Runtime.blockchain())
         return Runtime.__crypto
 
     @staticmethod

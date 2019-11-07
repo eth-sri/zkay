@@ -47,7 +47,7 @@ class CircuitGenerator(metaclass=ABCMeta):
             with time_measure('circuit_generation', True):
                 counter = Value('i', 0)
                 p_count = min(os.cpu_count(), c_count)
-                with Pool(processes=p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
+                with Pool(processes=1, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
                     pool.map(self._generate_circuit, self.circuits_to_prove)
 
         with print_step('Write verification contracts'):

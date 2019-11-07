@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Tuple, Optional, List
 
 from Crypto.Cipher import PKCS1_OAEP
@@ -11,36 +12,35 @@ from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair,
 from zkay.transaction.interface import ZkayCryptoInterface
 
 
-class RandomnessProxy:
-    def __init__(self) -> None:
-        super().__init__()
-        self.__last_rnd_bytes: Optional[bytes] = None
+# persistent_locals2 has been co-authored with Andrea Maffezzoli
+# http://code.activestate.com/recipes/577283-decorator-to-expose-local-variables-of-a-function-/
+# (hack to get local variables of called library function, used to extract randomness)
+class PersistentLocals(object):
+    def __init__(self, func):
+        self._locals = {}
+        self.func = func
 
-    def get_random_bytes(self, n: int):
-        assert self.__last_rnd_bytes is None
-        self.__last_rnd_bytes = get_random_bytes(n)
-        return self.__last_rnd_bytes
+    def __call__(self, *args, **kwargs):
+        def tracer(frame, event, arg):
+            if event=='return':
+                self._locals = frame.f_locals.copy()
 
-    def retrieve_randomness(self) -> bytes:
-        assert self.__last_rnd_bytes is not None
-        tmp = self.__last_rnd_bytes
-        self.__last_rnd_bytes = None
-        return tmp
+        # tracer is activated on next call, return or exception
+        sys.setprofile(tracer)
+        try:
+            # trace the function call
+            res = self.func(*args, **kwargs)
+        finally:
+            # disable tracer and replace with old one
+            sys.setprofile(None)
+        return res
 
+    def clear_locals(self):
+        self._locals = {}
 
-class StaticRandomnessProxy:
-    def __init__(self, randombytes: bytes) -> None:
-        super().__init__()
-        self.__randombytes = randombytes
-
-    def get_random_bytes(self, n: int):
-        assert self.__randombytes is not None and len(self.__randombytes) == n
-        tmp = self.__randombytes
-        self.__randombytes = None
-        return tmp
-
-    def retrieve_randomness(self) -> bytes:
-        return self.__randombytes
+    @property
+    def locals(self):
+        return self._locals
 
 
 class RSACrypto(ZkayCryptoInterface):
@@ -49,7 +49,6 @@ class RSACrypto(ZkayCryptoInterface):
 
     def __init__(self, conn: ZkayBlockchainInterface, key_dir: str = os.path.dirname(os.path.realpath(__file__))):
         super().__init__(conn, key_dir)
-        self.rnd_proxy = RandomnessProxy()
 
     def _generate_or_load_key_pair(self) -> KeyPair:
         if not os.path.exists(self.key_file):
@@ -59,7 +58,7 @@ class RSACrypto(ZkayCryptoInterface):
                 f.write(key.export_key())
             print('done')
         else:
-            print(f'Key not found, loading from file {self.key_file}')
+            print(f'Key pair found, loading from file {self.key_file}')
             with open(self.key_file, 'rb') as f:
                 key = RSA.import_key(f.read())
 
@@ -70,14 +69,14 @@ class RSACrypto(ZkayCryptoInterface):
         pub_key = RSA.construct((pk, self.default_exponent))
 
         if rnd is None:
-            rnd_proxy = self.rnd_proxy
+            randfunc = get_random_bytes
         else:
-            rnd_bytes = self.unpack_to_byte_array(rnd)
-            rnd_proxy = StaticRandomnessProxy(rnd_bytes)
-        crypto = PKCS1_OAEP.new(pub_key, hashAlgo=SHA256, randfunc=rnd_proxy.get_random_bytes)
+            randbytes = self.unpack_to_byte_array(rnd, cfg.rsa_rnd_bytes)
+            randfunc = lambda n: randbytes
+        encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256, randfunc=randfunc).encrypt)
 
-        cipher = self.pack_byte_array(crypto.encrypt(plain.to_bytes(31, byteorder='big')))
-        rnd = self.pack_byte_array(rnd_proxy.retrieve_randomness())
+        cipher = self.pack_byte_array(encrypt(plain.to_bytes(31, byteorder='big')))
+        rnd = self.pack_byte_array(encrypt.locals['ros'])
 
         return cipher, rnd
 
@@ -86,8 +85,8 @@ class RSACrypto(ZkayCryptoInterface):
             # uninitialized value
             return 0, RandomnessValue()[:]
         else:
-            crypto = PKCS1_OAEP.new(sk, hashAlgo=SHA256, randfunc=self.rnd_proxy.get_random_bytes)
-            plain = int.from_bytes(crypto.decrypt(self.unpack_to_byte_array(cipher)), byteorder='big')
-            rnd = self.pack_byte_array(self.rnd_proxy.retrieve_randomness())
+            decrypt = PersistentLocals(PKCS1_OAEP.new(sk, hashAlgo=SHA256).decrypt)
+            plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.rsa_key_bytes)), byteorder='big')
+            rnd = self.pack_byte_array(decrypt.locals['seed'])
 
             return plain, rnd
