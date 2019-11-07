@@ -75,8 +75,10 @@ class RSACrypto(ZkayCryptoInterface):
             randfunc = lambda n: randbytes
         encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256, randfunc=randfunc).encrypt)
 
-        cipher = self.pack_byte_array(encrypt(plain.to_bytes(31, byteorder='big')))
-        rnd = self.pack_byte_array(encrypt.locals['ros'])
+        cipher_bytes = encrypt(plain.to_bytes(cfg.pack_chunk_size, byteorder='big'))
+        cipher = self.pack_byte_array(cipher_bytes)
+        rnd_bytes = encrypt.locals['ros']
+        rnd = self.pack_byte_array(rnd_bytes)
 
         return cipher, rnd
 
