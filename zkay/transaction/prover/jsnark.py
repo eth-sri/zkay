@@ -1,8 +1,8 @@
 import os
-from tempfile import mkstemp
 from typing import List
 
-from zkay.jsnark_interface.libsnark_interface import libsnark_generate_proof
+import zkay.jsnark_interface.jsnark_interface as jsnark
+import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.interface import ZkayProverInterface
 
@@ -13,22 +13,12 @@ class JsnarkProver(ZkayProverInterface):
         for arg in args:
             assert arg < bn128_scalar_field, 'argument overflow'
 
-        with open(os.path.join(verifier_dir, 'circuit.in'), 'r') as f:
-            input_wire_ids = f.readlines()
-        input_wire_ids = [s.split(' ')[0] for s in input_wire_ids][1:]
-        assert len(input_wire_ids) == len(args)
-
-        _, infile = mkstemp('.in')
-        with open(infile, 'w') as f:
-            f.write('0 1\n')
-            for idx in range(len(args)):
-                f.write(f'{input_wire_ids[idx]} {hex(args[idx])[2:]}\n')
+        jsnark.prepare_proof(verifier_dir, args)
 
         cwd = os.getcwd()
         os.chdir(verifier_dir)
-        libsnark_generate_proof(verifier_dir, infile, self.proving_scheme)
+        libsnark.generate_proof(verifier_dir, os.path.join(verifier_dir, 'circuit.in'), self.proving_scheme)
         os.chdir(cwd)
-        os.remove(infile)
 
         with open(os.path.join(verifier_dir, 'proof.out')) as f:
             proof_lines = f.read().splitlines()

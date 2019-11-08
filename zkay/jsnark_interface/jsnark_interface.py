@@ -1,65 +1,65 @@
 import os
-
-import zkay.config as cfg
-from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+from typing import List
 
 import jnius_config
 
-from zkay.utils.output_suppressor import output_suppressed
-from zkay.zkay_ast.ast import Key
+import zkay.config as cfg
+from zkay.zkay_ast.ast import indent
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 jnius_config.add_classpath(os.path.join(dir_path, 'JsnarkCircuitBuilder.jar'))
 
-from jnius import PythonJavaClass, java_method, autoclass
+from jnius import autoclass
 
 jBigint = autoclass('java.math.BigInteger')
-jMap = autoclass('java.util.Map')
-jWire = autoclass('circuit.structure.Wire')
-jCircuitGenerator = autoclass('circuit.structure.CircuitGenerator')
-jZkayCircuitGenerator = autoclass('zkay.ZkayCircuitGenerator')
-jCircuitInput = autoclass('zkay.ZkayCircuitGenerator$CircuitInput')
-# jEncGadget = autoclass('zkay.DummyEncryptionGadget')
-jEncGadget = autoclass('zkay.RSAEncryptionGadget')
-jCondAssignmentGadget = autoclass('zkay.ConditionalAssignmentGadget')
+jCompiler = autoclass('zkay.ZkayCompiler')
 
 
-class PythonJsnarkConstraintGenerator(PythonJavaClass):
-    __javainterfaces__ = ['zkay/ZkayJsnarkInterface']
-
-    def __init__(self):
-        super(PythonJsnarkConstraintGenerator, self).__init__()
-        self.jsnark_visitor = None
-
-    @java_method('(Lcircuit/structure/CircuitGenerator;Ljava/util/Map;Ljava/util/Map;)V')
-    def add_circuit_constraints(self, generator: jCircuitGenerator, uint_inputs: jMap, public_keys: jMap):
-        inputs = {}
-        keys = uint_inputs.keySet().toArray()
-        for i in keys:
-            inputs[i] = uint_inputs.get(i)
-        keys = public_keys.keySet().toArray()
-        for i in keys:
-            inputs[i] = public_keys.get(i)
-        self.jsnark_visitor.visitCircuit(generator, inputs)
-
-
-def run_jsnark(jsnark_visitor, circuit: CircuitHelper, output_dir: str):
-    cg = PythonJsnarkConstraintGenerator()
-    cg.jsnark_visitor = jsnark_visitor
-
-    priv_list = []
-    for sec_param in circuit.sec_idfs:
-        priv_list.append(jCircuitInput(sec_param.name, sec_param.t.size_in_uints, False))
-
-    pub_list = []
-    for pub_param in circuit.input_idfs + circuit.output_idfs:
-        pub_list.append(jCircuitInput(pub_param.name, pub_param.t.size_in_uints, isinstance(pub_param.t, Key)))
-
-    should_hash = cfg.should_use_hash(circuit.num_public_args)
+def compile_circuit(circuit_dir: str, javacode: str):
     cwd = os.getcwd()
-    os.chdir(output_dir)
-    with output_suppressed('jsnark'):
-        zkay_gen = jZkayCircuitGenerator(circuit.get_circuit_name(), should_hash, cg, priv_list, pub_list, cfg.rsa_key_bits)
-        zkay_gen.generateCircuit()
-        zkay_gen.prepFiles()
+    os.chdir(circuit_dir)
+
+    jfile = os.path.join(circuit_dir, cfg.jsnark_circuit_classname + ".java")
+    with open(jfile, 'w') as f:
+        f.write(javacode)
+    jCompiler.compile(jfile)
+
+    circuit = jCompiler.load(circuit_dir, cfg.jsnark_circuit_classname)
+    circuit.compileCircuit()
     os.chdir(cwd)
+
+
+def prepare_proof(circuit_dir: str, serialized_args: List[int]):
+    cwd = os.getcwd()
+    os.chdir(circuit_dir)
+    circuit = jCompiler.load(circuit_dir, cfg.jsnark_circuit_classname)
+    circuit.prepareProof([jBigint(str(arg), 10) for arg in serialized_args])
+    os.chdir(cwd)
+
+
+_class_template_str = '''\
+import java.math.BigInteger;
+import circuit.structure.Wire;
+import zkay.ZkayCircuitBase;
+import zkay.ConditionalAssignmentGadget;
+
+public class ZkayCircuit extends ZkayCircuitBase {{
+    public ZkayCircuit() {{
+        super("{circuit_name}", {rsa_key_bits}, {priv_size}, {pub_size});
+    }}
+
+    @Override
+    protected void buildCircuit() {{
+        System.out.println("Building circuit hello world...");
+{init_inputs}
+
+{constraints}
+        verifyInputHash();
+    }}
+}}
+'''
+
+
+def get_jsnark_circuit_class_str(name: str, priv_size: int, pub_size: int, input_init: List[str], constraints: List[str]):
+    return _class_template_str.format(circuit_name=name, rsa_key_bits=cfg.rsa_key_bits, priv_size=priv_size, pub_size=pub_size,
+                                      init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))))

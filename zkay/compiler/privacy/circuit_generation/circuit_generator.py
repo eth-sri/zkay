@@ -13,12 +13,13 @@ from zkay.zkay_ast.ast import AST
 
 
 class CircuitGenerator(metaclass=ABCMeta):
-    def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
+    def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str, parallel_keygen: bool):
         self.python_visitor = PythonOffchainVisitor(circuits)
         self.sol_ast = transformed_ast
         self.circuits_to_prove = [c for c in circuits if c.requires_verification()]
         self.proving_scheme = proving_scheme
         self.output_dir = output_dir
+        self.p_count = min(os.cpu_count(), len(self.circuits_to_prove)) if parallel_keygen else 1
 
     def generate_circuits(self, *, import_keys: bool):
         """
@@ -33,10 +34,12 @@ class CircuitGenerator(metaclass=ABCMeta):
             f.write(ocode)
 
         # Generate proof circuit code
-        for circuit in self.circuits_to_prove:
-            self._generate_zkcircuit(circuit)
-
         c_count = len(self.circuits_to_prove)
+        print(f'Compiling {c_count} circuits...')
+        for c in self.circuits_to_prove:
+            self._generate_zkcircuit(c)
+        #with Pool(processes=1) as pool:
+        #    pool.map(self._generate_zkcircuit, self.circuits_to_prove)
 
         if import_keys:
             # Import TODO
@@ -46,9 +49,10 @@ class CircuitGenerator(metaclass=ABCMeta):
             print(f'Generating keys for {c_count} circuits...')
             with time_measure('circuit_generation', True):
                 counter = Value('i', 0)
-                p_count = min(os.cpu_count(), c_count)
-                with Pool(processes=1, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
-                    pool.map(self._generate_circuit, self.circuits_to_prove)
+                #with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
+                #    pool.map(self._generate_keys_par, self.circuits_to_prove)
+                for circ in self.circuits_to_prove:
+                    self._generate_keys(circ)
 
         with print_step('Write verification contracts'):
             for circuit in self.circuits_to_prove:
@@ -76,7 +80,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         finish_counter = counter
         c_count = total_count
 
-    def _generate_circuit(self, circuit: CircuitHelper):
+    def _generate_keys_par(self, circuit: CircuitHelper):
         self._generate_keys(circuit)
         with finish_counter.get_lock():
             finish_counter.value += 1

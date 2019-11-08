@@ -6,6 +6,8 @@ default_proving_scheme = 'gm17'
 default_snark_backend = 'jsnark'
 pki_contract_name = 'PublicKeyInfrastructure'
 
+jsnark_circuit_classname = 'ZkayCircuit'
+
 zk_out_name = 'out__'
 zk_in_name = 'in__'
 zk_struct_suffix = 'zk_data'

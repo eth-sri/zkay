@@ -1,17 +1,16 @@
 import os
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-import zkay.config as cfg
+import zkay.jsnark_interface.jsnark_interface as jsnark
+import zkay.jsnark_interface.libsnark_interface as libsnark
 
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
-from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
-from zkay.jsnark_interface.jsnark_interface import jWire, jCircuitGenerator, jEncGadget, jBigint, jCondAssignmentGadget, run_jsnark
-from zkay.jsnark_interface.libsnark_interface import libsnark_generate_keys
+from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
-    IndexExpr, NumberLiteralExpr, MemberAccessExpr
+    IndexExpr, NumberLiteralExpr, MemberAccessExpr, AST, TypeName
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -19,56 +18,36 @@ class JsnarkVisitor(AstVisitor):
     def __init__(self, circuit: CircuitHelper, log=False):
         super().__init__('node-or-children', log)
         self.circuit = circuit
-        self.generator: Optional[jCircuitGenerator] = None
-        self.local_vars: Dict[str, List[jWire]] = {}
 
-    def visitCircuit(self, generator: jCircuitGenerator, parameters: Dict[str, List[jWire]]):
-        self.generator = generator
-        self.local_vars = parameters
-        for constr in self.circuit.phi:
-            self.visitCircuitStatement(constr)
+    def visitCircuit(self) -> List[str]:
+        return [self.visitCircuitStatement(constr) for constr in self.circuit.phi]
 
-    def visitCircuitStatement(self, stmt: CircuitStatement):
+    def visitCircuitStatement(self, stmt: CircuitStatement) -> str:
         if isinstance(stmt, ExpressionToLocAssignment):
             assert stmt.lhs.t.size_in_uints == 1
-            self.local_vars[stmt.lhs.name] = [self.visit(stmt.expr)]
+            return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
         elif isinstance(stmt, EqConstraint):
-            lhs = self.local_vars[stmt.tgt.name]
-            rhs = self.local_vars[stmt.val.name]
-            assert len(lhs) == len(rhs), "length mismatch"
-            for i in range(len(lhs)):
-                self.generator.addEqualityAssertion(lhs[i], rhs[i])
+            assert stmt.tgt.t.size_in_uints == stmt.val.t.size_in_uints
+            return f'checkEq("{stmt.tgt.name}", "{stmt.val.name}");'
         else:
             assert isinstance(stmt, EncConstraint)
-            plain = self.local_vars[stmt.plain.name]
-            pk = self.local_vars[stmt.pk.name]
-            rnd = self.local_vars[stmt.rnd.name]
-            computed_cipher = jEncGadget(plain, pk, rnd, cfg.rsa_key_bits, f'enc({stmt.plain.name}, {stmt.pk.name}, {stmt.rnd.name})').getOutputWires()
-            expected_cipher = self.local_vars[stmt.cipher.name]
-
-            assert len(expected_cipher) == len(computed_cipher), "length mismatch"
-            computed_cipher_with_default = jCondAssignmentGadget(expected_cipher, computed_cipher, [self.generator.getZeroWire()]*len(computed_cipher), 'check_enc').getOutputWires()
-            assert len(computed_cipher) == len(computed_cipher_with_default), "length mismatch"
-            for i in range(len(computed_cipher)):
-                self.generator.addEqualityAssertion(expected_cipher[i], computed_cipher_with_default[i])
+            assert stmt.cipher.t == TypeName.cipher_type()
+            assert stmt.pk.t == TypeName.key_type()
+            assert stmt.rnd.t == TypeName.rnd_type()
+            return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
-        if ast.value:
-            return self.generator.getOneWire()
-        else:
-            return self.generator.getZeroWire()
+        return 'getOneWire()' if ast.value else 'getZeroWire()'
 
     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
-        return self.generator.createConstantWire(jBigint(str(ast.value)))
+        return f'createConstantWire(new BigInteger("{ast.value}", 10));'
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        w = self.local_vars[ast.idf.name]
-        assert len(w) == 1
-        return w[0]
+        return f'get("{ast.idf.name}")'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert isinstance(ast.member, HybridArgumentIdf) and ast.member.t.size_in_uints == 1
-        return self.local_vars[ast.member.name][0]
+        return f'get("{ast.member.name}")'
 
     def visitIndexExpr(self, ast: IndexExpr):
         raise NotImplementedError()
@@ -79,60 +58,81 @@ class JsnarkVisitor(AstVisitor):
             args = list(map(self.visit, ast.args))
 
             if op == 'ite':
-                return jCondAssignmentGadget([args[0]], [args[1]], [args[2]], 'ite').getOutputWires()[0]
+                fstr = 'new ConditionalAssignmentGadget({}, {}, {}).getOutputWires()[0]'
             elif op == 'parenthesis':
-                return args[0]
+                fstr = '({})'
 
             elif op == 'sign+':
-                return args[0]
+                fstr = '{}'
             elif op == 'sign-':
-                return args[0].mul(-1)
+                fstr = '{}.mul(-1)'
 
             elif op == '*':
-                return args[0].mul(args[1])
+                fstr = '{}.mul({})'
             elif op == '+':
-                return args[0].add(args[1])
+                fstr = '{}.add({})'
             elif op == '-':
-                return args[0].sub(args[1])
+                fstr = '{}.sub({})'
 
             elif op == '==':
-                return args[0].isEqualTo(args[1])
+                fstr = '{}.isEqualTo({})'
             elif op == '!=':
-                return args[0].sub(args[1]).checkNonZero()
+                fstr = '{}.sub({}).checkNonZero()'
 
             elif op == '<':
-                return args[0].isLessThan(args[1], 253)
+                fstr = '{}.isLessThan({}, 253))'
             elif op == '<=':
-                return args[0].isLessThanOrEqual(args[1], 253)
+                fstr = '{}.isLessThanOrEqual({}, 253)'
             elif op == '>':
-                return args[0].isGreaterThan(args[1], 253)
+                fstr = '{}.isGreaterThan({}, 253)'
             elif op == '>=':
-                return args[0].isGreaterThanOrEqual(args[1], 253)
+                fstr = '{}.isGreaterThanOrEqual({}, 253)'
 
             elif op == '&&':
-                and_fct = getattr(args[0], 'and')
-                return and_fct(args[1])
+                fstr = '{}.and({})'
             elif op == '||':
-                or_fct = getattr(args[0], 'or')
-                return or_fct(args[1])
+                fstr = '{}.or({})'
             elif op == '!':
-                return args[0].invAsBits()
+                fstr = '{}.invAsBits()'
+            else:
+                raise ValueError(f'Unsupported builtin function {ast.func.op}')
+
+            return fstr.format(*args)
 
         raise ValueError(f'Unsupported function {ast.func.code()} inside circuit')
 
 
 class JsnarkGenerator(CircuitGenerator):
+    def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
+        super().__init__(transformed_ast, circuits, proving_scheme, output_dir, False)
+
     def _generate_zkcircuit(self, circuit: CircuitHelper):
         output_dir = self._get_circuit_output_dir(circuit)
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        visitor = JsnarkVisitor(circuit)
-        run_jsnark(visitor, circuit, output_dir)
+        input_init_stmts = []
+        priv_size = 0
+        for sec_input in circuit.sec_idfs:
+            size = sec_input.t.size_in_uints
+            priv_size += size
+            input_init_stmts.append(f'addS("{sec_input.name}", {size});')
+
+        pub_size = 0
+        for pub_input in circuit.input_idfs + circuit.output_idfs:
+            size = pub_input.t.size_in_uints
+            pub_size += size
+            addf = 'addK' if pub_input.t == TypeName.key_type() else 'addP'
+            input_init_stmts.append(f'{addf}("{pub_input.name}", {size});')
+
+        constraints = JsnarkVisitor(circuit).visitCircuit()
+
+        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), priv_size, pub_size, input_init_stmts, constraints)
+        jsnark.compile_circuit(output_dir, code)
 
     def _generate_keys(self, circuit: CircuitHelper):
         output_dir = self._get_circuit_output_dir(circuit)
-        libsnark_generate_keys(output_dir, self.proving_scheme.name)
+        libsnark.generate_keys(output_dir, self.proving_scheme.name)
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper):
         output_dir = self._get_circuit_output_dir(circuit)

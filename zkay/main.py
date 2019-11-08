@@ -72,7 +72,7 @@ if __name__ == '__main__':
         exit(1)
 
     # create output directory
-    output_dir = Path(a.output)
+    output_dir = Path(a.output).absolute()
     if not output_dir.exists():
         os.mkdir(output_dir)
     elif not output_dir.is_dir():

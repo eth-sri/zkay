@@ -8,12 +8,12 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
 from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
-from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point
+from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.utils.multiline_formatter import MultiLineFormatter
 from zkay.utils.run_command import run_command
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import CodeVisitor, FunctionCallExpr, BuiltinFunction, TypeName, AnnotatedTypeName, \
-    AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr, IndexExpr
+    AssignmentStatement, IdentifierExpr, Identifier, BooleanLiteralExpr, IndexExpr, AST
 
 zok_bin = 'zokrates'
 if 'ZOKRATES_ROOT' in os.environ:
@@ -82,6 +82,9 @@ class ZokratesGenerator(CircuitGenerator):
     import "utils/pack/pack256" as pack
     '''
 
+    def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
+        super().__init__(transformed_ast, circuits, proving_scheme, output_dir, True)
+
     def _generate_zkcircuit(self, circuit: CircuitHelper):
         sec_args = circuit.secret_param_names
         pub_args = circuit.public_arg_arrays
@@ -118,8 +121,16 @@ class ZokratesGenerator(CircuitGenerator):
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        with open(os.path.join(output_dir, f'{circuit.get_circuit_name()}.zok'), 'w') as f:
+        code_file_name = f'{circuit.get_circuit_name()}.zok'
+        with open(os.path.join(output_dir, code_file_name), 'w') as f:
             f.write(str(zok_code))
+
+        with time_measure('compileZokrates'):
+            try:
+                run_command([zok_bin, 'compile', '-i', code_file_name], cwd=output_dir)
+            except SubprocessError as e:
+                print(e)
+                raise ValueError(f'Error compiling {code_file_name}') from e
 
     @staticmethod
     def __get_hash_code(pub_args: List[Tuple[str, int]], total_count: int) -> str:
@@ -157,13 +168,6 @@ class ZokratesGenerator(CircuitGenerator):
 
     def _generate_keys(self, circuit: CircuitHelper):
         output_dir = self._get_circuit_output_dir(circuit)
-        code_file_name = f'{circuit.get_circuit_name()}.zok'
-        with time_measure('compileZokrates'):
-            try:
-                run_command([zok_bin, 'compile', '-i', code_file_name], cwd=output_dir)
-            except SubprocessError as e:
-                print(e)
-                raise ValueError(f'Error compiling {code_file_name}') from e
         with time_measure('generatingKeyPair'):
             run_command([zok_bin, 'setup', '--proving-scheme', self.proving_scheme.name], cwd=output_dir)
 
