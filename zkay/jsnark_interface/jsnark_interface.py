@@ -43,14 +43,13 @@ import circuit.structure.Wire;
 import zkay.ZkayCircuitBase;
 import zkay.ConditionalAssignmentGadget;
 
-public class ZkayCircuit extends ZkayCircuitBase {{
-    public ZkayCircuit() {{
+public class {circuit_class_name} extends ZkayCircuitBase {{
+    public {circuit_class_name}() {{
         super("{circuit_name}", {rsa_key_bits}, {priv_size}, {pub_size});
     }}
 
     @Override
     protected void buildCircuit() {{
-        System.out.println("Building circuit hello world...");
 {init_inputs}
 
 {constraints}
@@ -61,5 +60,5 @@ public class ZkayCircuit extends ZkayCircuitBase {{
 
 
 def get_jsnark_circuit_class_str(name: str, priv_size: int, pub_size: int, input_init: List[str], constraints: List[str]):
-    return _class_template_str.format(circuit_name=name, rsa_key_bits=cfg.rsa_key_bits, priv_size=priv_size, pub_size=pub_size,
+    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, circuit_name=name, rsa_key_bits=cfg.rsa_key_bits, priv_size=priv_size, pub_size=pub_size,
                                       init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))))

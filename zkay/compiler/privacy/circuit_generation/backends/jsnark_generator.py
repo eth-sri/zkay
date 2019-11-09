@@ -3,7 +3,6 @@ from typing import List, Optional
 
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
-
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
@@ -40,7 +39,12 @@ class JsnarkVisitor(AstVisitor):
         return 'getOneWire()' if ast.value else 'getZeroWire()'
 
     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
-        return f'createConstantWire(new BigInteger("{ast.value}", 10));'
+        if ast.value == 0:
+            return f'getZeroWire()'
+        elif ast.value == 1:
+            return f'getOneWire()'
+        else:
+            return f'createConstantWire(new BigInteger("{ast.value}", 10))'
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return f'get("{ast.idf.name}")'
