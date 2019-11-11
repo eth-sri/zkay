@@ -525,10 +525,10 @@ class HybridArgumentIdf(Identifier):
         self.serialized_loc.end = start_idx + self.t.size_in_uints
 
         src = IdentifierExpr(source_idf).as_type(Array(AnnotatedTypeName.uint_all()))
-        if self.t.size_in_uints == 1:
-            return self.get_loc_expr().assign(src.index(start_idx).implicitly_converted(self.t))
-        else:
+        if isinstance(self.t, Array):
             return SliceExpr(self.get_loc_expr(), 0, self.t.size_in_uints).assign(self.serialized_loc)
+        else:
+            return self.get_loc_expr().assign(src.index(start_idx).implicitly_converted(self.t))
 
     def serialize(self, target_idf: str, start_idx: int) -> 'AssignmentStatement':
         assert self.serialized_loc.start == -1
@@ -537,10 +537,10 @@ class HybridArgumentIdf(Identifier):
         self.serialized_loc.end = start_idx + self.t.size_in_uints
 
         tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName.uint_all()))
-        if self.t.size_in_uints == 1:
-            return tgt.clone().index(start_idx).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
-        else:
+        if isinstance(self.t, Array):
             return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), 0, self.t.size_in_uints))
+        else:
+            return tgt.clone().index(start_idx).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
 
 
 class EncryptionExpression(ReclassifyExpr):

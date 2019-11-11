@@ -67,7 +67,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         import code
         import inspect
         from typing import Dict, List, Optional, Union, Any, Callable
-        from zkay.transaction import Runtime, CipherValue, AddressValue, RandomnessValue, PublicKeyValue
+        from zkay.transaction.runtime import Runtime
+        from zkay.transaction.interface import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
 
         {UINT256_MAX_NAME} = {1 << 256}
         {SCALAR_FIELD_NAME} = {bn128_scalar_field}

@@ -1,9 +1,29 @@
-from zkay.config import default_snark_backend
+import zkay.config as cfg
+
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
 from zkay.transaction.blockchain import Web3TesterBlockchain
-from zkay.transaction.crypto import DummyCrypto, RSACrypto
+from zkay.transaction.crypto.dummy import DummyCrypto
+from zkay.transaction.crypto.rsa import RSACrypto
 from zkay.transaction.keystore import SimpleKeystore
 from zkay.transaction.prover import ZokratesProver, JsnarkProver
+
+
+def get_crypto_class(name: str):
+    if name == 'rsa':
+        return RSACrypto
+    elif name == 'dummy':
+        return DummyCrypto
+    else:
+        raise ValueError(f'Invalid crypto backend {name}')
+
+
+def get_prover_class(name: str):
+    if name == 'zokrates':
+        return ZokratesProver
+    elif name == 'jsnark':
+        return JsnarkProver
+    else:
+        raise ValueError(f'Invalid prover backend {name}')
 
 
 class Runtime:
@@ -21,7 +41,7 @@ class Runtime:
     @staticmethod
     def crypto() -> ZkayCryptoInterface:
         if Runtime.__crypto is None:
-            Runtime.__crypto = RSACrypto(Runtime.blockchain())
+            Runtime.__crypto = get_crypto_class(cfg.crypto_backend)(Runtime.blockchain())
         return Runtime.__crypto
 
     @staticmethod
@@ -33,10 +53,5 @@ class Runtime:
     @staticmethod
     def prover() -> ZkayProverInterface:
         if Runtime.__prover is None:
-            if default_snark_backend == 'zokrates':
-                Runtime.__prover = ZokratesProver()
-            elif default_snark_backend == 'jsnark':
-                Runtime.__prover = JsnarkProver()
-            else:
-                raise ValueError(f'Invalid prover backend {default_snark_backend}')
+            Runtime.__prover = get_prover_class(cfg.snark_backend)()
         return Runtime.__prover

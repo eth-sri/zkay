@@ -16,7 +16,7 @@ from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformer.zkay_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation
-from zkay.config import default_snark_backend
+from zkay.config import snark_backend
 from zkay.utils.progress_printer import print_step
 from zkay.zkay_ast.ast import AST
 
@@ -43,12 +43,12 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
             f.write(ast.code())
 
     ps = ProvingSchemeGm17()
-    if default_snark_backend == 'zokrates':
+    if snark_backend == 'zokrates':
         cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
-    elif default_snark_backend == 'jsnark':
+    elif snark_backend == 'jsnark':
         cg = JsnarkGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
     else:
-        raise ValueError(f"Selected invalid backend {default_snark_backend}")
+        raise ValueError(f"Selected invalid backend {snark_backend}")
 
     # Generate manifest
     manifest = {

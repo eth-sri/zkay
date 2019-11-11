@@ -52,8 +52,8 @@ class RSACrypto(ZkayCryptoInterface):
 
     def _generate_or_load_key_pair(self) -> KeyPair:
         if not os.path.exists(self.key_file):
-            print(f'Key pair not found, generating new {cfg.rsa_key_bits} bit rsa key pair...')
-            key = RSA.generate(cfg.rsa_key_bits, e=self.default_exponent)
+            print(f'Key pair not found, generating new {cfg.key_bits} bit rsa key pair...')
+            key = RSA.generate(cfg.key_bits, e=self.default_exponent)
             with open(self.key_file, 'wb') as f:
                 f.write(key.export_key())
             print('done')
@@ -63,7 +63,7 @@ class RSACrypto(ZkayCryptoInterface):
                 key = RSA.import_key(f.read())
 
         modulus = key.publickey().n
-        return KeyPair(PublicKeyValue(self.serialize_bigint(modulus, cfg.rsa_key_bytes)), PrivateKeyValue(key))
+        return KeyPair(PublicKeyValue(self.serialize_bigint(modulus, cfg.key_bytes)), PrivateKeyValue(key))
 
     def _enc(self, plain: int, pk: int, rnd: Optional[Tuple[int, ...]]) -> Tuple[List[int], List[int]]:
         pub_key = RSA.construct((pk, self.default_exponent))
@@ -71,7 +71,7 @@ class RSACrypto(ZkayCryptoInterface):
         if rnd is None:
             randfunc = get_random_bytes
         else:
-            randbytes = self.unpack_to_byte_array(rnd, cfg.rsa_rnd_bytes)
+            randbytes = self.unpack_to_byte_array(rnd, cfg.rnd_bytes)
             randfunc = lambda n: randbytes
         encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256, randfunc=randfunc).encrypt)
 
@@ -88,7 +88,7 @@ class RSACrypto(ZkayCryptoInterface):
             return 0, RandomnessValue()[:]
         else:
             decrypt = PersistentLocals(PKCS1_OAEP.new(sk, hashAlgo=SHA256).decrypt)
-            plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.rsa_key_bytes)), byteorder='big')
+            plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.key_bytes)), byteorder='big')
             rnd = self.pack_byte_array(decrypt.locals['seed'])
 
             return plain, rnd

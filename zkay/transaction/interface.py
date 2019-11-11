@@ -301,7 +301,7 @@ class ZkayKeystoreInterface:
 
 
 class ZkayProverInterface(metaclass=ABCMeta):
-    def __init__(self, proving_scheme: str = cfg.default_proving_scheme):
+    def __init__(self, proving_scheme: str = cfg.proving_scheme):
         self.proving_scheme = proving_scheme
 
     def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List[int], in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
