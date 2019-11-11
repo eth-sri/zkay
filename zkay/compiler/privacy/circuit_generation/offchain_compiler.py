@@ -67,6 +67,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         import code
         import inspect
         from typing import Dict, List, Optional, Union, Any, Callable
+
+        from zkay import my_logging
         from zkay.transaction.runtime import Runtime
         from zkay.transaction.interface import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
 
@@ -93,6 +95,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         ''') if len(ast.contracts) == 1 else '') + dedent('''
         if __name__ == '__main__':
+            log_file = my_logging.get_log_file(filename='transactions', parent_dir="", include_timestamp=True, label=None)
+            my_logging.prepare_logger(log_file)
             code.interact(local=locals())
         ''')
 
