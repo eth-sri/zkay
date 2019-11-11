@@ -8,8 +8,6 @@ from zkay.zkay_ast.ast import indent
 
 # path jo jsnark interface jar
 circuit_builder_jar = os.path.join(os.path.dirname(os.path.realpath(__file__)),  'JsnarkCircuitBuilder.jar')
-# jsnark jvm options to increase heap size (otherwise gc kills throughput)
-jvm_perf_options = ['-Xms4096m', '-Xmx4096m']
 
 
 def compile_circuit(circuit_dir: str, javacode: str):
@@ -22,7 +20,7 @@ def compile_circuit(circuit_dir: str, javacode: str):
 
     # Run jsnark to generate the circuit
     with output_suppressed('jsnark'):
-        out, err = run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir)
+        out, err = run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir)
         print(out, err)
 
 
@@ -31,7 +29,7 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
 
     # Run jsnark to evaluate the circuit and compute prover inputs
     with output_suppressed('jsnark'):
-        out, err = run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir)
+        out, err = run_command(['java', '-Xms8196m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir)
         print(out, err)
 
 
