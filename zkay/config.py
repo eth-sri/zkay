@@ -2,13 +2,15 @@ import math
 import os
 from zkay.transaction.crypto.meta import cryptoparams
 from zkay.compiler.privacy.proving_schemes.meta import provingschemeparams
+
 config_dir = os.path.dirname(os.path.realpath(__file__))
 
+# proving scheme to use for nizk proof [gm17]
 proving_scheme = 'gm17'
+# prover backend [zokrates, jsnark]
 snark_backend = 'jsnark'
-crypto_backend = 'rsa'
-
-rsa_padding_scheme = 'oaep' # oaep or pkcs1.5
+# encryption algorithm [dummy, rsa_pkcs1_5, rsa_oaep]
+crypto_backend = 'rsa_pkcs1_5'
 
 pki_contract_name = 'PublicKeyInfrastructure'
 jsnark_circuit_classname = 'ZkayCircuit'

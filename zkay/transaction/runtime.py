@@ -1,16 +1,19 @@
 import zkay.config as cfg
+from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
+from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
 from zkay.transaction.blockchain import Web3TesterBlockchain
 from zkay.transaction.crypto.dummy import DummyCrypto
-from zkay.transaction.crypto.rsa import RSACrypto
 from zkay.transaction.keystore import SimpleKeystore
 from zkay.transaction.prover import ZokratesProver, JsnarkProver
 
 
 def get_crypto_class(name: str):
-    if name == 'rsa':
-        return RSACrypto
+    if name == 'rsa_pkcs1_5':
+        return RSAPKCS15Crypto
+    elif name == 'rsa_oaep':
+        return RSAOAEPCrypto
     elif name == 'dummy':
         return DummyCrypto
     else:
