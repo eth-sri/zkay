@@ -15,11 +15,11 @@ proving_scheme_map = {
 def generate_keys(output_dir: str, proving_scheme: str):
     with output_suppressed('libsnark'):
         out, err = run_command([libsnark_runner, 'keygen', output_dir, str(proving_scheme_map[proving_scheme])])
-        print(out + err)
+        print(out, err)
 
 
 def generate_proof(output_dir: str, input_filename: str, proving_scheme: str):
     with output_suppressed('libsnark'):
         out, err = run_command([libsnark_runner, 'proofgen', output_dir, input_filename,
                                 str(proving_scheme_map[proving_scheme]), str(int(libsnark_check_verify_locally_during_proof_generation))])
-        print(out + err)
+        print(out, err)

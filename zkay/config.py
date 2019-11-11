@@ -6,7 +6,7 @@ config_dir = os.path.dirname(os.path.realpath(__file__))
 
 proving_scheme = 'gm17'
 snark_backend = 'jsnark'
-crypto_backend = 'dummy'
+crypto_backend = 'rsa'
 
 pki_contract_name = 'PublicKeyInfrastructure'
 jsnark_circuit_classname = 'ZkayCircuit'

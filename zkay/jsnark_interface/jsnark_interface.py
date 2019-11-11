@@ -2,6 +2,7 @@ import os
 from typing import List
 
 import zkay.config as cfg
+from zkay.utils.output_suppressor import output_suppressed
 from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent
 
@@ -20,14 +21,18 @@ def compile_circuit(circuit_dir: str, javacode: str):
     run_command(['javac', '-cp', f'{circuit_builder_jar}', jfile], cwd=circuit_dir)
 
     # Run jsnark to generate the circuit
-    run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir)
+    with output_suppressed('jsnark'):
+        out, err = run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir)
+        print(out, err)
 
 
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     serialized_arg_str = [hex(arg)[2:] for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir)
+    with output_suppressed('jsnark'):
+        out, err = run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir)
+        print(out, err)
 
 
 _class_template_str = '''\
@@ -38,7 +43,7 @@ import zkay.ConditionalAssignmentGadget;
 
 public class {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{
-        super("{circuit_name}", {rsa_key_bits}, {priv_size}, {pub_size});
+        super("{circuit_name}", "{crypto_backend}", {key_bits}, {priv_size}, {pub_size});
     }}
 
     @Override
@@ -58,5 +63,6 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 
 
 def get_jsnark_circuit_class_str(name: str, priv_size: int, pub_size: int, input_init: List[str], constraints: List[str]):
-    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, circuit_name=name, rsa_key_bits=cfg.rsa_key_bits, priv_size=priv_size, pub_size=pub_size,
+    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend, circuit_name=name,
+                                      key_bits=cfg.key_bits, priv_size=priv_size, pub_size=pub_size,
                                       init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))))
