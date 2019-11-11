@@ -1,5 +1,5 @@
 cryptoparams = {'dummy': {
-    'key_bits': 256,
+    'key_bits': 248,
     'rnd_bytes': 31
 }, 'rsa': {
     'key_bits': 2048,

@@ -246,7 +246,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
     def pack_byte_array(bin: bytes) -> List[int]:
         total_bytes = len(bin)
         first_chunk_size = total_bytes % cfg.pack_chunk_size
-        arr = [int.from_bytes(bin[:first_chunk_size], byteorder='big')]
+        arr = [] if first_chunk_size == 0 else [int.from_bytes(bin[:first_chunk_size], byteorder='big')]
         for i in range(first_chunk_size, total_bytes - first_chunk_size, cfg.pack_chunk_size):
             arr.append(int.from_bytes(bin[i:i + cfg.pack_chunk_size], byteorder='big'))
         return list(reversed(arr))
