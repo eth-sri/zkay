@@ -1,40 +1,33 @@
 import os
 from typing import List
 
-import jnius_config
-
 import zkay.config as cfg
+from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-jnius_config.add_classpath(os.path.join(dir_path, 'JsnarkCircuitBuilder.jar'))
-
-from jnius import autoclass
-
-jBigint = autoclass('java.math.BigInteger')
-jCompiler = autoclass('zkay.ZkayCompiler')
+# path jo jsnark interface jar
+circuit_builder_jar = os.path.join(os.path.dirname(os.path.realpath(__file__)),  'JsnarkCircuitBuilder.jar')
+# jsnark jvm options to increase heap size (otherwise gc kills throughput)
+jvm_perf_options = ['-Xms4096m', '-Xmx4096m']
 
 
 def compile_circuit(circuit_dir: str, javacode: str):
-    cwd = os.getcwd()
-    os.chdir(circuit_dir)
-
     jfile = os.path.join(circuit_dir, cfg.jsnark_circuit_classname + ".java")
     with open(jfile, 'w') as f:
         f.write(javacode)
-    jCompiler.compile(jfile)
 
-    circuit = jCompiler.load(circuit_dir, cfg.jsnark_circuit_classname)
-    circuit.compileCircuit()
-    os.chdir(cwd)
+    # Compile the circuit java file
+    run_command(['javac', '-cp', f'{circuit_builder_jar}', jfile], cwd=circuit_dir)
+
+    # Run jsnark to generate the circuit
+    run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir)
 
 
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
-    cwd = os.getcwd()
-    os.chdir(circuit_dir)
-    circuit = jCompiler.load(circuit_dir, cfg.jsnark_circuit_classname)
-    circuit.prepareProof([jBigint(str(arg), 10) for arg in serialized_args])
-    os.chdir(cwd)
+    serialized_arg_str = [hex(arg)[2:] for arg in serialized_args]
+
+    # Run jsnark to evaluate the circuit and compute prover inputs
+    run_command(['java', *jvm_perf_options, '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir)
 
 
 _class_template_str = '''\
@@ -54,6 +47,11 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 
 {constraints}
         verifyInputHash();
+    }}
+
+    public static void main(String[] args) {{
+        {circuit_class_name} circuit = new {circuit_class_name}();
+        circuit.run(args);
     }}
 }}
 '''

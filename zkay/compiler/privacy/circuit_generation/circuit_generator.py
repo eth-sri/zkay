@@ -19,7 +19,8 @@ class CircuitGenerator(metaclass=ABCMeta):
         self.circuits_to_prove = [c for c in circuits if c.requires_verification()]
         self.proving_scheme = proving_scheme
         self.output_dir = output_dir
-        self.p_count = min(os.cpu_count(), len(self.circuits_to_prove)) if parallel_keygen else 1
+        self.parallel_keygen = parallel_keygen
+        self.p_count = min(os.cpu_count(), len(self.circuits_to_prove))
 
     def generate_circuits(self, *, import_keys: bool):
         """
@@ -36,10 +37,9 @@ class CircuitGenerator(metaclass=ABCMeta):
         # Generate proof circuit code
         c_count = len(self.circuits_to_prove)
         print(f'Compiling {c_count} circuits...')
-        for c in self.circuits_to_prove:
-            self._generate_zkcircuit(c)
-        #with Pool(processes=1) as pool:
-        #    pool.map(self._generate_zkcircuit, self.circuits_to_prove)
+        with time_measure('circuit_compilation', True):
+            with Pool(processes=self.p_count) as pool:
+                pool.map(self._generate_zkcircuit, self.circuits_to_prove)
 
         if import_keys:
             # Import TODO
@@ -47,12 +47,14 @@ class CircuitGenerator(metaclass=ABCMeta):
         else:
             # Generate keys in parallel
             print(f'Generating keys for {c_count} circuits...')
-            with time_measure('circuit_generation', True):
+            with time_measure('key_generation', True):
                 counter = Value('i', 0)
-                #with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
-                #    pool.map(self._generate_keys_par, self.circuits_to_prove)
-                for circ in self.circuits_to_prove:
-                    self._generate_keys(circ)
+                if self.parallel_keygen:
+                    with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
+                        pool.map(self._generate_keys_par, self.circuits_to_prove)
+                else:
+                    for circ in self.circuits_to_prove:
+                        self._generate_keys(circ)
 
         with print_step('Write verification contracts'):
             for circuit in self.circuits_to_prove:
