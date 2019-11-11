@@ -8,6 +8,8 @@ proving_scheme = 'gm17'
 snark_backend = 'jsnark'
 crypto_backend = 'rsa'
 
+rsa_padding_scheme = 'oaep' # oaep or pkcs1.5
+
 pki_contract_name = 'PublicKeyInfrastructure'
 jsnark_circuit_classname = 'ZkayCircuit'
 

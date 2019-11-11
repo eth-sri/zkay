@@ -834,7 +834,10 @@ class CipherText(Array):
 
 class Randomness(Array):
     def __init__(self):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.randomness_len))
+        if cfg.randomness_len is None:
+            super().__init__(AnnotatedTypeName.uint_all(), None)
+        else:
+            super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.randomness_len))
 
     def __eq__(self, other):
         return isinstance(other, Randomness)

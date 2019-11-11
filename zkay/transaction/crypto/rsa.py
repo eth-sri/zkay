@@ -2,7 +2,7 @@ import os
 import sys
 from typing import Tuple, Optional, List
 
-from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import PKCS1_OAEP, PKCS1_v1_5
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
@@ -43,6 +43,17 @@ class PersistentLocals(object):
         return self._locals
 
 
+class StaticRandomFunc:
+    def __init__(self, rnd_bytes) -> None:
+        self.rnd_bytes = rnd_bytes
+
+    def get_random_bytes(self, n):
+        assert len(self.rnd_bytes) >= n
+        ret = self.rnd_bytes[:n]
+        self.rnd_bytes = self.rnd_bytes[n:]
+        return ret
+
+
 class RSACrypto(ZkayCryptoInterface):
     key_file = os.path.join(cfg.config_dir, 'rsa_keypair.bin')
     default_exponent = 65537 # == 0x10001
@@ -72,12 +83,22 @@ class RSACrypto(ZkayCryptoInterface):
             randfunc = get_random_bytes
         else:
             randbytes = self.unpack_to_byte_array(rnd, cfg.rnd_bytes)
-            randfunc = lambda n: randbytes
-        encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256, randfunc=randfunc).encrypt)
+            randfunc = StaticRandomFunc(randbytes)
+
+        if cfg.rsa_padding_scheme == 'oeap':
+            encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256, randfunc=randfunc).encrypt)
+        else:
+            assert cfg.rsa_padding_scheme == 'pkcs1.5'
+            encrypt = PersistentLocals(PKCS1_v1_5.new(pub_key, randfunc=randfunc).encrypt)
 
         cipher_bytes = encrypt(plain.to_bytes(cfg.pack_chunk_size, byteorder='big'))
         cipher = self.pack_byte_array(cipher_bytes)
-        rnd_bytes = encrypt.locals['ros']
+
+        if cfg.rsa_padding_scheme == 'oeap':
+            rnd_bytes = encrypt.locals['ros']
+        else:
+            assert cfg.rsa_padding_scheme == 'pkcs1.5'
+            rnd_bytes = encrypt.locals['ps']
         rnd = self.pack_byte_array(rnd_bytes)
 
         return cipher, rnd
@@ -87,8 +108,22 @@ class RSACrypto(ZkayCryptoInterface):
             # uninitialized value
             return 0, RandomnessValue()[:]
         else:
-            decrypt = PersistentLocals(PKCS1_OAEP.new(sk, hashAlgo=SHA256).decrypt)
-            plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.key_bytes)), byteorder='big')
-            rnd = self.pack_byte_array(decrypt.locals['seed'])
+            if cfg.rsa_padding_scheme == 'oeap':
+                decrypt = PersistentLocals(PKCS1_OAEP.new(sk, hashAlgo=SHA256).decrypt)
+                plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.key_bytes)), byteorder='big')
+            else:
+                assert cfg.rsa_padding_scheme == 'pkcs1.5'
+                decrypt = PersistentLocals(PKCS1_v1_5.new(sk).decrypt)
+                ret = decrypt(self.unpack_to_byte_array(cipher, cfg.key_bytes), None)
+                if ret is None:
+                    raise RuntimeError("Tried to decrypt invalid cipher text")
+                plain = int.from_bytes(ret, byteorder='big')
+
+            if cfg.rsa_padding_scheme == 'oeap':
+                rnd_bytes = decrypt.locals['seed']
+            else:
+                assert cfg.rsa_padding_scheme == 'pkcs1.5'
+                rnd_bytes = decrypt.locals['em'][2:decrypt.locals['sep']]
+            rnd = self.pack_byte_array(rnd_bytes)
 
             return plain, rnd
