@@ -34,10 +34,7 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
 
 
 _class_template_str = '''\
-import java.math.BigInteger;
-import circuit.structure.Wire;
 import zkay.ZkayCircuitBase;
-import zkay.ConditionalAssignmentGadget;
 
 public class {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{
@@ -49,6 +46,7 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 {init_inputs}
 
 {constraints}
+
         verifyInputHash();
     }}
 

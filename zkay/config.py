@@ -10,7 +10,7 @@ proving_scheme = 'gm17'
 # prover backend [zokrates, jsnark]
 snark_backend = 'jsnark'
 # encryption algorithm [dummy, rsa_pkcs1_5, rsa_oaep]
-crypto_backend = 'rsa_pkcs1_5'
+crypto_backend = 'dummy'
 
 pki_contract_name = 'PublicKeyInfrastructure'
 jsnark_circuit_classname = 'ZkayCircuit'

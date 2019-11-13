@@ -36,15 +36,13 @@ class JsnarkVisitor(AstVisitor):
             return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
-        return 'getOneWire()' if ast.value else 'getZeroWire()'
+        return f'val({str(ast.value).lower()})'
 
     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
-        if ast.value == 0:
-            return f'getZeroWire()'
-        elif ast.value == 1:
-            return f'getOneWire()'
+        if ast.value < (1 << 31):
+            return f'val({ast.value})'
         else:
-            return f'createConstantWire(new BigInteger("{ast.value}", 10))'
+            return f'val("{ast.value}")'
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return f'get("{ast.idf.name}")'
@@ -62,7 +60,7 @@ class JsnarkVisitor(AstVisitor):
             args = list(map(self.visit, ast.args))
 
             if op == 'ite':
-                fstr = 'new ConditionalAssignmentGadget({}, {}, {}).getOutputWires()[0]'
+                fstr = 'ite({}, {}, {})[0]'
             elif op == 'parenthesis':
                 fstr = '({})'
 

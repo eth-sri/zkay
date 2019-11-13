@@ -81,7 +81,7 @@ if __name__ == '__main__':
         exit(2)
 
     # create log directory
-    log_file = my_logging.get_log_file(filename='compile', parent_dir=str(output_dir), include_timestamp=True, label=None)
+    log_file = my_logging.get_log_file(filename='compile', parent_dir=str(output_dir), include_timestamp=False, label=None)
     my_logging.prepare_logger(log_file)
 
     # only type-check
