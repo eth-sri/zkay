@@ -22,6 +22,7 @@ contract funccall {
     }
 
     function calc(uint@me v) public {
+        require(owner == me);
         pubval = 0;
         res = v + some_comp(v, v);
         update_pubval();

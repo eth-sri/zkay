@@ -174,7 +174,7 @@ payableAddress
 //       -> https://solidity.readthedocs.io/en/v0.4.24/contracts.html#view-functions
 // payable: function may receive Ether
 stateMutability
-  : PayableKeyword ;
+  : PayableKeyword | PureKeyword | ViewKeyword ;
 
 block
   : '{' statements+=statement* '}' ;
