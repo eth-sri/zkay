@@ -25,7 +25,7 @@ contract funccall {
         require(owner == me);
         pubval = 0;
         res = v + some_comp(v, v);
-        update_pubval();
+        //update_pubval(); problem, alias analysis forgets that me == owner
         pubval = some_comp_pub(pubval, res);
     }
 }

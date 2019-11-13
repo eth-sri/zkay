@@ -7,11 +7,12 @@ from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformer
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, IfStatement, \
-    IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, Identifier, \
+    IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
+    Identifier, \
     VariableDeclarationStatement, Block, ExpressionStatement, \
     UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, \
-    CastExpr, StructDefinition, Array, LabeledBlock
+    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
@@ -308,6 +309,10 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         else:
             return self.visit_children(ast)
 
+    #def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+    #    if (isinstance(ast))
+    #    raise NotImplementedError()
+
 
 class ZkayCircuitTransformer(AstTransformerVisitor):
     """ Corresponds to T_phi from paper """
@@ -315,6 +320,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
     def __init__(self, current_generator: CircuitHelper):
         super().__init__()
         self.gen = current_generator
+        self.param_remap = {}
 
     def visitLiteralExpr(self, ast: LiteralExpr):
         """ Rule (13) """
@@ -324,6 +330,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         return self.transform_location(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
+        if ast.idf.name in self.param_remap:
+            ast.idf = Identifier(self.param_remap[ast.idf.name])
         return self.transform_location(ast)
 
     def transform_location(self, loc: LocationExpr):
@@ -337,3 +345,35 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
     def visitExpression(self, ast: Expression):
         """ Rule (16) """
         return self.visit_children(ast)
+
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, BuiltinFunction):
+            return self.visit_children(ast)
+
+        # TODO inline (make sure that possible in type checker)
+        fdef = ast.func.target
+        assert isinstance(fdef, FunctionDefinition)
+        stmts = []
+        for param, arg in zip(fdef.parameters, ast.args):
+            stmts.append(Identifier(f'_arg{len(stmts)}').decl_var(param.annotated_type, arg))
+        with InlineFunction(self, ast):
+            # TODO need to visit the untransformed function
+            stmts += self.visit_list(fdef.body.statements)
+        return LabeledBlock(stmts, 'inlined')
+
+
+class InlineFunction:
+    def __init__(self, v: ZkayCircuitTransformer, fct: FunctionCallExpr):
+        self.v = v
+        self.fct = fct
+        self.prevmap = None
+
+    def __enter__(self):
+        self.prevmap = self.v.param_remap
+        self.v.param_remap = {}
+        self.v.param_remap.update(self.prevmap)
+        for idx, param in enumerate(self.fct.func.target.parameters):
+            self.v.param_remap[param.idf.name] = f'_arg{idx}'
+
+    def __exit__(self, t, value, traceback):
+        self.v.param_remap = self.prevmap

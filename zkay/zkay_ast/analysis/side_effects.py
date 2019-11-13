@@ -1,4 +1,4 @@
-from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction
+from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, FunctionTypeName, LocationExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -28,7 +28,15 @@ class SideEffectsVisitor(AstVisitor):
             # builtin functions have no side-effects
             pass
         else:
-            # conservatively assume functions may have side-effects
+            assert isinstance(ast.func, LocationExpr)
+            assert ast.func.target is not None
+            assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
+            mods = ast.func.target.annotated_type.type_name.modifiers
+            for mod in mods:
+                if mod == 'pure' or mod == 'view':
+                    return
+
+            # Conservatively assume that functions which are neither view nor pure have side effects
             self.has_side_effects = True
 
     def visitAssignmentExpr(self, _):
