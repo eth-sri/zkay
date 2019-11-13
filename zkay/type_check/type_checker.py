@@ -6,8 +6,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
-    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, PayableAddress, FunctionTypeName, \
-    AddressMembers, AddressPayableMembers, UserDefinedTypeName, StructDefinition, TupleType, Identifier, IndexExpr, Array, LocationExpr
+    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, FunctionTypeName, \
+    UserDefinedTypeName, StructDefinition, TupleType, Identifier, IndexExpr, Array, LocationExpr
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -170,13 +170,13 @@ class TypeCheckVisitor(AstVisitor):
 
             # Check arguments
             for i in range(len(ast.args)):
-                if ft.parameters[i].annotated_type.privacy_annotation != Expression.all_expr():
-                    raise NotImplementedError("Private arguments in function calls not yet supported")
+                #if ft.parameters[i].annotated_type.privacy_annotation != Expression.all_expr():
+                #    raise NotImplementedError("Private arguments in function calls not yet supported")
                 ast.args[i] = self.get_rhs(ast.args[i], ft.parameters[i].annotated_type)
 
-            for rp in ft.return_parameters:
-                if rp.annotated_type.privacy_annotation != Expression.all_expr():
-                    raise NotImplementedError("Private return values for called functions not yet supported")
+            #for rp in ft.return_parameters:
+            #    if rp.annotated_type.privacy_annotation != Expression.all_expr():
+            #       raise NotImplementedError("Private return values for called functions not yet supported")
 
             # Set expression type to return type
             if len(ft.return_parameters) == 1:
@@ -188,27 +188,8 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeException('Function calls currently not supported', ast)
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
-        t = ast.expr.annotated_type.type_name
-        name = ast.member.name
-        if t == TypeName.address_type():
-            ast.annotated_type = getattr(AddressMembers, name, None)
-        elif isinstance(t, PayableAddress):
-            ast.annotated_type = getattr(AddressPayableMembers, name, None)
-        elif not t.is_primitive_type() or isinstance(t, Mapping):
-            assert isinstance(t, UserDefinedTypeName)
-            if isinstance(t.target, StructDefinition):
-                # Handle struct access
-                matches = [x.annotated_type for x in t.target.members if x.idf.name == ast.member.name]
-                if len(matches) != 1:
-                    raise TypeException(f'Member {name} not found', ast.member)
-                ast.annotated_type = matches[0]
-            else:
-                raise NotImplementedError("Member access is not supported for custom types")
-        else:
-            raise TypeException("Primitive types and mappings don't have members", ast.member)
-
-        if ast.annotated_type is None:
-            raise NotImplementedError(f'operation {name} is currently not supported')
+        assert ast.target is not None
+        ast.annotated_type = deep_copy(ast.target.annotated_type)
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         if not ast.privacy.privacy_annotation_label():

@@ -176,6 +176,13 @@ class BuildASTVisitor(SolidityVisitor):
 
         return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa)
 
+    def visitElementaryTypeName(self, ctx: SolidityParser.ElementaryTypeNameContext):
+        if ctx.getText() == 'address':
+            return ast.AddressTypeName()
+        elif ctx.getText() == 'address payable':
+            return ast.AddressPayableTypeName()
+        return super().visitElementaryTypeName(ctx)
+
     def visitIndexExpr(self, ctx: SolidityParser.IndexExprContext):
         arr = self.visit(ctx.arr)
         index = self.visit(ctx.index)

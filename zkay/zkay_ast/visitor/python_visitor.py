@@ -7,7 +7,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, Statement, IfStat
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
-    SourceUnit, ContractDefinition, PayableAddress, Randomness, Key, CipherText, SliceExpr
+    SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help']}
 
@@ -141,13 +141,14 @@ class PythonCodeVisitor(CodeVisitor):
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
         if ast == TypeName.uint_type():
             return 'int'
-        elif ast == TypeName.address_type():
-            return 'str'
         else:
             return ast.code()
 
-    def visitPayableAddress(self, ast: PayableAddress):
-        return self.visit(TypeName.address_type())
+    def visitAddressTypeName(self, ast: AddressTypeName):
+        return 'str'
+
+    def visitAddressPayableTypeName(self, ast: AddressPayableTypeName):
+        return 'str'
 
     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
         return 'Any'

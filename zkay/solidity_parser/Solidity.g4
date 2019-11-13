@@ -135,8 +135,7 @@ variableDeclaration
 // - arrays: allows fixed size (T[k]) and dynamic size (T[])
 typeName
   : elementaryTypeName
-  | mapping
-  | payableAddress ; // NB: Add payable address again
+  | mapping ;
 
 // REMOVED:
 // - string
@@ -147,13 +146,10 @@ typeName
 // - Fixed
 // - Ufixed
 elementaryTypeName
-  : name=('address' | 'bool' | Uint)  ;
+  : name=('address' | 'address payable' | 'bool' | Uint)  ;
 
 mapping
   : 'mapping' '(' key_type=elementaryTypeName ( '!' key_label=identifier )? '=>' value_type=annotatedTypeName ')' ;
-
-payableAddress
-  : 'address' 'payable' ;
 
 // REMOVED (only allow default)
 // storage location

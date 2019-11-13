@@ -149,7 +149,7 @@ class Expression(AST):
         assert (isinstance(expected, TypeName))
 
         # Implicit conversions
-        if isinstance(self.annotated_type.type_name, PayableAddress) and expected == TypeName.address_type():
+        if isinstance(self.annotated_type.type_name, AddressPayableTypeName) and expected == TypeName.address_type():
             return True
 
         # check data type
@@ -682,7 +682,11 @@ class TypeName(AST):
 
     @staticmethod
     def address_type():
-        return ElementaryTypeName('address')
+        return AddressTypeName()
+
+    @staticmethod
+    def address_payable_type():
+        return AddressPayableTypeName()
 
     @staticmethod
     def void_type():
@@ -690,17 +694,14 @@ class TypeName(AST):
 
     @staticmethod
     def cipher_type():
-        # TODO correct type
         return CipherText()
 
     @staticmethod
     def rnd_type():
-        # TODO correct type
         return Randomness()
 
     @staticmethod
     def key_type():
-        # TODO correct type
         return Key()
 
     @staticmethod
@@ -708,16 +709,12 @@ class TypeName(AST):
         # TODO correct type
         return Proof()
 
-    @staticmethod
-    def address_payable_type():
-        return PayableAddress()
-
     @property
     def size_in_uints(self):
         return 1
 
     def is_primitive_type(self):
-        return self == TypeName.bool_type() or self == TypeName.uint_type() or self == TypeName.address_type()
+        return self == TypeName.bool_type() or self == TypeName.uint_type() or self == TypeName.address_type() or self == TypeName.address_payable_type()
 
     def can_be_private(self):
         return self == TypeName.bool_type() or self == TypeName.uint_type()
@@ -758,6 +755,28 @@ class UserDefinedTypeName(TypeName):
         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
 
 
+class AddressTypeName(UserDefinedTypeName):
+    def __init__(self):
+        super().__init__([Identifier('<address>')], None)
+
+    def clone(self) -> 'UserDefinedTypeName':
+        return AddressTypeName()
+
+    def __eq__(self, other):
+        return isinstance(other, AddressTypeName)
+
+
+class AddressPayableTypeName(UserDefinedTypeName):
+    def __init__(self):
+        super().__init__([Identifier('<address_payable>')], None)
+
+    def clone(self) -> 'UserDefinedTypeName':
+        return AddressPayableTypeName()
+
+    def __eq__(self, other):
+        return isinstance(other, AddressPayableTypeName)
+
+
 class Mapping(TypeName):
 
     def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: 'AnnotatedTypeName'):
@@ -782,15 +801,6 @@ class Mapping(TypeName):
             return self.key_type == other.key_type and self.value_type == other.value_type
         else:
             return False
-
-
-class PayableAddress(TypeName):
-
-    def clone(self) -> 'PayableAddress':
-        return PayableAddress()
-
-    def __eq__(self, other):
-        return isinstance(other, PayableAddress)
 
 
 class Array(TypeName):
@@ -951,34 +961,31 @@ class AnnotatedTypeName(AST):
 
     @staticmethod
     def uint_all():
-        return AnnotatedTypeName(TypeName.uint_type(), None)
+        return AnnotatedTypeName(TypeName.uint_type())
 
     @staticmethod
     def bool_all():
-        return AnnotatedTypeName(TypeName.bool_type(), None)
+        return AnnotatedTypeName(TypeName.bool_type())
 
     @staticmethod
     def address_all():
-        return AnnotatedTypeName(TypeName.address_type(), None)
+        return AnnotatedTypeName(TypeName.address_type())
 
     @staticmethod
     def void_all():
-        return AnnotatedTypeName(TypeName.void_type(), None)
+        return AnnotatedTypeName(TypeName.void_type())
 
     @staticmethod
     def cipher_type():
-        # TODO correct type
-        return AnnotatedTypeName(TypeName.cipher_type(), None)
+        return AnnotatedTypeName(TypeName.cipher_type())
 
     @staticmethod
     def key_type():
-        # TODO correct type
-        return AnnotatedTypeName(TypeName.key_type(), None)
+        return AnnotatedTypeName(TypeName.key_type())
 
     @staticmethod
     def proof_type():
-        # TODO correct type (depends on proving scheme)
-        return AnnotatedTypeName(TypeName.proof_type(), None)
+        return AnnotatedTypeName(TypeName.proof_type())
 
     @staticmethod
     def all(type: TypeName):
@@ -992,7 +999,7 @@ class AnnotatedTypeName(AST):
     def array_all(value_type: 'AnnotatedTypeName', *length: int):
         t = value_type
         for l in length:
-            t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)), None)
+            t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)))
         return t
 
 
@@ -1108,7 +1115,7 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
             self.return_parameters = []
 
         self.annotated_type: AnnotatedTypeName \
-            = AnnotatedTypeName.all(FunctionTypeName(parameters, modifiers, return_parameters))
+            = AnnotatedTypeName.all(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
@@ -1219,97 +1226,8 @@ class SourceUnit(AST):
         assert (isinstance(c, ContractDefinition))
         return c
 
+
 PrivacyLabelExpr = Union[MeExpr, AllExpr, IdentifierExpr]
-
-
-# BUILTIN SPECIAL TYPE DEFINITIONS
-
-
-class AddressMembers:
-    # addr.balance: uint
-    balance: AnnotatedTypeName = AnnotatedTypeName.uint_all()
-
-
-class AddressPayableMembers(AddressMembers):
-    # addr.send(uint) returns bool
-    send: AnnotatedTypeName = AnnotatedTypeName.all(
-        FunctionTypeName(
-            parameters=[Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
-            modifiers=[],
-            return_parameters=[Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))]
-        )
-    )
-
-    # addr.transfer(uint)
-    transfer: AnnotatedTypeName = AnnotatedTypeName.all(
-        FunctionTypeName(
-            parameters=[Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
-            modifiers=[],
-            return_parameters=[]
-        )
-    )
-
-
-class GlobalDefs:
-    # gasleft: FunctionDefinition = FunctionDefinition(
-    #     idf=Identifier('gasleft'),
-    #     parameters=[],
-    #     modifiers=[],
-    #     return_parameters=[Parameter([], annotated_type=AnnotatedTypeName.uint_all(), idf=Identifier(''))],
-    #     body=Block([])
-    # )
-    # gasleft.idf.parent = gasleft
-
-    msg_struct: StructDefinition = StructDefinition(
-        Identifier('<msg>'), [
-            VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('sender')),
-            VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('value')),
-        ]
-    )
-
-    block_struct: StructDefinition = StructDefinition(
-        Identifier('<block>'), [
-            VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('coinbase')),
-            VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('difficulty')),
-            VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('gaslimit')),
-            VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('number')),
-            VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('timestamp')),
-        ]
-    )
-
-    tx_struct: StructDefinition = StructDefinition(
-        Identifier('<tx>'), [
-            VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('gasprice')),
-            VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('origin')),
-        ]
-    )
-
-
-class GlobalVars:
-    msg: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.msg_struct.idf], GlobalDefs.msg_struct)), [],
-        Identifier('msg'), None
-    )
-    msg.idf.parent = msg
-
-    block: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.block_struct.idf], GlobalDefs.block_struct)), [],
-        Identifier('block'), None
-    )
-    block.idf.parent = block
-
-    tx: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.tx_struct.idf], GlobalDefs.tx_struct)), [],
-        Identifier('tx'), None
-    )
-    tx.idf.parent = tx
-
-    now: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.uint_all(), [],
-        Identifier('now'), None
-    )
-    now.idf.parent = now
-
 
 # UTIL FUNCTIONS
 
@@ -1528,6 +1446,12 @@ class CodeVisitor(AstVisitor):
     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
         return self.visit_list(ast.names, '.')
 
+    def visitAddressTypeName(self, ast: AddressTypeName):
+        return 'address'
+
+    def visitAddressPayableTypeName(self, ast: AddressPayableTypeName):
+        return 'address payable'
+
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         t = self.visit(ast.type_name)
         if ast.old_priv_text != '':
@@ -1546,9 +1470,6 @@ class CodeVisitor(AstVisitor):
             label = f'/*!{ast.key_label}*/' if ast.key_label is not None else ''
         v = self.visit(ast.value_type)
         return f"mapping({k}{label} => {v})"
-
-    def visitPayableAddress(self, ast: PayableAddress):
-        return "address payable"
 
     def visitArray(self, ast: Array):
         t = self.visit(ast.value_type)

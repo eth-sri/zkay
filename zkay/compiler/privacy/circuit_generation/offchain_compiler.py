@@ -12,8 +12,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     StateVariableDeclaration, Statement, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, \
     Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness, SliceExpr, \
-    Array, Comment
-from zkay.zkay_ast.ast import ElementaryTypeName
+    Array, Comment, AddressTypeName
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
@@ -50,10 +49,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         self.inside_circuit: bool = False
 
-    def visitElementaryTypeName(self, ast: ElementaryTypeName):
-        if ast == TypeName.address_type():
-            return 'AddressValue'
-        return super().visitElementaryTypeName(ast)
+    def visitAddressTypeName(self, ast: AddressTypeName):
+        return 'AddressValue'
 
     def visitSourceUnit(self, ast: SourceUnit):
         ctrcs = self.visit_list(ast.contracts)
