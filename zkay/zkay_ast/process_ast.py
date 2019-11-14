@@ -3,6 +3,8 @@ from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step, colored_print, TermColor
 from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
+from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
+from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
@@ -70,6 +72,7 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
             r(ast)
         if alias_analysis:
             a(ast)
+        call_graph_analysis(ast)
     if type_check:
         with print_step("Zkay type checking"):
             try:
@@ -79,3 +82,5 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
                     print("\n\nERROR: Type check failed")
                     print(f'{str(te)}\n')
                 raise TypeCheckException()
+
+    detect_hybrid_functions(ast)

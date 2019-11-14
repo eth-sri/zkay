@@ -1,7 +1,7 @@
 import abc
 import textwrap
 from os import linesep
-from typing import List, Dict, Union, Optional, Callable
+from typing import List, Dict, Union, Optional, Callable, Set
 
 import zkay.config as cfg
 from zkay.zkay_ast.analysis.partition_state import PartitionState
@@ -1077,6 +1077,9 @@ class ConstructorOrFunctionDefinition(AST):
 
         # specify parent type
         self.parent: ContractDefinition = None
+        self.called_functions: Set[ConstructorOrFunctionDefinition] = set()
+        self.has_static_body = True
+        self.requires_verification = False
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
@@ -1116,6 +1119,9 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
 
         self.annotated_type: AnnotatedTypeName \
             = AnnotatedTypeName.all(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
+
+        self.original_body = body
+        self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
