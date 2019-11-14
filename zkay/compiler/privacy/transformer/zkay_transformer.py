@@ -320,9 +320,17 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         else:
             return self.visit_children(ast)
 
-    #def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-    #    if (isinstance(ast))
-    #    raise NotImplementedError()
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if ast.annotated_type.is_private():
+            return self.visitExpression(ast)
+
+        if isinstance(ast.func, LocationExpr):
+            if ast.func.target.requires_verification:
+                if ast.func.target.has_side_effects:
+                    raise NotImplementedError('Side effects in inlined functions not yet supported (have to make sure evaluation order matches solidity semantics)')
+                # TODO inline
+                raise NotImplementedError('Calls to functions which require verification not yet supported')
+        return self.visit_children(ast)
 
 
 class ZkayCircuitTransformer(AstTransformerVisitor):
