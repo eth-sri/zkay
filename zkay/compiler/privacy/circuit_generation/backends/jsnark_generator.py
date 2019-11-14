@@ -5,7 +5,7 @@ import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
-    ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
+    TempVarDecl, EqConstraint, EncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
@@ -22,7 +22,7 @@ class JsnarkVisitor(AstVisitor):
         return [self.visitCircuitStatement(constr) for constr in self.circuit.phi]
 
     def visitCircuitStatement(self, stmt: CircuitStatement) -> str:
-        if isinstance(stmt, ExpressionToLocAssignment):
+        if isinstance(stmt, TempVarDecl):
             assert stmt.lhs.t.size_in_uints == 1
             return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
         elif isinstance(stmt, EqConstraint):

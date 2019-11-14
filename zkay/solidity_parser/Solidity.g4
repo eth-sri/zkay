@@ -111,7 +111,7 @@ modifierList
   : ( modifiers+=modifier )* ;
 
 modifier
-  : stateMutability | PublicKeyword ;
+  : stateMutability | PublicKeyword | InternalKeyword | PrivateKeyword ;
 
 parameterList
   : '(' ( params+=parameter (',' params+=parameter)* )? ')' ;

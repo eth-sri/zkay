@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 import zkay.config as cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
-    ExpressionToLocAssignment, EncConstraint, EqConstraint
+    TempVarDecl, EncConstraint, EqConstraint
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.transformer.zkay_transformer import proof_param_name
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
@@ -314,7 +314,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         with CircuitComputation(self):
             for stmt in circuit.phi:
-                if isinstance(stmt, ExpressionToLocAssignment):
+                if isinstance(stmt, TempVarDecl):
                     stmts.append(f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}')
                 elif isinstance(stmt, EncConstraint):
                     cipher_str = self.visit(stmt.cipher.get_loc_expr())

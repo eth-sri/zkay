@@ -1,14 +1,20 @@
-from zkay.zkay_ast.ast import HybridArgumentIdf, Expression
+from zkay.zkay_ast.ast import HybridArgumentIdf, Expression, LocationExpr
 
 
 class CircuitStatement:
     pass
 
 
-class ExpressionToLocAssignment(CircuitStatement):
+class TempVarDecl(CircuitStatement):
     def __init__(self, lhs: HybridArgumentIdf, expr: Expression):
         self.lhs = lhs
         self.expr = expr
+
+
+class CircAssignment(CircuitStatement):
+    def __init__(self, lhs: LocationExpr, rhs: Expression):
+        self.lhs = lhs
+        self.rhs = rhs
 
 
 class EncConstraint(CircuitStatement):

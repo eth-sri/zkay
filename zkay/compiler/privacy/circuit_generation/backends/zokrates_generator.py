@@ -5,7 +5,7 @@ from typing import Tuple, List
 
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
-    ExpressionToLocAssignment, EqConstraint, EncConstraint, HybridArgumentIdf
+    TempVarDecl, EqConstraint, EncConstraint, HybridArgumentIdf
 from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
@@ -55,7 +55,7 @@ class ZokratesCodeVisitor(CodeVisitor):
         return super().visitFunctionCallExpr(ast)
 
     def visitCircuitStatement(self, stmt: CircuitStatement):
-        if isinstance(stmt, ExpressionToLocAssignment):
+        if isinstance(stmt, TempVarDecl):
             lhs = stmt.lhs.get_loc_expr(AnnotatedTypeName.uint_all())
             return f'field {self.visit(AssignmentStatement(lhs, stmt.expr))}'
         elif isinstance(stmt, EqConstraint):

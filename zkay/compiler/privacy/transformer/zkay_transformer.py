@@ -1,4 +1,5 @@
 import re
+from copy import deepcopy
 from typing import Dict, Optional, List, Tuple
 
 import zkay.config as cfg
@@ -12,13 +13,12 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionD
     VariableDeclarationStatement, Block, ExpressionStatement, \
     UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, \
-    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction
+    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction, AssignmentStatement
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
 proof_param_name = 'proof__'
 verification_function_name = 'check_verify'
-default_return_var_name = 'return_value__'
 
 
 def transform_ast(ast: AST) -> Tuple[AST, 'ZkayTransformer']:
@@ -63,6 +63,10 @@ class ZkayTransformer(AstTransformerVisitor):
             # Transform types of normal state variables
             c.state_variable_declarations = list(filter(None.__ne__, map(self.var_decl_trafo.visit, c.state_variable_declarations)))
 
+            # Don't have to generate function for internal/private functions which require verification (will always be inlined)
+            # TODO external functions
+            c.function_definitions = [fdef for fdef in c.function_definitions if 'public' in fdef.modifiers or not fdef.requires_verification]
+
             # Transform function children and include required verification contracts
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_children(f)
@@ -103,6 +107,7 @@ class ZkayTransformer(AstTransformerVisitor):
             ast.return_parameters = list(map(self.var_decl_trafo.visit, ast.return_parameters))
 
         # Transform body
+        ast.original_body = deepcopy(ast.body)
         ast.body = ZkayStatementTransformer(circuit_generator).visit(ast.body)
         return ast
 
@@ -114,7 +119,7 @@ class ZkayTransformer(AstTransformerVisitor):
         if isinstance(ast, FunctionDefinition) and ast.return_parameters:
             assert len(ast.return_parameters) == 1  # for now
             preamble += Comment.comment_list("Declare return variable", [
-                Identifier(default_return_var_name).decl_var(ast.return_parameters[0].annotated_type)
+                Identifier(cfg.return_var_name).decl_var(ast.return_parameters[0].annotated_type)
             ])
 
         if not circuit_generator.requires_verification():
@@ -123,6 +128,12 @@ class ZkayTransformer(AstTransformerVisitor):
                 ast.body.statements.pop()
             ast.body.statements = preamble + ast.body.statements
         else:
+            if not ast.has_side_effects:
+                for idx, mod in enumerate(ast.modifiers):
+                    if mod == 'pure' or mod == 'view':
+                        ast.modifiers.remove(mod)
+                        break
+
             zk_struct_type = UserDefinedTypeName([Identifier(f'{ast.name}_{cfg.zk_struct_suffix}')])
             preamble += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), Comment()]
 
@@ -170,7 +181,7 @@ class ZkayTransformer(AstTransformerVisitor):
         # Add return statement at the end if necessary
         # (was previously replaced by assignment to return_var by ZkayStatementTransformer)
         if circuit_generator.has_return_var:
-            ast.body.statements.append(ReturnStatement(IdentifierExpr(default_return_var_name)))
+            ast.body.statements.append(ReturnStatement(IdentifierExpr(cfg.return_var_name)))
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -224,7 +235,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             return None
         assert not self.gen.has_return_var
         self.gen.has_return_var = True
-        return ast.replaced_with(IdentifierExpr(default_return_var_name).assign(self.expr_trafo.visit(ast.expr)))
+        return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(self.expr_trafo.visit(ast.expr)))
 
     def visitBlock(self, ast: Block):
         """ Rule (1) """
@@ -320,7 +331,6 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
     def __init__(self, current_generator: CircuitHelper):
         super().__init__()
         self.gen = current_generator
-        self.param_remap = {}
 
     def visitLiteralExpr(self, ast: LiteralExpr):
         """ Rule (13) """
@@ -330,9 +340,11 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         return self.transform_location(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        if ast.idf.name in self.param_remap:
-            ast.idf = Identifier(self.param_remap[ast.idf.name])
-        return self.transform_location(ast)
+        ast.idf = self.gen.get_remapped_idf(ast.idf)
+        if isinstance(ast.idf, HybridArgumentIdf):
+            return ast
+        else:
+            return self.transform_location(ast)
 
     def transform_location(self, loc: LocationExpr):
         """ Rule (14) """
@@ -346,34 +358,30 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         """ Rule (16) """
         return self.visit_children(ast)
 
+    # INLINED FUNCTION CALLS
+
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             return self.visit_children(ast)
-
         # TODO inline (make sure that possible in type checker)
         fdef = ast.func.target
         assert isinstance(fdef, FunctionDefinition)
-        stmts = []
-        for param, arg in zip(fdef.parameters, ast.args):
-            stmts.append(Identifier(f'_arg{len(stmts)}').decl_var(param.annotated_type, arg))
-        with InlineFunction(self, ast):
-            # TODO need to visit the untransformed function
-            stmts += self.visit_list(fdef.body.statements)
-        return LabeledBlock(stmts, 'inlined')
+        assert fdef.return_parameters
 
+        if not fdef.has_static_body:
+            raise ValueError('Function with dynamic body cannot be inlined')
 
-class InlineFunction:
-    def __init__(self, v: ZkayCircuitTransformer, fct: FunctionCallExpr):
-        self.v = v
-        self.fct = fct
-        self.prevmap = None
+        return self.gen.inline_function(ast, fdef)
 
-    def __enter__(self):
-        self.prevmap = self.v.param_remap
-        self.v.param_remap = {}
-        self.v.param_remap.update(self.prevmap)
-        for idx, param in enumerate(self.fct.func.target.parameters):
-            self.v.param_remap[param.idf.name] = f'_arg{idx}'
+    def visitReturnStatement(self, ast: ReturnStatement):
+        assert ast.expr is not None
+        return self.gen.create_temp_var_decl(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, ast.expr))
 
-    def __exit__(self, t, value, traceback):
-        self.v.param_remap = self.prevmap
+    def visitAssignmentStatement(self, ast: AssignmentStatement):
+        return self.gen.create_assignment(ast)
+
+    def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
+        return self.gen.create_temp_var_decl(ast)
+
+    def visitStatement(self, ast: Statement):
+        raise NotImplementedError("Unsupported statement")

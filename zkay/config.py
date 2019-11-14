@@ -19,6 +19,7 @@ zk_out_name = 'out__'
 zk_in_name = 'in__'
 zk_struct_suffix = 'zk_data'
 zk_data_var_name = f'{zk_struct_suffix}__'
+return_var_name = 'return_value__'
 
 pack_chunk_size = 31
 key_bits = cryptoparams[crypto_backend]['key_bits']

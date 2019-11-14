@@ -1,13 +1,15 @@
+from copy import deepcopy
 from typing import List, Dict, Optional, Tuple, Callable
 
 import zkay.config as cfg
-from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, EncConstraint, ExpressionToLocAssignment, \
-    EqConstraint
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, EncConstraint, TempVarDecl, \
+    EqConstraint, CircAssignment
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
-    HybridArgumentIdf, EncryptionExpression
+    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, Identifier, \
+    AnnotatedTypeName
 
 
 class NameFactory:
@@ -70,6 +72,8 @@ class CircuitHelper:
         self._pk_for_label: Dict[str, AssignmentStatement] = {}
         self._param_to_in_assignments: List[AssignmentStatement] = []
 
+        self._inline_var_remap: Dict[str, HybridArgumentIdf] = {}
+
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
 
@@ -128,7 +132,9 @@ class CircuitHelper:
 
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
-        return self.has_in_args or self.has_out_args or self._secret_input_name_factory.count
+        req = self.has_in_args or self.has_out_args or self._secret_input_name_factory.count
+        assert req == self.fct.requires_verification
+        return req
 
     def encrypt_parameter(self, param: Parameter):
         plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.type_name)
@@ -164,10 +170,53 @@ class CircuitHelper:
         loc_expr.statement.in_assignments.append(input_idf.get_loc_expr().assign(input_expr))
         return locally_decrypted_idf.get_loc_expr()
 
+    def inline_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition):
+        # TODO type checker needs to ensure that called functions can be inlined (i.e. static body, all operations supported in private)
+
+        # prepend this to the current circuit statement:
+        # 1. assign args to temporary variables
+        # 2. include original function body with replaced parameter idfs
+        # 3. assign return value to temporary var
+        # return temp ret var
+
+        prevmap = self._inline_var_remap
+        self._inline_var_remap = {}
+        self._inline_var_remap.update(prevmap)
+
+        stmts = []
+        for param, arg in zip(fdef.parameters, ast.args):
+            stmts.append(self.create_temp_var_decl(Identifier(param.idf.name).decl_var(param.annotated_type, self._circ_trafo.visit(arg))))
+        inlined_stmts = deepcopy(fdef.original_body.statements)
+        for stmt in inlined_stmts:
+            stmts.append(self._circ_trafo.visit(stmt))
+        ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), AnnotatedTypeName(self._inline_var_remap[cfg.return_var_name].t))
+
+        self._phi += stmts
+        self._inline_var_remap = prevmap
+        return ret
+
+    def get_remapped_idf(self, idf: Identifier) -> Identifier:
+        if idf.name in self._inline_var_remap:
+            return self._inline_var_remap[idf.name].clone()
+        else:
+            return idf
+
+    def create_temp_var_decl(self, ast: VariableDeclarationStatement):
+        rhs = self._circ_trafo.visit(ast.expr)
+        lhs = self._local_expr_name_factory.get_new_idf(ast.variable_declaration.annotated_type.type_name, rhs)
+        self._inline_var_remap[ast.variable_declaration.idf.name] = lhs
+        return TempVarDecl(lhs, rhs)
+
+    def create_assignment(self, ast: AssignmentStatement):
+        lhs = self._circ_trafo.visit(ast.lhs)
+        rhs = self._circ_trafo.visit(ast.rhs)
+        assert isinstance(lhs, LocationExpr)
+        return CircAssignment(lhs, rhs)
+
     def _evaluate_private_expression(self, expr: Expression):
         priv_expr = self._circ_trafo.visit(expr)
         sec_circ_var_idf = self._local_expr_name_factory.get_new_idf(expr.annotated_type.type_name)
-        stmt = ExpressionToLocAssignment(sec_circ_var_idf, priv_expr)
+        stmt = TempVarDecl(sec_circ_var_idf, priv_expr)
         self.phi.append(stmt)
         return sec_circ_var_idf, priv_expr
 
