@@ -1,7 +1,7 @@
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
-from zkay.zkay_ast.analysis.side_effects import has_side_effects
+from zkay.zkay_ast.analysis.side_effects import has_side_effects, check_for_side_effects_or_nonstatic_function_calls
 from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
@@ -71,6 +71,8 @@ class TypeCheckVisitor(AstVisitor):
         # set output type
         if private:
             p = Expression.me_expr()
+            for arg in ast.args:
+                check_for_side_effects_or_nonstatic_function_calls(arg)
         else:
             p = Expression.all_expr()
         output_type = AnnotatedTypeName(func.output_type(), p)
@@ -138,8 +140,7 @@ class TypeCheckVisitor(AstVisitor):
     def make_private(expr: Expression, privacy: Expression):
         assert (privacy.privacy_annotation_label() is not None)
 
-        if has_side_effects(expr):  # TODO
-            raise NotImplementedError("Expressions with side effects are not allowed inside private expressions")
+        check_for_side_effects_or_nonstatic_function_calls(expr)
 
         pl = privacy.privacy_annotation_label()
         if isinstance(pl, Identifier):
@@ -162,7 +163,7 @@ class TypeCheckVisitor(AstVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             self.handle_builtin_function_call(ast, ast.func)
-        elif isinstance(ast.func.annotated_type.type_name, FunctionTypeName):
+        elif isinstance(ast.func, LocationExpr):
             ft = ast.func.annotated_type.type_name
 
             if len(ft.parameters) != len(ast.args):
@@ -185,7 +186,7 @@ class TypeCheckVisitor(AstVisitor):
                 # TODO maybe not None label in the future
                 ast.annotated_type = AnnotatedTypeName(TupleType([t.annotated_type for t in ft.return_parameters]), None)
         else:
-            raise TypeException('Function calls currently not supported', ast)
+            raise TypeException('Invalid function call', ast)
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert ast.target is not None
@@ -199,6 +200,8 @@ class TypeCheckVisitor(AstVisitor):
         ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy)
         if ast.instanceof(ast.expr.annotated_type) is True:
             raise TypeException(f'Redundant "reveal": Expression is already "@{ast.privacy.code()}"', ast)
+
+        check_for_side_effects_or_nonstatic_function_calls(ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):
         b = ast.condition
