@@ -82,7 +82,7 @@ class JsnarkVisitor(AstVisitor):
                 fstr = '{}.sub({}).checkNonZero()'
 
             elif op == '<':
-                fstr = '{}.isLessThan({}, 253))'
+                fstr = '{}.isLessThan({}, 253)'
             elif op == '<=':
                 fstr = '{}.isLessThanOrEqual({}, 253)'
             elif op == '>':
