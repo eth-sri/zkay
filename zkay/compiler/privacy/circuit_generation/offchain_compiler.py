@@ -3,6 +3,7 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 import zkay.config as cfg
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     TempVarDecl, EncConstraint, EqConstraint
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
@@ -319,6 +320,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     cipher_str = self.visit(stmt.cipher.get_loc_expr())
                     enc_str = f'(CipherValue() if {cipher_str} == CipherValue() else {CRYPTO_OBJ_NAME}.enc({self.visit(stmt.plain.get_loc_expr())}, {self.visit(stmt.pk.get_loc_expr())}, {self.visit(stmt.rnd.get_loc_expr())})[0])'
                     stmts.append(assert_str.format(enc_str, cipher_str))
+                elif isinstance(stmt, CircAssignment):
+                    stmts.append(f'{self.visit(stmt.lhs)} = {self.visit(stmt.rhs)}')
                 else:
                     assert isinstance(stmt, EqConstraint)
                     stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))

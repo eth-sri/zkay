@@ -7,7 +7,8 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, Statement, IfStat
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
-    SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, StatementList
+    SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
+    StatementList, IdentifierExpr
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help']}
 
@@ -49,6 +50,12 @@ class PythonCodeVisitor(CodeVisitor):
         return f'def {sanitized(ast.name)}({params}):\n{indent(body)}'
 
     def visitStatementList(self, ast: StatementList):
+        return self.visit_list(ast.statements)
+
+    def visitBlock(self, ast: Block):
+        return self.visit_list(ast.statements)
+
+    def visitIndentBlock(self, ast: IndentBlock):
         return self.visit_list(ast.statements)
 
     def handle_stmt(self, ast: Statement, stmt_txt: str) -> str:
@@ -130,6 +137,9 @@ class PythonCodeVisitor(CodeVisitor):
         else:
             f = self.visit(ast.func)
             a = self.visit_list(ast.args, ', ')
+
+            if isinstance(ast.func, IdentifierExpr):
+                f = f'self.{f}'
             return f'{f}({a})'
 
     def visitComment(self, ast: Comment):

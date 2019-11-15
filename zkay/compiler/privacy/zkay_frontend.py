@@ -42,6 +42,10 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
         with open(contract_filename, 'w') as f:
             f.write(ast.code())
 
+    with print_step("Dry-run solc compilation (libs)"):
+        for f in [pki_filename, verifylib_filename]:
+            check_compilation(f, show_errors=False)
+
     ps = ProvingSchemeGm17()
     if snark_backend == 'zokrates':
         cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
@@ -69,8 +73,8 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
     cg.generate_circuits(import_keys=False)
 
     # Check that all the solidity files would compile
-    with print_step("Dry-run solc compilation"):
-        for f in [pki_filename, verifylib_filename, contract_filename] + cg.get_verification_contract_filenames():
+    with print_step("Dry-run solc compilation (main contracts + verifiers)"):
+        for f in [contract_filename] + cg.get_verification_contract_filenames():
             check_compilation(f, show_errors=False)
 
     return cg
