@@ -467,6 +467,9 @@ class SliceExpr(LocationExpr):
 class MeExpr(Expression):
     idf = Identifier('me')
 
+    def clone(self) -> 'MeExpr':
+        return MeExpr()
+
     def __eq__(self, other):
         return isinstance(other, MeExpr)
 
@@ -476,6 +479,9 @@ class MeExpr(Expression):
 
 class AllExpr(Expression):
     idf = Identifier('all')
+
+    def clone(self) -> 'AllExpr':
+        return AllExpr()
 
     def __eq__(self, other):
         return isinstance(other, AllExpr)
@@ -794,7 +800,8 @@ class Mapping(TypeName):
         self.value_type = f(self.value_type)
 
     def clone(self) -> 'Mapping':
-        return Mapping(self.key_type.clone(), self.key_label, self.value_type.clone())
+        from zkay.zkay_ast.visitor.deep_copy import deep_copy
+        return deep_copy(self)
 
     def __eq__(self, other):
         if isinstance(other, Mapping):
@@ -922,6 +929,26 @@ class TupleType(TypeName):
         return self.check_component_wise(other, lambda x, y: x == y)
 
 
+class FunctionTypeName(TypeName):
+    def __init__(self, parameters: List['Parameter'], modifiers: List[str], return_parameters: List['Parameter']):
+        super().__init__()
+        self.parameters = parameters
+        self.modifiers = modifiers
+        self.return_parameters = return_parameters
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.parameters = list(map(f, self.parameters))
+        self.return_parameters = list(map(f, self.return_parameters))
+
+    def clone(self) -> 'FunctionTypeName':
+        # TODO deep copy if required
+        return FunctionTypeName(self.parameters, self.modifiers, self.return_parameters)
+
+    def __eq__(self, other):
+        return isinstance(other, FunctionTypeName) and self.parameters == other.parameters and \
+               self.modifiers == other.modifiers and self.return_parameters == other.return_parameters
+
+
 class AnnotatedTypeName(AST):
 
     def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, old_priv_text: str = ''):
@@ -939,8 +966,8 @@ class AnnotatedTypeName(AST):
         self.privacy_annotation = f(self.privacy_annotation)
 
     def clone(self) -> 'AnnotatedTypeName':
-        from zkay.zkay_ast.visitor.deep_copy import deep_copy
-        at = AnnotatedTypeName(self.type_name.clone(), deep_copy(self.privacy_annotation), self.old_priv_text)
+        assert not self.privacy_annotation is None
+        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.old_priv_text)
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
 
@@ -1055,18 +1082,6 @@ class Parameter(AST):
         self.idf = f(self.idf)
 
 
-class FunctionTypeName(TypeName):
-    def __init__(self, parameters: List[Parameter], modifiers: List[str], return_parameters: List[Parameter]):
-        super().__init__()
-        self.parameters = parameters
-        self.modifiers = modifiers
-        self.return_parameters = return_parameters
-
-    def __eq__(self, other):
-        return isinstance(other, FunctionTypeName) and self.parameters == other.parameters and \
-               self.modifiers == other.modifiers and self.return_parameters == other.return_parameters
-
-
 class ConstructorOrFunctionDefinition(AST):
 
     def __init__(self, parameters: List[Parameter], modifiers: List[str], body: Block):
@@ -1081,6 +1096,8 @@ class ConstructorOrFunctionDefinition(AST):
         self.is_recursive = False
         self.has_static_body = True
         self.requires_verification = False
+        self.requires_verification_if_external = False
+        self.can_be_private = True
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
@@ -1091,7 +1108,6 @@ class ConstructorOrFunctionDefinition(AST):
         idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
         storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
         self.parameters.append(Parameter([], t, idf, storage_loc))
-
 
     @property
     def name(self):

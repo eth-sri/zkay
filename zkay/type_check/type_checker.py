@@ -1,13 +1,14 @@
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
-from zkay.zkay_ast.analysis.side_effects import has_side_effects, check_for_side_effects_or_nonstatic_function_calls
+from zkay.zkay_ast.analysis.side_effects import has_side_effects
 from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
-    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, FunctionTypeName, \
-    UserDefinedTypeName, StructDefinition, TupleType, Identifier, IndexExpr, Array, LocationExpr
+    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, LocationExpr
+from zkay.zkay_ast.pointers.parent_setter import set_parents
+from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -71,8 +72,6 @@ class TypeCheckVisitor(AstVisitor):
         # set output type
         if private:
             p = Expression.me_expr()
-            for arg in ast.args:
-                check_for_side_effects_or_nonstatic_function_calls(arg)
         else:
             p = Expression.all_expr()
         output_type = AnnotatedTypeName(func.output_type(), p)
@@ -85,7 +84,7 @@ class TypeCheckVisitor(AstVisitor):
 
             t = ast.args[0].annotated_type.type_name
             parameter_types = 2 * [t]
-            can_be_private = t == TypeName.uint_type() or t == TypeName.bool_type()
+            can_be_private = t.can_be_private()
 
         elif func.is_neg_sign():
             if isinstance(ast.args[0], NumberLiteralExpr):
@@ -133,14 +132,13 @@ class TypeCheckVisitor(AstVisitor):
 
     @staticmethod
     def is_accessible_by_invoker(ast: Expression):
-        return ast.annotated_type.is_public() or ast.is_lvalue() or \
-               ast.instanceof(AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr()))
+        return True
+        #return ast.annotated_type.is_public() or ast.is_lvalue() or \
+        #       ast.instanceof(AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr()))
 
     @staticmethod
     def make_private(expr: Expression, privacy: Expression):
         assert (privacy.privacy_annotation_label() is not None)
-
-        check_for_side_effects_or_nonstatic_function_calls(expr)
 
         pl = privacy.privacy_annotation_label()
         if isinstance(pl, Identifier):
@@ -181,7 +179,7 @@ class TypeCheckVisitor(AstVisitor):
 
             # Set expression type to return type
             if len(ft.return_parameters) == 1:
-                ast.annotated_type = ft.return_parameters[0].annotated_type
+                ast.annotated_type = ft.return_parameters[0].annotated_type.clone()
             else:
                 # TODO maybe not None label in the future
                 ast.annotated_type = AnnotatedTypeName(TupleType([t.annotated_type for t in ft.return_parameters]), None)
@@ -190,7 +188,7 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert ast.target is not None
-        ast.annotated_type = deep_copy(ast.target.annotated_type)
+        ast.annotated_type = ast.target.annotated_type.clone()
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         if not ast.privacy.privacy_annotation_label():
@@ -200,8 +198,6 @@ class TypeCheckVisitor(AstVisitor):
         ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy)
         if ast.instanceof(ast.expr.annotated_type) is True:
             raise TypeException(f'Redundant "reveal": Expression is already "@{ast.privacy.code()}"', ast)
-
-        check_for_side_effects_or_nonstatic_function_calls(ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):
         b = ast.condition
@@ -242,7 +238,7 @@ class TypeCheckVisitor(AstVisitor):
             # no action necessary, the identifier will be replaced later
             pass
         else:
-            ast.annotated_type = deep_copy(ast.target.annotated_type)
+            ast.annotated_type = ast.target.annotated_type.clone()
 
             if not self.is_accessible_by_invoker(ast):
                 raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)

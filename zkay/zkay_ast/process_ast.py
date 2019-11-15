@@ -4,6 +4,7 @@ from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
 from zkay.utils.progress_printer import print_step, colored_print, TermColor
 from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
 from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
+from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_compliance
 from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
@@ -77,6 +78,7 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
         with print_step("Zkay type checking"):
             try:
                 t(ast)
+                check_circuit_compliance(ast)
                 detect_hybrid_functions(ast)
             except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as te:
                 with colored_print(TermColor.FAIL):

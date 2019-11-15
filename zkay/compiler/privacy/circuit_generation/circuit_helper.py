@@ -171,8 +171,6 @@ class CircuitHelper:
         return locally_decrypted_idf.get_loc_expr()
 
     def inline_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition):
-        # TODO type checker needs to ensure that called functions can be inlined (i.e. static body, all operations supported in private)
-
         # prepend this to the current circuit statement:
         # 1. assign args to temporary variables
         # 2. include original function body with replaced parameter idfs

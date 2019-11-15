@@ -1,4 +1,4 @@
-from zkay.zkay_ast.ast import SourceUnit
+from zkay.zkay_ast.ast import SourceUnit, Parameter
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -10,3 +10,6 @@ class FunctionVisitor(AstVisitor):
         for c in ast.contracts:
             list(map(self.visit, c.constructor_definitions))
             list(map(self.visit, c.function_definitions))
+
+    def visitParameter(self, ast: Parameter):
+        pass

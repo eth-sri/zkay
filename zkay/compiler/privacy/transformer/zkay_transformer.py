@@ -67,6 +67,9 @@ class ZkayTransformer(AstTransformerVisitor):
             # TODO external functions
             c.function_definitions = [fdef for fdef in c.function_definitions if 'public' in fdef.modifiers or not fdef.requires_verification]
 
+            # TODO add additional external function for all with not requires_verification and requires_external verification
+            # Update all function call exprs to point to internal version
+
             # Transform function children and include required verification contracts
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_children(f)
@@ -95,11 +98,12 @@ class ZkayTransformer(AstTransformerVisitor):
         self.circuit_generators[ast] = circuit_generator
         self.current_generator = circuit_generator
 
-        # Check encryption for all private args
-        for p in ast.parameters:
-            """ * of T_e rule 8 """
-            if p.annotated_type.is_private():
-                circuit_generator.encrypt_parameter(p)
+        # Check encryption for all private args (if call can come from outside)
+        if not ('private' in ast.modifiers or 'internal' in ast.modifiers):
+            for p in ast.parameters:
+                """ * of T_e rule 8 """
+                if p.annotated_type.is_private():
+                    circuit_generator.encrypt_parameter(p)
 
         # Transform parameters
         ast.parameters = list(map(self.var_decl_trafo.visit, ast.parameters))
@@ -313,19 +317,17 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         """ Rule (11) """
         return self.gen.move_out(ast.expr, ast.privacy)
 
-    def visitExpression(self, ast: Expression):
-        """ Rule (10 & 12) """
-        if ast.annotated_type is not None and ast.annotated_type.is_private():
-            return self.gen.move_out(ast, Expression.me_expr())
-        else:
-            return self.visit_children(ast)
-
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if ast.annotated_type.is_private():
-            return self.visitExpression(ast)
+        if isinstance(ast.func, BuiltinFunction):
+            if ast.func.is_private:
+                """ Modified Rule (12) (priv expression on its own does not trigger verification) """
+                return self.gen.move_out(ast, Expression.me_expr())
+            else:
+                """ Rule (10) """
+                return self.visit_children(ast)
 
         if isinstance(ast.func, LocationExpr):
-            if ast.func.target.requires_verification:
+            if ast.func.target.requires_verification_if_external: # TODO don't inline funcitons which only require external verification
                 if ast.func.target.has_side_effects:
                     raise NotImplementedError('Side effects in inlined functions not yet supported (have to make sure evaluation order matches solidity semantics)')
                 # TODO inline

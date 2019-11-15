@@ -1,6 +1,6 @@
 from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AllExpr, AstException, FunctionCallExpr, \
-    LocationExpr
+from zkay.zkay_ast.ast import ReclassifyExpr, ConstructorOrFunctionDefinition, AllExpr, FunctionCallExpr, \
+    LocationExpr, BuiltinFunction
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -27,15 +27,19 @@ class DirectHybridFunctionDetectionVisitor(FunctionVisitor):
     def visitAllExpr(self, ast: AllExpr):
         pass
 
-    def visitExpression(self, ast: Expression):
-        if ast.annotated_type.is_private():
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:
             ast.statement.function.requires_verification = True
+        self.visitChildren(ast)
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
+        self.visit(ast.body)
+        if ast.requires_verification:
+            ast.requires_verification_if_external = True
+
         for param in ast.parameters:
             if param.annotated_type.is_private():
-                ast.requires_verification = True
-        self.visit(ast.body)
+                ast.requires_verification_if_external = True
 
 
 class IndirectHybridFunctionDetectionVisitor(FunctionVisitor):
@@ -44,12 +48,13 @@ class IndirectHybridFunctionDetectionVisitor(FunctionVisitor):
             for fct in ast.called_functions:
                 if fct.requires_verification:
                     ast.requires_verification = True
+                    ast.requires_verification_if_external = True
                     break
 
 
 class NonInlineableCallDetector(FunctionVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, LocationExpr):
-            if ast.func.target.requires_verification and ast.func.target.is_recursive:
+            if ast.func.target.requires_verification_if_external and ast.func.target.is_recursive: # TODO don't inline funcitons which only require external verification
                 raise TypeException("Non-inlineable call to recursive private function", ast.func)
         self.visitChildren(ast)
