@@ -668,7 +668,10 @@ class StatementList(Statement):
 
 
 class Block(StatementList):
-    pass
+
+    def clone(self) -> 'Block':
+        from zkay.zkay_ast.visitor.deep_copy import deep_copy
+        return deep_copy(self, with_types=True)
 
 
 class LabeledBlock(StatementList):

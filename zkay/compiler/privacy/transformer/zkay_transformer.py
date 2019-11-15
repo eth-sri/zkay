@@ -1,5 +1,4 @@
 import re
-from copy import deepcopy
 from typing import Dict, Optional, List, Tuple
 
 import zkay.config as cfg
@@ -116,8 +115,8 @@ class ZkayTransformer(AstTransformerVisitor):
         self.current_generator = self.circuit_generators[ast]
 
         # Transform body
-        ast.original_body = deepcopy(ast.body)
-        ast.body = ZkayStatementTransformer(self.current_generator).visit(ast.body)
+        ast.original_body = ast.body
+        ast.body = ZkayStatementTransformer(self.current_generator).visit(ast.body.clone())
         return ast
 
     def transform_function_definition(self, ast: ConstructorOrFunctionDefinition):
@@ -354,7 +353,6 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
                     raise NotImplementedError('Side effects in inlined functions not yet supported (have to make sure evaluation order matches solidity semantics)')
                 # TODO inline
                 return self.gen.inline_function(ast, fdef)
-                raise NotImplementedError('Calls to functions which require verification not yet supported')
         return self.visit_children(ast)
 
 

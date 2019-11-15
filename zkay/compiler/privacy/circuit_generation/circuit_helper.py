@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List, Dict, Optional, Tuple, Callable
 
 import zkay.config as cfg
@@ -8,19 +7,17 @@ from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformer
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
-    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, Identifier, \
+    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, \
+    Identifier, \
     AnnotatedTypeName, Statement, IndentBlock
 
 
-class NameFactory:
-    def __init__(self, base_name: str, is_private: bool):
+class BaseNameFactory:
+    def __init__(self, base_name: str):
         self.base_name = base_name
-        self.is_private = is_private
         self.count = 0
-        self.size = 0
-        self.idfs = []
 
-    def get_new_idf(self, t: TypeName, priv_expr: Optional[Expression] = None) -> HybridArgumentIdf:
+    def get_new_name(self, t: TypeName) -> str:
         if t == TypeName.key_type():
             postfix = 'key'
         elif t == TypeName.cipher_type():
@@ -28,9 +25,25 @@ class NameFactory:
         else:
             postfix = 'plain'
         name = f'{self.base_name}{self.count}_{postfix}'
-
-        idf = HybridArgumentIdf(name, t, self.is_private, priv_expr)
         self.count += 1
+        return name
+
+
+class SimpleNameFactory(BaseNameFactory):
+    def get_new_idf(self, t: TypeName) -> Identifier:
+        return Identifier(self.get_new_name(t))
+
+
+class NameFactory(BaseNameFactory):
+    def __init__(self, base_name: str, is_private: bool):
+        super().__init__(base_name)
+        self.is_private = is_private
+        self.size = 0
+        self.idfs = []
+
+    def get_new_idf(self, t: TypeName, priv_expr: Optional[Expression] = None) -> HybridArgumentIdf:
+        name = self.get_new_name(t)
+        idf = HybridArgumentIdf(name, t, self.is_private, priv_expr)
         self.size += t.size_in_uints
         self.idfs.append(idf)
         return idf
@@ -63,7 +76,7 @@ class CircuitHelper:
         """ List of proof circuit statements (assertions and assignments) """
 
         # Local variables outside circuit
-        self._local_var_name_factory = NameFactory('_zk_tmp', is_private=False)
+        self._local_var_name_factory = SimpleNameFactory('_zk_tmp')
 
         # Private inputs
         self._secret_input_name_factory = NameFactory('secret', is_private=True)
@@ -78,7 +91,7 @@ class CircuitHelper:
         self._pk_for_label: Dict[str, AssignmentStatement] = {}
         self._param_to_in_assignments: List[AssignmentStatement] = []
 
-        self._inline_var_remap: Dict[str, HybridArgumentIdf] = {}
+        self._inline_var_remap: Dict[str, Identifier] = {}
 
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
@@ -188,11 +201,14 @@ class CircuitHelper:
 
         for param, arg in zip(fdef.parameters, ast.args):
             self._current_pre_stmts.append(self.create_temporary_variable(param.idf.name, param.annotated_type, self._expr_trafo.visit(arg)))
-        inlined_stmts = deepcopy(fdef.original_body.statements)
+        inlined_stmts = fdef.original_body.clone().statements
         self._current_pre_stmts.append(self._inline_stmt_trafo.visit(IndentBlock('INLINED_' + fdef.name, inlined_stmts)))
 
-        ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(),
-                             AnnotatedTypeName(self._inline_var_remap[cfg.return_var_name].t))
+        if fdef.return_parameters:
+            assert len(fdef.return_parameters) == 1
+            ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), fdef.return_parameters[0].annotated_type)
+        else:
+            ret = None
 
         self._inline_var_remap = prevmap
         if is_outer:
@@ -213,9 +229,9 @@ class CircuitHelper:
 
         for param, arg in zip(fdef.parameters, ast.args):
             self.create_circuit_temp_var_decl(Identifier(param.idf.name).decl_var(param.annotated_type, self._circ_trafo.visit(arg)))
-        inlined_stmts = deepcopy(fdef.original_body.statements)
+        inlined_stmts = fdef.original_body.clone().statements
         for stmt in inlined_stmts:
-            self._phi.append(self._circ_trafo.visit(stmt))
+            self._circ_trafo.visit(stmt)
         ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), AnnotatedTypeName(self._inline_var_remap[cfg.return_var_name].t))
 
         self._inline_var_remap = prevmap
