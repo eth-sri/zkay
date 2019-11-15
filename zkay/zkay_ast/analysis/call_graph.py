@@ -31,18 +31,15 @@ class DirectCalledFunctionDetector(FunctionVisitor):
 class IndirectCalledFunctionDetector(FunctionVisitor):
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         # Fixed point iteration
-        size = len(ast.called_functions)
-        while True:
-            for fct in ast.called_functions:
-                ast.called_functions.update(fct.called_functions)
-
-            new_size = len(ast.called_functions)
-            if new_size == size:
-                break
-            size = new_size
+        size = 0
+        leaves = ast.called_functions
+        while len(ast.called_functions) > size:
+            size = len(ast.called_functions)
+            leaves = [fct for leaf in leaves for fct in leaf.called_functions if fct not in ast.called_functions]
+            ast.called_functions.update(leaves)
 
         if ast in ast.called_functions:
-            # This is a recursive function
+            ast.is_recursive = True
             ast.has_static_body = False
 
 

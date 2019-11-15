@@ -1,4 +1,6 @@
-from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AllExpr, AstException
+from zkay.type_check.type_exceptions import TypeException
+from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, AllExpr, AstException, FunctionCallExpr, \
+    LocationExpr
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -12,6 +14,9 @@ def detect_hybrid_functions(ast):
     v.visit(ast)
 
     v = IndirectHybridFunctionDetectionVisitor()
+    v.visit(ast)
+
+    v = NonInlineableCallDetector()
     v.visit(ast)
 
 
@@ -40,3 +45,11 @@ class IndirectHybridFunctionDetectionVisitor(FunctionVisitor):
                 if fct.requires_verification:
                     ast.requires_verification = True
                     break
+
+
+class NonInlineableCallDetector(FunctionVisitor):
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, LocationExpr):
+            if ast.func.target.requires_verification and ast.func.target.is_recursive:
+                raise TypeException("Non-inlineable call to recursive private function", ast.func)
+        self.visitChildren(ast)

@@ -1078,6 +1078,7 @@ class ConstructorOrFunctionDefinition(AST):
         # specify parent type
         self.parent: ContractDefinition = None
         self.called_functions: Set[ConstructorOrFunctionDefinition] = set()
+        self.is_recursive = False
         self.has_static_body = True
         self.requires_verification = False
 

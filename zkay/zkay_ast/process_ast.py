@@ -77,10 +77,9 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
         with print_step("Zkay type checking"):
             try:
                 t(ast)
+                detect_hybrid_functions(ast)
             except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as te:
                 with colored_print(TermColor.FAIL):
                     print("\n\nERROR: Type check failed")
                     print(f'{str(te)}\n')
                 raise TypeCheckException()
-
-    detect_hybrid_functions(ast)
