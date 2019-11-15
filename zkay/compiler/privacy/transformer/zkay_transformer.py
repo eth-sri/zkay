@@ -9,11 +9,10 @@ from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, IfStatement, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
-    Identifier, \
-    VariableDeclarationStatement, Block, ExpressionStatement, \
+    Identifier, VariableDeclarationStatement, ExpressionStatement, \
     UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, \
-    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction, AssignmentStatement
+    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction, AssignmentStatement, StatementList
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
@@ -50,7 +49,7 @@ class ZkayTransformer(AstTransformerVisitor):
             self.current_generator.verifier_contract_filename = fname
         ast.used_contracts.append(fname)
 
-        return StateVariableDeclaration(AnnotatedTypeName(c_type, None), ['constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0)))
+        return StateVariableDeclaration(AnnotatedTypeName(c_type), ['constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0)))
 
     def visitSourceUnit(self, ast: SourceUnit):
         # Include pki contract
@@ -70,9 +69,13 @@ class ZkayTransformer(AstTransformerVisitor):
             # TODO add additional external function for all with not requires_verification and requires_external verification
             # Update all function call exprs to point to internal version
 
-            # Transform function children and include required verification contracts
+            # Transform function signatures
             for f in c.constructor_definitions + c.function_definitions:
-                self.transform_function_children(f)
+                self.transform_function_signature(f)
+
+            # Transform function body statements
+            for f in c.constructor_definitions + c.function_definitions:
+                self.transform_function_body(f)
                 if self.current_generator.requires_verification():
                     contract_state_var_decl = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls) - 1}_{f.name}')
                     ext_var_decls.append(contract_state_var_decl)
@@ -87,16 +90,15 @@ class ZkayTransformer(AstTransformerVisitor):
                 circuit = self.circuit_generators[f]
                 if circuit.requires_verification():
                     c.struct_definitions.append(StructDefinition(Identifier(f'{f.name}_{cfg.zk_struct_suffix}'), [
-                        VariableDeclaration([], AnnotatedTypeName(idf.t, None), idf.clone(), '')
+                        VariableDeclaration([], AnnotatedTypeName(idf.t), idf.clone(), '')
                         for idf in circuit.output_idfs + circuit.input_idfs
                     ]))
 
         return ast
 
-    def transform_function_children(self, ast: ConstructorOrFunctionDefinition):
-        circuit_generator = CircuitHelper(ast, ZkayExpressionTransformer, ZkayCircuitTransformer)
+    def transform_function_signature(self, ast: ConstructorOrFunctionDefinition):
+        circuit_generator = CircuitHelper(ast, ZkayInlineStmtTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer)
         self.circuit_generators[ast] = circuit_generator
-        self.current_generator = circuit_generator
 
         # Check encryption for all private args (if call can come from outside)
         if not ('private' in ast.modifiers or 'internal' in ast.modifiers):
@@ -110,9 +112,12 @@ class ZkayTransformer(AstTransformerVisitor):
         if isinstance(ast, FunctionDefinition):
             ast.return_parameters = list(map(self.var_decl_trafo.visit, ast.return_parameters))
 
+    def transform_function_body(self, ast: ConstructorOrFunctionDefinition):
+        self.current_generator = self.circuit_generators[ast]
+
         # Transform body
         ast.original_body = deepcopy(ast.body)
-        ast.body = ZkayStatementTransformer(circuit_generator).visit(ast.body)
+        ast.body = ZkayStatementTransformer(self.current_generator).visit(ast.body)
         return ast
 
     def transform_function_definition(self, ast: ConstructorOrFunctionDefinition):
@@ -196,7 +201,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         self.expr_trafo = ZkayExpressionTransformer(None)
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
-        new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name.clone()), None)
+        new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name.clone()))
         if ast.is_private():
             new_t.old_priv_text = f'{ast.code()}' if ast.type_name != new_t.type_name else f'@{ast.privacy_annotation.code()}'
         return new_t
@@ -241,7 +246,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         self.gen.has_return_var = True
         return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(self.expr_trafo.visit(ast.expr)))
 
-    def visitBlock(self, ast: Block):
+    def visitStatementList(self, ast: StatementList):
         """ Rule (1) """
         new_statements = []
         for idx, stmt in enumerate(ast.statements):
@@ -256,7 +261,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             if old_code_wo_annotations == new_code_wo_annotation_comments:
                 new_statements.append(transformed_stmt)
             else:
-                new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.in_assignments + [transformed_stmt])
+                new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.in_assignments + transformed_stmt.pre_statements + [transformed_stmt])
 
         if new_statements and not isinstance(new_statements[-1], Comment) and isinstance(ast.parent, ConstructorOrFunctionDefinition):
             new_statements.append(Comment())
@@ -288,6 +293,21 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         assert False, f"Missed an expression of type {type(ast)}"
 
 
+class ZkayInlineStmtTransformer(ZkayStatementTransformer):
+    def visitReturnStatement(self, ast: ReturnStatement):
+        if ast.expr is None:
+            return None
+        assert isinstance(ast.function, FunctionDefinition)
+        assert len(ast.function.return_parameters) == 1
+        expr = self.expr_trafo.visit(ast.expr)
+        return self.gen.create_temporary_variable(cfg.return_var_name, ast.function.return_parameters[0].annotated_type, expr)
+
+    def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
+        vardecl = self.var_decl_trafo.visit(ast.variable_declaration)
+        expr = self.expr_trafo.visit(ast.expr)
+        return self.gen.create_temporary_variable(vardecl.idf.name, vardecl.annotated_type, expr)
+
+
 class ZkayExpressionTransformer(AstTransformerVisitor):
     """ Corresponds to T_L / T_e from paper (parameter encryption checks are handled outside of this) """
 
@@ -305,8 +325,9 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         """ Rule (8) """
-        if isinstance(ast.idf, HybridArgumentIdf):
-            return ast.implicitly_converted(ast.idf.t)
+        ast.idf = self.gen.get_remapped_idf(ast.idf)
+        #if isinstance(ast.idf, HybridArgumentIdf):
+        #    return ast.implicitly_converted(ast.idf.t)
         return ast
 
     def visitIndexExpr(self, ast: IndexExpr):
@@ -327,10 +348,12 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
                 return self.visit_children(ast)
 
         if isinstance(ast.func, LocationExpr):
-            if ast.func.target.requires_verification_if_external: # TODO don't inline funcitons which only require external verification
-                if ast.func.target.has_side_effects:
+            fdef = ast.func.target
+            if fdef.requires_verification_if_external: # TODO don't inline funcitons which only require external verification
+                if fdef.has_side_effects:
                     raise NotImplementedError('Side effects in inlined functions not yet supported (have to make sure evaluation order matches solidity semantics)')
                 # TODO inline
+                return self.gen.inline_function(ast, fdef)
                 raise NotImplementedError('Calls to functions which require verification not yet supported')
         return self.visit_children(ast)
 
@@ -377,21 +400,19 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         fdef = ast.func.target
         assert isinstance(fdef, FunctionDefinition)
         assert fdef.return_parameters
+        assert fdef.has_static_body
 
-        if not fdef.has_static_body:
-            raise ValueError('Function with dynamic body cannot be inlined')
-
-        return self.gen.inline_function(ast, fdef)
+        return self.gen.inline_circuit_function(ast, fdef)
 
     def visitReturnStatement(self, ast: ReturnStatement):
         assert ast.expr is not None
-        return self.gen.create_temp_var_decl(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, ast.expr))
+        self.gen.create_circuit_temp_var_decl(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, ast.expr))
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        return self.gen.create_assignment(ast)
+        self.gen.create_assignment(ast)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
-        return self.gen.create_temp_var_decl(ast)
+        self.gen.create_circuit_temp_var_decl(ast)
 
     def visitStatement(self, ast: Statement):
         raise NotImplementedError("Unsupported statement")
