@@ -116,7 +116,7 @@ class Expression(AST):
         else:
             assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
             return self
-        ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation)
+        ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation.clone())
         return ret
 
     def __init__(self):
@@ -569,6 +569,9 @@ class Statement(AST):
         self.out_refs: List['HybridArgumentIdf'] = []
         self.in_assignments: List[AssignmentStatement] = []
 
+        # Inlined function statements
+        self.pre_statements = []
+
     def replaced_with(self, replacement: 'Statement') -> 'Statement':
         repl = super().replaced_with(replacement)
         assert isinstance(repl, Statement)
@@ -577,6 +580,7 @@ class Statement(AST):
         repl.function = self.function
         repl.out_refs = self.out_refs
         repl.in_assignments = self.in_assignments
+        repl.pre_statements = self.pre_statements
         return repl
 
 
@@ -640,14 +644,14 @@ class AssignmentStatement(SimpleStatement):
         self.rhs = f(self.rhs)
 
 
-class Block(Statement):
-
+class StatementList(Statement):
     def __init__(self, statements: List[Statement]):
         super().__init__()
         self.statements = statements
 
-    # Special case, if processing a statement returns a list of statements,
-    # all statements will be integrated into this block
+        # Special case, if processing a statement returns a list of statements,
+        # all statements will be integrated into this block
+
     def process_children(self, f: Callable[['AST'], 'AST']):
         new_stmts = []
         for idx, stmt in enumerate(self.statements):
@@ -663,13 +667,17 @@ class Block(Statement):
         return self.statements[key]
 
 
-class LabeledBlock(Block):
+class Block(StatementList):
+    pass
+
+
+class LabeledBlock(StatementList):
     def __init__(self, statements: List[Statement], label: str):
         super().__init__(statements)
         self.label = label
 
 
-class IndentBlock(Block):
+class IndentBlock(StatementList):
     def __init__(self, name: str, statements: List[Statement]):
         super().__init__(statements)
         self.name = name
@@ -1098,6 +1106,7 @@ class ConstructorOrFunctionDefinition(AST):
         self.requires_verification = False
         self.requires_verification_if_external = False
         self.can_be_private = True
+        self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
@@ -1138,7 +1147,6 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
             = AnnotatedTypeName.all(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
 
         self.original_body = body
-        self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
@@ -1448,10 +1456,13 @@ class CodeVisitor(AstVisitor):
             rhs = self.visit(ast.rhs)
             return f'{lhs} = {rhs};'
 
-    def handle_block(self, ast: Block):
+    def handle_block(self, ast: StatementList):
         s = self.visit_list(ast.statements)
         s = indent(s)
         return s
+
+    def visitStatementList(self, ast: StatementList):
+        return self.visit_list(ast.statements)
 
     def visitBlock(self, ast: Block):
         return f'{{\n{self.handle_block(ast)}\n}}'

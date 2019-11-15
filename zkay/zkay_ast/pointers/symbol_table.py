@@ -1,6 +1,5 @@
-from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, Statement, \
-    SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
-    StructDefinition, Array, UserDefinedTypeName
+from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
+    StructDefinition, UserDefinedTypeName, StatementList
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -68,7 +67,7 @@ class SymbolTableFiller(AstVisitor):
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.names = {ast.idf.name: ast.idf}
 
-    def visitBlock(self, ast: Statement):
+    def visitStatementList(self, ast: StatementList):
         ast.names = collect_children_names(ast)
 
     def visitSimpleStatement(self, ast: SimpleStatement):

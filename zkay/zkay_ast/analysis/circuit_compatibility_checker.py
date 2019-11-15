@@ -1,7 +1,7 @@
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.analysis.side_effects import SideEffectsVisitor
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
-    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, Block
+    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, Block, StatementList
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -38,6 +38,9 @@ class DirectCanBePrivateDetector(FunctionVisitor):
         ast.statement.function.can_be_private &= (t == t.uint_type() or t == t.bool_type())
         self.visitChildren(ast)
 
+    def visitReclassifyExpr(self, ast: ReclassifyExpr):
+        return self.visit(ast.expr)
+
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.visitChildren(ast)
 
@@ -47,7 +50,7 @@ class DirectCanBePrivateDetector(FunctionVisitor):
     def visitReturnStatement(self, ast: ReturnStatement):
         self.visitChildren(ast)
 
-    def visitBlock(self, ast: Block):
+    def visitStatementList(self, ast: StatementList):
         self.visitChildren(ast)
 
     def visitStatement(self, ast: Statement):

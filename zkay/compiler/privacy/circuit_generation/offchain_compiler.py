@@ -13,7 +13,6 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness, SliceExpr, \
     Array, Comment, AddressTypeName
-from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -364,7 +363,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return None
 
     def visitEncryptionExpression(self, ast: EncryptionExpression):
-        priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(deep_copy(ast.privacy))
+        priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())
         plain = self.visit(ast.expr)
         with CircuitComputation(self):
             return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'

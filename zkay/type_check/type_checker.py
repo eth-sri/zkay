@@ -7,9 +7,6 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, LocationExpr
-from zkay.zkay_ast.pointers.parent_setter import set_parents
-from zkay.zkay_ast.pointers.symbol_table import link_identifiers
-from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -140,9 +137,9 @@ class TypeCheckVisitor(AstVisitor):
     def make_private(expr: Expression, privacy: Expression):
         assert (privacy.privacy_annotation_label() is not None)
 
-        pl = privacy.privacy_annotation_label()
+        pl = privacy.privacy_annotation_label().clone()
         if isinstance(pl, Identifier):
-            pl = privacy.replaced_with(IdentifierExpr(Identifier(pl.name)))
+            pl = IdentifierExpr(pl, AnnotatedTypeName.address_all())
         r = ReclassifyExpr(expr, pl)
 
         # set type
