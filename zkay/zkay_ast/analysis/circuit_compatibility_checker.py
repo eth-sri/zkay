@@ -31,7 +31,8 @@ class DirectCanBePrivateDetector(FunctionVisitor):
             elif ast.func.is_ite():
                 can_be_private |= ast.annotated_type.type_name.can_be_private()
             ast.statement.function.can_be_private &= can_be_private
-        self.visitChildren(ast)
+        for arg in ast.args:
+            self.visit(arg)
 
     def visitLocationExpr(self, ast: LocationExpr):
         t = ast.annotated_type.type_name
