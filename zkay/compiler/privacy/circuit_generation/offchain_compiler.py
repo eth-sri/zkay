@@ -3,7 +3,8 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 import zkay.config as cfg
-from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, \
+    CircuitStatement
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf, \
     TempVarDecl, EncConstraint, EqConstraint
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
@@ -306,25 +307,34 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         ] if s)
         return code
 
+    __assert_str = 'assert {0} == {1}, f\'check failed for lhs={{{0}}} and rhs={{{1}}}\''
+    def visitCircuitStatement(self, stmt: CircuitStatement):
+        if isinstance(stmt, CircComment):
+            return f'# {stmt.text}' if stmt.text else ''
+        elif isinstance(stmt, CircIndentBlock):
+            stmts = list(map(self.visitCircuitStatement, stmt.statements))
+            return '\n'.join(stmts)
+            #return f'## BEGIN {stmt.name} ##\n' + '\n'.join(stmts) + '\n' + f'##  END  {stmt.name} ##'
+        elif isinstance(stmt, TempVarDecl):
+            return f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}'
+        elif isinstance(stmt, EncConstraint):
+            cipher_str = self.visit(stmt.cipher.get_loc_expr())
+            enc_str = f'(CipherValue() if {cipher_str} == CipherValue() else {CRYPTO_OBJ_NAME}.enc({self.visit(stmt.plain.get_loc_expr())}, {self.visit(stmt.pk.get_loc_expr())}, {self.visit(stmt.rnd.get_loc_expr())})[0])'
+            return self.__assert_str.format(enc_str, cipher_str)
+        elif isinstance(stmt, CircAssignment):
+            return f'{self.visit(stmt.lhs)} = {self.visit(stmt.rhs)}'
+        else:
+            assert isinstance(stmt, EqConstraint)
+            return self.__assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr()))
+
     def build_proof_check_fct(self) -> str:
         circuit = self.current_circ
         pnames = ', '.join([f'{{{cfg.zk_data_var_name}["{p.name}"]}}' for p in circuit.input_idfs + circuit.output_idfs])
         stmts = [f"print(f'Circuit arguments: {{list(map(str, priv_args))}}, {pnames}')"]
-        assert_str = 'assert {0} == {1}, f\'check failed for lhs={{{0}}} and rhs={{{1}}}\''
 
         with CircuitComputation(self):
-            for stmt in circuit.phi:
-                if isinstance(stmt, TempVarDecl):
-                    stmts.append(f'{stmt.lhs.name}: int = {self.visit(stmt.expr.implicitly_converted(TypeName.uint_type()))}')
-                elif isinstance(stmt, EncConstraint):
-                    cipher_str = self.visit(stmt.cipher.get_loc_expr())
-                    enc_str = f'(CipherValue() if {cipher_str} == CipherValue() else {CRYPTO_OBJ_NAME}.enc({self.visit(stmt.plain.get_loc_expr())}, {self.visit(stmt.pk.get_loc_expr())}, {self.visit(stmt.rnd.get_loc_expr())})[0])'
-                    stmts.append(assert_str.format(enc_str, cipher_str))
-                elif isinstance(stmt, CircAssignment):
-                    stmts.append(f'{self.visit(stmt.lhs)} = {self.visit(stmt.rhs)}')
-                else:
-                    assert isinstance(stmt, EqConstraint)
-                    stmts.append(assert_str.format(self.visit(stmt.tgt.get_loc_expr()), self.visit(stmt.val.get_loc_expr())))
+            stmts += [self.visitCircuitStatement(stmt) for stmt in circuit.phi]
+
         stmts.append('print(\'Proof soundness verified\')')
 
         params = f'self, {cfg.zk_data_var_name}: Dict, priv_args: List'

@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Tuple, Callable
 
 import zkay.config as cfg
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, EncConstraint, TempVarDecl, \
-    EqConstraint, CircAssignment
+    EqConstraint, CircAssignment, CircComment, CircIndentBlock
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
@@ -17,7 +17,7 @@ class BaseNameFactory:
         self.base_name = base_name
         self.count = 0
 
-    def get_new_name(self, t: TypeName) -> str:
+    def get_new_name(self, t: TypeName, inc=True) -> str:
         if t == TypeName.key_type():
             postfix = 'key'
         elif t == TypeName.cipher_type():
@@ -25,7 +25,8 @@ class BaseNameFactory:
         else:
             postfix = 'plain'
         name = f'{self.base_name}{self.count}_{postfix}'
-        self.count += 1
+        if inc:
+            self.count += 1
         return name
 
 
@@ -162,21 +163,26 @@ class CircuitHelper:
         self.param_to_in_assignments.append(cipher_idf.get_loc_expr().assign(IdentifierExpr(param.idf.name)))
 
     def move_out(self, expr: Expression, new_privacy: PrivacyLabelExpr):
-        plain_result_idf, priv_expr = self._evaluate_private_expression(expr)
+        ecode = expr.code()
+        with CircIndentBlockBuilder(f'[{expr.statement.function.name}]: {ecode}', self._phi):
+            plain_result_idf, priv_expr = self._evaluate_private_expression(expr)
 
-        if new_privacy.is_all_expr():
-            new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
-            self._phi.append(EqConstraint(plain_result_idf, new_out_param))
-            out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
-        else:
-            new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(priv_expr, new_privacy))
-            self._ensure_encryption(plain_result_idf, new_privacy, new_out_param, False)
-            out_var = new_out_param.get_loc_expr()
+            if new_privacy.is_all_expr():
+                new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
+                self._phi.append(EqConstraint(plain_result_idf, new_out_param))
+                out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
+            else:
+                new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(priv_expr, new_privacy))
+                self._ensure_encryption(plain_result_idf, new_privacy, new_out_param, False)
+                out_var = new_out_param.get_loc_expr()
+
+        self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
 
         expr.statement.out_refs.append(new_out_param)
         return out_var
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
+        expr_text = loc_expr.code()
         input_expr = self._expr_trafo.visit(loc_expr)
         if privacy.is_all_expr():
             input_idf = self._in_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
@@ -186,6 +192,7 @@ class CircuitHelper:
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
             self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf, False)
 
+        self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
         loc_expr.statement.in_assignments.append(input_idf.get_loc_expr().assign(input_expr))
         return locally_decrypted_idf.get_loc_expr()
 
@@ -199,10 +206,12 @@ class CircuitHelper:
             is_outer = True
             self._current_pre_stmts = ast.statement.pre_statements
 
+        calltext = f'INLINED {ast.code()}'
+
         for param, arg in zip(fdef.parameters, ast.args):
             self._current_pre_stmts.append(self.create_temporary_variable(param.idf.name, param.annotated_type, self._expr_trafo.visit(arg)))
         inlined_stmts = fdef.original_body.clone().statements
-        self._current_pre_stmts.append(self._inline_stmt_trafo.visit(IndentBlock('INLINED_' + fdef.name, inlined_stmts)))
+        self._current_pre_stmts.append(self._inline_stmt_trafo.visit(IndentBlock(calltext, inlined_stmts)))
 
         if fdef.return_parameters:
             assert len(fdef.return_parameters) == 1
@@ -227,13 +236,13 @@ class CircuitHelper:
         self._inline_var_remap = {}
         self._inline_var_remap.update(prevmap)
 
-        for param, arg in zip(fdef.parameters, ast.args):
-            self.create_circuit_temp_var_decl(Identifier(param.idf.name).decl_var(param.annotated_type, self._circ_trafo.visit(arg)))
-        inlined_stmts = fdef.original_body.clone().statements
-        for stmt in inlined_stmts:
-            self._circ_trafo.visit(stmt)
-        ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), AnnotatedTypeName(self._inline_var_remap[cfg.return_var_name].t))
-
+        with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
+            for param, arg in zip(fdef.parameters, ast.args):
+                self.create_circuit_temp_var_decl(Identifier(param.idf.name).decl_var(param.annotated_type, self._circ_trafo.visit(arg)))
+            inlined_stmts = fdef.original_body.clone().statements
+            for stmt in inlined_stmts:
+                self._circ_trafo.visit(stmt)
+            ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), AnnotatedTypeName(self._inline_var_remap[cfg.return_var_name].t))
         self._inline_var_remap = prevmap
         return ret
 
@@ -259,8 +268,8 @@ class CircuitHelper:
         self._phi.append(CircAssignment(lhs, rhs))
 
     def _evaluate_private_expression(self, expr: Expression):
-        priv_expr = self._circ_trafo.visit(expr)
         sec_circ_var_idf = self._circ_temp_name_factory.get_new_idf(expr.annotated_type.type_name)
+        priv_expr = self._circ_trafo.visit(expr)
         stmt = TempVarDecl(sec_circ_var_idf, priv_expr)
         self.phi.append(stmt)
         return sec_circ_var_idf, priv_expr
@@ -279,3 +288,16 @@ class CircuitHelper:
             pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
             self._pk_for_label[pname] = idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy)]))
             return idf
+
+
+class CircIndentBlockBuilder:
+    def __init__(self, name: str, phi: List[CircuitStatement]):
+        self.name = name
+        self.phi = phi
+        self.old_phi = None
+
+    def __enter__(self):
+        self.old_phi = self.phi[:]
+
+    def __exit__(self, t, value, traceback):
+        self.phi[:] = self.old_phi + [CircIndentBlock(self.name, self.phi[len(self.old_phi):])]
