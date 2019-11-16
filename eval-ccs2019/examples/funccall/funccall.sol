@@ -48,8 +48,12 @@ contract funccall {
         return reveal(v1 + v2, all);
     }
 
-    function priv_inc(uint@me val) public pure returns(uint@me) {
+    function priv_inc2(uint@me val) internal pure returns(uint@me) {
         return val + 1;
+    }
+
+    function priv_inc(uint@me val) public pure returns(uint@me) {
+        return val + priv_inc2(42 * val);
     }
 
     function calc(uint@me v) public {
