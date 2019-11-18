@@ -142,6 +142,13 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Got value {val} for state variable "{name}"')
         return val
 
+    def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, List]:
+        assert contract_handle is not None
+        debug_print(f'Calling contract function {name}({Value.list_to_string(*args)})')
+        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
+        debug_print(f'Got return value {val}')
+        return val
+
     def transact(self, contract_handle, function: str, actual_args: List, should_encrypt: List[bool]) -> Any:
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
