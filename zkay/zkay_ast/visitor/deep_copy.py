@@ -55,8 +55,6 @@ class DeepCopyVisitor(AstVisitor):
             'function',
             'is_private',
 
-            'out_refs',
-            'in_assignments',
             'pre_statements',
 
             # For array children (ciphertext, key etc.)

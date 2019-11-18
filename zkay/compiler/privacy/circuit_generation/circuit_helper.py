@@ -9,7 +9,7 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, \
     Identifier, \
-    AnnotatedTypeName, Statement, IndentBlock
+    AnnotatedTypeName, Statement, IndentBlock, HybridArgType, Comment, CircuitInputStatement, CircuitComputationStatement
 
 
 class BaseNameFactory:
@@ -30,27 +30,22 @@ class BaseNameFactory:
         return name
 
 
-class SimpleNameFactory(BaseNameFactory):
-    def get_new_idf(self, t: TypeName) -> Identifier:
-        return Identifier(self.get_new_name(t))
-
-
 class NameFactory(BaseNameFactory):
-    def __init__(self, base_name: str, is_private: bool):
+    def __init__(self, base_name: str, arg_type: HybridArgType):
         super().__init__(base_name)
-        self.is_private = is_private
+        self.arg_type = arg_type
         self.size = 0
         self.idfs = []
 
     def get_new_idf(self, t: TypeName, priv_expr: Optional[Expression] = None) -> HybridArgumentIdf:
         name = self.get_new_name(t)
-        idf = HybridArgumentIdf(name, t, self.is_private, priv_expr)
+        idf = HybridArgumentIdf(name, t, self.arg_type, priv_expr)
         self.size += t.size_in_uints
         self.idfs.append(idf)
         return idf
 
     def add_idf(self, name: str, t: TypeName):
-        idf = HybridArgumentIdf(name, t, self.is_private)
+        idf = HybridArgumentIdf(name, t, self.arg_type)
         self.count += 1
         self.size += t.size_in_uints
         self.idfs.append(idf)
@@ -77,22 +72,22 @@ class CircuitHelper:
         """ List of proof circuit statements (assertions and assignments) """
 
         # Local variables outside circuit
-        self._local_var_name_factory = SimpleNameFactory('_zk_tmp')
+        self._local_var_name_factory = NameFactory('_zk_tmp', arg_type=HybridArgType.PUB_CONTRACT_VAL)
 
         # Private inputs
-        self._secret_input_name_factory = NameFactory('secret', is_private=True)
+        self._secret_input_name_factory = NameFactory('secret', arg_type=HybridArgType.PRIV_CIRCUIT_VAL)
         # Circuit internal
-        self._circ_temp_name_factory = NameFactory('tmp', is_private=True)
+        self._circ_temp_name_factory = NameFactory('tmp', arg_type=HybridArgType.PRIV_CIRCUIT_VAL)
 
         # Public inputs
-        self._out_name_factory = NameFactory(cfg.zk_out_name, is_private=False)
-        self._in_name_factory = NameFactory(cfg.zk_in_name, is_private=False)
+        self._out_name_factory = NameFactory(cfg.zk_out_name, arg_type=HybridArgType.PUB_CIRCUIT_ARG)
+        self._in_name_factory = NameFactory(cfg.zk_in_name, arg_type=HybridArgType.PUB_CIRCUIT_ARG)
 
         # Public contract elements
         self._pk_for_label: Dict[str, AssignmentStatement] = {}
         self._param_to_in_assignments: List[AssignmentStatement] = []
 
-        self._inline_var_remap: Dict[str, Identifier] = {}
+        self._inline_var_remap: Dict[str, HybridArgumentIdf] = {}
 
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
@@ -124,6 +119,10 @@ class CircuitHelper:
     @property
     def input_idfs(self) -> List[HybridArgumentIdf]:
         return self._in_name_factory.idfs
+
+    @property
+    def temp_vars_outside_circuit(self) -> List[HybridArgumentIdf]:
+        return self._local_var_name_factory.idfs
 
     @property
     def sec_idfs(self) -> List[HybridArgumentIdf]:
@@ -178,7 +177,7 @@ class CircuitHelper:
 
         self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
 
-        expr.statement.out_refs.append(new_out_param)
+        expr.statement.pre_statements.append(CircuitComputationStatement(new_out_param))
         return out_var
 
     def move_in(self, loc_expr: LocationExpr, privacy: PrivacyLabelExpr):
@@ -193,7 +192,7 @@ class CircuitHelper:
             self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf, False)
 
         self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
-        loc_expr.statement.in_assignments.append(input_idf.get_loc_expr().assign(input_expr))
+        loc_expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
         return locally_decrypted_idf.get_loc_expr()
 
     def inline_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition):
@@ -201,27 +200,27 @@ class CircuitHelper:
         self._inline_var_remap = {}
         self._inline_var_remap.update(prevmap)
 
-        is_outer = False
-        if self._current_pre_stmts is None:
-            is_outer = True
-            self._current_pre_stmts = ast.statement.pre_statements
-
         calltext = f'INLINED {ast.code()}'
 
+        inlined_code = IndentBlock(calltext, [])
+
         for param, arg in zip(fdef.parameters, ast.args):
-            self._current_pre_stmts.append(self.create_temporary_variable(param.idf.name, param.annotated_type, self._expr_trafo.visit(arg)))
+            inlined_code.statements.append(self.create_temporary_variable(param.idf.name, param.annotated_type, self._expr_trafo.visit(arg)))
         inlined_stmts = fdef.original_body.clone().statements
-        self._current_pre_stmts.append(self._inline_stmt_trafo.visit(IndentBlock(calltext, inlined_stmts)))
+        for stmt in inlined_stmts:
+            trafo_stmt = self._inline_stmt_trafo.visit(stmt)
+            inlined_code.statements += trafo_stmt.pre_statements + [trafo_stmt]
+            trafo_stmt.pre_statements = []
+        inlined_code.statements.append(Comment())
+        ast.statement.pre_statements.append(inlined_code)
 
         if fdef.return_parameters:
             assert len(fdef.return_parameters) == 1
-            ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), fdef.return_parameters[0].annotated_type)
+            ret = ast.replaced_with(self._inline_var_remap[cfg.return_var_name].get_loc_expr()).as_type(fdef.return_parameters[0].annotated_type)
         else:
             ret = None
 
         self._inline_var_remap = prevmap
-        if is_outer:
-            self._current_pre_stmts = None
 
         return ret
 
@@ -238,24 +237,27 @@ class CircuitHelper:
 
         with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
             for param, arg in zip(fdef.parameters, ast.args):
-                self.create_circuit_temp_var_decl(Identifier(param.idf.name).decl_var(param.annotated_type, self._circ_trafo.visit(arg)))
+                self.create_circuit_temp_var_decl(Identifier(param.idf.name).decl_var(param.annotated_type, arg))
             inlined_stmts = fdef.original_body.clone().statements
             for stmt in inlined_stmts:
                 self._circ_trafo.visit(stmt)
+                ast.statement.pre_statements += stmt.pre_statements
             ret = IdentifierExpr(self._inline_var_remap[cfg.return_var_name].clone(), AnnotatedTypeName(self._inline_var_remap[cfg.return_var_name].t))
         self._inline_var_remap = prevmap
         return ret
 
-    def get_remapped_idf(self, idf: Identifier) -> Identifier:
-        if idf.name in self._inline_var_remap:
-            return self._inline_var_remap[idf.name].clone()
+    def get_remapped_idf(self, idf: IdentifierExpr) -> LocationExpr:
+        if idf.idf.name in self._inline_var_remap:
+            return idf.replaced_with(self._inline_var_remap[idf.idf.name].get_loc_expr()).as_type(idf.annotated_type)
         else:
             return idf
 
-    def create_temporary_variable(self, original_idf: str, t: AnnotatedTypeName, expr: Optional[Expression]) -> Identifier:
-        tmp_var = self._local_var_name_factory.get_new_idf(t.type_name)
+    def create_temporary_variable(self, original_idf: str, t: AnnotatedTypeName, expr: Optional[Expression]) -> AssignmentStatement:
+        base_name = self._local_var_name_factory.get_new_name(t.type_name, False)
+        tmp_var = self._local_var_name_factory.add_idf(f'{base_name}_{original_idf}', t.type_name)
         self._inline_var_remap[original_idf] = tmp_var
-        return tmp_var.decl_var(t, expr)
+        ret = IdentifierExpr(cfg.zk_data_var_name).dot(tmp_var).as_type(t).assign(expr)
+        return ret
 
     def create_circuit_temp_var_decl(self, ast: VariableDeclarationStatement):
         tmp_var, priv_expr = self._evaluate_private_expression(ast.expr)
@@ -268,8 +270,8 @@ class CircuitHelper:
         self._phi.append(CircAssignment(lhs, rhs))
 
     def _evaluate_private_expression(self, expr: Expression):
-        sec_circ_var_idf = self._circ_temp_name_factory.get_new_idf(expr.annotated_type.type_name)
         priv_expr = self._circ_trafo.visit(expr)
+        sec_circ_var_idf = self._circ_temp_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
         stmt = TempVarDecl(sec_circ_var_idf, priv_expr)
         self.phi.append(stmt)
         return sec_circ_var_idf, priv_expr

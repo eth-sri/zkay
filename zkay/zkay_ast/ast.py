@@ -1,5 +1,6 @@
 import abc
 import textwrap
+from enum import IntEnum
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set
 
@@ -505,22 +506,28 @@ class ReclassifyExpr(Expression):
         self.privacy = f(self.privacy)
 
 
+class HybridArgType(IntEnum):
+    PRIV_CIRCUIT_VAL = 0
+    PUB_CIRCUIT_ARG = 1
+    PUB_CONTRACT_VAL = 2
+
+
 class HybridArgumentIdf(Identifier):
-    def __init__(self, name: str, t: 'TypeName', is_private: bool, corresponding_priv_expression: Optional[Expression] = None):
+    def __init__(self, name: str, t: 'TypeName', arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None):
         super().__init__(name)
         self.t = t # transformed type of this idf
-        self.is_private = is_private
+        self.arg_type = arg_type
         self.corresponding_priv_expression = corresponding_priv_expression
         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), -1, -1)
 
     def get_loc_expr(self) -> LocationExpr:
-        if self.is_private:
+        if self.arg_type == HybridArgType.PRIV_CIRCUIT_VAL:
             return IdentifierExpr(self.clone()).as_type(self.t)
         else:
             return IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
 
     def clone(self):
-        ha = HybridArgumentIdf(self.name, self.t, self.is_private, self.corresponding_priv_expression)
+        ha = HybridArgumentIdf(self.name, self.t, self.arg_type, self.corresponding_priv_expression)
         ha.serialized_loc = self.serialized_loc
         return ha
 
@@ -566,10 +573,6 @@ class Statement(AST):
         self.function: ConstructorOrFunctionDefinition = None
 
         # set by circuit helper
-        self.out_refs: List['HybridArgumentIdf'] = []
-        self.in_assignments: List[AssignmentStatement] = []
-
-        # Inlined function statements
         self.pre_statements = []
 
     def replaced_with(self, replacement: 'Statement') -> 'Statement':
@@ -578,10 +581,14 @@ class Statement(AST):
         repl.before_analysis = self.before_analysis
         repl.after_analysis = self.after_analysis
         repl.function = self.function
-        repl.out_refs = self.out_refs
-        repl.in_assignments = self.in_assignments
         repl.pre_statements = self.pre_statements
         return repl
+
+
+class CircuitComputationStatement(Statement):
+    def __init__(self, var: HybridArgumentIdf):
+        super().__init__()
+        self.idf = var.clone()
 
 
 class IfStatement(Statement):
@@ -642,6 +649,10 @@ class AssignmentStatement(SimpleStatement):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
+
+
+class CircuitInputStatement(AssignmentStatement):
+    pass
 
 
 class StatementList(Statement):
@@ -759,7 +770,6 @@ class ElementaryTypeName(TypeName):
 
 
 class UserDefinedTypeName(TypeName):
-
     def __init__(self, names: List[Identifier], target: Optional[Union['ContractDefinition', 'StructDefinition']] = None):
         super().__init__()
         self.names = names
@@ -770,6 +780,16 @@ class UserDefinedTypeName(TypeName):
 
     def __eq__(self, other):
         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
+
+
+class StructTypeName(UserDefinedTypeName):
+    def clone(self) -> 'StructTypeName':
+        return StructTypeName(self.names.copy(), self.target)
+
+
+class ContractTypeName(UserDefinedTypeName):
+    def clone(self) -> 'ContractTypeName':
+        return ContractTypeName(self.names.copy(), self.target)
 
 
 class AddressTypeName(UserDefinedTypeName):
@@ -1458,6 +1478,9 @@ class CodeVisitor(AstVisitor):
             lhs = self.visit(ast.lhs)
             rhs = self.visit(ast.rhs)
             return f'{lhs} = {rhs};'
+
+    def visitCircuitComputationStatement(self, ast: CircuitComputationStatement):
+        return None
 
     def handle_block(self, ast: StatementList):
         s = self.visit_list(ast.statements)

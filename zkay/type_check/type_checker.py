@@ -198,7 +198,7 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         b = ast.condition
-        expected = AnnotatedTypeName(TypeName.bool_type(), Expression.all_expr())
+        expected = AnnotatedTypeName.bool_all()
         if not b.instanceof(expected):
             raise TypeMismatchException(expected, b.annotated_type, b)
 

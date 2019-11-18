@@ -11,7 +11,8 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionD
     Identifier, VariableDeclarationStatement, ExpressionStatement, \
     UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, \
-    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction, AssignmentStatement, StatementList
+    CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction, AssignmentStatement, StatementList, StructTypeName, \
+    ContractTypeName, HybridArgType
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
@@ -40,7 +41,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
     def import_contract(self, ast: SourceUnit, vname: str) -> StateVariableDeclaration:
         inst_idf = get_contract_instance_idf(vname)
-        c_type = UserDefinedTypeName([Identifier(vname)])
+        c_type = ContractTypeName([Identifier(vname)])
         fname = f'./{vname}.sol'
 
         if self.current_generator:
@@ -90,7 +91,7 @@ class ZkayTransformer(AstTransformerVisitor):
                 if circuit.requires_verification():
                     c.struct_definitions.append(StructDefinition(Identifier(f'{f.name}_{cfg.zk_struct_suffix}'), [
                         VariableDeclaration([], AnnotatedTypeName(idf.t), idf.clone(), '')
-                        for idf in circuit.output_idfs + circuit.input_idfs
+                        for idf in circuit.output_idfs + circuit.input_idfs + circuit.temp_vars_outside_circuit
                     ]))
 
         return ast
@@ -142,7 +143,7 @@ class ZkayTransformer(AstTransformerVisitor):
                         ast.modifiers.remove(mod)
                         break
 
-            zk_struct_type = UserDefinedTypeName([Identifier(f'{ast.name}_{cfg.zk_struct_suffix}')])
+            zk_struct_type = StructTypeName([Identifier(f'{ast.name}_{cfg.zk_struct_suffix}')])
             preamble += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), Comment()]
 
             # Deserialize out array (if any)
@@ -243,7 +244,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             return None
         assert not self.gen.has_return_var
         self.gen.has_return_var = True
-        return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(self.expr_trafo.visit(ast.expr)))
+        expr = self.expr_trafo.visit(ast.expr)
+        return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(expr))
 
     def visitStatementList(self, ast: StatementList):
         """ Rule (1) """
@@ -260,7 +262,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             if old_code_wo_annotations == new_code_wo_annotation_comments:
                 new_statements.append(transformed_stmt)
             else:
-                new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.in_assignments + transformed_stmt.pre_statements + [transformed_stmt])
+                new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.pre_statements + [transformed_stmt])
 
         if new_statements and not isinstance(new_statements[-1], Comment) and isinstance(ast.parent, ConstructorOrFunctionDefinition):
             new_statements.append(Comment())
@@ -299,12 +301,12 @@ class ZkayInlineStmtTransformer(ZkayStatementTransformer):
         assert isinstance(ast.function, FunctionDefinition)
         assert len(ast.function.return_parameters) == 1
         expr = self.expr_trafo.visit(ast.expr)
-        return self.gen.create_temporary_variable(cfg.return_var_name, ast.function.return_parameters[0].annotated_type, expr)
+        return ast.replaced_with(self.gen.create_temporary_variable(cfg.return_var_name, ast.function.return_parameters[0].annotated_type, expr))
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         vardecl = self.var_decl_trafo.visit(ast.variable_declaration)
         expr = self.expr_trafo.visit(ast.expr)
-        return self.gen.create_temporary_variable(vardecl.idf.name, vardecl.annotated_type, expr)
+        return ast.replaced_with(self.gen.create_temporary_variable(vardecl.idf.name, vardecl.annotated_type, expr))
 
 
 class ZkayExpressionTransformer(AstTransformerVisitor):
@@ -324,10 +326,9 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         """ Rule (8) """
-        ast.idf = self.gen.get_remapped_idf(ast.idf)
-        #if isinstance(ast.idf, HybridArgumentIdf):
+        # if isinstance(ast.idf, HybridArgumentIdf):
         #    return ast.implicitly_converted(ast.idf.t)
-        return ast
+        return self.gen.get_remapped_idf(ast)
 
     def visitIndexExpr(self, ast: IndexExpr):
         """ Rule (9) """
@@ -371,8 +372,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         return self.transform_location(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        ast.idf = self.gen.get_remapped_idf(ast.idf)
-        if isinstance(ast.idf, HybridArgumentIdf):
+        ast = self.gen.get_remapped_idf(ast)
+        if isinstance(ast, IdentifierExpr) and isinstance(ast.idf, HybridArgumentIdf): # and ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL:
             return ast
         else:
             return self.transform_location(ast)
@@ -404,7 +405,9 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitReturnStatement(self, ast: ReturnStatement):
         assert ast.expr is not None
-        self.gen.create_circuit_temp_var_decl(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, ast.expr))
+        e = self.visit(ast.expr)
+        ret_var_decl = ast.replaced_with(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, e))
+        self.gen.create_circuit_temp_var_decl(ret_var_decl)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.create_assignment(ast)

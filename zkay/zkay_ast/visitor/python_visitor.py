@@ -2,7 +2,7 @@ import keyword
 from textwrap import dedent
 from typing import Union, List
 
-from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, Statement, IfStatement, indent, ReturnStatement, Comment, \
+from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
@@ -56,10 +56,7 @@ class PythonCodeVisitor(CodeVisitor):
         return self.visit_list(ast.statements)
 
     def visitIndentBlock(self, ast: IndentBlock):
-        return self.visit_list(ast.statements)
-
-    def handle_stmt(self, ast: Statement, stmt_txt: str) -> str:
-        return stmt_txt
+        return f'### BEGIN {ast.name}\n{self.visit_list(ast.statements)}\n###  END  {ast.name}'
 
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)
@@ -68,25 +65,25 @@ class PythonCodeVisitor(CodeVisitor):
         if ast.else_branch:
             e = self.visit(ast.else_branch)
             ret += f'\nelse:\n{indent(e)}'
-        return self.handle_stmt(ast, ret)
+        return ret
 
     def visitReturnStatement(self, ast: ReturnStatement):
         e = '' if ast.expr is None else self.visit(ast.expr)
-        return self.handle_stmt(ast, f'return {e}')
+        return f'return {e}'
 
     def visitExpressionStatement(self, ast: ExpressionStatement):
-        return self.handle_stmt(ast, self.visit(ast.expr))
+        return self.visit(ast.expr)
 
     def visitRequireStatement(self, ast: RequireStatement):
         c = self.visit(ast.condition)
-        return self.handle_stmt(ast, dedent(f'''\
+        return dedent(f'''\
             if not ({c}):
-                raise Exception("{ast.code()[:-1]} failed")'''))
+                raise Exception("{ast.code()[:-1]} failed")''')
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         lhs = self.visit(ast.lhs)
         rhs = self.visit(ast.rhs)
-        return self.handle_stmt(ast, f'{lhs} = {rhs}')
+        return f'{lhs} = {rhs}'
 
     def visitSliceExpr(self, ast: SliceExpr):
         return f'{self.visit(ast.arr)}[{ast.start}:{ast.end}]'
@@ -109,7 +106,7 @@ class PythonCodeVisitor(CodeVisitor):
         t = ast.variable_declaration.annotated_type.type_name
         s = self.visit(ast.variable_declaration)
         e = self.get_default_value(t) if ast.expr is None else self.visit(ast.expr)
-        return self.handle_stmt(ast, f'{s} = {e}')
+        return f'{s} = {e}'
 
     def visitVariableDeclaration(self, ast: Union[VariableDeclaration, Parameter]):
         return f'{self.visit(ast.idf)}: {self.visit(ast.annotated_type)}'

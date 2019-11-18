@@ -1,6 +1,6 @@
 # BUILTIN SPECIAL TYPE DEFINITIONS
 from zkay.zkay_ast.ast import AnnotatedTypeName, FunctionTypeName, Parameter, Identifier, StructDefinition, \
-    VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName
+    VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName, StructTypeName
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 
 
@@ -72,19 +72,19 @@ class GlobalDefs:
 
 class GlobalVars:
     msg: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.msg_struct.idf], GlobalDefs.msg_struct)), [],
+        AnnotatedTypeName.all(StructTypeName([GlobalDefs.msg_struct.idf], GlobalDefs.msg_struct)), [],
         Identifier('msg'), None
     )
     msg.idf.parent = msg
 
     block: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.block_struct.idf], GlobalDefs.block_struct)), [],
+        AnnotatedTypeName.all(StructTypeName([GlobalDefs.block_struct.idf], GlobalDefs.block_struct)), [],
         Identifier('block'), None
     )
     block.idf.parent = block
 
     tx: StateVariableDeclaration = StateVariableDeclaration(
-        AnnotatedTypeName.all(UserDefinedTypeName([GlobalDefs.tx_struct.idf], GlobalDefs.tx_struct)), [],
+        AnnotatedTypeName.all(StructTypeName([GlobalDefs.tx_struct.idf], GlobalDefs.tx_struct)), [],
         Identifier('tx'), None
     )
     tx.idf.parent = tx
