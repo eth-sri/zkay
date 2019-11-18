@@ -56,11 +56,15 @@ contract funccall {
         return val + priv_inc2(42 * val);
     }
 
+    function get_res() public view returns(uint@owner) {
+        return res;
+    }
+
     function calc(uint@me v) public {
         require(owner == me);
         pubval = 0;
         uint test = recursive(23) + some_comp_pub(v, v);
-        res = priv_inc(v) + 1;
+        res = priv_inc(v) + 1 + get_res();
         //res = v + some_comp(v, v) + pure_pub_func(2);
         //update_pubval(); problem, alias analysis forgets that me == owner
         //pubval = some_comp_pub(pubval, res); will not work for non-purely public functions
