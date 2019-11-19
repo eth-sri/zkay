@@ -311,7 +311,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
     def __init__(self, proving_scheme: str = cfg.proving_scheme):
         self.proving_scheme = proving_scheme
 
-    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List[int], in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
+    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List, in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
         for arg in priv_values:
             assert not isinstance(arg, Value) or isinstance(arg, RandomnessValue)
         manifest = parse_manifest(project_dir)

@@ -10,7 +10,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness, SliceExpr, \
     Array, Comment, AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, \
-    AddressPayableTypeName, CircuitComputationStatement, BlankLine
+    AddressPayableTypeName, CircuitComputationStatement, BlankLine, VariableDeclarationStatement
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -203,7 +203,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 enc_param_str += f'{PRIV_VALUES_NAME}["{arg.idf.name}"] = {sname}\n'
                 enc_param_str += f'{sname}, {PRIV_VALUES_NAME}["{arg.idf.name}_R"] = {CRYPTO_OBJ_NAME}.enc({sname}, {PK_OBJ_NAME})\n'
         enc_param_comment_str = '\n# Encrypt parameters' if enc_param_str else ''
-        enc_param_str = enc_param_str[:-1]
+        enc_param_str = enc_param_str[:-1] if enc_param_str else ''
 
         actual_params_assign_str = f"actual_params = [{all_params}]"
 
@@ -228,12 +228,15 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             out_var_decl_str = cfg.zk_out_name + ' = []'
 
         if circuit.requires_verification():
-            generate_proof_str += dedent(f'''
-            # Generate proof
-            priv_arg_list = [{PRIV_VALUES_NAME}[arg] for arg in [{", ".join([f"'{s.name}'" for s in circuit.sec_idfs])}]]
-            {self.call_python_proof_simulator(ast.name)}
-            proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {cfg.zk_in_name}, {cfg.zk_out_name})
-            actual_params.append(proof)''')
+            priv_args = ''
+            for idx, val in enumerate(circuit.sec_idfs):
+                priv_args += f"{PRIV_VALUES_NAME}.get('{val.name}', {self.get_default_value(val.t)}),"
+                priv_args += '\n' if idx % 2 == 1 else ' '
+            priv_args = 'priv_arg_list = [\n' + indent(priv_args) + ']'
+
+            generate_proof_str += '\n'.join(['\n#Generate proof', priv_args, self.call_python_proof_simulator(ast.name),
+                                             f"proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', priv_arg_list, {cfg.zk_in_name}, {cfg.zk_out_name})",
+                                             'actual_params.append(proof)'])
 
         should_encrypt = ", ".join([str(bool(p.annotated_type.old_priv_text)) for p in self.current_f.parameters])
         if isinstance(ast, ConstructorDefinition):
@@ -264,19 +267,30 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         else:
             invoke_transact_str = ''
 
-        code = '\n'.join(dedent(s) for s in [
+        pre_body_code = f'if {IS_EXTERNAL_CALL}:\n' + indent('\n'.join(dedent(s) for s in [
             address_wrap_str,
-            preamble_str,
             in_var_decl_str,
             enc_param_comment_str,
             enc_param_str,
-            actual_params_assign_str,
+            actual_params_assign_str] if s))
+
+        body_code = '\n'.join(dedent(s) for s in [
             begin_body_comment_str,
             body_str,
             end_body_comment_str,
+        ] if s) + '\n'
+
+        post_body_code = f'if {IS_EXTERNAL_CALL}:\n' + indent('\n'.join(dedent(s) for s in [
             out_var_decl_str,
             generate_proof_str,
             invoke_transact_str
+        ] if s))
+
+        code = '\n'.join(s for s in [
+            dedent(preamble_str),
+            pre_body_code,
+            body_code,
+            post_body_code
         ] if s)
 
         return 'with CleanState(self):\n' + indent(code)
@@ -316,7 +330,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'
 
     def visitReturnStatement(self, ast: ReturnStatement):
-        return None
+        return f'if not {IS_EXTERNAL_CALL}:\n{cfg.indentation}{super().visitReturnStatement(ast)}'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
@@ -382,6 +396,17 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def build_proof_check_fct(self) -> str:
         return ''
+
+    def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
+        if ast.variable_declaration.idf.name == cfg.zk_data_var_name:
+            c = self.current_circ
+            s = ''
+            for idx, val in enumerate(c.output_idfs + c.input_idfs + c.temp_vars_outside_circuit):
+                s += f"'{val.name}': {self.get_default_value(val.t)},"
+                s += '\n' if idx % 4 == 3 else ' '
+            return f'{cfg.zk_data_var_name}: Dict = {{\n' + indent(s) + '}'
+        else:
+            return super().visitVariableDeclarationStatement(ast)
 
 
 class CircuitContext:

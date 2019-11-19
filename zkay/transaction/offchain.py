@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict, Union, Callable, Any
+from typing import Dict, Union, Callable, Any, Optional
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.interface import AddressValue, RandomnessValue, CipherValue
@@ -20,7 +20,7 @@ class ContractSimulator:
 
         self.priv_values: Dict[str, Union[int, bool, RandomnessValue]] = {}
         self.state_values: Dict[str, Union[int, bool, CipherValue, AddressValue]] = {}
-        self.is_external: bool = True
+        self.is_external: Optional[bool] = None
 
         self.contract_handle = None
 
@@ -66,14 +66,16 @@ class CleanState:
         self.was_external = None
 
     def __enter__(self):
-        if self.v.is_external:
+        self.was_external = self.v.is_external
+        if self.v.is_external is None:
+            self.v.is_external = True
             self.v.state_values.clear()
             self.v.priv_values.clear()
-        self.was_external = self.v.is_external
-        self.v.is_external = False
+        else:
+            self.v.is_external = False
 
     def __exit__(self, t, value, traceback):
-        self.v.is_external = self.was_external
         if self.v.is_external:
             self.v.state_values.clear()
             self.v.priv_values.clear()
+        self.v.is_external = self.was_external
