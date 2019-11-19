@@ -4,6 +4,8 @@ from typing import List, Tuple
 
 from antlr4 import FileStream
 
+import zkay.config as cfg
+
 examples_dir = os.path.dirname(os.path.abspath(__file__))
 code_dir = os.path.join(examples_dir, 'code')
 type_error_dir = os.path.join(examples_dir, 'type_errors')
@@ -18,7 +20,7 @@ class Example:
 
     def code(self):
         with open(self.file_location, 'r') as file:
-            return file.read()
+            return file.read().replace('\t', cfg.indentation)
 
     def stream(self):
         return FileStream(self.file_location)

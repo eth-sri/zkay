@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
-contract Analysis{
+
+contract Analysis {
 	address@all x1;
 	address@all x2;
 	address@all x3;
@@ -78,7 +79,6 @@ contract Analysis{
 
 		}
 		// [['all'], ['me'], ['x1', 'x2'], ['x3'], ['x4', 'x5']]
-
 		// [['all'], ['me'], ['x1'], ['x2'], ['x3'], ['x4'], ['x5']]
 
 
@@ -118,7 +118,6 @@ contract Analysis{
 
 		}
 		// [['all'], ['me'], ['x1', 'x2'], ['x3'], ['x4']]
-
 	}
 	// [['all'], ['me'], ['x1', 'x2'], ['x3'], ['x4']]
 
@@ -137,5 +136,4 @@ contract Analysis{
 
 	}
 	// [['all'], ['me'], ['x1'], ['x2'], ['x3'], ['x4'], ['x5']]
-
 }
