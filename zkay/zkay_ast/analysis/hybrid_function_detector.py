@@ -37,9 +37,10 @@ class DirectHybridFunctionDetectionVisitor(FunctionVisitor):
         if ast.requires_verification:
             ast.requires_verification_if_external = True
 
-        for param in ast.parameters:
-            if param.annotated_type.is_private():
-                ast.requires_verification_if_external = True
+        if ast.can_be_external:
+            for param in ast.parameters:
+                if param.annotated_type.is_private():
+                    ast.requires_verification_if_external = True
 
 
 class IndirectHybridFunctionDetectionVisitor(FunctionVisitor):
