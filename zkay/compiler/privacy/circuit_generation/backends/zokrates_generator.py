@@ -86,7 +86,7 @@ class ZokratesGenerator(CircuitGenerator):
         super().__init__(transformed_ast, circuits, proving_scheme, output_dir, True)
 
     def _generate_zkcircuit(self, circuit: CircuitHelper):
-        sec_args = circuit.secret_param_names
+        sec_args = [s.name for s in circuit.sec_idfs]
         pub_args = circuit.public_arg_arrays
         tot_count = sum(map(lambda x: x[1], pub_args))
 

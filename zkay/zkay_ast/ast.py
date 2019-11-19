@@ -83,7 +83,7 @@ class Comment(AST):
 
     @staticmethod
     def comment_list(text: str, block: List[AST]) -> List[AST]:
-        return block if not block else [Comment(text)] + block + [Comment()]
+        return block if not block else [Comment(text)] + block + [BlankLine()]
 
     @staticmethod
     def comment_wrap_block(text: str, block: List[AST]) -> List[AST]:
@@ -95,8 +95,13 @@ class Comment(AST):
             Comment('-' * 31),
         ] + block + [
             Comment('-' * 31),
-            Comment(),
+            BlankLine(),
         ]
+
+
+class BlankLine(Comment):
+    def __init__(self):
+        super().__init__()
 
 
 class Expression(AST):
@@ -1130,6 +1135,7 @@ class ConstructorOrFunctionDefinition(AST):
         self.requires_verification_if_external = False
         self.can_be_private = True
         self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
+        self.can_be_external = not ('private' in self.modifiers or 'internal' in self.modifiers)
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
@@ -1287,7 +1293,7 @@ PrivacyLabelExpr = Union[MeExpr, AllExpr, IdentifierExpr]
 
 
 def indent(s: str):
-    return textwrap.indent(s, ' '*4)
+    return textwrap.indent(s, cfg.indentation)
 
 
 # EXCEPTIONS
@@ -1381,6 +1387,14 @@ class CodeVisitor(AstVisitor):
         s = sep.join(s)
         return s
 
+    def visit_single_or_list(self, v: Union[List[AST], AST, str], sep='\n'):
+        if isinstance(v, List):
+            return self.visit_list(v, sep)
+        elif isinstance(v, str):
+            return v
+        else:
+            return self.visit(v)
+
     def visitAST(self, ast: AST):
         # should never be called
         raise NotImplementedError("Did not implement code generation for " + repr(ast))
@@ -1444,11 +1458,11 @@ class CodeVisitor(AstVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)
-        t = self.visit(ast.then_branch)
+        t = self.visit_single_or_list(ast.then_branch)
         ret = f'if ({c}) {t}'
         if ast.else_branch:
-            e = self.visit(ast.else_branch)
-            ret += f' else {e}'
+            e = self.visit_single_or_list(ast.else_branch)
+            ret += f'\n else {e}'
         return ret
 
     def visitReturnStatement(self, ast: ReturnStatement):
@@ -1495,7 +1509,7 @@ class CodeVisitor(AstVisitor):
 
     def visitIndentBlock(self, ast: IndentBlock):
         fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"
-        return fstr.format('', 'BEGIN') + self.handle_block(ast) + fstr.format(' ', 'END ')
+        return f"{fstr.format('', 'BEGIN')}{self.handle_block(ast)}\n{fstr.format(' ', 'END ')}"
 
     def visitLabeledBlock(self, ast: LabeledBlock):
         return self.visit_list(ast.statements)
@@ -1575,7 +1589,7 @@ class CodeVisitor(AstVisitor):
         return s
 
     def visitFunctionDefinition(self, ast: FunctionDefinition):
-        b = self.visit(ast.body)
+        b = self.visit_single_or_list(ast.body)
         return self.function_definition_to_str(ast.idf, ast.parameters, ast.modifiers, ast.return_parameters, b)
 
     def function_definition_to_str(
@@ -1602,7 +1616,7 @@ class CodeVisitor(AstVisitor):
         return f
 
     def visitConstructorDefinition(self, ast: ConstructorDefinition):
-        b = self.visit(ast.body)
+        b = self.visit_single_or_list(ast.body)
         return self.function_definition_to_str(None, ast.parameters, ast.modifiers, [], b)
 
     def visitStructDefinition(self, ast: StructDefinition):
@@ -1637,7 +1651,7 @@ class CodeVisitor(AstVisitor):
         state_vars = '\n'.join(state_vars)
         constructors = '\n\n'.join(constructors)
         functions = '\n\n'.join(functions)
-        body = '\n\n'.join([structs, state_vars, constructors, functions])
+        body = '\n\n'.join(filter(''.__ne__, [structs, state_vars, constructors, functions]))
         body = indent(body)
         return f"contract {i} {{\n{body}\n}}"
 
@@ -1658,6 +1672,4 @@ class CodeVisitor(AstVisitor):
         p = ast.pragma_directive
         contracts = self.visit_list(ast.contracts)
         lfstr = 'import "{}";'
-        return f'{p}\n\n' \
-               f'{linesep.join([lfstr.format(uc) for uc in ast.used_contracts])}\n\n' \
-               f'{contracts}'
+        return '\n\n'.join(filter(''.__ne__, [p, linesep.join([lfstr.format(uc) for uc in ast.used_contracts]), contracts]))

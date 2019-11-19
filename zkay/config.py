@@ -12,6 +12,9 @@ snark_backend = 'jsnark'
 # encryption algorithm [dummy, rsa_pkcs1_5, rsa_oaep]
 crypto_backend = 'dummy'
 
+generate_offchain_circuit_simulation_code = False
+indentation = ' '*4
+
 pki_contract_name = 'PublicKeyInfrastructure'
 jsnark_circuit_classname = 'ZkayCircuit'
 

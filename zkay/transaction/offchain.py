@@ -55,6 +55,10 @@ class ContractSimulator:
             self.state_values[loc] = val
             return val
 
+    @staticmethod
+    def my_address() -> AddressValue:
+        return Runtime.blockchain().my_address
+
 
 class CleanState:
     def __init__(self, v: ContractSimulator):

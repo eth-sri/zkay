@@ -8,11 +8,10 @@ from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, ConstructorOrFunctionDefinition, IfStatement, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
-    Identifier, VariableDeclarationStatement, ExpressionStatement, \
-    UserDefinedTypeName, SourceUnit, ReturnStatement, LocationExpr, AST, \
+    Identifier, VariableDeclarationStatement, ExpressionStatement, SourceUnit, ReturnStatement, LocationExpr, AST, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndentBlock, IndexExpr, NumberLiteralExpr, \
     CastExpr, StructDefinition, Array, LabeledBlock, FunctionCallExpr, BuiltinFunction, AssignmentStatement, StatementList, StructTypeName, \
-    ContractTypeName, HybridArgType
+    ContractTypeName, HybridArgType, BlankLine
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
@@ -42,12 +41,12 @@ class ZkayTransformer(AstTransformerVisitor):
     def import_contract(self, ast: SourceUnit, vname: str) -> StateVariableDeclaration:
         inst_idf = get_contract_instance_idf(vname)
         c_type = ContractTypeName([Identifier(vname)])
-        fname = f'./{vname}.sol'
+        import_filename = f'./{vname}.sol'
 
         if self.current_generator:
             self.current_generator.verifier_contract_type = c_type
-            self.current_generator.verifier_contract_filename = fname
-        ast.used_contracts.append(fname)
+            self.current_generator.verifier_contract_filename = import_filename
+        ast.used_contracts.append(import_filename)
 
         return StateVariableDeclaration(AnnotatedTypeName(c_type), ['constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0)))
 
@@ -86,9 +85,9 @@ class ZkayTransformer(AstTransformerVisitor):
 
             # Transform function definitions
             for f in c.constructor_definitions + c.function_definitions:
-                self.transform_function_definition(f)
                 circuit = self.circuit_generators[f]
                 if circuit.requires_verification():
+                    self.create_verification_wrapper(f)
                     c.struct_definitions.append(StructDefinition(Identifier(f'{f.name}_{cfg.zk_struct_suffix}'), [
                         VariableDeclaration([], AnnotatedTypeName(idf.t), idf.clone(), '')
                         for idf in circuit.output_idfs + circuit.input_idfs + circuit.temp_vars_outside_circuit
@@ -101,11 +100,11 @@ class ZkayTransformer(AstTransformerVisitor):
         self.circuit_generators[ast] = circuit_generator
 
         # Check encryption for all private args (if call can come from outside)
-        if not ('private' in ast.modifiers or 'internal' in ast.modifiers):
+        if ast.can_be_external:
             for p in ast.parameters:
                 """ * of T_e rule 8 """
                 if p.annotated_type.is_private():
-                    circuit_generator.encrypt_parameter(p)
+                    circuit_generator.ensure_parameter_encryption(p)
 
         # Transform parameters
         ast.parameters = list(map(self.var_decl_trafo.visit, ast.parameters))
@@ -120,7 +119,7 @@ class ZkayTransformer(AstTransformerVisitor):
         ast.body = ZkayStatementTransformer(self.current_generator).visit(ast.body.clone())
         return ast
 
-    def transform_function_definition(self, ast: ConstructorOrFunctionDefinition):
+    def create_verification_wrapper(self, ast: ConstructorOrFunctionDefinition):
         circuit_generator = self.circuit_generators[ast]
 
         preamble: List[AST] = []
@@ -131,61 +130,52 @@ class ZkayTransformer(AstTransformerVisitor):
                 Identifier(cfg.return_var_name).decl_var(ast.return_parameters[0].annotated_type)
             ])
 
-        if not circuit_generator.requires_verification():
-            if ast.body.statements and isinstance(ast.body.statements[-1], Comment):
-                # Remove superfluous empty line
-                ast.body.statements.pop()
-            ast.body.statements = preamble + ast.body.statements
-        else:
-            if not ast.has_side_effects:
-                for idx, mod in enumerate(ast.modifiers):
-                    if mod == 'pure' or mod == 'view':
-                        ast.modifiers.remove(mod)
-                        break
+        if not ast.has_side_effects:
+            ast.modifiers = [mod for mod in ast.modifiers if mod != 'pure' and mod != 'view']
 
-            zk_struct_type = StructTypeName([Identifier(f'{ast.name}_{cfg.zk_struct_suffix}')])
-            preamble += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), Comment()]
+        zk_struct_type = StructTypeName([Identifier(f'{ast.name}_{cfg.zk_struct_suffix}')])
+        preamble += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), BlankLine()]
 
-            # Deserialize out array (if any)
-            deserialize_stmts = []
-            offset = 0
-            for s in circuit_generator.output_idfs:
-                deserialize_stmts += [s.deserialize(cfg.zk_out_name, offset)]
-                offset += s.t.size_in_uints
-            if deserialize_stmts:
-                ast.add_param(Array(AnnotatedTypeName.uint_all(), offset), cfg.zk_out_name)
-                deserialize_stmts = [LabeledBlock(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), 'exclude')]
+        # Deserialize out array (if any)
+        deserialize_stmts = []
+        offset = 0
+        for s in circuit_generator.output_idfs:
+            deserialize_stmts += [s.deserialize(cfg.zk_out_name, offset)]
+            offset += s.t.size_in_uints
+        if deserialize_stmts:
+            ast.add_param(Array(AnnotatedTypeName.uint_all(), offset), cfg.zk_out_name)
+            deserialize_stmts = [LabeledBlock(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), 'exclude')]
 
-            # Add proof parameter
-            ast.add_param(AnnotatedTypeName.proof_type(), proof_param_name)
+        # Add proof parameter
+        ast.add_param(AnnotatedTypeName.proof_type(), proof_param_name)
 
-            # Serialize in parameters to in array (if any)
-            serialize_stmts = []
-            offset = 0
-            for s in circuit_generator.input_idfs:
-                serialize_stmts += [s.serialize(cfg.zk_in_name, offset)]
-                offset += s.t.size_in_uints
-            if serialize_stmts:
-                serialize_stmts = Comment.comment_wrap_block('Serialize input values', [
-                    Identifier(cfg.zk_in_name).decl_var(Array(AnnotatedTypeName.uint_all(), offset))
-                ] + serialize_stmts)
+        # Serialize in parameters to in array (if any)
+        serialize_stmts = []
+        offset = 0
+        for s in circuit_generator.input_idfs:
+            serialize_stmts += [s.serialize(cfg.zk_in_name, offset)]
+            offset += s.t.size_in_uints
+        if serialize_stmts:
+            serialize_stmts = Comment.comment_wrap_block('Serialize input values', [
+                Identifier(cfg.zk_in_name).decl_var(Array(AnnotatedTypeName.uint_all(), offset))
+            ] + serialize_stmts)
 
-            # Call to verifier
-            verifier = IdentifierExpr(get_contract_instance_idf(circuit_generator.verifier_contract_type.code()))
-            verifier_args = [IdentifierExpr(proof_param_name)]
-            verifier_args += [IdentifierExpr(name) for name, _ in circuit_generator.public_arg_arrays]
-            verify = ExpressionStatement(verifier.call(verification_function_name, verifier_args))
+        # Call to verifier
+        verifier = IdentifierExpr(get_contract_instance_idf(circuit_generator.verifier_contract_type.code()))
+        verifier_args = [IdentifierExpr(proof_param_name)]
+        verifier_args += [IdentifierExpr(name) for name, _ in circuit_generator.public_arg_arrays]
+        verify = ExpressionStatement(verifier.call(verification_function_name, verifier_args))
 
-            # Assemble new body (public key requests, transformed statements, verification invocation)
-            ast.body.statements = preamble + \
-                                  deserialize_stmts + \
-                                  Comment.comment_wrap_block('Backup private arguments for verification',
-                                                             circuit_generator.param_to_in_assignments) + \
-                                  [IndentBlock("BODY", ast.body.statements)] + \
-                                  Comment.comment_wrap_block('Request required public keys',
-                                                             circuit_generator.public_key_requests) + \
-                                  serialize_stmts + \
-                                  [LabeledBlock([Comment('Verify zk proof of execution'), verify], 'exclude')]
+        # Assemble new body (public key requests, transformed statements, verification invocation)
+        ast.body.statements = preamble + \
+                              deserialize_stmts + \
+                              Comment.comment_wrap_block('Backup private arguments for verification',
+                                                         circuit_generator.param_to_in_assignments) + \
+                              [IndentBlock("BODY", ast.body.statements)] + \
+                              Comment.comment_wrap_block('Request required public keys',
+                                                         circuit_generator.public_key_requests) + \
+                              serialize_stmts + \
+                              [LabeledBlock([Comment('Verify zk proof of execution'), verify], 'exclude')]
 
         # Add return statement at the end if necessary
         # (was previously replaced by assignment to return_var by ZkayStatementTransformer)
@@ -240,12 +230,16 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         self.var_decl_trafo = ZkayVarDeclTransformer()
 
     def visitReturnStatement(self, ast: ReturnStatement):
-        if ast.expr is None:
-            return None
-        assert not self.gen.has_return_var
-        self.gen.has_return_var = True
-        expr = self.expr_trafo.visit(ast.expr)
-        return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(expr))
+        if self.gen.requires_verification():
+            if ast.expr is None:
+                return None
+            assert not self.gen.has_return_var
+            self.gen.has_return_var = True
+            expr = self.expr_trafo.visit(ast.expr)
+            return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(expr))
+        else:
+            ast.expr = self.expr_trafo.visit(ast.expr)
+            return ast
 
     def visitStatementList(self, ast: StatementList):
         """ Rule (1) """
@@ -264,8 +258,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             else:
                 new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.pre_statements + [transformed_stmt])
 
-        if new_statements and not isinstance(new_statements[-1], Comment) and isinstance(ast.parent, ConstructorOrFunctionDefinition):
-            new_statements.append(Comment())
+        if new_statements and isinstance(new_statements[-1], BlankLine):
+            new_statements = new_statements[:-1]
         ast.statements = new_statements
         return ast
 
@@ -336,23 +330,22 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (11) """
-        return self.gen.move_out(ast.expr, ast.privacy)
+        return self.gen.get_circuit_output_for_private_expression(ast.expr, ast.privacy)
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             if ast.func.is_private:
                 """ Modified Rule (12) (priv expression on its own does not trigger verification) """
-                return self.gen.move_out(ast, Expression.me_expr())
+                return self.gen.get_circuit_output_for_private_expression(ast, Expression.me_expr())
             else:
                 """ Rule (10) """
                 return self.visit_children(ast)
 
         if isinstance(ast.func, LocationExpr):
             fdef = ast.func.target
-            if fdef.requires_verification_if_external: # TODO don't inline funcitons which only require external verification
+            if fdef.requires_verification_if_external: # TODO don't inline functions which only require external verification
                 if fdef.has_side_effects:
                     raise NotImplementedError('Side effects in inlined functions not yet supported (have to make sure evaluation order matches solidity semantics)')
-                # TODO inline
                 return self.gen.inline_function(ast, fdef)
         return self.visit_children(ast)
 
@@ -373,14 +366,15 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         ast = self.gen.get_remapped_idf(ast)
-        if isinstance(ast, IdentifierExpr) and isinstance(ast.idf, HybridArgumentIdf): # and ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL:
+        if isinstance(ast, IdentifierExpr) and isinstance(ast.idf, HybridArgumentIdf):
+            assert ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
             return ast
         else:
             return self.transform_location(ast)
 
     def transform_location(self, loc: LocationExpr):
         """ Rule (14) """
-        return self.gen.move_in(loc, Expression.me_expr() if loc.annotated_type.is_private() else Expression.all_expr())
+        return self.gen.add_to_circuit_inputs(loc)
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (15) """
@@ -407,13 +401,13 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         assert ast.expr is not None
         e = self.visit(ast.expr)
         ret_var_decl = ast.replaced_with(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, e))
-        self.gen.create_circuit_temp_var_decl(ret_var_decl)
+        self.gen.create_temporary_circuit_variable(ret_var_decl)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        self.gen.create_assignment(ast)
+        self.gen.add_assignment_to_circuit(ast)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
-        self.gen.create_circuit_temp_var_decl(ast)
+        self.gen.create_temporary_circuit_variable(ast)
 
     def visitStatement(self, ast: Statement):
         raise NotImplementedError("Unsupported statement")

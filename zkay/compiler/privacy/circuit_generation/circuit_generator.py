@@ -3,8 +3,11 @@ from abc import ABCMeta, abstractmethod
 from multiprocessing import Pool, Value
 from typing import List
 
+import zkay.config as cfg
+
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
+from zkay.compiler.privacy.circuit_generation.offchain_compiler_with_circuit_simu import PythonOffchainVisitorWithProofSimulation
 from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
 from zkay.utils.progress_printer import print_step
@@ -14,7 +17,10 @@ from zkay.zkay_ast.ast import AST
 
 class CircuitGenerator(metaclass=ABCMeta):
     def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str, parallel_keygen: bool):
-        self.python_visitor = PythonOffchainVisitor(circuits)
+        if cfg.generate_offchain_circuit_simulation_code:
+            self.python_visitor = PythonOffchainVisitorWithProofSimulation(circuits)
+        else:
+            self.python_visitor = PythonOffchainVisitor(circuits)
         self.sol_ast = transformed_ast
         self.circuits_to_prove = [c for c in circuits if c.requires_verification()]
         self.proving_scheme = proving_scheme
