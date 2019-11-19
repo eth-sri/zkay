@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Tuple, Callable
 
 import zkay.config as cfg
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, EncConstraint, TempVarDecl, \
-    EqConstraint, CircAssignment, CircComment, CircIndentBlock
+    EqConstraint, CircAssignment, CircComment, CircIndentBlock, ChangeGuardStatement
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
@@ -148,27 +148,27 @@ class CircuitHelper:
         expr.statement.pre_statements.append(CircuitComputationStatement(new_out_param))
         return out_var
 
-    def add_to_circuit_inputs(self, loc_expr: LocationExpr) -> LocationExpr:
+    def add_to_circuit_inputs(self, expr: Expression) -> Tuple[HybridArgumentIdf, LocationExpr]:
         """
         Corresponds to in() from paper
-        :param loc_expr: Location (contract variable) which should be made available inside the circuit
-        :return: Location expression which references the (decrypted if necessary) input value
+        :param expr: public expression which should be made available inside the circuit as an argument
+        :return: Location expression which references the (decrypted if necessary) input expression
         """
-        privacy = Expression.me_expr() if loc_expr.annotated_type.is_private() else Expression.all_expr()
+        privacy = Expression.me_expr() if expr.annotated_type.is_private() else Expression.all_expr()
 
-        expr_text = loc_expr.code()
-        input_expr = self._expr_trafo.visit(loc_expr)
+        expr_text = expr.code()
+        input_expr = self._expr_trafo.visit(expr)
         if privacy.is_all_expr():
-            input_idf = self._in_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
+            input_idf = self._in_name_factory.get_new_idf(expr.annotated_type.type_name)
             locally_decrypted_idf = input_idf
         else:
-            locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(loc_expr.annotated_type.type_name)
+            locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(expr.annotated_type.type_name)
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
             self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf, False)
 
         self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
-        loc_expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
-        return locally_decrypted_idf.get_loc_expr()
+        expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
+        return locally_decrypted_idf, locally_decrypted_idf.get_loc_expr()
 
     # For inlining
     # prepend:
@@ -285,3 +285,17 @@ class InlineRemap:
 
     def __exit__(self, t, value, traceback):
         self._inline_var_remap = self.prev
+
+
+class Guarded:
+    def __init__(self, c: CircuitHelper, guard_idf: HybridArgumentIdf, is_true: bool) -> None:
+        super().__init__()
+        self.c = c
+        self.guard_idf = guard_idf
+        self.is_true = is_true
+
+    def __enter__(self):
+        self.c.phi.append(ChangeGuardStatement.add_guard(self.guard_idf, self.is_true))
+
+    def __exit__(self, t, value, traceback):
+        self.c.phi.append(ChangeGuardStatement.pop_guard())

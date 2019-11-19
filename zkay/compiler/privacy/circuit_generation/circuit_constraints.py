@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from zkay.zkay_ast.ast import HybridArgumentIdf, Expression, LocationExpr
 
@@ -25,6 +25,21 @@ class TempVarDecl(CircuitStatement):
     def __init__(self, lhs: HybridArgumentIdf, expr: Expression):
         self.lhs = lhs
         self.expr = expr
+
+
+class ChangeGuardStatement(CircuitStatement):
+    def __init__(self, new_cond: Optional[HybridArgumentIdf], is_true: Optional[bool] = None) -> None:
+        super().__init__()
+        self.new_cond = new_cond
+        self.is_true = is_true
+
+    @staticmethod
+    def add_guard(new_cond: HybridArgumentIdf, is_true: bool):
+        return ChangeGuardStatement(new_cond, is_true)
+
+    @staticmethod
+    def pop_guard():
+        return ChangeGuardStatement(None)
 
 
 class CircAssignment(CircuitStatement):

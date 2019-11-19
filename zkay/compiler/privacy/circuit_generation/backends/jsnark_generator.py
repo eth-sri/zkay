@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
-from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, ChangeGuardStatement
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     TempVarDecl, EqConstraint, EncConstraint, HybridArgumentIdf
@@ -37,6 +37,11 @@ class JsnarkVisitor(AstVisitor):
         elif isinstance(stmt, CircAssignment):
             assert isinstance(stmt.lhs, IdentifierExpr)
             return f'assign("{stmt.lhs.names}", {self.visit(stmt.rhs)});'
+        elif isinstance(stmt, ChangeGuardStatement):
+            if stmt.new_cond is None:
+                return 'popGuard();'
+            else:
+                return f'addGuard("{stmt.new_cond.name}", {str(stmt.is_true).lower()});'
         else:
             assert isinstance(stmt, EncConstraint)
             assert stmt.cipher.t == TypeName.cipher_type()

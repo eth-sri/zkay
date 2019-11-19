@@ -2,7 +2,7 @@ import re
 from typing import Dict, Optional, List, Tuple
 
 import zkay.config as cfg
-from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper
+from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, Guarded
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
@@ -230,7 +230,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         self.var_decl_trafo = ZkayVarDeclTransformer()
 
     def visitReturnStatement(self, ast: ReturnStatement):
-        if self.gen.requires_verification():
+        if ast.function.requires_verification_if_external: # TODO only if requires_verification
             if ast.expr is None:
                 return None
             assert not self.gen.has_return_var
@@ -278,10 +278,12 @@ class ZkayStatementTransformer(AstTransformerVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         """ Rule (6) """
-        # TODO guard condition
-        ast.condition = self.expr_trafo.visit(ast.condition)
-        ast.then_branch = self.visit(ast.then_branch)
-        ast.else_branch = self.visit(ast.else_branch)
+        assert ast.condition.annotated_type.is_public()
+        guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
+        with Guarded(self.gen, guard_var, True):
+            ast.then_branch = self.visit(ast.then_branch)
+        with Guarded(self.gen, guard_var, False):
+            ast.else_branch = self.visit(ast.else_branch)
         return ast
 
     def visitExpression(self, ast: Expression):
@@ -374,7 +376,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def transform_location(self, loc: LocationExpr):
         """ Rule (14) """
-        return self.gen.add_to_circuit_inputs(loc)
+        return self.gen.add_to_circuit_inputs(loc)[1]
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (15) """
