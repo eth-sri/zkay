@@ -39,7 +39,7 @@ contract funccall {
     // Mixed function with static body
     function some_comp_pub(uint@me v1, uint@me v2) pure public returns (uint) {
         uint x = recursive(42) + some_comp_pub2(v1, v2);
-        return reveal(v1 + v2, all);
+        return reveal(v1 + v2, all) + x;
     }
 
     function some_comp_pub2(uint@me v1, uint@me v2) pure public returns (uint) {
