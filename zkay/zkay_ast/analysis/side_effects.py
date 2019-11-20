@@ -1,45 +1,38 @@
-from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, FunctionTypeName, LocationExpr
+from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, AST, \
+    Expression, Statement
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
-def has_side_effects(ast):
-    """
-
-    :param ast:
-    :return: true if ast is guaranteed to have no side-effects
-    """
-    v = SideEffectsVisitor()
-    v.visit(ast)
-    return v.has_side_effects
+def detect_expressions_with_side_effects(ast) -> bool:
+    v = SideEffectsDetector()
+    ret = v.visit(ast)
+    return ret
 
 
-class SideEffectsVisitor(AstVisitor):
-    """
-    No side effects (side-effects by sub-trees are always handled by the visitor):
-    - variableDeclarationStatement: only defines a new variable, does not modify an old one
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.has_side_effects = False
-        self.has_nonstatic_fcall = False
-        self.can_be_private = True
+class SideEffectsDetector(AstVisitor):
+    def visitAssignmentExpr(self, ast: AssignmentExpr):
+        ast.has_side_effects = True
+        return ast.has_side_effects
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, BuiltinFunction):
-            # builtin functions have no side-effects
-            pass
-        else:
-            assert isinstance(ast.func, LocationExpr)
+        ast.has_side_effects = self.visitExpression(ast)
+        if isinstance(ast.func, LocationExpr):
             assert ast.func.target is not None
             assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
-            self.has_side_effects |= ast.func.target.has_side_effects
-            self.has_nonstatic_fcall |= not ast.func.target.has_static_body
-            self.can_be_private &= ast.func.target.can_be_private
+            ast.has_side_effects |= ast.func.target.has_side_effects
+        return ast.has_side_effects
 
-    def visitAssignmentExpr(self, _):
-        self.has_side_effects = True
-        raise NotImplementedError()
+    def visitAssignmentStatement(self, ast: AssignmentStatement):
+        ast.has_side_effects = True
+        return ast.has_side_effects
 
-    def visitAssignmentStatement(self, _):
-        self.has_side_effects = True
+    def visitExpression(self, ast: Expression):
+        ast.has_side_effects = self.visitAST(ast)
+        return ast.has_side_effects
+
+    def visitStatement(self, ast: Statement):
+        ast.has_side_effects = self.visitAST(ast)
+        return ast.has_side_effects
+
+    def visitAST(self, ast: AST):
+        return any(map(self.visit, ast.children()))

@@ -2,7 +2,7 @@ from parameterized import parameterized_class
 
 from zkay.examples.examples import all_examples
 from zkay.examples.test_examples import TestExamples
-from zkay.zkay_ast.analysis.side_effects import has_side_effects
+from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
 from zkay.zkay_ast.build_ast import build_ast
 
 
@@ -19,6 +19,6 @@ class TestSideEffects(TestExamples):
 
     def test_side_effects(self):
         ast = build_ast(self.example.code())
-        e = has_side_effects(ast)
+        e = detect_expressions_with_side_effects(ast)
         if self.has_side_effects() is not None:
             self.assertEqual(e, self.has_side_effects())

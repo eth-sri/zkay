@@ -1,7 +1,6 @@
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
-from zkay.zkay_ast.analysis.side_effects import has_side_effects
 from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
@@ -102,7 +101,7 @@ class TypeCheckVisitor(AstVisitor):
             # (public side effects could leak information about private condition)
             if ast.args[0].annotated_type.privacy_annotation != Expression.all_expr():
                 for arg in ast.args:
-                    if has_side_effects(arg):
+                    if arg.has_side_effects:
                         raise TypeException("Expression inside private conditional expression might have side effect", arg)
 
         for i in range(len(parameter_types)):
@@ -144,6 +143,9 @@ class TypeCheckVisitor(AstVisitor):
 
         # set type
         r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, privacy)
+
+        # propagate side effects
+        r.has_side_effects = expr.has_side_effects
 
         # set statement
         r.statement = expr.statement
@@ -203,12 +205,8 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeMismatchException(expected, b.annotated_type, b)
 
     def visitReturnStatement(self, ast: ReturnStatement):
-        f = ast.parent
-        while not isinstance(f, FunctionDefinition):
-            f = f.parent
-
-        assert (isinstance(f, FunctionDefinition))
-        expected_types = f.get_return_type()
+        assert (isinstance(ast.function, FunctionDefinition))
+        expected_types = ast.function.get_return_type()
 
         if ast.expr is None and expected_types is not None:
             raise TypeMismatchException(expected_types, None, ast)

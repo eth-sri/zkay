@@ -1,4 +1,4 @@
-from zkay.zkay_ast.ast import AST, Expression, Statement, FunctionDefinition, ConstructorDefinition
+from zkay.zkay_ast.ast import AST, Expression, Statement, FunctionDefinition, ConstructorDefinition, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -26,7 +26,7 @@ class ExpressionToStatementVisitor(AstVisitor):
 
     def visitStatement(self, ast: Statement):
         parent = ast
-        while parent and not isinstance(parent, FunctionDefinition) and not isinstance(parent, ConstructorDefinition):
+        while parent and not isinstance(parent, ConstructorOrFunctionDefinition):
             parent = parent.parent
         if parent:
             ast.function = parent

@@ -10,7 +10,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr
 
-kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help']}
+kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
 
 
 def sanitized(name):

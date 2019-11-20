@@ -347,6 +347,10 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         return self.gen.get_circuit_output_for_private_expression(ast.expr, ast.privacy)
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if any(arg.has_side_effects for arg in ast.args):
+            # Have to linearize
+            raise NotImplementedError()
+
         if isinstance(ast.func, BuiltinFunction):
             if ast.func.is_private:
                 """ Modified Rule (12) (priv expression on its own does not trigger verification) """
@@ -403,11 +407,12 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             return self.visit_children(ast)
-        # TODO inline (make sure that possible in type checker)
         fdef = ast.func.target
         assert isinstance(fdef, FunctionDefinition)
         assert fdef.return_parameters
         assert fdef.has_static_body
+        assert not fdef.has_side_effects or ast.has_side_effects
+        assert not ast.has_side_effects
 
         return self.gen.inline_circuit_function(ast, fdef)
 

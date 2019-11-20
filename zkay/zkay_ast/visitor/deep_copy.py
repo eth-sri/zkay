@@ -1,5 +1,6 @@
 import inspect
 
+from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
 from zkay.zkay_ast.ast import AST, Expression
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
@@ -20,6 +21,7 @@ def deep_copy(ast: AST, with_types=False):
     ast_copy.parent = ast.parent
     set_parents(ast_copy)
     link_identifiers(ast_copy)
+    detect_expressions_with_side_effects(ast_copy)
     return ast_copy
 
 
@@ -54,6 +56,7 @@ class DeepCopyVisitor(AstVisitor):
             'instantiated_key',
             'function',
             'is_private',
+            'has_side_effects',
 
             'pre_statements',
 

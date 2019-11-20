@@ -1,8 +1,8 @@
 from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.analysis.side_effects import SideEffectsVisitor
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
-    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, Block, StatementList
+    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, Block, StatementList, Expression, FunctionTypeName
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def check_circuit_compliance(ast):
@@ -68,12 +68,12 @@ class IndirectCanBePrivateDetector(FunctionVisitor):
                     return
 
 
-def check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast):
-    v = SideEffectsVisitor()
-    v.visit(ast)
-
-    if v.has_side_effects:
+def check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast: Expression):
+    if ast.has_side_effects:
         raise TypeException('Expressions with side effects are not allowed inside private expressions', ast)
+
+    v = NonstaticOrIncompatibilityDetector()
+    v.visit(ast)
     if v.has_nonstatic_fcall:
         raise TypeException('Function calls to non static functions are not allowed inside private expressions', ast)
     if not v.can_be_private:
@@ -90,3 +90,17 @@ class CircuitComplianceChecker(FunctionVisitor):
                 check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(arg)
         else:
             self.visitChildren(ast)
+
+
+class NonstaticOrIncompatibilityDetector(AstVisitor):
+    def __init__(self):
+        super().__init__()
+        self.has_nonstatic_fcall = False
+        self.can_be_private = True
+
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, LocationExpr):
+            assert ast.func.target is not None
+            assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
+            self.has_nonstatic_fcall |= not ast.func.target.has_static_body
+            self.can_be_private &= ast.func.target.can_be_private

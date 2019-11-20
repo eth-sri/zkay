@@ -6,6 +6,7 @@ from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
 from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
 from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_compliance
 from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
+from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
@@ -69,6 +70,7 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
                     print("\n\nERROR: Preprocessing failed")
                     print(f'{str(e)}\n')
                 raise PreprocessAstException()
+        detect_expressions_with_side_effects(ast)
         if check_return:
             r(ast)
         if alias_analysis:

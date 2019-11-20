@@ -7,7 +7,8 @@ from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformer
 from zkay.examples.examples import analysis, all_examples
 from zkay.examples.test_examples import TestExamples
 from zkay.zkay_ast.analysis.alias_analysis import alias_analysis
-from zkay.zkay_ast.ast import Statement, CodeVisitor, AST, Comment, BlankLine
+from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
+from zkay.zkay_ast.ast import Statement, Comment, BlankLine
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
@@ -20,6 +21,7 @@ class TestAliasAnalysisDetail(TestCase):
         ast = build_ast(analysis.code())
         set_parents(ast)
         link_identifiers(ast)
+        detect_expressions_with_side_effects(ast)
         alias_analysis(ast)
 
         # generate string, including analysis results
@@ -41,6 +43,7 @@ class TestAliasAnalysis(TestExamples):
         ast = build_ast(self.example.code())
         set_parents(ast)
         link_identifiers(ast)
+        detect_expressions_with_side_effects(ast)
         alias_analysis(ast)
 
 

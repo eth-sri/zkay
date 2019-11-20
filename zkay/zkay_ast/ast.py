@@ -132,6 +132,8 @@ class Expression(AST):
         # set by expression to statement
         self.statement: Statement = None
 
+        self.has_side_effects = False
+
     def is_all_expr(self):
         return self == Expression.all_expr()
 
@@ -579,6 +581,8 @@ class Statement(AST):
 
         # set by circuit helper
         self.pre_statements = []
+
+        self.has_side_effects = False
 
     def replaced_with(self, replacement: 'Statement') -> 'Statement':
         repl = super().replaced_with(replacement)
