@@ -1,6 +1,8 @@
 import os
 from typing import List, Optional
 
+import zkay.config as cfg
+
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, ChangeGuardStatement
@@ -143,7 +145,8 @@ class JsnarkGenerator(CircuitGenerator):
 
         constraints = JsnarkVisitor(circuit).visitCircuit()
 
-        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), priv_size, pub_size, input_init_stmts, constraints)
+        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), priv_size, pub_size, cfg.should_use_hash(pub_size),
+                                                   input_init_stmts, constraints)
         jsnark.compile_circuit(output_dir, code)
 
     def _generate_keys(self, circuit: CircuitHelper):

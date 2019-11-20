@@ -44,4 +44,4 @@ libsnark_check_verify_locally_during_proof_generation: bool = False
 
 
 def should_use_hash(pub_arg_count: int):
-    return True
+    return False

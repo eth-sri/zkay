@@ -28,7 +28,10 @@ class MultiLineFormatter:
             return self.append_lines(other, sep=', ')
 
     def __truediv__(self, other: str) -> 'MultiLineFormatter':
-        return self.indent() * other
+        if other:
+            return self.indent() * other
+        else:
+            return self.indent()
 
     def __floordiv__(self, other) -> 'MultiLineFormatter':
         return self.dedent() * other
@@ -43,7 +46,7 @@ class MultiLineFormatter:
         return self
 
     def append_lines(self, lines, sep='\n') -> 'MultiLineFormatter':
-        self.text += sep.join(indent(dedent(t), self.current_indent) for t in lines if t)
+        self.text += sep.join(indent(dedent(t if t != '\n' else ''), self.current_indent) for t in lines if t)
         return self
 
     def indent(self) -> 'MultiLineFormatter':

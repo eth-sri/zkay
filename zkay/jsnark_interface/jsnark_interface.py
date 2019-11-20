@@ -38,16 +38,14 @@ import zkay.ZkayCircuitBase;
 
 public class {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{
-        super("{circuit_name}", "{crypto_backend}", {key_bits}, {priv_size}, {pub_size});
+        super("{circuit_name}", "{crypto_backend}", {key_bits}, {priv_size}, {pub_size}, {use_input_hashing});
     }}
 
     @Override
     protected void buildCircuit() {{
 {init_inputs}
 
-{constraints}
-
-        verifyInputHash();
+{constraints}{verify_hash_str}
     }}
 
     public static void main(String[] args) {{
@@ -58,7 +56,9 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 '''
 
 
-def get_jsnark_circuit_class_str(name: str, priv_size: int, pub_size: int, input_init: List[str], constraints: List[str]):
+def get_jsnark_circuit_class_str(name: str, priv_size: int, pub_size: int, should_hash: bool, input_init: List[str], constraints: List[str]):
+    verify_hash = f'\n\n{8*" "}verifyInputHash();' if should_hash else ''
     return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend, circuit_name=name,
-                                      key_bits=cfg.key_bits, priv_size=priv_size, pub_size=pub_size,
-                                      init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))))
+                                      key_bits=cfg.key_bits, priv_size=priv_size, pub_size=pub_size, use_input_hashing=str(should_hash).lower(),
+                                      init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))),
+                                      verify_hash_str=verify_hash)
