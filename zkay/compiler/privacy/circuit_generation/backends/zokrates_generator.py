@@ -85,7 +85,7 @@ class ZokratesGenerator(CircuitGenerator):
     def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
         super().__init__(transformed_ast, circuits, proving_scheme, output_dir, True)
 
-    def _generate_zkcircuit(self, circuit: CircuitHelper):
+    def _generate_zkcircuit(self, circuit: CircuitHelper) -> bool:
         sec_args = [s.name for s in circuit.sec_idfs]
         pub_args = circuit.public_arg_arrays
         tot_count = sum(map(lambda x: x[1], pub_args))
@@ -131,6 +131,8 @@ class ZokratesGenerator(CircuitGenerator):
             except SubprocessError as e:
                 print(e)
                 raise ValueError(f'Error compiling {code_file_name}') from e
+
+        return True
 
     @staticmethod
     def __get_hash_code(pub_args: List[Tuple[str, int]], total_count: int) -> str:

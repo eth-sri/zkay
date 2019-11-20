@@ -45,7 +45,10 @@ class CircuitGenerator(metaclass=ABCMeta):
         print(f'Compiling {c_count} circuits...')
         with time_measure('circuit_compilation', True):
             with Pool(processes=self.p_count) as pool:
-                pool.map(self._generate_zkcircuit, self.circuits_to_prove)
+                modified = pool.map(self._generate_zkcircuit, self.circuits_to_prove)
+
+        modified_circuits_to_prove = [circ for t, circ in zip(modified, self.circuits_to_prove)
+                                      if t or not all(map(os.path.exists, self._get_vk_and_pk_paths(circ)))]
 
         if import_keys:
             # Import TODO
@@ -57,9 +60,9 @@ class CircuitGenerator(metaclass=ABCMeta):
                 counter = Value('i', 0)
                 if self.parallel_keygen:
                     with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
-                        pool.map(self._generate_keys_par, self.circuits_to_prove)
+                        pool.map(self._generate_keys_par, modified_circuits_to_prove)
                 else:
-                    for circ in self.circuits_to_prove:
+                    for circ in modified_circuits_to_prove:
                         self._generate_keys(circ)
 
         with print_step('Write verification contracts'):
@@ -103,7 +106,11 @@ class CircuitGenerator(metaclass=ABCMeta):
         return os.path.join(self.output_dir, f'{circuit.get_circuit_name()}_out')
 
     @abstractmethod
-    def _generate_zkcircuit(self, circuit: CircuitHelper):
+    def _generate_zkcircuit(self, circuit: CircuitHelper) -> bool:
+        """
+        Generate code and compile a single circuit,
+        :return: True if the circuit was modified since last generation (need to generate new keys)
+        """
         pass
 
     @abstractmethod

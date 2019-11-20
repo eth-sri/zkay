@@ -8,6 +8,9 @@ from zkay.zkay_ast.ast import indent
 
 # path jo jsnark interface jar
 circuit_builder_jar = os.path.join(os.path.dirname(os.path.realpath(__file__)),  'JsnarkCircuitBuilder.jar')
+with open(circuit_builder_jar, 'rb') as jarfile:
+    from hashlib import sha512
+    circuit_builder_jar_hash = sha512(jarfile.read()).hexdigest()
 
 
 def compile_circuit(circuit_dir: str, javacode: str):

@@ -1,8 +1,8 @@
 import os
-from typing import List, Optional
+from hashlib import sha512
+from typing import List, Optional, Set
 
 import zkay.config as cfg
-
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, ChangeGuardStatement
@@ -124,7 +124,7 @@ class JsnarkGenerator(CircuitGenerator):
     def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
         super().__init__(transformed_ast, circuits, proving_scheme, output_dir, False)
 
-    def _generate_zkcircuit(self, circuit: CircuitHelper):
+    def _generate_zkcircuit(self, circuit: CircuitHelper) -> bool:
         output_dir = self._get_circuit_output_dir(circuit)
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
@@ -147,7 +147,23 @@ class JsnarkGenerator(CircuitGenerator):
 
         code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), priv_size, pub_size, cfg.should_use_hash(pub_size),
                                                    input_init_stmts, constraints)
-        jsnark.compile_circuit(output_dir, code)
+
+        hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.sha512')
+        hash = sha512((jsnark.circuit_builder_jar_hash + code).encode('utf-8')).hexdigest()
+        if os.path.exists(hashfile):
+            with open(hashfile, 'r') as f:
+                oldhash = f.read()
+        else:
+            oldhash = ''
+
+        if oldhash != hash or not os.path.exists(os.path.join(output_dir, 'circuit.arith')):
+            jsnark.compile_circuit(output_dir, code)
+            with open(hashfile, 'w') as f:
+                f.write(hash)
+            return True
+        else:
+            print(f'Circuit \'{circuit.get_circuit_name()}\' not modified, skipping compilation')
+            return False
 
     def _generate_keys(self, circuit: CircuitHelper):
         output_dir = self._get_circuit_output_dir(circuit)
