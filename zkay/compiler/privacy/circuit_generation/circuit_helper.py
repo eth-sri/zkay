@@ -58,6 +58,10 @@ class CircuitHelper:
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
 
+    @property
+    def zk_data_struct_name(self):
+        return f'{self.verifier_contract_type.code()}_{cfg.zk_struct_suffix}'
+
     @staticmethod
     def get_transformed_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
         return expr.annotated_type.type_name if privacy.is_all_expr() else TypeName.cipher_type()

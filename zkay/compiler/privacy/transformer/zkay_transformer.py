@@ -72,11 +72,23 @@ class ZkayTransformer(AstTransformerVisitor):
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_signature(f)
 
+            contracts_with_overloads: Dict[str, int] = {}
+            for f in c.constructor_definitions + c.function_definitions:
+                if f.name in contracts_with_overloads:
+                    contracts_with_overloads[f.name] = 0
+                else:
+                    contracts_with_overloads[f.name] = -1
+
             # Transform function body statements
             for f in c.constructor_definitions + c.function_definitions:
                 self.transform_function_body(f)
                 if self.current_generator.requires_verification():
-                    contract_state_var_decl = self.import_contract(ast, f'Verify_{c.idf.name}_{len(ext_var_decls) - 1}_{f.name}')
+                    name = f'Verify_{c.idf.name}_{f.name}'
+                    idx = contracts_with_overloads[f.name]
+                    if idx != -1:
+                        name = f'{name}_{idx}'
+                        contracts_with_overloads[f.name] += 1
+                    contract_state_var_decl = self.import_contract(ast, name)
                     ext_var_decls.append(contract_state_var_decl)
 
             # Add external contract state variables
@@ -88,7 +100,7 @@ class ZkayTransformer(AstTransformerVisitor):
                 circuit = self.circuit_generators[f]
                 if circuit.requires_verification():
                     self.create_verification_wrapper(f)
-                    c.struct_definitions.append(StructDefinition(Identifier(f'{f.name}_{cfg.zk_struct_suffix}'), [
+                    c.struct_definitions.append(StructDefinition(Identifier(circuit.zk_data_struct_name), [
                         VariableDeclaration([], AnnotatedTypeName(idf.t), idf.clone(), '')
                         for idf in circuit.output_idfs + circuit.input_idfs + circuit.temp_vars_outside_circuit
                     ]))
@@ -133,7 +145,7 @@ class ZkayTransformer(AstTransformerVisitor):
         if not ast.has_side_effects:
             ast.modifiers = [mod for mod in ast.modifiers if mod != 'pure' and mod != 'view']
 
-        zk_struct_type = StructTypeName([Identifier(f'{ast.name}_{cfg.zk_struct_suffix}')])
+        zk_struct_type = StructTypeName([Identifier(circuit_generator.zk_data_struct_name)])
         preamble += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), BlankLine()]
 
         # Deserialize out array (if any)
