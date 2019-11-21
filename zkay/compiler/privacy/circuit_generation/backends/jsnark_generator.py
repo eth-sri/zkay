@@ -157,6 +157,10 @@ class JsnarkGenerator(CircuitGenerator):
             oldhash = ''
 
         if oldhash != hash or not os.path.exists(os.path.join(output_dir, 'circuit.arith')):
+            # Remove old keys
+            for f in self._get_vk_and_pk_paths(circuit):
+                if os.path.exists(f):
+                    os.remove(f)
             jsnark.compile_circuit(output_dir, code)
             with open(hashfile, 'w') as f:
                 f.write(hash)
