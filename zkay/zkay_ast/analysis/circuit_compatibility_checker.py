@@ -81,15 +81,26 @@ def check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(as
 
 
 class CircuitComplianceChecker(FunctionVisitor):
+    def __init__(self):
+        super().__init__()
+        self.priv_setter = PrivateSetter()
+
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
+        self.priv_setter.visit(ast)
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:
             for arg in ast.args:
                 check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(arg)
+            self.priv_setter.visit(ast)
         else:
             self.visitChildren(ast)
+
+
+class PrivateSetter(AstVisitor):
+    def visitExpression(self, ast: Expression):
+        ast.is_private = True
 
 
 class NonstaticOrIncompatibilityDetector(AstVisitor):

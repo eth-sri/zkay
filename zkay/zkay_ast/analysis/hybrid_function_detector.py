@@ -1,7 +1,8 @@
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ReclassifyExpr, ConstructorOrFunctionDefinition, AllExpr, FunctionCallExpr, \
-    LocationExpr, BuiltinFunction
+    LocationExpr, BuiltinFunction, Expression
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
+from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def detect_hybrid_functions(ast):
@@ -17,6 +18,9 @@ def detect_hybrid_functions(ast):
     v.visit(ast)
 
     v = NonInlineableCallDetector()
+    v.visit(ast)
+
+    v = InlineFunctionDetector()
     v.visit(ast)
 
 
@@ -56,6 +60,22 @@ class IndirectHybridFunctionDetectionVisitor(FunctionVisitor):
 class NonInlineableCallDetector(FunctionVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, LocationExpr):
-            if ast.func.target.requires_verification_if_external and ast.func.target.is_recursive: # TODO don't inline funcitons which only require external verification
+            if ast.func.target.requires_verification_if_external and ast.func.target.is_recursive: # TODO don't inline functions which only require external verification
                 raise TypeException("Non-inlineable call to recursive private function", ast.func)
         self.visitChildren(ast)
+
+
+class InlineFunctionDetector(AstVisitor):
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, LocationExpr):
+            if ast.func.target.requires_verification_if_external and not ast.is_private: # TODO don't inline functions which only require external verification
+                ast.contains_inlined_function = True
+                return True
+        return self.visitExpression(ast)
+
+    def visitExpression(self, ast: Expression):
+        ast.contains_inlined_function = any(self.visit(c) for c in ast.children())
+        return ast.contains_inlined_function
+
+    def visitAST(self, _):
+        return False

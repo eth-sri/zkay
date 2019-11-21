@@ -9,7 +9,7 @@ from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, Identifier, \
-    AnnotatedTypeName, IndentBlock, HybridArgType, CircuitInputStatement, CircuitComputationStatement, BlankLine
+    AnnotatedTypeName, IndentBlock, HybridArgType, CircuitInputStatement, CircuitComputationStatement, BlankLine, LiteralExpr
 
 
 class CircuitHelper:
@@ -224,10 +224,13 @@ class CircuitHelper:
         else:
             return idf
 
-    def create_temporary_variable(self, original_idf: str, t: AnnotatedTypeName, expr: Optional[Expression]) -> AssignmentStatement:
+    def create_temporary_variable(self, original_idf: Optional[str], t: AnnotatedTypeName, expr: Optional[Expression]) -> AssignmentStatement:
         base_name = self._local_var_name_factory.get_new_name(t.type_name, False)
-        tmp_var = self._local_var_name_factory.add_idf(f'{base_name}_{original_idf}', t.type_name)
-        self._inline_var_remap[original_idf] = tmp_var
+        if original_idf is not None:
+            tmp_var = self._local_var_name_factory.add_idf(f'{base_name}_{original_idf}', t.type_name)
+            self._inline_var_remap[original_idf] = tmp_var
+        else:
+            tmp_var = self._local_var_name_factory.add_idf(base_name, t.type_name)
         ret = IdentifierExpr(cfg.zk_data_var_name).dot(tmp_var).as_type(t).assign(expr)
         return ret
 

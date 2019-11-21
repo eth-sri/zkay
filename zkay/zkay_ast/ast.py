@@ -133,6 +133,8 @@ class Expression(AST):
         self.statement: Statement = None
 
         self.has_side_effects = False
+        self.contains_inlined_function = False
+        self.is_private = False
 
     def is_all_expr(self):
         return self == Expression.all_expr()

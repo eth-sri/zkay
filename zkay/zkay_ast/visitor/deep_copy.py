@@ -57,6 +57,7 @@ class DeepCopyVisitor(AstVisitor):
             'function',
             'is_private',
             'has_side_effects',
+            'contains_inlined_function',
 
             'pre_statements',
 
@@ -87,6 +88,8 @@ class DeepCopyVisitor(AstVisitor):
         ast_copy = self.visitChildren(ast)
         if self.with_types and ast.annotated_type is not None:
             ast_copy.annotated_type = ast.annotated_type.clone()
+        ast_copy.contains_inlined_function = ast.contains_inlined_function
+        ast_copy.is_private = ast.is_private
         return ast_copy
 
     def copy_field(self, field):
