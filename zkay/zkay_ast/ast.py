@@ -1,5 +1,6 @@
 import abc
 import textwrap
+from collections import OrderedDict
 from enum import IntEnum
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set
@@ -65,6 +66,10 @@ class Identifier(AST):
         super().__init__()
         self.name = name
 
+    @property
+    def is_final(self):
+        return isinstance(self.parent, StateVariableDeclaration) and self.parent.is_final
+
     def clone(self) -> 'Identifier':
         return Identifier(self.name)
 
@@ -111,8 +116,10 @@ class Expression(AST):
         return AllExpr()
 
     @staticmethod
-    def me_expr():
-        return MeExpr()
+    def me_expr(stmt: Optional['Statement']=None):
+        me = MeExpr()
+        me.statement = stmt
+        return me
 
     def implicitly_converted(self, expected: 'TypeName'):
         if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
@@ -133,7 +140,6 @@ class Expression(AST):
         self.statement: Statement = None
 
         self.has_side_effects = False
-        self.contains_inlined_function = False
         self.is_private = False
 
     def is_all_expr(self):
@@ -171,6 +177,9 @@ class Expression(AST):
 
     def is_rvalue(self) -> bool:
         return not self.is_lvalue()
+
+    def binop(self, op: str, rhs: 'Expression') -> 'Expression':
+        return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
 
     def is_parent_of(self, child):
         e = child
@@ -283,6 +292,9 @@ class BuiltinFunction(Expression):
     def is_ite(self):
         return self.op == 'ite'
 
+    def has_shortcircuiting(self):
+        return self.is_ite() or self.op == '&&' or self.op == '||'
+
     def arity(self):
         return self.format_string().count('{}')
 
@@ -346,15 +358,25 @@ class FunctionCallExpr(Expression):
         self.args = list(map(f, self.args))
 
 
-class CastExpr(Expression):
+class NewExpr(FunctionCallExpr):
+    def __init__(self, annotated_type: 'AnnotatedTypeName', args: List[Expression]):
+        assert not isinstance(annotated_type, ElementaryTypeName)
+        super().__init__(Identifier(f'new {annotated_type.code()}'), args)
+        self.annotated_type = annotated_type
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.annotated_type = f(self.annotated_type)
+        self.args = list(map(f, self.args))
+
+
+class CastExpr(FunctionCallExpr):
     def __init__(self, t: 'TypeName', expr: 'Expression'):
-        super().__init__()
         self.t = t
-        self.expr = expr
+        super().__init__(Identifier(t.code()), [expr])
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.t = f(self.t)
-        self.expr = f(self.expr)
+        self.args[0] = f(self.args[0])
 
 
 class AssignmentExpr(Expression):
@@ -438,6 +460,10 @@ class IdentifierExpr(LocationExpr):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
 
+    def with_target(self, target: AST) -> 'IdentifierExpr':
+        self.target = target
+        return self
+
     def clone(self):
         idf = IdentifierExpr(self.idf.clone()).as_type(self.annotated_type)
         idf.target = self.target
@@ -467,15 +493,17 @@ class IndexExpr(LocationExpr):
 
 
 class SliceExpr(LocationExpr):
-    def __init__(self, arr: LocationExpr, start: int, end: int):
+    def __init__(self, arr: LocationExpr, base: Optional[Expression], start_offset: int, size: int):
         super().__init__()
         self.arr = arr
-        self.start = start
-        self.end = end
+        self.base = base
+        self.start_offset = start_offset
+        self.size = size
 
 
 class MeExpr(Expression):
-    idf = Identifier('me')
+    name = 'me'
+    is_final = True
 
     def clone(self) -> 'MeExpr':
         return MeExpr()
@@ -488,7 +516,8 @@ class MeExpr(Expression):
 
 
 class AllExpr(Expression):
-    idf = Identifier('all')
+    name = 'all'
+    is_final = True
 
     def clone(self) -> 'AllExpr':
         return AllExpr()
@@ -527,7 +556,7 @@ class HybridArgumentIdf(Identifier):
         self.t = t # transformed type of this idf
         self.arg_type = arg_type
         self.corresponding_priv_expression = corresponding_priv_expression
-        self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), -1, -1)
+        self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
 
     def get_loc_expr(self) -> LocationExpr:
         if self.arg_type == HybridArgType.PRIV_CIRCUIT_VAL:
@@ -540,33 +569,40 @@ class HybridArgumentIdf(Identifier):
         ha.serialized_loc = self.serialized_loc
         return ha
 
-    def deserialize(self, source_idf: str, start_idx: int) -> 'AssignmentStatement':
-        assert self.serialized_loc.start == -1
-        self.serialized_loc.arr = IdentifierExpr(source_idf)
-        self.serialized_loc.start = start_idx
-        self.serialized_loc.end = start_idx + self.t.size_in_uints
+    def _set_serialized_loc(self, idf, base, start_offset):
+        assert self.serialized_loc.start_offset == -1
+        self.serialized_loc.arr = IdentifierExpr(idf)
+        self.serialized_loc.base = base
+        self.serialized_loc.start_offset = start_offset
+        self.serialized_loc.size = self.t.size_in_uints
+
+    def deserialize(self, source_idf: str, base: Optional[Expression], start_offset: int) -> 'AssignmentStatement':
+        self._set_serialized_loc(source_idf, base, start_offset)
 
         src = IdentifierExpr(source_idf).as_type(Array(AnnotatedTypeName.uint_all()))
         if isinstance(self.t, Array):
-            return SliceExpr(self.get_loc_expr(), 0, self.t.size_in_uints).assign(self.serialized_loc)
+            return SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints).assign(self.serialized_loc)
+        elif base is not None:
+            return self.get_loc_expr().assign(src.index(base.binop('+', NumberLiteralExpr(start_offset))).implicitly_converted(self.t))
         else:
-            return self.get_loc_expr().assign(src.index(start_idx).implicitly_converted(self.t))
+            return self.get_loc_expr().assign(src.index(start_offset).implicitly_converted(self.t))
 
-    def serialize(self, target_idf: str, start_idx: int) -> 'AssignmentStatement':
-        assert self.serialized_loc.start == -1
-        self.serialized_loc.arr = IdentifierExpr(target_idf)
-        self.serialized_loc.start = start_idx
-        self.serialized_loc.end = start_idx + self.t.size_in_uints
+    def serialize(self, target_idf: str, base: Optional[Expression], start_offset: int) -> 'AssignmentStatement':
+        self._set_serialized_loc(target_idf, base, start_offset)
 
         tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName.uint_all()))
         if isinstance(self.t, Array):
-            return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), 0, self.t.size_in_uints))
+            return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints))
+        elif base is not None:
+            return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
         else:
-            return tgt.clone().index(start_idx).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
+            return tgt.clone().index(start_offset).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
 
 
 class EncryptionExpression(ReclassifyExpr):
-    def __init__(self, expr: Expression, privacy: Expression):
+    def __init__(self, expr: Expression, privacy: 'PrivacyLabelExpr'):
+        if isinstance(privacy, Identifier):
+            privacy = IdentifierExpr(privacy)
         super().__init__(expr, privacy)
         self.annotated_type = AnnotatedTypeName.cipher_type()
 
@@ -604,7 +640,7 @@ class CircuitComputationStatement(Statement):
 
 class IfStatement(Statement):
 
-    def __init__(self, condition: Expression, then_branch: Statement, else_branch: Statement):
+    def __init__(self, condition: Expression, then_branch: 'Block', else_branch: 'Block'):
         super().__init__()
         self.condition = condition
         self.then_branch = then_branch
@@ -693,7 +729,7 @@ class Block(StatementList):
 
     def clone(self) -> 'Block':
         from zkay.zkay_ast.visitor.deep_copy import deep_copy
-        return deep_copy(self, with_types=True)
+        return deep_copy(self, with_types=True, with_analysis=True)
 
 
 class LabeledBlock(StatementList):
@@ -1119,6 +1155,14 @@ class Parameter(AST):
         self.storage_location = storage_location
         self.original_type = original_type
 
+    def copy(self) -> 'Parameter':
+        return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location, self.original_type)
+
+    def with_changed_storage(self, match_storage: str, new_storage: str) -> 'Parameter':
+        if self.storage_location == match_storage:
+            self.storage_location = new_storage
+        return self
+
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
@@ -1134,12 +1178,20 @@ class ConstructorOrFunctionDefinition(AST):
 
         # specify parent type
         self.parent: ContractDefinition = None
-        self.called_functions: Set[ConstructorOrFunctionDefinition] = set()
+
+        self.unambiguous_name: Optional[str] = None
+
+        self.called_functions: OrderedDict[ConstructorOrFunctionDefinition, None] = OrderedDict()
         self.is_recursive = False
         self.has_static_body = True
-        self.requires_verification = False
-        self.requires_verification_if_external = False
         self.can_be_private = True
+
+        # True if this function contains private expressions
+        self.requires_verification = False
+
+        # True if this function is public and either requires verification or has private arguments
+        self.requires_verification_when_external = False
+
         self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
         self.can_be_external = not ('private' in self.modifiers or 'internal' in self.modifiers)
 
@@ -1147,11 +1199,22 @@ class ConstructorOrFunctionDefinition(AST):
         self.parameters = list(map(f, self.parameters))
         self.body = f(self.body)
 
-    def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier]):
+    def replaced_with(self, replacement: 'ConstructorOrFunctionDefinition') -> 'ConstructorOrFunctionDefinition':
+        replacement: ConstructorOrFunctionDefinition = super().replaced_with(replacement)
+        replacement.called_functions = self.called_functions
+        replacement.is_recursive = self.is_recursive
+        replacement.has_static_body = self.has_static_body
+        replacement.requires_verification = self.requires_verification
+        replacement.requires_verification_when_external = self.requires_verification_when_external
+        replacement.can_be_private = self.can_be_private
+        return replacement
+
+    def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier], ref_storage_loc: str = 'memory'):
         t = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
         idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
-        storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
+        storage_loc = '' if t.type_name.is_primitive_type() else ref_storage_loc
         self.parameters.append(Parameter([], t, idf, storage_loc))
+        self.parameters[-1].original_type = t
 
     @property
     def name(self):
@@ -1207,6 +1270,9 @@ class ConstructorDefinition(ConstructorOrFunctionDefinition):
     def __init__(self, parameters: List[Parameter], modifiers: List[str], body: Block):
         super().__init__(parameters, modifiers, body)
 
+    def as_function(self):
+        return self.replaced_with(FunctionDefinition(Identifier(self.name), self.parameters, self.modifiers, [], self.body))
+
 
 class StateVariableDeclaration(AST):
 
@@ -1216,6 +1282,8 @@ class StateVariableDeclaration(AST):
         self.keywords = keywords
         self.idf = idf
         self.expr = expr
+
+        self.is_final = 'final' in self.keywords
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
@@ -1293,7 +1361,7 @@ class SourceUnit(AST):
         return c
 
 
-PrivacyLabelExpr = Union[MeExpr, AllExpr, IdentifierExpr]
+PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
 
 # UTIL FUNCTIONS
 
@@ -1425,9 +1493,6 @@ class CodeVisitor(AstVisitor):
             a = self.visit_list(ast.args, ', ')
             return f'{f}({a})'
 
-    def visitCastExpr(self, ast: CastExpr):
-        return f'{self.visit(ast.t)}({self.visit(ast.expr)})'
-
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         lhs = self.visit(ast.lhs)
         rhs = self.visit(ast.rhs)
@@ -1487,12 +1552,13 @@ class CodeVisitor(AstVisitor):
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         if isinstance(ast.lhs, SliceExpr) and isinstance(ast.rhs, SliceExpr):
-            sz = ast.lhs.end - ast.lhs.start
-            assert sz == ast.rhs.end - ast.rhs.start, "Slice ranges don't have same size"
+            assert ast.lhs.size == ast.rhs.size, "Slice ranges don't have same size"
             s = ''
             lexpr, rexpr = self.visit(ast.lhs.arr), self.visit(ast.rhs.arr)
-            for i in range(sz):
-                s += f'{lexpr}[{ast.lhs.start + i}] = {rexpr}[{ast.rhs.start + i}];\n'
+            lbase = '' if ast.lhs.base is None else f'{self.visit(ast.lhs.base)} + '
+            rbase = '' if ast.rhs.base is None else f'{self.visit(ast.rhs.base)} + '
+            for i in range(ast.lhs.size):
+                s += f'{lexpr}[{lbase}{ast.lhs.start_offset + i}] = {rexpr}[{rbase}{ast.rhs.start_offset + i}];\n'
             return s[:-1]
         else:
             lhs = self.visit(ast.lhs)

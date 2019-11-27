@@ -24,7 +24,7 @@ class DirectCalledFunctionDetector(FunctionVisitor):
             assert isinstance(ast.func, LocationExpr)
             fdef = ast.func.target
             assert isinstance(fdef, FunctionDefinition)
-            ast.statement.function.called_functions.add(fdef)
+            ast.statement.function.called_functions[fdef] = None
         self.visitChildren(ast)
 
 
@@ -35,7 +35,7 @@ class IndirectCalledFunctionDetector(FunctionVisitor):
         leaves = ast.called_functions
         while len(ast.called_functions) > size:
             size = len(ast.called_functions)
-            leaves = [fct for leaf in leaves for fct in leaf.called_functions if fct not in ast.called_functions]
+            leaves = {fct: None for leaf in leaves for fct in leaf.called_functions if fct not in ast.called_functions}
             ast.called_functions.update(leaves)
 
         if ast in ast.called_functions:

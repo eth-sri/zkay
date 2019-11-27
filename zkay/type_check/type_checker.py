@@ -5,7 +5,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentExpr, BooleanLiteralExpr, NumberLiteralExpr, AnnotatedTypeName, Expression, TypeName, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
-    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, LocationExpr
+    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
+    LocationExpr, CastExpr, NewExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -168,13 +169,7 @@ class TypeCheckVisitor(AstVisitor):
 
             # Check arguments
             for i in range(len(ast.args)):
-                #if ft.parameters[i].annotated_type.privacy_annotation != Expression.all_expr():
-                #    raise NotImplementedError("Private arguments in function calls not yet supported")
                 ast.args[i] = self.get_rhs(ast.args[i], ft.parameters[i].annotated_type)
-
-            #for rp in ft.return_parameters:
-            #    if rp.annotated_type.privacy_annotation != Expression.all_expr():
-            #       raise NotImplementedError("Private return values for called functions not yet supported")
 
             # Set expression type to return type
             if len(ft.return_parameters) == 1:
@@ -184,6 +179,13 @@ class TypeCheckVisitor(AstVisitor):
                 ast.annotated_type = AnnotatedTypeName(TupleType([t.annotated_type for t in ft.return_parameters]), None)
         else:
             raise TypeException('Invalid function call', ast)
+
+    def visitCastExpr(self, ast: CastExpr):
+        ast.annotated_type = AnnotatedTypeName(ast.t, ast.args[0].annotated_type.privacy_annotation)
+
+    def visitNewExpr(self, ast: NewExpr):
+        # already has correct type
+        pass
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert ast.target is not None
@@ -318,7 +320,7 @@ class TypeCheckVisitor(AstVisitor):
             if isinstance(t, Mapping):
                 # no action necessary, this is the case: mapping(address!x => uint@x)
                 pass
-            elif 'final' not in t.keywords:
+            elif not t.is_final:
                 raise TypeException('Privacy annotations must be "final", if they are expressions', ast)
             elif t.annotated_type != AnnotatedTypeName.address_all():
                 raise TypeException(f'Privacy type is not a public address, but {str(t.annotated_type)}', ast)

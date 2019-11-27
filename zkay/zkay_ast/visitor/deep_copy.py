@@ -1,13 +1,13 @@
 import inspect
 
 from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
-from zkay.zkay_ast.ast import AST, Expression
+from zkay.zkay_ast.ast import AST, Expression, Statement, Parameter, CastExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
-def deep_copy(ast: AST, with_types=False):
+def deep_copy(ast: AST, with_types=False, with_analysis=False):
     """
 
     :param ast:
@@ -16,7 +16,7 @@ def deep_copy(ast: AST, with_types=False):
 
     Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
     """
-    v = DeepCopyVisitor(with_types)
+    v = DeepCopyVisitor(with_types, with_analysis)
     ast_copy = v.visit(ast)
     ast_copy.parent = ast.parent
     set_parents(ast_copy)
@@ -27,9 +27,10 @@ def deep_copy(ast: AST, with_types=False):
 
 class DeepCopyVisitor(AstVisitor):
 
-    def __init__(self, with_types):
+    def __init__(self, with_types, with_analysis):
         super().__init__('node-or-children')
         self.with_types = with_types
+        self.with_analysis = with_analysis
 
     def visitChildren(self, ast):
         c = ast.__class__
@@ -60,6 +61,7 @@ class DeepCopyVisitor(AstVisitor):
             'contains_inlined_function',
 
             'pre_statements',
+            'is_final',
 
             # For array children (ciphertext, key etc.)
             'expr',
@@ -73,6 +75,9 @@ class DeepCopyVisitor(AstVisitor):
         ast_copy.line = ast.line
         ast_copy.column = ast.column
         return ast_copy
+
+    def visitCastExpr(self, ast: CastExpr):
+        return CastExpr(self.visit(ast.t), self.visit(ast.args[0]))
 
     def visitAnnotatedTypeName(self, ast):
         ast_copy = self.visitChildren(ast)
@@ -88,8 +93,13 @@ class DeepCopyVisitor(AstVisitor):
         ast_copy = self.visitChildren(ast)
         if self.with_types and ast.annotated_type is not None:
             ast_copy.annotated_type = ast.annotated_type.clone()
-        ast_copy.contains_inlined_function = ast.contains_inlined_function
         ast_copy.is_private = ast.is_private
+        return ast_copy
+
+    def visitStatement(self, ast: Statement):
+        ast_copy = self.visitChildren(ast)
+        if self.with_analysis:
+            ast_copy.before_analysis = ast.before_analysis
         return ast_copy
 
     def copy_field(self, field):
