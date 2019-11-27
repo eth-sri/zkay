@@ -35,6 +35,9 @@ class PartitionState:
         return self.get_index(x) is not None
 
     def same_partition(self, x, y):
+        if x == y:
+            return True
+
         # get x
         xp = self.get_index(x)
         if xp is None:
@@ -114,8 +117,15 @@ class PartitionState:
     def separate_all(self):
         s = PartitionState()
         for p in self._partitions.values():
+            # Side effects do not affect the aliasing of final values
+            final_vals = set()
             for x in p:
-                s.insert(x)
+                if x.is_final:
+                    final_vals.add(x)
+                else:
+                    s.insert(x)
+            if final_vals:
+                s._insert_partition(final_vals)
         return s
 
     def copy(self, project=None):
