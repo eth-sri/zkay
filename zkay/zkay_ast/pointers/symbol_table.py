@@ -1,6 +1,7 @@
-from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
-    StructDefinition, UserDefinedTypeName, StatementList
-from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars
+from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, \
+    SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
+    StructDefinition, UserDefinedTypeName, StatementList, Array
+from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -108,9 +109,13 @@ class SymbolTableLinker(AstVisitor):
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert isinstance(ast.expr, LocationExpr), "Function call return value member access not yet supported"
         type = ast.expr.target.annotated_type.type_name
-        assert isinstance(type, UserDefinedTypeName)
-        if type.target is not None:
-            ast.target = type.target.names[ast.member.name].parent
+        if isinstance(type, Array):
+            assert ast.member.name == 'length'
+            ast.target = array_length_member
+        else:
+            assert isinstance(type, UserDefinedTypeName)
+            if type.target is not None:
+                ast.target = type.target.names[ast.member.name].parent
 
     def visitIndexExpr(self, ast: IndexExpr):
         assert isinstance(ast.arr, LocationExpr), "Function call return value indexing not yet supported"

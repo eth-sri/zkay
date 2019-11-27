@@ -3,6 +3,7 @@ from zkay.zkay_ast.ast import AnnotatedTypeName, FunctionTypeName, Parameter, Id
     VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName, StructTypeName
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 
+array_length_member = VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('length'))
 
 class GlobalDefs:
     # gasleft: FunctionDefinition = FunctionDefinition(
