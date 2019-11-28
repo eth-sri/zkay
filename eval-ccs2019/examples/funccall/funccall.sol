@@ -30,7 +30,7 @@ contract funccall {
         return reveal(val > 42 ? 0 : recursive(reveal(val, all) + 1), all);
     }*/
 
-    // Private function used in private expression (inlined)
+    // Private function used in private expression
     function some_comp(uint@me v1, uint@me v2) pure internal returns (uint@me) {
         uint x = some_comp_pub(1, 2);
         return v1 + v2 + x;
@@ -60,13 +60,26 @@ contract funccall {
         return res;
     }
 
+    function getself(uint@me self) public returns(uint) {
+        return reveal(self, all);
+    }
+
+    function getself2(uint self) public returns(uint) {
+        return self;
+    }
+
+    function getself3(uint@me self) public returns(uint@me) {
+        return self;
+    }
+
     function calc(uint@me v) public {
         require(owner == me);
-        pubval = 0;
-        uint test = recursive(23) + some_comp_pub(v, v);
         res = priv_inc(v) + 1 + get_res();
+        uint test = recursive(23) + getself(v) + some_comp_pub(getself3(v), getself3(v)) + getself(42);
+        //uint@me asdf = getself(2);
+        //asdf = getself(getself2(53)) + 1;
         //res = v + some_comp(v, v) + pure_pub_func(2);
-        //update_pubval(); problem, alias analysis forgets that me == owner
-        //pubval = some_comp_pub(pubval, res); will not work for non-purely public functions
+        update_pubval();
+        pubval = some_comp_pub(pubval, res);
     }
 }
