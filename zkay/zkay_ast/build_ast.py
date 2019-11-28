@@ -114,13 +114,6 @@ class BuildASTVisitor(SolidityVisitor):
                             r = ast.RequireStatement(e.args[0])
                             statements[i] = r
 
-            # handle assignment
-            if isinstance(s, ast.ExpressionStatement):
-                e = s.expr
-                if isinstance(e, ast.AssignmentExpr):
-                    a = ast.AssignmentStatement(e.lhs, e.rhs)
-                    statements[i] = a
-
             statements[i].line = s.line
             statements[i].column = s.column
 
@@ -251,3 +244,25 @@ class BuildASTVisitor(SolidityVisitor):
                 return ReclassifyExpr(args[0], args[1])
 
         return FunctionCallExpr(func, args)
+
+    def visitIfStatement(self, ctx:SolidityParser.IfStatementContext):
+        cond = self.visit(ctx.condition)
+        then_branch = self.visit(ctx.then_branch)
+        if not isinstance(then_branch, ast.Block):
+            then_branch = ast.Block([then_branch])
+
+        if ctx.else_branch is not None:
+            else_branch = self.visit(ctx.else_branch)
+            if not isinstance(else_branch, ast.Block):
+                else_branch = ast.Block([else_branch])
+        else:
+            else_branch = None
+
+        return ast.IfStatement(cond, then_branch, else_branch)
+
+    def visitExpressionStatement(self, ctx:SolidityParser.ExpressionStatementContext):
+        e = self.visit(ctx.expr)
+        if isinstance(e, ast.AssignmentExpr):
+            return ast.AssignmentStatement(e.lhs, e.rhs)
+        else:
+            return ExpressionStatement(e)
