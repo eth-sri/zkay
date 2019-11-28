@@ -3,13 +3,10 @@ from abc import ABCMeta, abstractmethod
 from multiprocessing import Pool, Value
 from typing import List
 
-import zkay.config as cfg
-
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
-from zkay.compiler.privacy.circuit_generation.offchain_compiler_with_circuit_simu import PythonOffchainVisitorWithProofSimulation
-from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
+from zkay.config import should_use_hash
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import AST
@@ -17,12 +14,10 @@ from zkay.zkay_ast.ast import AST
 
 class CircuitGenerator(metaclass=ABCMeta):
     def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str, parallel_keygen: bool):
-        if cfg.generate_offchain_circuit_simulation_code:
-            self.python_visitor = PythonOffchainVisitorWithProofSimulation(circuits)
-        else:
-            self.python_visitor = PythonOffchainVisitor(circuits)
+        self.python_visitor = PythonOffchainVisitor(circuits)
         self.sol_ast = transformed_ast
-        self.circuits_to_prove = [c for c in circuits if c.requires_verification()]
+        self.circuits = {circ.fct: circ for circ in circuits}
+        self.circuits_to_prove = [c for c in circuits if c.requires_verification() and c.fct.can_be_external]
         self.proving_scheme = proving_scheme
         self.output_dir = output_dir
         self.parallel_keygen = parallel_keygen
@@ -44,6 +39,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         c_count = len(self.circuits_to_prove)
         print(f'Compiling {c_count} circuits...')
         with time_measure('circuit_compilation', True):
+            #modified = list(map(self._generate_zkcircuit, self.circuits_to_prove))
             with Pool(processes=self.p_count) as pool:
                 modified = pool.map(self._generate_zkcircuit, self.circuits_to_prove)
 
@@ -69,7 +65,7 @@ class CircuitGenerator(metaclass=ABCMeta):
             for circuit in self.circuits_to_prove:
                 vk = self._parse_verification_key(circuit)
                 with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
-                    should_hash = should_use_hash(circuit.num_public_args)
+                    should_hash = should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
                     primary_inputs = self._get_primary_inputs(should_hash, circuit)
                     f.write(self.proving_scheme.generate_verification_contract(vk, circuit, should_hash, primary_inputs))
 

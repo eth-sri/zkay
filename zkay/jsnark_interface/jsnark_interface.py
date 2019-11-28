@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Dict
 
 import zkay.config as cfg
 from zkay.utils.output_suppressor import output_suppressed
@@ -27,8 +27,10 @@ def compile_circuit(circuit_dir: str, javacode: str):
         print(out, err)
 
 
-def prepare_proof(circuit_dir: str, serialized_args: List[int]):
-    serialized_arg_str = [hex(arg)[2:] for arg in serialized_args]
+def prepare_proof(circuit_dir: str, serialized_pub_args: List[int], priv_args: Dict[str, List[int]]):
+    serialized_arg_str = [hex(arg)[2:] for arg in serialized_pub_args]
+    for name, vals in priv_args.items():
+        serialized_arg_str.append(' '.join([name] + [hex(v)[2:] for v in vals]))
 
     # Run jsnark to evaluate the circuit and compute prover inputs
     with output_suppressed('jsnark'):
@@ -41,12 +43,13 @@ import zkay.ZkayCircuitBase;
 
 public class {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{
-        super("{circuit_name}", "{crypto_backend}", {key_bits}, {priv_size}, {pub_size}, {use_input_hashing});
+        super("{circuit_name}", "{crypto_backend}", {key_bits}, {pub_size}, {use_input_hashing});
     }}
-
+{fdefs}
     @Override
     protected void buildCircuit() {{
 {init_inputs}
+        addAllInputs();
 
 {constraints}{verify_hash_str}
     }}
@@ -59,9 +62,14 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 '''
 
 
-def get_jsnark_circuit_class_str(name: str, priv_size: int, pub_size: int, should_hash: bool, input_init: List[str], constraints: List[str]):
+def get_jsnark_circuit_class_str(name: str, pub_size: int, should_hash: bool,
+                                 fdefs: List[str], input_init: List[str], constraints: List[str]):
     verify_hash = f'\n\n{8*" "}verifyInputHash();' if should_hash else ''
+    function_definitions = '\n\n'.join(fdefs)
+    if function_definitions:
+        function_definitions = f'\n{function_definitions}\n'
     return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend, circuit_name=name,
-                                      key_bits=cfg.key_bits, priv_size=priv_size, pub_size=pub_size, use_input_hashing=str(should_hash).lower(),
+                                      key_bits=cfg.key_bits, pub_size=pub_size, use_input_hashing=str(should_hash).lower(),
+                                      fdefs=indent(function_definitions),
                                       init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))),
                                       verify_hash_str=verify_hash)

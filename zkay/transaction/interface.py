@@ -6,6 +6,7 @@ from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 import zkay.config as cfg
 
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.utils.timer import time_measure
 
@@ -31,13 +32,15 @@ class Value(tuple):
         return self[:].__hash__()
 
     @staticmethod
-    def unwrap_values(v: Union[int, bool, 'Value', List]) -> Union[int, List]:
+    def unwrap_values(v: Union[int, bool, 'Value', List, Dict]) -> Union[int, List, Dict]:
         if isinstance(v, List):
             return list(map(Value.unwrap_values, v))
         elif isinstance(v, AddressValue):
             return v.val
+        elif isinstance(v, Dict):
+            return {key: Value.unwrap_values(vals) for key, vals in v.items()}
         else:
-            return v[:] if isinstance(v, Value) else v
+            return list(v[:]) if isinstance(v, Value) else v
 
     @staticmethod
     def flatten(v: List) -> List:
@@ -50,9 +53,13 @@ class Value(tuple):
         return out
 
     @staticmethod
-    def list_to_string(v: Union[int, bool, 'Value', List]) -> str:
+    def collection_to_string(v: Union[int, bool, 'Value', Dict, List, Tuple]) -> str:
         if isinstance(v, List):
-            return f"[{', '.join(map(Value.list_to_string, v))}]"
+            return f"[{', '.join(map(Value.collection_to_string, v))}]"
+        elif isinstance(v, Tuple):
+            return f"({', '.join(map(Value.collection_to_string, v))})"
+        elif isinstance(v, Dict):
+            return f"{{{', '.join([f'{key}: {Value.collection_to_string(val)}' for key, val in v.items()])}}}"
         else:
             return str(v)
 
@@ -144,7 +151,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, List]:
         assert contract_handle is not None
-        debug_print(f'Calling contract function {name}({Value.list_to_string(*args)})')
+        debug_print(f'Calling contract function {name}{Value.collection_to_string(args)}')
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
         debug_print(f'Got return value {val}')
         return val
@@ -152,12 +159,12 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
     def transact(self, contract_handle, function: str, actual_args: List, should_encrypt: List[bool]) -> Any:
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
-        debug_print(f'Issuing transaction for function "{function}"{Value.list_to_string(actual_args)})')
+        debug_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
         return self._transact(contract_handle, function, *Value.unwrap_values(actual_args))
 
     def deploy(self, project_dir: str, contract: str, actual_args: List, should_encrypt: List[bool]) -> Any:
         self.__check_args(actual_args, should_encrypt)
-        debug_print(f'Deploying contract {contract}[{Value.list_to_string(actual_args)}]')
+        debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
         return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args))
 
     def connect(self, project_dir: str, contract: str, address: AddressValue) -> Any:
@@ -311,15 +318,29 @@ class ZkayProverInterface(metaclass=ABCMeta):
     def __init__(self, proving_scheme: str = cfg.proving_scheme):
         self.proving_scheme = proving_scheme
 
-    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List, in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
-        for arg in priv_values:
+    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: Dict[str, Any], in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
+        for arg in priv_values.values():
             assert not isinstance(arg, Value) or isinstance(arg, RandomnessValue)
+        debug_print(f'Generating proof for {contract}.{function} [priv: {Value.collection_to_string(priv_values)}] '
+                    f'[in: {Value.collection_to_string(in_vals)}] [out: {Value.collection_to_string(out_vals)}]')
+
+        priv_values, in_vals, out_vals = Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals)
+
+        # Check for overflows
+        for arg in in_vals + out_vals:
+            assert arg < bn128_scalar_field, 'argument overflow'
+        for name, vals in priv_values.items():
+            if not isinstance(vals, List):
+                vals = [vals]
+            for arg in vals:
+                assert arg < bn128_scalar_field, 'argument overflow'
+            priv_values[name] = vals
+
         manifest = parse_manifest(project_dir)
-        debug_print(f'Generating proof for {contract}.{function}')
         with time_measure(f'generate_proof_{contract}.{function}', True):
             return self._generate_proof(os.path.join(project_dir, f"{manifest[Manifest.verifier_names][f'{contract}.{function}']}_out"),
-                                        Value.flatten(Value.unwrap_values(priv_values)), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals))
+                                        priv_values, in_vals, out_vals)
 
     @abstractmethod
-    def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:
+    def _generate_proof(self, verifier_dir: str, priv_values: Dict[str, List[int]], in_vals: List[int], out_vals: List[int]) -> List[int]:
         pass

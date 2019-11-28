@@ -1,14 +1,15 @@
 import os
 from hashlib import sha512
-from typing import List, Optional, Set
+from typing import List, Optional
 
 import zkay.config as cfg
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
-from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, ChangeGuardStatement
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, \
+    CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
-    TempVarDecl, EqConstraint, EncConstraint, HybridArgumentIdf
+    CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
@@ -17,39 +18,46 @@ from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 class JsnarkVisitor(AstVisitor):
-    def __init__(self, circuit: CircuitHelper, log=False):
-        super().__init__('node-or-children', log)
-        self.circuit = circuit
+    def __init__(self, phi: List[CircuitStatement]):
+        super().__init__('node-or-children', False)
+        self.phi = phi
 
     def visitCircuit(self) -> List[str]:
-        return [self.visitCircuitStatement(constr) for constr in self.circuit.phi]
+        return [self.visit(constr) for constr in self.phi]
 
-    def visitCircuitStatement(self, stmt: CircuitStatement) -> str:
-        if isinstance(stmt, CircComment):
-            return f'// {stmt.text}' if stmt.text else ''
-        elif isinstance(stmt, CircIndentBlock):
-            stmts = list(map(self.visitCircuitStatement, stmt.statements))
-            return f'/*** BEGIN {stmt.name} ***/\n' + indent('\n'.join(stmts)) + '\n' + f'/***  END  {stmt.name} ***/'
-        elif isinstance(stmt, TempVarDecl):
-            assert stmt.lhs.t.size_in_uints == 1
-            return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
-        elif isinstance(stmt, EqConstraint):
-            assert stmt.tgt.t.size_in_uints == stmt.val.t.size_in_uints
-            return f'checkEq("{stmt.tgt.name}", "{stmt.val.name}");'
-        elif isinstance(stmt, CircAssignment):
-            assert isinstance(stmt.lhs, IdentifierExpr)
-            return f'assign("{stmt.lhs.names}", {self.visit(stmt.rhs)});'
-        elif isinstance(stmt, ChangeGuardStatement):
-            if stmt.new_cond is None:
-                return 'popGuard();'
-            else:
-                return f'addGuard("{stmt.new_cond.name}", {str(stmt.is_true).lower()});'
+    def visitCircComment(self, stmt: CircComment):
+        return f'// {stmt.text}' if stmt.text else ''
+
+    def visitCircIndentBlock(self, stmt: CircIndentBlock):
+        stmts = list(map(self.visit, stmt.statements))
+        return f'/*** BEGIN {stmt.name} ***/\n' + indent('\n'.join(stmts)) + '\n' + f'/***  END  {stmt.name} ***/'
+
+    def visitCircCall(self, stmt: CircCall):
+        return f'_{stmt.fct.unambiguous_name}();'
+
+    def visitCircVarDecl(self, stmt: CircVarDecl):
+        assert stmt.lhs.t.size_in_uints == 1
+        return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
+
+    def visitCircEqConstraint(self, stmt: CircEqConstraint):
+        assert stmt.tgt.t.size_in_uints == stmt.val.t.size_in_uints
+        return f'checkEq("{stmt.tgt.name}", "{stmt.val.name}");'
+
+    def visitCircEncConstraint(self, stmt: CircEncConstraint):
+        assert stmt.cipher.t == TypeName.cipher_type()
+        assert stmt.pk.t == TypeName.key_type()
+        assert stmt.rnd.t == TypeName.rnd_type()
+        return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+
+    def visitCircAssignment(self, stmt: CircAssignment):
+        assert isinstance(stmt.lhs, IdentifierExpr)
+        return f'assign("{stmt.lhs.names}", {self.visit(stmt.rhs)});'
+
+    def visitCircGuardModification(self, stmt: CircGuardModification):
+        if stmt.new_cond is None:
+            return 'popGuard();'
         else:
-            assert isinstance(stmt, EncConstraint)
-            assert stmt.cipher.t == TypeName.cipher_type()
-            assert stmt.pk.t == TypeName.key_type()
-            assert stmt.rnd.t == TypeName.rnd_type()
-            return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+            return f'addGuard("{stmt.new_cond.name}", {str(stmt.is_true).lower()});'
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
         return f'val({str(ast.value).lower()})'
@@ -120,6 +128,24 @@ class JsnarkVisitor(AstVisitor):
         raise ValueError(f'Unsupported function {ast.func.code()} inside circuit')
 
 
+def add_function_circuit_arguments(circuit: CircuitHelper):
+    input_init_stmts = []
+    for sec_input in circuit.sec_idfs:
+        input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints});')
+
+    for pub_input in circuit.input_idfs:
+        addf = 'addK' if pub_input.t == TypeName.key_type() else 'addIn'
+        input_init_stmts.append(f'{addf}("{pub_input.name}", {pub_input.t.size_in_uints});')
+
+    for pub_output in circuit.output_idfs:
+        input_init_stmts.append(f'addOut("{pub_output.name}", {pub_output.t.size_in_uints});')
+
+    for fct in circuit.function_calls_with_verification:
+        input_init_stmts.append(f'addArgs_{fct.func.target.unambiguous_name}();')
+
+    return input_init_stmts
+
+
 class JsnarkGenerator(CircuitGenerator):
     def __init__(self, transformed_ast: AST, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
         super().__init__(transformed_ast, circuits, proving_scheme, output_dir, False)
@@ -129,24 +155,25 @@ class JsnarkGenerator(CircuitGenerator):
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        input_init_stmts = []
-        priv_size = 0
-        for sec_input in circuit.sec_idfs:
-            size = sec_input.t.size_in_uints
-            priv_size += size
-            input_init_stmts.append(f'addS("{sec_input.name}", {size});')
+        fdefs = []
+        for fct in list(circuit.fct.called_functions.keys()):
+            if fct.requires_verification:
+                target_circuit = self.circuits[fct]
+                body = '\n'.join([f'stepIn("{fct.unambiguous_name}");'] + add_function_circuit_arguments(target_circuit) + ['stepOut();'])
+                arg_fdef = f'private void addArgs_{fct.unambiguous_name}() {{\n' + indent(body) + '\n}'
 
-        pub_size = 0
-        for pub_input in circuit.input_idfs + circuit.output_idfs:
-            size = pub_input.t.size_in_uints
-            pub_size += size
-            addf = 'addK' if pub_input.t == TypeName.key_type() else 'addP'
-            input_init_stmts.append(f'{addf}("{pub_input.name}", {size});')
+                body_stmts = JsnarkVisitor(target_circuit.phi).visitCircuit()
+                body = '\n'.join([f'stepIn("{fct.unambiguous_name}");'] + [stmt.strip() for stmt in body_stmts] + ['stepOut();'])
+                constr_fdef = f'private void _{fct.unambiguous_name}() {{\n' + indent(body) + '\n}'
 
-        constraints = JsnarkVisitor(circuit).visitCircuit()
+                fdefs.append(f'{arg_fdef}\n{constr_fdef}')
 
-        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), priv_size, pub_size, cfg.should_use_hash(pub_size),
-                                                   input_init_stmts, constraints)
+        input_init_stmts = add_function_circuit_arguments(circuit)
+        constraints = JsnarkVisitor(circuit.phi).visitCircuit()
+
+        pub_size = circuit.in_size_trans + circuit.out_size_trans
+        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), pub_size, cfg.should_use_hash(pub_size),
+                                                   fdefs, input_init_stmts, constraints)
 
         hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.sha512')
         hash = sha512((jsnark.circuit_builder_jar_hash + code).encode('utf-8')).hexdigest()
