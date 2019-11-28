@@ -1,31 +1,33 @@
-from typing import List, Dict, Optional, Tuple, Callable
+from typing import List, Dict, Optional, Tuple, Callable, Set, Union
 
 import zkay.config as cfg
-from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, EncConstraint, TempVarDecl, \
-    EqConstraint, CircAssignment, CircComment, CircIndentBlock, ChangeGuardStatement
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
+    CircEqConstraint, CircAssignment, CircComment, CircIndentBlock, CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, Identifier, \
-    AnnotatedTypeName, IndentBlock, HybridArgType, CircuitInputStatement, CircuitComputationStatement, BlankLine, LiteralExpr
+    AnnotatedTypeName, HybridArgType, CircuitInputStatement, CircuitComputationStatement, AllExpr, MeExpr, \
+    StructDefinition, SliceExpr, Statement, StateVariableDeclaration
 
 
 class CircuitHelper:
     def __init__(self, fct: ConstructorOrFunctionDefinition,
-                 inline_stmt_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
+                 static_owner_labels: List[Union[MeExpr, AllExpr, Identifier]],
                  expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
-                 circ_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor]):
+                 circ_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
+                 internal_circuit: Optional['CircuitHelper'] = None):
         super().__init__()
 
         # Function and verification contract corresponding to this circuit
         self.fct = fct
         self.verifier_contract_filename: Optional[str] = None
         self.verifier_contract_type: Optional[UserDefinedTypeName] = None
+        self.internal_zk_data_struct: Optional[StructDefinition] = None
 
         # Transformer visitors
-        self._inline_stmt_trafo: AstTransformerVisitor = inline_stmt_trafo_constructor(self)
         self._expr_trafo: AstTransformerVisitor = expr_trafo_constructor(self)
         self._circ_trafo: AstTransformerVisitor = circ_trafo_constructor(self)
 
@@ -46,10 +48,25 @@ class CircuitHelper:
         self._in_name_factory = NameFactory(cfg.zk_in_name, arg_type=HybridArgType.PUB_CIRCUIT_ARG)
 
         # For a given owner label (idf or me), stores the corresponding assignment of the requested key to the corresponding in variable
-        self._pk_for_label: Dict[str, AssignmentStatement] = {}
+        self._static_owner_labels = static_owner_labels
+        self._global_keys: Set[Union[MeExpr, Identifier]] = set()
 
-        self._param_to_in_assignments: List[AssignmentStatement] = []
         self.has_return_var = False
+        self.function_calls_with_verification: List[FunctionCallExpr] = []
+
+        # Set by transform_transitive_calls
+        if internal_circuit:
+            self.verifier_contract_filename = internal_circuit.verifier_contract_filename
+            internal_circuit.verifier_contract_filename = None
+            self.verifier_contract_type = internal_circuit.verifier_contract_type
+            internal_circuit.verifier_contract_type = None
+            self._global_keys = internal_circuit._global_keys
+
+            self.trans_priv_size = internal_circuit.priv_in_size_trans
+            self.trans_in_size = internal_circuit.in_size_trans
+            self.trans_out_size = internal_circuit.out_size_trans
+        else:
+            self.trans_priv_size, self.trans_in_size, self.trans_out_size = None, None, None
 
         # Current inlining remapping dictionary
         # (maps inlined function parameter and variable identifiers to the corresponding temporary variables)
@@ -60,27 +77,31 @@ class CircuitHelper:
 
     @property
     def zk_data_struct_name(self):
-        return f'{self.verifier_contract_type.code()}_{cfg.zk_struct_suffix}'
-
-    @staticmethod
-    def get_transformed_type(expr: Expression, privacy: PrivacyLabelExpr) -> TypeName:
-        return expr.annotated_type.type_name if privacy.is_all_expr() else TypeName.cipher_type()
+        return f'{self.fct.unambiguous_name}_{cfg.zk_struct_suffix}'
 
     @property
-    def num_public_args(self) -> int:
-        return self._out_name_factory.count + self._in_name_factory.count
+    def priv_in_size_trans(self) -> int:
+        return self.priv_in_size + self.trans_priv_size
 
     @property
-    def has_out_args(self) -> bool:
-        return self._out_name_factory.count > 0
+    def priv_in_size(self) -> int:
+        return self._secret_input_name_factory.size
 
     @property
-    def has_in_args(self) -> bool:
-        return self._in_name_factory.count > 0
+    def out_size_trans(self) -> int:
+        return self.out_size + self.trans_out_size
 
     @property
-    def public_out_size(self) -> int:
+    def out_size(self) -> int:
         return self._out_name_factory.size
+
+    @property
+    def in_size_trans(self) -> int:
+        return self.in_size + self.trans_in_size
+
+    @property
+    def in_size(self) -> int:
+        return self._in_name_factory.size
 
     @property
     def output_idfs(self) -> List[HybridArgumentIdf]:
@@ -91,10 +112,6 @@ class CircuitHelper:
         return self._in_name_factory.idfs
 
     @property
-    def temp_vars_outside_circuit(self) -> List[HybridArgumentIdf]:
-        return self._local_var_name_factory.idfs
-
-    @property
     def sec_idfs(self) -> List[HybridArgumentIdf]:
         return self._secret_input_name_factory.idfs
 
@@ -103,29 +120,33 @@ class CircuitHelper:
         return self._phi
 
     @property
-    def public_key_requests(self) -> List[AssignmentStatement]:
-        return list(self._pk_for_label.values())
-
-    @property
-    def param_to_in_assignments(self) -> List[AssignmentStatement]:
-        return self._param_to_in_assignments
+    def requested_global_keys(self) -> Set[Union[MeExpr, Identifier]]:
+        return self._global_keys
 
     @property
     def public_arg_arrays(self) -> List[Tuple[str, int]]:
         """ Returns names and lengths of all public parameter uint256 arrays which go into the verifier"""
-        return [(e.base_name, e.size) for e in (self._in_name_factory, self._out_name_factory) if e.count > 0]
+        return [(self._in_name_factory.base_name, self.in_size_trans), (self._out_name_factory.base_name, self.out_size_trans)]
+
+    @staticmethod
+    def _get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
+        if isinstance(plabel, Identifier):
+            return IdentifierExpr(plabel.clone(), AnnotatedTypeName.address_all()).with_target(plabel.parent)
+        else:
+            return plabel.clone()
 
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
-        req = self.has_in_args or self.has_out_args or self._secret_input_name_factory.count
-        assert req == self.fct.requires_verification_if_external # TODO -> requires_verification
+        req = self.in_size_trans > 0 or self.out_size_trans > 0 or self.priv_in_size_trans > 0
+        assert req == self.fct.requires_verification
         return req
 
-    def ensure_parameter_encryption(self, param: Parameter):
+    def ensure_parameter_encryption(self, fct: ConstructorOrFunctionDefinition, param: Parameter, offset) -> AssignmentStatement:
         plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.type_name)
-        cipher_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type())
-        self._ensure_encryption(plain_idf, Expression.me_expr(), cipher_idf, True)
-        self._param_to_in_assignments.append(cipher_idf.get_loc_expr().assign(IdentifierExpr(param.idf.name)))
+        name = f'{self._in_name_factory.get_new_name(param.annotated_type.type_name, False)}_{param.idf.name}'
+        cipher_idf = self._in_name_factory.add_idf(name, param.annotated_type.type_name)
+        self._ensure_encryption(fct.body, plain_idf, Expression.me_expr(), cipher_idf, True)
+        return SliceExpr(IdentifierExpr(cfg.zk_in_name), None, offset, cipher_idf.t.size_in_uints).assign(SliceExpr(IdentifierExpr(param.idf.clone()), None, 0, cipher_idf.t.size_in_uints))
 
     def get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
         """
@@ -135,16 +156,21 @@ class CircuitHelper:
         :return: Location expression which references the encrypted circuit result
         """
         ecode = expr.code()
-        with CircIndentBlockBuilder(f'[{expr.statement.function.name}]: {ecode}', self._phi):
-            plain_result_idf, priv_expr = self._evaluate_private_expression(expr)
+        with CircIndentBlockBuilder(f'{ecode}', self._phi):
+            plain_result_idf, private_expr = self._evaluate_private_expression(expr)
 
-            if new_privacy.is_all_expr():
-                new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
-                self._phi.append(EqConstraint(plain_result_idf, new_out_param))
+            if isinstance(new_privacy, AllExpr):
+                new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
+                self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
                 out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
             else:
-                new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(priv_expr, new_privacy))
-                self._ensure_encryption(plain_result_idf, new_privacy, new_out_param, False)
+                for owner in self._static_owner_labels:
+                    if expr.statement.before_analysis.same_partition(owner, new_privacy):
+                        new_privacy = owner
+                        break
+                privacy_label_expr = self._get_privacy_expr_from_label(new_privacy)
+                new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
+                self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False)
                 out_var = new_out_param.get_loc_expr()
 
         self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
@@ -168,11 +194,16 @@ class CircuitHelper:
         else:
             locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(expr.annotated_type.type_name)
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
-            self._ensure_encryption(locally_decrypted_idf, Expression.me_expr(), input_idf, False)
+            self._ensure_encryption(expr.statement, locally_decrypted_idf, Expression.me_expr(), input_idf, False)
 
         self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
         expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
         return locally_decrypted_idf, locally_decrypted_idf.get_loc_expr()
+
+    def call_function(self, ast: FunctionCallExpr):
+        assert ast.func.target.requires_verification
+        self.function_calls_with_verification.append(ast)
+        self.phi.append(CircCall(ast.func.target))
 
     # For inlining
     # prepend:
@@ -180,30 +211,6 @@ class CircuitHelper:
     # 2. include original function body with replaced parameter idfs
     # 3. assign return value to temporary var
     # return temp ret var
-
-    def inline_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition):
-        with InlineRemap(self):
-            calltext = f'INLINED {ast.code()}'
-
-            inlined_code = IndentBlock(calltext, [])
-
-            for param, arg in zip(fdef.parameters, ast.args):
-                inlined_code.statements.append(self.create_temporary_variable(param.idf.name, param.annotated_type, self._expr_trafo.visit(arg)))
-            inlined_stmts = fdef.original_body.clone().statements
-            for stmt in inlined_stmts:
-                trafo_stmt = self._inline_stmt_trafo.visit(stmt)
-                inlined_code.statements += trafo_stmt.pre_statements + [trafo_stmt]
-                trafo_stmt.pre_statements = []
-            inlined_code.statements.append(BlankLine())
-            ast.statement.pre_statements.append(inlined_code)
-
-            if fdef.return_parameters:
-                assert len(fdef.return_parameters) == 1
-                ret_t = fdef.return_parameters[0].annotated_type
-                ret = ast.replaced_with(self._inline_var_remap[cfg.return_var_name].get_loc_expr()).as_type(ret_t)
-            else:
-                ret = None
-        return ret
 
     def inline_circuit_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition):
         with InlineRemap(self):
@@ -224,16 +231,6 @@ class CircuitHelper:
         else:
             return idf
 
-    def create_temporary_variable(self, original_idf: Optional[str], t: AnnotatedTypeName, expr: Optional[Expression]) -> AssignmentStatement:
-        base_name = self._local_var_name_factory.get_new_name(t.type_name, False)
-        if original_idf is not None:
-            tmp_var = self._local_var_name_factory.add_idf(f'{base_name}_{original_idf}', t.type_name)
-            self._inline_var_remap[original_idf] = tmp_var
-        else:
-            tmp_var = self._local_var_name_factory.add_idf(base_name, t.type_name)
-        ret = IdentifierExpr(cfg.zk_data_var_name).dot(tmp_var).as_type(t).assign(expr)
-        return ret
-
     def create_temporary_circuit_variable(self, ast: VariableDeclarationStatement):
         tmp_var, priv_expr = self._evaluate_private_expression(ast.expr)
         self._inline_var_remap[ast.variable_declaration.idf.name] = tmp_var
@@ -247,24 +244,38 @@ class CircuitHelper:
     def _evaluate_private_expression(self, expr: Expression):
         priv_expr = self._circ_trafo.visit(expr)
         sec_circ_var_idf = self._circ_temp_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
-        stmt = TempVarDecl(sec_circ_var_idf, priv_expr)
+        stmt = CircVarDecl(sec_circ_var_idf, priv_expr)
         self.phi.append(stmt)
         return sec_circ_var_idf, priv_expr
 
-    def _ensure_encryption(self, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf, is_param: bool):
+    def _ensure_encryption(self, stmt: Statement, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf, is_param: bool):
         rnd = self._secret_input_name_factory.add_idf(f'{plain.name if is_param else cipher.name}_R', TypeName.rnd_type())
-        pk = self._request_public_key(new_privacy)
-        self._phi.append(EncConstraint(plain, rnd, pk, cipher))
+        pk = self._request_public_key(stmt, new_privacy)
+        self._phi.append(CircEncConstraint(plain, rnd, pk, cipher))
 
-    def _request_public_key(self, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
-        pname = privacy.idf.name
-        if pname in self._pk_for_label:
-            return self._pk_for_label[pname].lhs.member
-        else:
-            idf = self._in_name_factory.get_new_idf(TypeName.key_type())
-            pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
-            self._pk_for_label[pname] = idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy)]))
-            return idf
+    def _request_public_key(self, stmt: Statement, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
+        is_static = isinstance(privacy, IdentifierExpr) and isinstance(privacy.target, StateVariableDeclaration) and privacy.target.is_final
+        if isinstance(privacy, MeExpr) or is_static:
+            # Global static privacy (either me or final state var)
+            self._global_keys.add(privacy)
+            return HybridArgumentIdf(self.get_glob_key_name(privacy), TypeName.key_type(), HybridArgType.PUB_CIRCUIT_ARG)
+
+        # Dynamic privacy -> always request key on spot and add to local in args
+        name = f'{self._in_name_factory.get_new_name(TypeName.key_type(), False)}_{privacy.name}'
+        idf, get_key_stmt = self.request_public_key(privacy, name)
+        stmt.pre_statements.append(get_key_stmt)
+        return idf
+
+    @staticmethod
+    def get_glob_key_name(label: Union[MeExpr, Identifier]):
+        assert isinstance(label, (MeExpr, Identifier))
+        return f'glob_key_{label.name}'
+
+    def request_public_key(self, plabel: Union[MeExpr, Identifier], name):
+        idf = self._in_name_factory.add_idf(name, TypeName.key_type())
+        pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
+        privacy_label_expr = self._get_privacy_expr_from_label(plabel)
+        return idf, idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy_label_expr)]))
 
 
 class CircIndentBlockBuilder:
@@ -302,7 +313,7 @@ class Guarded:
         self.is_true = is_true
 
     def __enter__(self):
-        self.c.phi.append(ChangeGuardStatement.add_guard(self.guard_idf, self.is_true))
+        self.c.phi.append(CircGuardModification.add_guard(self.guard_idf, self.is_true))
 
     def __exit__(self, t, value, traceback):
-        self.c.phi.append(ChangeGuardStatement.pop_guard())
+        self.c.phi.append(CircGuardModification.pop_guard())

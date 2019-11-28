@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from zkay.zkay_ast.ast import HybridArgumentIdf, Expression, LocationExpr
+from zkay.zkay_ast.ast import HybridArgumentIdf, Expression, LocationExpr, FunctionDefinition
 
 
 class CircuitStatement:
@@ -14,32 +14,37 @@ class CircComment(CircuitStatement):
 
 
 class CircIndentBlock(CircuitStatement):
-
-    def __init__(self, name: str, statements: List[CircuitStatement]) -> None:
+    def __init__(self, name: str, statements: List[CircuitStatement]):
         super().__init__()
         self.name = name
         self.statements = statements
 
 
-class TempVarDecl(CircuitStatement):
+class CircCall(CircuitStatement):
+    def __init__(self, fct: FunctionDefinition):
+        super().__init__()
+        self.fct = fct
+
+
+class CircVarDecl(CircuitStatement):
     def __init__(self, lhs: HybridArgumentIdf, expr: Expression):
         self.lhs = lhs
         self.expr = expr
 
 
-class ChangeGuardStatement(CircuitStatement):
-    def __init__(self, new_cond: Optional[HybridArgumentIdf], is_true: Optional[bool] = None) -> None:
+class CircGuardModification(CircuitStatement):
+    def __init__(self, new_cond: Optional[HybridArgumentIdf], is_true: Optional[bool] = None):
         super().__init__()
         self.new_cond = new_cond
         self.is_true = is_true
 
     @staticmethod
     def add_guard(new_cond: HybridArgumentIdf, is_true: bool):
-        return ChangeGuardStatement(new_cond, is_true)
+        return CircGuardModification(new_cond, is_true)
 
     @staticmethod
     def pop_guard():
-        return ChangeGuardStatement(None)
+        return CircGuardModification(None)
 
 
 class CircAssignment(CircuitStatement):
@@ -48,7 +53,7 @@ class CircAssignment(CircuitStatement):
         self.rhs = rhs
 
 
-class EncConstraint(CircuitStatement):
+class CircEncConstraint(CircuitStatement):
     def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf):
         self.plain = plain
         self.rnd = rnd
@@ -56,7 +61,7 @@ class EncConstraint(CircuitStatement):
         self.cipher = cipher
 
 
-class EqConstraint(CircuitStatement):
+class CircEqConstraint(CircuitStatement):
     def __init__(self, tgt: HybridArgumentIdf, val: HybridArgumentIdf):
         self.tgt = tgt
         self.val = val

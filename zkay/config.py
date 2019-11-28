@@ -12,7 +12,6 @@ snark_backend = 'jsnark'
 # encryption algorithm [dummy, rsa_pkcs1_5, rsa_oaep]
 crypto_backend = 'dummy'
 
-generate_offchain_circuit_simulation_code = False
 indentation = ' '*4
 
 pki_contract_name = 'PublicKeyInfrastructure'
@@ -23,6 +22,8 @@ zk_in_name = 'in__'
 zk_struct_suffix = 'zk_data'
 zk_data_var_name = f'{zk_struct_suffix}__'
 return_var_name = 'return_value__'
+proof_param_name = 'proof__'
+verification_function_name = 'check_verify'
 
 pack_chunk_size = 31
 key_bits = cryptoparams[crypto_backend]['key_bits']
@@ -45,3 +46,10 @@ libsnark_check_verify_locally_during_proof_generation: bool = False
 
 def should_use_hash(pub_arg_count: int):
     return False
+
+
+def get_internal_name(fct) -> str:
+    if fct.requires_verification_when_external:
+        return f'_{fct.name}'
+    else:
+        return fct.name

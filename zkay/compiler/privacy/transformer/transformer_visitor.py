@@ -11,7 +11,7 @@ class AstTransformerVisitor:
         return self._visit_internal(ast)
 
     def visit_list(self, ast_list: List[AST]):
-        return list(map(self.visit, ast_list))
+        return list(filter(None.__ne__, map(self.visit, ast_list)))
 
     def visit_children(self, ast: AST):
         ast.process_children(self.visit)

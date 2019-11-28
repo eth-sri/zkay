@@ -5,7 +5,7 @@ from typing import Tuple, List
 
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
-    TempVarDecl, EqConstraint, EncConstraint, HybridArgumentIdf
+    CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
 from zkay.config import should_use_hash
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
@@ -55,14 +55,14 @@ class ZokratesCodeVisitor(CodeVisitor):
         return super().visitFunctionCallExpr(ast)
 
     def visitCircuitStatement(self, stmt: CircuitStatement):
-        if isinstance(stmt, TempVarDecl):
+        if isinstance(stmt, CircVarDecl):
             lhs = stmt.lhs.get_loc_expr(AnnotatedTypeName.uint_all())
             return f'field {self.visit(AssignmentStatement(lhs, stmt.expr))}'
-        elif isinstance(stmt, EqConstraint):
+        elif isinstance(stmt, CircEqConstraint):
             return self.visit(FunctionCallExpr(BuiltinFunction('=='),
                                                          [e.get_loc_expr(AnnotatedTypeName.uint_all()) for e in [stmt.tgt, stmt.val]]))
         else:
-            assert isinstance(stmt, EncConstraint)
+            assert isinstance(stmt, CircEncConstraint)
             fcall = FunctionCallExpr(IdentifierExpr(Identifier('enc')),
                                      [e.get_loc_expr(AnnotatedTypeName.uint_all()) for e in [stmt.plain, stmt.rnd, stmt.pk]])
             fcall.annotated_type = AnnotatedTypeName.uint_all()

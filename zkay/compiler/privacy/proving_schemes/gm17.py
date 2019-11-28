@@ -1,5 +1,7 @@
 from typing import List
 
+import zkay.config as cfg
+
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
@@ -33,7 +35,6 @@ class ProvingSchemeGm17(ProvingScheme):
 
     def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper, should_hash: bool, primary_inputs: List[str]) -> str:
         vk = verification_key
-        inputs = circuit.public_arg_arrays
 
         query_length = len(vk.query)
         assert query_length == len(primary_inputs) + 1
@@ -79,14 +80,18 @@ class ProvingSchemeGm17(ProvingScheme):
                 return vk;''' // f'''\
             }}
 
-            function check_verify(uint[8] memory proof_, {', '.join([f'uint[{count}] memory {var}' for var, count in inputs])}) public {{''' / ((
+            function {cfg.verification_function_name}(uint[8] memory proof_, uint[] memory {cfg.zk_in_name}, uint[] memory {cfg.zk_out_name}) public {{''' / f'''\
+                // Check if input size correct
+                require({cfg.zk_in_name}.length == {circuit.in_size_trans}, "Wrong public input length");
+                // Check if output size correct
+                require({cfg.zk_out_name}.length == {circuit.out_size_trans}, "Wrong public output length");''' * ((
                 ['// Check that inputs do not overflow'] +
                 [f'require({pi} < {self.snark_scalar_field_var_name}, "{pi} outside snark field bounds");' for pi in potentially_overflowing_pi] + ['\n']) if potentially_overflowing_pi else '') * '''\
                 Proof memory proof;
                 proof.a = Pairing.G1Point(proof_[0], proof_[1]);
                 proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
                 proof.c = Pairing.G1Point(proof_[6], proof_[7]);''' * (
-                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({", ".join([n for n, _ in inputs])}))) % {self.snark_scalar_field_var_name};' if should_hash else '') *  \
+                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({cfg.zk_in_name}, {cfg.zk_out_name}))) % {self.snark_scalar_field_var_name};' if should_hash else '') *  \
                 'VerifyingKey memory vk = verifyingKey();' * \
                 f"Pairing.G1Point memory vk_x = {(f'Pairing.scalar_mul(vk.query[1], {first_pi})' if first_pi != '1' else f'vk.query[1]')};" * [
                 f"vk_x = Pairing.addition(vk_x, {(f'Pairing.scalar_mul(vk.query[{idx + 2}], {pi})' if pi != '1' else f'vk.query[{idx + 2}]')});" for idx, pi in enumerate(primary_inputs[1:])] * '''\

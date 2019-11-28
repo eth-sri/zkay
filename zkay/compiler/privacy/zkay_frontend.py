@@ -14,7 +14,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGe
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
-from zkay.compiler.privacy.transformer.zkay_transformer import transform_ast
+from zkay.compiler.privacy.transformer.zkay_contract_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation
 from zkay.config import snark_backend
 from zkay.utils.progress_printer import print_step
