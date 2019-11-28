@@ -6,7 +6,8 @@ from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
 from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
 from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_compliance
 from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
-from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
+from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects, compute_modified_sets, \
+    check_for_undefined_behavior_due_to_eval_order
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
@@ -76,9 +77,11 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
         if alias_analysis:
             a(ast)
         call_graph_analysis(ast)
+        compute_modified_sets(ast)
     if type_check:
         with print_step("Zkay type checking"):
             try:
+                check_for_undefined_behavior_due_to_eval_order(ast)
                 t(ast)
                 check_circuit_compliance(ast)
                 detect_hybrid_functions(ast)

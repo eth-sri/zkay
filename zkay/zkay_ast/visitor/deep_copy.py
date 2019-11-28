@@ -44,6 +44,8 @@ class DeepCopyVisitor(AstVisitor):
             # General fields
             'line',
             'column',
+            'modified_values',
+            'read_values',
 
             # Specialized fields
             'parent',
@@ -74,6 +76,8 @@ class DeepCopyVisitor(AstVisitor):
 
         ast_copy.line = ast.line
         ast_copy.column = ast.column
+        ast_copy.modified_values = ast.modified_values
+        ast_copy.read_values = ast.read_values
         return ast_copy
 
     def visitCastExpr(self, ast: CastExpr):

@@ -3,7 +3,7 @@ import textwrap
 from collections import OrderedDict
 from enum import IntEnum
 from os import linesep
-from typing import List, Dict, Union, Optional, Callable, Set
+from typing import List, Dict, Union, Optional, Callable, Set, Tuple
 
 import zkay.config as cfg
 from zkay.zkay_ast.analysis.partition_state import PartitionState
@@ -36,7 +36,10 @@ class AST:
         self.line = -1
         self.column = -1
 
-    def children(self) -> List:
+        self.modified_values: Set[InstanceTarget] = set()
+        self.read_values: Set[InstanceTarget] = set()
+
+    def children(self) -> List['AST']:
         cb = ChildListBuilder()
         self.process_children(cb.add_child)
         return cb.children
@@ -173,6 +176,7 @@ class Expression(AST):
         return expected == actual
 
     def is_lvalue(self) -> bool:
+        # TODO not really correct once we have reference types (there can be nested rvalues in left assignment subexpressions)
         return isinstance(self.statement, AssignmentStatement) and self.statement.lhs.is_parent_of(self)
 
     def is_rvalue(self) -> bool:
@@ -422,12 +426,7 @@ class LocationExpr(Expression):
     def __init__(self):
         super().__init__()
         # set later by symbol table
-        self.target: Union[
-            VariableDeclaration,
-            Parameter,
-            FunctionDefinition,
-            StateVariableDeclaration,
-            ContractDefinition] = None
+        self.target: Optional[TargetDefinition] = None
 
     def call(self, member: Union[str, Identifier], args: List[Expression]) -> 'FunctionCallExpr':
         member = Identifier(member) if isinstance(member, str) else member.clone()
@@ -471,8 +470,9 @@ class IdentifierExpr(LocationExpr):
 
 
 class MemberAccessExpr(LocationExpr):
-    def __init__(self, expr: Expression, member: Identifier):
+    def __init__(self, expr: LocationExpr, member: Identifier):
         super().__init__()
+        assert isinstance(expr, LocationExpr)
         self.expr = expr
         self.member = member
 
@@ -482,8 +482,9 @@ class MemberAccessExpr(LocationExpr):
 
 
 class IndexExpr(LocationExpr):
-    def __init__(self, arr: Expression, key: Expression):
+    def __init__(self, arr: LocationExpr, key: Expression):
         super().__init__()
+        assert isinstance(arr, LocationExpr)
         self.arr = arr
         self.key = key
 
@@ -1362,6 +1363,8 @@ class SourceUnit(AST):
 
 
 PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
+TargetDefinition = Union[VariableDeclaration, Parameter, FunctionDefinition, StateVariableDeclaration, StructDefinition, ContractDefinition]
+InstanceTarget = Tuple[Union[VariableDeclaration, Parameter, StateVariableDeclaration], Optional[Identifier]]
 
 # UTIL FUNCTIONS
 
