@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict, Union, Callable, Any, Optional
+from typing import Dict, Union, Callable, Any, Optional, Tuple, List
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.interface import AddressValue, RandomnessValue, CipherValue
@@ -24,9 +24,19 @@ class ContractSimulator:
 
         self.contract_handle = None
 
+        self.current_prefix = ''
+        self.prefix_count: Dict[str, int] = {}
+
     @property
     def address(self):
         return self.contract_handle.address
+
+    def _get_name(self, name):
+        return self.current_prefix + name
+
+    def _call(self, fname, fct, *args) -> Any:
+        with FunctionContext(self, fname):
+            return fct(*args)
 
     @staticmethod
     def comp_overflow_checked(val: int):
@@ -78,4 +88,23 @@ class CleanState:
         if self.v.is_external:
             self.v.state_values.clear()
             self.v.priv_values.clear()
+            self.v.current_prefix = ''
+            self.v.prefix_count.clear()
         self.v.is_external = self.was_external
+
+
+class FunctionContext:
+    def __init__(self, v: ContractSimulator, fname: str):
+        self.v = v
+        self.fname = fname
+        self.old_prefix = None
+
+    def __enter__(self):
+        self.old_prefix = self.v.current_prefix
+        new_prefix = self.v.current_prefix + self.fname + "."
+        count = self.v.prefix_count.get(new_prefix, 0)
+        self.v.prefix_count[new_prefix] = count + 1
+        self.v.current_prefix = f'{new_prefix}{count}.'
+
+    def __exit__(self, t, value, traceback):
+        self.v.current_prefix = self.old_prefix
