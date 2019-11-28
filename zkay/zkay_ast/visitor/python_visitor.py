@@ -8,7 +8,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
-    StatementList, IdentifierExpr
+    StatementList, IdentifierExpr, NewExpr
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
 
@@ -86,7 +86,12 @@ class PythonCodeVisitor(CodeVisitor):
         return f'{lhs} = {rhs}'
 
     def visitSliceExpr(self, ast: SliceExpr):
-        return f'{self.visit(ast.arr)}[{ast.start}:{ast.end}]'
+        if ast.base is not None:
+            base = f'{self.visit(ast.base)} + '
+        else:
+            base = ''
+
+        return f'{self.visit(ast.arr)}[{base}{ast.start_offset}:{base}{ast.start_offset + ast.size}]'
 
     def get_default_value(self, t: TypeName):
         if isinstance(t, Array) and not isinstance(t, (CipherText, Key, Randomness)):
@@ -107,6 +112,12 @@ class PythonCodeVisitor(CodeVisitor):
         s = self.visit(ast.variable_declaration)
         e = self.get_default_value(t) if ast.expr is None else self.visit(ast.expr)
         return f'{s} = {e}'
+
+    def visitNewExpr(self, ast: NewExpr):
+        if isinstance(ast.annotated_type.type_name, Array):
+            return f'[0 for _ in range({self.visit(ast.args[0])})]'
+        else:
+            raise NotImplementedError()
 
     def visitVariableDeclaration(self, ast: Union[VariableDeclaration, Parameter]):
         return f'{self.visit(ast.idf)}: {self.visit(ast.annotated_type)}'
