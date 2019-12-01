@@ -8,8 +8,8 @@ from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN
 from zkay.zkay_ast.analysis.contains_private_checker import contains_private_expr
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
-    Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction, AssignmentStatement
+    Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
+    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -58,18 +58,6 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         self.expr_trafo = ZkayExpressionTransformer(self.gen)
         self.var_decl_trafo = ZkayVarDeclTransformer()
 
-    def visitReturnStatement(self, ast: ReturnStatement):
-        if ast.function.requires_verification:
-            if ast.expr is None:
-                return None
-            assert not self.gen.has_return_var
-            self.gen.has_return_var = True
-            expr = self.expr_trafo.visit(ast.expr)
-            return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(expr))
-        else:
-            ast.expr = self.expr_trafo.visit(ast.expr)
-            return ast
-
     def visitStatementList(self, ast: StatementList):
         """ Rule (1) """
         new_statements = []
@@ -112,13 +100,27 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
             with Guarded(self.gen, guard_var, True):
                 ast.then_branch = self.visit(ast.then_branch)
-            with Guarded(self.gen, guard_var, False):
-                ast.else_branch = self.visit(ast.else_branch)
+            if ast.else_branch is not None:
+                with Guarded(self.gen, guard_var, False):
+                    ast.else_branch = self.visit(ast.else_branch)
         else:
             ast.condition = self.expr_trafo.visit_children(ast.condition)
             ast.then_branch = self.visit(ast.then_branch)
-            ast.else_branch = self.visit(ast.else_branch)
+            if ast.else_branch is not None:
+                ast.else_branch = self.visit(ast.else_branch)
         return ast
+
+    def visitReturnStatement(self, ast: ReturnStatement):
+        if ast.function.requires_verification:
+            if ast.expr is None:
+                return None
+            assert not self.gen.has_return_var
+            self.gen.has_return_var = True
+            expr = self.expr_trafo.visit(ast.expr)
+            return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(expr))
+        else:
+            ast.expr = self.expr_trafo.visit(ast.expr)
+            return ast
 
     def visitExpression(self, ast: Expression):
         assert False, f"Missed an expression of type {type(ast)}"
@@ -151,6 +153,16 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         """ Rule (11) """
         return self.gen.get_circuit_output_for_private_expression(ast.expr, ast.privacy.privacy_annotation_label())
 
+    def visit_guarded_expression(self, guard_var: HybridArgumentIdf, if_true: bool, expr: Expression):
+        prelen = len(expr.statement.pre_statements)
+        with Guarded(self.gen, guard_var, if_true):
+            ret = self.visit(expr)
+        new_pre_stmts = expr.statement.pre_statements[prelen:]
+        if new_pre_stmts:
+            cond_expr = guard_var.get_loc_expr() if if_true else guard_var.get_loc_expr().unop('!')
+            expr.statement.pre_statements = expr.statement.pre_statements[:prelen] + [IfStatement(cond_expr, Block(new_pre_stmts), None)]
+        return ret
+
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             if ast.func.is_private:
@@ -163,16 +175,12 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
                     op = ast.func.op
                     guard_var, ast.args[0] = self.gen.add_to_circuit_inputs(ast.args[0])
                     if op == 'ite':
-                        with Guarded(self.gen, guard_var, True):
-                            ast.args[1] = self.visit(ast.args[1])
-                        with Guarded(self.gen, guard_var, False):
-                            ast.args[2] = self.visit(ast.args[2])
+                        ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1])
+                        ast.args[2] = self.visit_guarded_expression(guard_var, False, ast.args[2])
                     elif op == '||':
-                        with Guarded(self.gen, guard_var, False):
-                            ast.args[1] = self.visit(ast.args[1])
+                        ast.args[1] = self.visit_guarded_expression(guard_var, False, ast.args[1])
                     elif op == '&&':
-                        with Guarded(self.gen, guard_var, True):
-                            ast.args[1] = self.visit(ast.args[1])
+                        ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1])
                     return ast
 
                 return self.visit_children(ast)
