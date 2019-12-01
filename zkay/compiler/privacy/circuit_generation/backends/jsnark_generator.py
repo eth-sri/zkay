@@ -140,9 +140,6 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
     for pub_output in circuit.output_idfs:
         input_init_stmts.append(f'addOut("{pub_output.name}", {pub_output.t.size_in_uints});')
 
-    for fct in circuit.function_calls_with_verification:
-        input_init_stmts.append(f'addArgs_{fct.func.target.unambiguous_name}();')
-
     return input_init_stmts
 
 
@@ -159,20 +156,20 @@ class JsnarkGenerator(CircuitGenerator):
         for fct in list(circuit.fct.called_functions.keys()):
             if fct.requires_verification:
                 target_circuit = self.circuits[fct]
-                body = '\n'.join([f'stepIn("{fct.unambiguous_name}");'] + add_function_circuit_arguments(target_circuit) + ['stepOut();'])
-                arg_fdef = f'private void addArgs_{fct.unambiguous_name}() {{\n' + indent(body) + '\n}'
-
                 body_stmts = JsnarkVisitor(target_circuit.phi).visitCircuit()
-                body = '\n'.join([f'stepIn("{fct.unambiguous_name}");'] + [stmt.strip() for stmt in body_stmts] + ['stepOut();'])
-                constr_fdef = f'private void _{fct.unambiguous_name}() {{\n' + indent(body) + '\n}'
 
-                fdefs.append(f'{arg_fdef}\n{constr_fdef}')
+                body = '\n'.join([f'stepIn("{fct.unambiguous_name}");'] +
+                                 add_function_circuit_arguments(target_circuit) + [''] +
+                                 [stmt.strip() for stmt in body_stmts] +
+                                 ['stepOut();'])
+                fdef = f'private void _{fct.unambiguous_name}() {{\n' + indent(body) + '\n}'
+                fdefs.append(f'{fdef}')
 
         input_init_stmts = add_function_circuit_arguments(circuit)
         constraints = JsnarkVisitor(circuit.phi).visitCircuit()
 
-        pub_size = circuit.in_size_trans + circuit.out_size_trans
-        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(), pub_size, cfg.should_use_hash(pub_size),
+        code = jsnark.get_jsnark_circuit_class_str(circuit.get_circuit_name(),
+                                                   circuit.in_size_trans, circuit.out_size_trans, circuit.priv_in_size_trans,
                                                    fdefs, input_init_stmts, constraints)
 
         hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.sha512')

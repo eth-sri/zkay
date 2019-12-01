@@ -43,11 +43,11 @@ class Value(tuple):
             return list(v[:]) if isinstance(v, Value) else v
 
     @staticmethod
-    def flatten(v: List) -> List:
+    def flatten(v: Collection) -> List:
         out = []
         for elem in v:
             if isinstance(elem, Collection):
-                out += elem
+                out += Value.flatten(elem)
             else:
                 out.append(elem)
         return out
@@ -318,23 +318,17 @@ class ZkayProverInterface(metaclass=ABCMeta):
     def __init__(self, proving_scheme: str = cfg.proving_scheme):
         self.proving_scheme = proving_scheme
 
-    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: Dict[str, Any], in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
-        for arg in priv_values.values():
+    def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List, in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
+        for arg in priv_values:
             assert not isinstance(arg, Value) or isinstance(arg, RandomnessValue)
         debug_print(f'Generating proof for {contract}.{function} [priv: {Value.collection_to_string(priv_values)}] '
                     f'[in: {Value.collection_to_string(in_vals)}] [out: {Value.collection_to_string(out_vals)}]')
 
-        priv_values, in_vals, out_vals = Value.unwrap_values(priv_values), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals)
+        priv_values, in_vals, out_vals = Value.unwrap_values(Value.flatten(priv_values)), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals)
 
         # Check for overflows
-        for arg in in_vals + out_vals:
-            assert arg < bn128_scalar_field, 'argument overflow'
-        for name, vals in priv_values.items():
-            if not isinstance(vals, List):
-                vals = [vals]
-            for arg in vals:
-                assert arg < bn128_scalar_field, 'argument overflow'
-            priv_values[name] = vals
+        for arg in priv_values + in_vals + out_vals:
+            assert int(arg) < bn128_scalar_field, 'argument overflow'
 
         manifest = parse_manifest(project_dir)
         with time_measure(f'generate_proof_{contract}.{function}', True):
@@ -342,5 +336,5 @@ class ZkayProverInterface(metaclass=ABCMeta):
                                         priv_values, in_vals, out_vals)
 
     @abstractmethod
-    def _generate_proof(self, verifier_dir: str, priv_values: Dict[str, List[int]], in_vals: List[int], out_vals: List[int]) -> List[int]:
+    def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:
         pass
