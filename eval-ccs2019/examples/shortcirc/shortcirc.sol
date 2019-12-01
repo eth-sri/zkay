@@ -68,4 +68,19 @@ contract shortcirc {
         // x2 = 210, priv2 = 420
         // smap[10] = 420, x1 = 14, x2 == 210
     }
+
+    function test_short2() public {
+        uint@me v = 51;
+        uint@me v2 = 123;
+        uint@me v3 = 14;
+        uint@me v4 = 70;
+        res = priv1(v) && priv1(v2) || priv1(v3) ? priv1(v3) && priv1(v) : priv1(v4);
+
+        v = 2;
+        uint idx = x2;
+        // idx = 0
+        idx = idx + priv2(v) + priv22(v);
+        // x2 == 2, x1 == 2, idx = 0 + 4 + 6 = 10
+        smap[idx] = priv2(v4) > priv22(v3) && priv2(x2) > priv22(v) ? priv2(priv3(x2)) + (priv22(v2) < 50 ? priv22(v4) : priv22(42)) : priv2(x2) - priv22(v);
+    }
 }
