@@ -28,6 +28,7 @@ class CircCall(CircuitStatement):
 
 class CircVarDecl(CircuitStatement):
     def __init__(self, lhs: HybridArgumentIdf, expr: Expression):
+        super().__init__()
         self.lhs = lhs
         self.expr = expr
 
@@ -49,12 +50,14 @@ class CircGuardModification(CircuitStatement):
 
 class CircAssignment(CircuitStatement):
     def __init__(self, lhs: LocationExpr, rhs: Expression):
+        super().__init__()
         self.lhs = lhs
         self.rhs = rhs
 
 
 class CircEncConstraint(CircuitStatement):
     def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf):
+        super().__init__()
         self.plain = plain
         self.rnd = rnd
         self.pk = pk
@@ -63,5 +66,6 @@ class CircEncConstraint(CircuitStatement):
 
 class CircEqConstraint(CircuitStatement):
     def __init__(self, tgt: HybridArgumentIdf, val: HybridArgumentIdf):
+        super().__init__()
         self.tgt = tgt
         self.val = val

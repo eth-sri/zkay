@@ -142,7 +142,7 @@ class CircuitHelper:
         return req
 
     def ensure_parameter_encryption(self, fct: ConstructorOrFunctionDefinition, param: Parameter, offset) -> AssignmentStatement:
-        plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.type_name)
+        plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.original_type.type_name)
         name = f'{self._in_name_factory.get_new_name(param.annotated_type.type_name, False)}_{param.idf.name}'
         cipher_idf = self._in_name_factory.add_idf(name, param.annotated_type.type_name)
         self._ensure_encryption(fct.body, plain_idf, Expression.me_expr(), cipher_idf, True)
