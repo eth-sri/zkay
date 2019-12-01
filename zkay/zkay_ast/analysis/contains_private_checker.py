@@ -1,6 +1,6 @@
 from typing import Optional
 
-from zkay.zkay_ast.ast import Expression, AST
+from zkay.zkay_ast.ast import Expression, AST, FunctionCallExpr, LocationExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -17,12 +17,17 @@ class ContainsPrivVisitor(AstVisitor):
         super().__init__('node-or-children')
         self.contains_private = False
 
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, LocationExpr):
+            self.contains_private |= ast.func.target.requires_verification
+        self.visitExpression(ast)
+
     def visitExpression(self, ast: Expression):
         if ast.is_private:
             self.contains_private = True
-            return
-        else:
-            self.visitChildren(ast)
+        self.visitAST(ast)
 
     def visitAST(self, ast):
-        return self.visitChildren(ast)
+        if self.contains_private:
+            return
+        self.visitChildren(ast)
