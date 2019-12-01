@@ -7,9 +7,9 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
-    ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Randomness, Array, \
-    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
-    VariableDeclarationStatement, LocationExpr, FunctionDefinition, AssignmentStatement
+    ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
+    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
+    CircuitComputationStatement, VariableDeclarationStatement, FunctionDefinition, LocationExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -19,7 +19,8 @@ CONN_OBJ_NAME = 'self.conn'
 KEYSTORE_OBJ_NAME = 'self.keystore'
 SK_OBJ_NAME = f'{KEYSTORE_OBJ_NAME}.sk'
 PK_OBJ_NAME = f'{KEYSTORE_OBJ_NAME}.pk'
-PRIV_VALUES_NAME = 'self.priv_values'
+PRIV_VALUES_NAME = 'self.current_priv_values'
+ALL_PRIV_VALUES_NAME = 'self.all_priv_values'
 STATE_VALUES_NAME = 'self.state_values'
 CONTRACT_NAME = 'self.contract_name'
 CONTRACT_HANDLE = 'self.contract_handle'
@@ -62,7 +63,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         from zkay import my_logging
         from zkay.transaction.interface import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
-        from zkay.transaction.offchain import {UINT256_MAX_NAME}, {SCALAR_FIELD_NAME}, ContractSimulator, CleanState, FunctionContext
+        from zkay.transaction.offchain import {UINT256_MAX_NAME}, {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx
 
 
         ''') + contracts + (dedent(f'''
@@ -117,7 +118,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     @staticmethod
     def get_priv_value(idf: str):
-        return f'{PRIV_VALUES_NAME}[self._get_name("{idf}")]'
+        return f'{PRIV_VALUES_NAME}["{idf}"]'
 
     def get_loc_value(self, arr: Identifier, indices: List[str]) -> str:
         if isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PRIV_CIRCUIT_VAL and not arr.name.startswith('tmp'):
@@ -241,7 +242,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         body_str = self.visit(ast.body).strip()
 
         out_var_serialize_str = ''
-        set_priv_default_str = ''
+        sec_var_serialize_str = ''
         if circuit is not None:
             for out_idf in circuit.output_idfs:
                 out_var_serialize_str += f'\n{self.visit(out_idf.serialized_loc)} = '
@@ -251,24 +252,28 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     out_var_serialize_str += f'[int({self.visit(out_idf.get_loc_expr())})]'
             if out_var_serialize_str:
                 out_var_serialize_str = f'\n# Serialize output values{out_var_serialize_str}'
-
-            for idx, val in enumerate(circuit.sec_idfs):
-                set_priv_default_str += f'{PRIV_VALUES_NAME}.setdefault(self._get_name("{val.name}"), {self.get_default_value(val.t)}),'
-                set_priv_default_str += '\n' if idx % 2 == 1 else ' '
+            if circuit.sec_idfs:
+                offset = 0
+                for sec_idf in circuit.sec_idfs:
+                    if isinstance(sec_idf.t, Array):
+                        sec_var_serialize_str += f'\n{ALL_PRIV_VALUES_NAME}[self.current_all_index + {offset}:self.current_all_index + {offset + sec_idf.t.size_in_uints}] = {PRIV_VALUES_NAME}.get("{sec_idf.name}", {self.get_default_value(sec_idf.t)})[:]'
+                    else:
+                        sec_var_serialize_str += f'\n{ALL_PRIV_VALUES_NAME}[self.current_all_index + {offset}] = {PRIV_VALUES_NAME}.get("{sec_idf.name}", {self.get_default_value(sec_idf.t)})'
+                    offset += sec_idf.t.size_in_uints
 
         body_code = '\n'.join(dedent(s) for s in [
             f'\n## BEGIN Simulate body',
             body_str,
             '## END Simulate body',
             out_var_serialize_str,
-            set_priv_default_str
+            sec_var_serialize_str,
         ] if s) + '\n'
 
         # Add proof to actual argument list (when required)
         generate_proof_str = ''
         if ast.can_be_external and circuit:
             generate_proof_str += '\n'.join(['\n#Generate proof',
-                                             f"proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', {PRIV_VALUES_NAME}, {cfg.zk_in_name}, {cfg.zk_out_name})",
+                                             f"proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', {ALL_PRIV_VALUES_NAME}, {cfg.zk_in_name}, {cfg.zk_out_name})",
                                              'actual_params.append(proof)'])
 
         should_encrypt = ", ".join([str(bool(p.annotated_type.old_priv_text)) for p in self.current_f.parameters])
@@ -313,7 +318,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             post_body_code
         ] if s)
 
-        return 'with CleanState(self):\n' + indent(code)
+        return f'with FunctionCtx(self, {circuit.priv_in_size_trans if circuit else -1}):\n' + indent(code)
 
     def visitReturnStatement(self, ast: ReturnStatement):
         if not ast.function.requires_verification:
@@ -365,7 +370,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         elif isinstance(ast.func, LocationExpr) and ast.func.target is not None:
             f = self.visit(ast.func)
             a = self.visit_list(ast.args, ', ')
-            return f'self._call("{ast.func.target.unambiguous_name}", self.{f}, {a})'
+            return f'self._call({ast.sec_start_offset}, self.{f}, {a})'
 
         return super().visitFunctionCallExpr(ast)
 

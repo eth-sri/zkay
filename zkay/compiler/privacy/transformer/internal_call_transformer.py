@@ -16,6 +16,7 @@ def transform_internal_calls(hybrid_fcts: List[ConstructorOrFunctionDefinition],
         i, o, p = 0, 0, 0
         for fc in circuit.function_calls_with_verification:
             fdef = fc.func.target
+            fc.sec_start_offset = circuit.priv_in_size + p
             fc.args += [IdentifierExpr(cfg.zk_in_name),
                         IdentifierExpr(f'{cfg.zk_in_name}_start_idx').binop('+', NumberLiteralExpr(circuit.in_size + i)),
                         IdentifierExpr(cfg.zk_out_name),

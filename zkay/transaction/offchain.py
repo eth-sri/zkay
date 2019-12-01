@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict, Union, Callable, Any, Optional, Tuple, List
+from typing import Dict, Union, Callable, Any, Optional, List
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.interface import AddressValue, RandomnessValue, CipherValue
@@ -18,30 +18,27 @@ class ContractSimulator:
         self.keystore = Runtime.keystore()
         self.prover = Runtime.prover()
 
-        self.priv_values: Dict[str, Union[int, bool, RandomnessValue]] = {}
+        self.current_priv_values: Dict[str, Union[int, bool, RandomnessValue]] = {}
+        self.all_priv_values: List[Union[int, bool, RandomnessValue]] = []
+        self.current_all_index = None
+
         self.state_values: Dict[str, Union[int, bool, CipherValue, AddressValue]] = {}
         self.is_external: Optional[bool] = None
 
         self.contract_handle = None
 
-        self.current_prefix = ''
-        self.prefix_count: Dict[str, int] = {}
-
     @property
     def address(self):
         return self.contract_handle.address
-
-    def _get_name(self, name):
-        return self.current_prefix + name
-
-    def _call(self, fname, fct, *args) -> Any:
-        with FunctionContext(self, fname):
-            return fct(*args)
 
     @staticmethod
     def comp_overflow_checked(val: int):
         assert val < _bn128_comp_scalar_field, f'Value {val} is too large for comparison'
         return val
+
+    def _call(self, sec_offset, fct, *args) -> Any:
+        with CallCtx(self, sec_offset):
+            return fct(*args)
 
     @staticmethod
     def help(members):
@@ -70,41 +67,46 @@ class ContractSimulator:
         return Runtime.blockchain().my_address
 
 
-class CleanState:
-    def __init__(self, v: ContractSimulator):
+class FunctionCtx:
+    def __init__(self, v: ContractSimulator, trans_sec_size):
         self.v = v
         self.was_external = None
+        self.trans_sec_size = trans_sec_size
 
     def __enter__(self):
         self.was_external = self.v.is_external
         if self.v.is_external is None:
             self.v.is_external = True
             self.v.state_values.clear()
-            self.v.priv_values.clear()
+            self.v.all_priv_values = [0 for _ in range(self.trans_sec_size)]
+            self.v.current_all_index = 0
+            self.v.current_priv_values.clear()
         else:
             self.v.is_external = False
 
     def __exit__(self, t, value, traceback):
         if self.v.is_external:
             self.v.state_values.clear()
-            self.v.priv_values.clear()
-            self.v.current_prefix = ''
-            self.v.prefix_count.clear()
+            self.v.all_priv_values = None
+            self.v.current_all_index = 0
+            self.v.current_priv_values.clear()
         self.v.is_external = self.was_external
 
 
-class FunctionContext:
-    def __init__(self, v: ContractSimulator, fname: str):
+class CallCtx:
+    def __init__(self, v: ContractSimulator, sec_offset):
         self.v = v
-        self.fname = fname
-        self.old_prefix = None
+        self.sec_offset = sec_offset
+
+        self.old_priv_values = None
+        self.old_all_idx = None
 
     def __enter__(self):
-        self.old_prefix = self.v.current_prefix
-        new_prefix = self.v.current_prefix + self.fname + "."
-        count = self.v.prefix_count.get(new_prefix, 0)
-        self.v.prefix_count[new_prefix] = count + 1
-        self.v.current_prefix = f'{new_prefix}{count}.'
+        self.old_priv_values = self.v.current_priv_values
+        self.v.current_priv_values = {}
+        self.old_all_idx = self.v.current_all_index
+        self.v.current_all_index += self.sec_offset
 
     def __exit__(self, t, value, traceback):
-        self.v.current_prefix = self.old_prefix
+        self.v.current_priv_values = self.old_priv_values
+        self.v.current_all_index = self.old_all_idx

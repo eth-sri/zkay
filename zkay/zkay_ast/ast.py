@@ -182,6 +182,9 @@ class Expression(AST):
     def is_rvalue(self) -> bool:
         return not self.is_lvalue()
 
+    def unop(self, op: str) -> 'Expression':
+        return FunctionCallExpr(BuiltinFunction(op), [self])
+
     def binop(self, op: str, rhs: 'Expression') -> 'Expression':
         return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
 
@@ -352,10 +355,11 @@ class BuiltinFunction(Expression):
 
 class FunctionCallExpr(Expression):
 
-    def __init__(self, func: Expression, args: List[Expression]):
+    def __init__(self, func: Expression, args: List[Expression], sec_start_offset: Optional[int] = 0):
         super().__init__()
         self.func = func
         self.args = args
+        self.sec_start_offset = sec_start_offset
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.func = f(self.func)

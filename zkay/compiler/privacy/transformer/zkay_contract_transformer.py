@@ -288,6 +288,7 @@ class ZkayTransformer(AstTransformerVisitor):
         # Call internal function
         args = [IdentifierExpr(param.idf.clone()) for param in ext_fct.parameters]
         internal_call = FunctionCallExpr(IdentifierExpr(int_fct.idf.clone()).with_target(int_fct), args)
+        internal_call.sec_start_offset = circuit.priv_in_size
         ext_fct.called_functions[int_fct] = None
         if int_fct.requires_verification:
             circuit.call_function(internal_call)
