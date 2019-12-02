@@ -6,7 +6,7 @@ from typing import Tuple, List
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
-from zkay.config import should_use_hash
+from zkay.config import cfg
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.utils.multiline_formatter import MultiLineFormatter
@@ -90,7 +90,7 @@ class ZokratesGenerator(CircuitGenerator):
         pub_args = circuit.public_arg_arrays
         tot_count = sum(map(lambda x: x[1], pub_args))
 
-        if should_use_hash(tot_count):
+        if cfg.should_use_hash(tot_count):
             actual_sec_args = [f'private field {arg}' for arg in sec_args] + [f'private field[{arg[1]}] {arg[0]}' for arg in pub_args]
             actual_pub_args = []
             imports = self.hash_imports

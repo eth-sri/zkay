@@ -3,6 +3,8 @@ import os
 import re
 from pathlib import Path
 
+from zkay.config import cfg
+
 from zkay import my_logging
 from zkay.compiler.privacy.zkay_frontend import compile_zkay, package_zkay
 from zkay.compiler.solidity.compiler import SolcException
@@ -27,9 +29,24 @@ def parse_arguments():
         dest='count',
         help="Count the number of statements in the translated program")
     parser.add_argument('input', type=str, help='The source file')
+    parser.add_argument('--config-overrides', default='', dest='overrides', help='comma separated list of config_val_name=config_val pairs')
 
     # parse
     a = parser.parse_args()
+
+    # Support for overriding any config value via command line
+    override_dict = {}
+    if a.overrides:
+        overrides = a.overrides.split(',')
+        for o in overrides:
+            key_val = o.split('=')
+            if len(key_val) != 2:
+                raise ValueError(f'Invalid override argument {key_val}')
+            k, v = key_val
+            v = v.strip().replace('\'', '\\\'')
+            override_dict[k.strip()] = f"'{v}'"
+
+    cfg.override_defaults(override_dict)
 
     return a
 

@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
-import zkay.config as cfg
+from zkay.config import cfg
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest

@@ -1,7 +1,7 @@
 import os
 from typing import List
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.utils.output_suppressor import output_suppressed
 from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent

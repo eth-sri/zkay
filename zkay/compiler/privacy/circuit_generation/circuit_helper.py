@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Tuple, Callable, Set, Union
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
     CircEqConstraint, CircAssignment, CircComment, CircIndentBlock, CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory

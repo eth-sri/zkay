@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, IdentifierExpr, NumberLiteralExpr
 

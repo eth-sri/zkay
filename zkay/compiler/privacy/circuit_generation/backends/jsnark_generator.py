@@ -2,7 +2,7 @@ import os
 from hashlib import sha512
 from typing import List, Optional
 
-import zkay.config as cfg
+from zkay.config import cfg
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, \

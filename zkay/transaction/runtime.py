@@ -1,4 +1,4 @@
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
 from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 

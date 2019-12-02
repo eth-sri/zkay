@@ -9,9 +9,9 @@ from typing import Union, Any, Dict, Optional, List, Tuple
 from eth_tester import PyEVMBackend, EthereumTester
 from web3 import Web3
 
+from zkay.config import cfg
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.compiler.privacy import library_contracts
-from zkay.config import pki_contract_name
 from zkay.transaction.interface import PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
 
 max_gas_limit = 10000000
@@ -25,15 +25,15 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         # Compile and deploy global libraries
         tmpdir = tempfile.mkdtemp()
-        pki_sol = os.path.join(tmpdir, f'{pki_contract_name}.sol')
+        pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
         with open(pki_sol, 'w') as f:
-            f.write(library_contracts.pki_contract)
+            f.write(library_contracts.get_pki_contract())
 
         verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
         with open(verify_sol, 'w') as f:
             f.write(library_contracts.get_verify_libs_code())
 
-        self.pki_contract = self.deploy_contract(self.compile_contract(pki_sol, pki_contract_name))
+        self.pki_contract = self.deploy_contract(self.compile_contract(pki_sol, cfg.pki_contract_name))
         self.lib_addresses = {
             f'BN256G2': self.deploy_contract(self.compile_contract(verify_sol, 'BN256G2')).address,
             f'Pairing': self.deploy_contract(self.compile_contract(verify_sol, 'Pairing')).address
@@ -81,7 +81,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
                 vf[verifier_name] = AddressValue(self.deploy_contract(cout).address)
             self.verifiers_for_uuid[uuid] = vf
         ret = self.verifiers_for_uuid[uuid].copy()
-        ret[pki_contract_name] = AddressValue(self.pki_contract.address)
+        ret[cfg.pki_contract_name] = AddressValue(self.pki_contract.address)
         return ret
 
     def _my_address(self) -> AddressValue:
@@ -93,7 +93,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _announce_public_key(self, address: AddressValue, pk: Tuple[int, ...]):
         return self._transact(self.pki_contract, 'announcePk', pk)
 
-    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
+    def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
         return contract_handle.functions[name](*indices).call({'from': self.my_address.val})
 
     def _transact(self, contract_handle, function: str, *actual_params) -> Any:

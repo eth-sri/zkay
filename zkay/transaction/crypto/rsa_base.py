@@ -3,7 +3,7 @@ import sys
 
 from Crypto.PublicKey import RSA
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair, ZkayBlockchainInterface
 from zkay.transaction.interface import ZkayCryptoInterface
 

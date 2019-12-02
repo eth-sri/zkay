@@ -2,7 +2,7 @@ from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \

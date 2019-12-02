@@ -1,6 +1,6 @@
 from typing import Tuple, List
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair, RandomnessValue
 from zkay.transaction.interface import ZkayCryptoInterface

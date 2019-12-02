@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from antlr4 import FileStream
 
-import zkay.config as cfg
+from zkay.config import cfg
 
 examples_dir = os.path.dirname(os.path.abspath(__file__))
 code_dir = os.path.join(examples_dir, 'code')

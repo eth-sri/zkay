@@ -6,7 +6,7 @@ from typing import List
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
-from zkay.config import should_use_hash
+from zkay.config import cfg
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import AST
@@ -65,7 +65,7 @@ class CircuitGenerator(metaclass=ABCMeta):
             for circuit in self.circuits_to_prove:
                 vk = self._parse_verification_key(circuit)
                 with open(os.path.join(self.output_dir, circuit.verifier_contract_filename), 'w') as f:
-                    should_hash = should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
+                    should_hash = cfg.should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
                     primary_inputs = self._get_primary_inputs(should_hash, circuit)
                     f.write(self.proving_scheme.generate_verification_contract(vk, circuit, should_hash, primary_inputs))
 

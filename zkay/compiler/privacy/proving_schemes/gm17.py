@@ -1,6 +1,6 @@
 from typing import List
 
-import zkay.config as cfg
+from zkay.config import cfg
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field

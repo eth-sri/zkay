@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, Guarded
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_compiler import WS_PATTERN, ID_PATTERN

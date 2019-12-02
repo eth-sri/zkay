@@ -5,7 +5,7 @@ from enum import IntEnum
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, Tuple
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 

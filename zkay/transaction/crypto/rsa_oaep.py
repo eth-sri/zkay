@@ -4,7 +4,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.transaction.crypto.rsa_base import RSACrypto, PersistentLocals
 
 

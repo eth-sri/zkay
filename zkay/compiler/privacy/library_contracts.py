@@ -1,4 +1,6 @@
-import zkay.config as cfg
+from textwrap import dedent
+
+from zkay.config import cfg
 
 
 def get_verify_libs_code():
@@ -7,24 +9,27 @@ def get_verify_libs_code():
 
 bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
-pki_contract = f'''\
-pragma solidity ^0.5;
 
-contract {cfg.pki_contract_name} {{
-    mapping(address => uint[{cfg.key_len}]) pks;
-    mapping(address => bool) hasAnnounced;
+def get_pki_contract() -> str:
+    return dedent(f'''\
+    pragma solidity ^0.5;
 
-    function announcePk(uint[{cfg.key_len}] calldata pk) external {{
-        pks[msg.sender] = pk;
-        hasAnnounced[msg.sender] = true;
+    contract {cfg.pki_contract_name} {{
+        mapping(address => uint[{cfg.key_len}]) pks;
+        mapping(address => bool) hasAnnounced;
+
+        function announcePk(uint[{cfg.key_len}] calldata pk) external {{
+            pks[msg.sender] = pk;
+            hasAnnounced[msg.sender] = true;
+        }}
+
+        function getPk(address a) public view returns(uint[{cfg.key_len}] memory) {{
+            require(hasAnnounced[a]);
+            return pks[a];
+        }}
     }}
+    ''')
 
-    function getPk(address a) public view returns(uint[{cfg.key_len}] memory) {{
-        require(hasAnnounced[a]);
-        return pks[a];
-    }}
-}}\
-'''
 
 bn256_lib = '''\
 // This file is LGPL3 Licensed

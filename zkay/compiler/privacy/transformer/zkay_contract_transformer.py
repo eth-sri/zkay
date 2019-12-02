@@ -1,6 +1,6 @@
 from typing import Dict, Optional, List, Tuple
 
-import zkay.config as cfg
+from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.transformer.internal_call_transformer import transform_internal_calls
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
