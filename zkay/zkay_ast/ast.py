@@ -1584,7 +1584,7 @@ class CodeVisitor(AstVisitor):
         return self.visit_list(ast.statements)
 
     def visitBlock(self, ast: Block):
-        return f'{{\n{self.handle_block(ast)}\n}}'
+        return f'{{\n{self.handle_block(ast).rstrip()}\n}}'
 
     def visitIndentBlock(self, ast: IndentBlock):
         fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"

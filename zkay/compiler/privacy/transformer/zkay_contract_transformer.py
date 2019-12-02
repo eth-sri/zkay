@@ -235,6 +235,7 @@ class ZkayTransformer(AstTransformerVisitor):
             serialize_stmts += [s.serialize(cfg.zk_in_name, in_start_idx, offset)]
             offset += s.t.size_in_uints
         if offset:
+            stmts.append(Comment())
             stmts += Comment.comment_wrap_block('Serialize input values', serialize_stmts)
 
         # Add return statement at the end if necessary
@@ -300,6 +301,7 @@ class ZkayTransformer(AstTransformerVisitor):
         else:
             in_call = ExpressionStatement(internal_call)
         stmts.append(in_call)
+        stmts.append(Comment())
 
         # Add out and proof parameter
         storage_loc = 'calldata' if isinstance(ext_fct, FunctionDefinition) else 'memory'
