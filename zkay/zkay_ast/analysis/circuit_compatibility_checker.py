@@ -85,9 +85,18 @@ class CircuitComplianceChecker(FunctionVisitor):
         super().__init__()
         self.priv_setter = PrivateSetter()
 
+    def should_evaluate_public_expr_in_circuit(self, expr: Expression) -> bool:
+        # TODO decide based on the contents of expr
+        # In some cases it may be cheaper to evaluate the expression inside the circuit (e.g. to avoid additional encryption operations)
+        return False
+
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
-        check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
-        self.priv_setter.visit(ast)
+        if ast.expr.annotated_type.is_public() and not self.should_evaluate_public_expr_in_circuit(ast.expr):
+            ast.is_private = True
+            self.visit(ast.expr)
+        else:
+            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
+            self.priv_setter.visit(ast)
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:

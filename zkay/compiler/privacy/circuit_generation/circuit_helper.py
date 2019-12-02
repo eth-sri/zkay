@@ -157,7 +157,10 @@ class CircuitHelper:
         """
         ecode = expr.code()
         with CircIndentBlockBuilder(f'{ecode}', self._phi):
-            plain_result_idf, private_expr = self._evaluate_private_expression(expr)
+            if expr.is_private:
+                plain_result_idf, private_expr = self._evaluate_private_expression(expr)
+            else:
+                plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
 
             if isinstance(new_privacy, AllExpr):
                 new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
