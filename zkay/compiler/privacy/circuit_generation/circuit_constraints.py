@@ -56,12 +56,13 @@ class CircAssignment(CircuitStatement):
 
 
 class CircEncConstraint(CircuitStatement):
-    def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf):
+    def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf, is_dec: bool):
         super().__init__()
         self.plain = plain
         self.rnd = rnd
         self.pk = pk
         self.cipher = cipher
+        self.is_dec = is_dec # True if this is an inverted decryption
 
 
 class CircEqConstraint(CircuitStatement):

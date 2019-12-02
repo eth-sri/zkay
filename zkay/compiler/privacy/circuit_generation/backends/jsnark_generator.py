@@ -47,7 +47,10 @@ class JsnarkVisitor(AstVisitor):
         assert stmt.cipher.t == TypeName.cipher_type()
         assert stmt.pk.t == TypeName.key_type()
         assert stmt.rnd.t == TypeName.rnd_type()
-        return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+        if stmt.is_dec:
+            return f'checkDec("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+        else:
+            return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
 
     def visitCircAssignment(self, stmt: CircAssignment):
         assert isinstance(stmt.lhs, IdentifierExpr)

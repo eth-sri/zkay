@@ -221,21 +221,22 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
     def local_keys(self):
         return self.__my_keys
 
-    def enc(self, plain: int, pk: PublicKeyValue, rnd: Optional[RandomnessValue] = None) -> Tuple[CipherValue, RandomnessValue]:
+    def enc(self, plain: int, pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
         """
         Encrypts plain with the provided public key
         :param plain: plain text to encrypt
         :param pk: public key
-        :param rnd: if specified, this particular randomness will be used for encryption
         :return: Tuple(cipher text, randomness which was used to encrypt plain)
         """
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk}"')
-        cipher, rnd = self._enc(int(plain), self.deserialize_bigint(pk[:]), None if rnd is None else rnd[:])
-        cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
-        if cipher == CipherValue():
-            raise Exception("Encryption resulted in cipher text 0 which is a reserved value. Please try again.")
+        while True:
+            # Retry until cipher text is not 0
+            cipher, rnd = self._enc(int(plain), self.deserialize_bigint(pk[:]))
+            cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
+            if cipher != CipherValue():
+                break
         return cipher, rnd
 
     def dec(self, cipher: CipherValue, sk: PrivateKeyValue) -> Tuple[int, RandomnessValue]:
@@ -248,8 +249,11 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
         debug_print(f'Decrypting value {cipher} with secret key "{sk}"')
-        plain, rnd = self._dec(cipher[:], sk.val)
-        return plain, RandomnessValue(rnd)
+        if cipher == CipherValue():
+            return 0, RandomnessValue()
+        else:
+            plain, rnd = self._dec(cipher[:], sk.val)
+            return plain, RandomnessValue(rnd)
 
     @staticmethod
     def serialize_bigint(key: int, total_bytes: int) -> List[int]:
@@ -279,7 +283,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _enc(self, plain: int, pk: int, rnd: Optional[Tuple[int, ...]]) -> Tuple[List[int], List[int]]:
+    def _enc(self, plain: int, pk: int) -> Tuple[List[int], List[int]]:
         pass
 
     @abstractmethod

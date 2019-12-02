@@ -145,7 +145,7 @@ class CircuitHelper:
         plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.original_type.type_name)
         name = f'{self._in_name_factory.get_new_name(param.annotated_type.type_name, False)}_{param.idf.name}'
         cipher_idf = self._in_name_factory.add_idf(name, param.annotated_type.type_name)
-        self._ensure_encryption(fct.body, plain_idf, Expression.me_expr(), cipher_idf, True)
+        self._ensure_encryption(fct.body, plain_idf, Expression.me_expr(), cipher_idf, True, False)
         return SliceExpr(IdentifierExpr(cfg.zk_in_name), None, offset, cipher_idf.t.size_in_uints).assign(SliceExpr(IdentifierExpr(param.idf.clone()), None, 0, cipher_idf.t.size_in_uints))
 
     def get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
@@ -170,7 +170,7 @@ class CircuitHelper:
                         break
                 privacy_label_expr = self._get_privacy_expr_from_label(new_privacy)
                 new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
-                self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False)
+                self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
                 out_var = new_out_param.get_loc_expr()
 
         self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
@@ -194,7 +194,7 @@ class CircuitHelper:
         else:
             locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(expr.annotated_type.type_name)
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
-            self._ensure_encryption(expr.statement, locally_decrypted_idf, Expression.me_expr(), input_idf, False)
+            self._ensure_encryption(expr.statement, locally_decrypted_idf, Expression.me_expr(), input_idf, False, True)
 
         self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
         expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
@@ -248,10 +248,10 @@ class CircuitHelper:
         self.phi.append(stmt)
         return sec_circ_var_idf, priv_expr
 
-    def _ensure_encryption(self, stmt: Statement, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf, is_param: bool):
+    def _ensure_encryption(self, stmt: Statement, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf, is_param: bool, is_dec: bool):
         rnd = self._secret_input_name_factory.add_idf(f'{plain.name if is_param else cipher.name}_R', TypeName.rnd_type())
         pk = self._request_public_key(stmt, new_privacy)
-        self._phi.append(CircEncConstraint(plain, rnd, pk, cipher))
+        self._phi.append(CircEncConstraint(plain, rnd, pk, cipher, is_dec))
 
     def _request_public_key(self, stmt: Statement, privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
         is_static = isinstance(privacy, IdentifierExpr) and isinstance(privacy.target, StateVariableDeclaration) and privacy.target.is_final
