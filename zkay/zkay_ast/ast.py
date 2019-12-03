@@ -1390,16 +1390,18 @@ def get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[Co
     error_msg += '\n'
 
     start_line = line if stmt is None else stmt.line
-    for line in range(start_line, line + 1):
-        # replace tabs with 4 spaces for consistent output
-        orig_line: str = code[line - 1]
-        orig_line = orig_line.replace('\t', '    ')
-        error_msg += f'{orig_line}\n'
+    if start_line != -1:
+        for line in range(start_line, line + 1):
+            # replace tabs with 4 spaces for consistent output
+            orig_line: str = code[line - 1]
+            orig_line = orig_line.replace('\t', '    ')
+            error_msg += f'{orig_line}\n'
 
-    affected_line: str = code[line - 1]
-    loc_string = ''.join('----' if c == '\t' else '-' for c in affected_line[:column - 1])
-
-    return f'{error_msg}{loc_string}/'
+        affected_line: str = code[line - 1]
+        loc_string = ''.join('----' if c == '\t' else '-' for c in affected_line[:column - 1])
+        return f'{error_msg}{loc_string}/'
+    else:
+        return error_msg
 
 
 class AstException(Exception):
