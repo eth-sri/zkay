@@ -39,6 +39,8 @@ class Runtime:
     def blockchain() -> ZkayBlockchainInterface:
         if Runtime.__blockchain is None:
             Runtime.__blockchain = Web3TesterBlockchain()
+            from zkay.transaction.types import AddressValue
+            AddressValue.get_balance = Runtime.__blockchain.get_balance
         return Runtime.__blockchain
 
     @staticmethod

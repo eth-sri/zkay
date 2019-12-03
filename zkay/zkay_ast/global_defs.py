@@ -1,9 +1,10 @@
 # BUILTIN SPECIAL TYPE DEFINITIONS
 from zkay.zkay_ast.ast import AnnotatedTypeName, FunctionTypeName, Parameter, Identifier, StructDefinition, \
-    VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName, StructTypeName
+    VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName, StructTypeName, FunctionDefinition, Block
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 
 array_length_member = VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('length'))
+
 
 class GlobalDefs:
     # gasleft: FunctionDefinition = FunctionDefinition(
@@ -25,22 +26,14 @@ class GlobalDefs:
     address_payable_struct: StructDefinition = StructDefinition(
         Identifier('<address_payable>'), [
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('balance')),
-            VariableDeclaration([], AnnotatedTypeName.all(
-                FunctionTypeName(
-                    parameters=[Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
-                    modifiers=[],
-                    return_parameters=[Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))]
-                )
-            ), Identifier('send')),
-            VariableDeclaration([], AnnotatedTypeName.all(
-                FunctionTypeName(
-                    parameters=[Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))],
-                    modifiers=[],
-                    return_parameters=[]
-                )
-            ), Identifier('transfer'))
+            FunctionDefinition(Identifier('send'), [Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))], ['public'],
+                               [Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))], Block([])),
+            FunctionDefinition(Identifier('transfer'), [Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))], ['public'],
+                               [], Block([])),
         ]
     )
+    address_payable_struct.members[1].can_be_private = False
+    address_payable_struct.members[2].can_be_private = False
     set_parents(address_payable_struct)
 
     msg_struct: StructDefinition = StructDefinition(

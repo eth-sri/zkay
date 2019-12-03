@@ -12,7 +12,8 @@ from web3 import Web3
 from zkay.config import cfg
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.compiler.privacy import library_contracts
-from zkay.transaction.interface import PublicKeyValue, Manifest, AddressValue, ZkayBlockchainInterface
+from zkay.transaction.interface import Manifest, ZkayBlockchainInterface
+from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 
 max_gas_limit = 10000000
 
@@ -51,7 +52,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
             'bin': jout['evm']['bytecode']['object']
         }
 
-    def deploy_contract(self, contract_interface, *args):
+    def deploy_contract(self, contract_interface, *args, value: Optional[int] = None):
         if args is None:
             args = []
 
@@ -60,11 +61,17 @@ class Web3Blockchain(ZkayBlockchainInterface):
             bytecode=contract_interface['bin']
         )
 
-        tx_receipt = self._transact(contract, 'constructor', *args)
+        tx_receipt = self._transact(contract, 'constructor', *args, value=value)
         contract = self.w3.eth.contract(
             address=tx_receipt.contractAddress, abi=contract_interface['abi']
         )
         return contract
+
+    def get_special_variables(self, sender: AddressValue, value: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
+        block = self.w3.eth.getBlock('latest')
+        return MsgStruct(sender, value), \
+               BlockStruct(AddressValue(self.w3.eth.coinbase), block['difficulty'], block['gasLimit'], block['number'], block['timestamp']),\
+               TxStruct(self.w3.eth.gasPrice, sender)
 
     @abstractmethod
     def _create_w3_instance(self) -> Web3:
@@ -87,6 +94,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _my_address(self) -> AddressValue:
         return AddressValue(self.w3.eth.defaultAccount)
 
+    def _get_balance(self, address: str) -> int:
+        return self.w3.eth.getBalance(address)
+
     def _req_public_key(self, address: AddressValue) -> PublicKeyValue:
         return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address.val))
 
@@ -96,16 +106,19 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
         return contract_handle.functions[name](*indices).call({'from': self.my_address.val})
 
-    def _transact(self, contract_handle, function: str, *actual_params) -> Any:
+    def _transact(self, contract_handle, function: str, *actual_params, value: Optional[int] = None) -> Any:
         fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
-        tx_hash = fobj(*actual_params).transact({'from': self.my_address.val, 'gas': max_gas_limit})
+        tx = {'from': self.my_address.val, 'gas': max_gas_limit}
+        if value:
+            tx['value'] = value
+        tx_hash = fobj(*actual_params).transact(tx)
         tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         if tx_receipt['status'] == 0:
             raise Exception("Transaction failed")
         print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
-    def _deploy(self, manifest, contract: str, *actual_args):
+    def _deploy(self, manifest, contract: str, *actual_args, value: Optional[int] = None):
         filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
         with open(filename) as f:
             c = f.read()
@@ -118,7 +131,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
             f.write(c)
         cout = self.compile_contract(filename, contract)
 
-        return self.deploy_contract(cout, *actual_args)
+        return self.deploy_contract(cout, *actual_args, value=value)
 
     def _connect(self, manifest, contract: str, address: str) -> Any:
         filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])

@@ -28,7 +28,7 @@ class PythonCodeVisitor(CodeVisitor):
     def visitContractDefinition(self, ast: ContractDefinition):
         raise NotImplementedError("This needs to be implemented in child class")
 
-    def handle_function_params(self, params: List[Parameter]):
+    def handle_function_params(self, ast: ConstructorOrFunctionDefinition, params: List[Parameter]):
         params = self.visit_list(params, ", ")
         if params:
             return f'self, {params}'
@@ -45,7 +45,7 @@ class PythonCodeVisitor(CodeVisitor):
         return self.visitConstructorOrFunctionDefinition(ast)
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
-        params = self.handle_function_params(ast.parameters)
+        params = self.handle_function_params(ast, ast.parameters)
         body = self.handle_function_body(ast)
         return f'def {sanitized(ast.name)}({params}):\n{indent(body)}'
 

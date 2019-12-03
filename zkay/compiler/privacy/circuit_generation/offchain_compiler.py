@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
+from zkay.zkay_ast.analysis.contains_private_checker import contains_private_expr
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
@@ -62,7 +63,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from typing import Dict, List, Optional, Union, Any, Callable
 
         from zkay import my_logging
-        from zkay.transaction.interface import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
+        from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
         from zkay.transaction.offchain import {UINT256_MAX_NAME}, {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx
 
 
@@ -98,19 +99,19 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             deploy_cmd = f'c.constructor(*constructor_args)'
 
         return indent(dedent(f'''\
-            def __init__(self, project_dir: str):
-                super().__init__(project_dir)
+            def __init__(self, project_dir: str, user_addr: AddressValue):
+                super().__init__(project_dir, user_addr)
                 {CONTRACT_NAME} = '{ast.idf.name}'
 
             @staticmethod
             def connect(project_dir: str, address: str) -> '{name}':
-                c = {name}(project_dir)
+                c = {name}(project_dir, ContractSimulator.my_address())
                 c.contract_handle = c.conn.connect(project_dir, '{ast.idf.name}', AddressValue(address))
                 return c
 
             @staticmethod
             def deploy(project_dir: str, *constructor_args) -> '{name}':
-                c = {name}(project_dir)
+                c = {name}(project_dir, ContractSimulator.my_address())
                 c.contract_handle = {deploy_cmd}
                 return c
 
@@ -173,13 +174,19 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if ast.original_type is None:
             t = 'Any'
         elif ast.original_type.is_address():
-            t = 'str'
+            if ast.parent.can_be_external:
+                t = 'str'
+            else:
+                t = 'AddressValue'
         else:
             t = self.visit(ast.original_type.type_name)
         return f'{self.visit(ast.idf)}: {t}'
 
-    def handle_function_params(self, params: List[Parameter]):
-        return super().handle_function_params(self.current_params)
+    def handle_function_params(self, ast: ConstructorOrFunctionDefinition, params: List[Parameter]):
+        param_str = super().handle_function_params(ast, self.current_params)
+        if ast.is_payable:
+            param_str += ', *, value: int = 0'
+        return param_str
 
     @staticmethod
     def do_if_external(ast: ConstructorOrFunctionDefinition, extern_elems: Optional[List[str]] = None, intern_elems: Optional[List[str]] = None):
@@ -197,8 +204,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return intern_s
 
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
-        preamble_str = f'msg = lambda: None\n' \
-                       f'msg.sender = {CONN_OBJ_NAME}.my_address\n'
+        preamble_str = 'msg = self.current_msg\n' \
+                       'block = self.current_block\n' \
+                       'tx = self.current_tx\n'
         circuit = self.current_circ
 
         all_params = ', '.join([f'{self.visit(param.idf)}' for param in self.current_params])
@@ -280,12 +288,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if isinstance(ast, ConstructorDefinition):
             invoke_transact_str = f'''
             # Deploy contract
-            return {CONN_OBJ_NAME}.deploy({PROJECT_DIR_NAME}, {CONTRACT_NAME}, actual_params, [{should_encrypt}])
+            return {CONN_OBJ_NAME}.deploy({PROJECT_DIR_NAME}, {CONTRACT_NAME}, actual_params, [{should_encrypt}]{", value=value" if ast.is_payable else ""})
             '''
         elif circuit or ast.has_side_effects:
             invoke_transact_str = f'''
             # Invoke public transaction
-            return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, '{ast.name}', actual_params, [{should_encrypt}])
+            return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, '{ast.name}', actual_params, [{should_encrypt}]{", value=value" if ast.is_payable else ""})
             '''
         elif ast.return_parameters:
             assert len(ast.return_parameters) == 1
@@ -318,7 +326,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             post_body_code
         ] if s)
 
-        return f'with FunctionCtx(self, {circuit.priv_in_size_trans if circuit else -1}):\n' + indent(code)
+        return f'with FunctionCtx(self, {circuit.priv_in_size_trans if circuit else -1}{", value=value" if ast.is_payable else ""}):\n' + indent(code)
 
     def visitReturnStatement(self, ast: ReturnStatement):
         if not ast.function.requires_verification:
@@ -367,7 +375,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
             return ast.func.format_string().format(*args)
-        elif isinstance(ast.func, LocationExpr) and ast.func.target is not None:
+        elif isinstance(ast.func, LocationExpr) and ast.func.target is not None and ast.func.target.requires_verification:
             f = self.visit(ast.func)
             a = self.visit_list(ast.args, ', ')
             return f'self._call({ast.sec_start_offset}, self.{f}, {a})'

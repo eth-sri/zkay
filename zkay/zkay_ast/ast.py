@@ -1199,6 +1199,7 @@ class ConstructorOrFunctionDefinition(AST):
 
         self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
         self.can_be_external = not ('private' in self.modifiers or 'internal' in self.modifiers)
+        self.is_payable = 'payable' in self.modifiers
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.parameters = list(map(f, self.parameters))
@@ -1242,13 +1243,8 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
         super().__init__(parameters, modifiers, body)
         # set fields
         self.idf = idf
-        self.return_parameters = return_parameters
-        if return_parameters is None:
-            self.return_parameters = []
-
-        self.annotated_type: AnnotatedTypeName \
-            = AnnotatedTypeName.all(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
-
+        self.return_parameters = return_parameters if return_parameters else []
+        self.annotated_type: AnnotatedTypeName = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
         self.original_body = body
 
     def process_children(self, f: Callable[['AST'], 'AST']):

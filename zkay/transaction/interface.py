@@ -8,6 +8,8 @@ from zkay.config import cfg
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
+from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, PrivateKeyValue, CipherValue, \
+    RandomnessValue, KeyPair
 from zkay.utils.timer import time_measure
 
 __debug_print = True
@@ -16,103 +18,6 @@ __debug_print = True
 def debug_print(*args):
     if __debug_print:
         print(*args)
-
-
-class Value(tuple):
-    def __new__(cls, contents: Collection):
-        return super(Value, cls).__new__(cls, contents)
-
-    def __str__(self):
-        return f'{type(self).__name__}({super().__str__()})'
-
-    def __eq__(self, other):
-        return isinstance(other, type(self)) and super().__eq__(other)
-
-    def __hash__(self):
-        return self[:].__hash__()
-
-    @staticmethod
-    def unwrap_values(v: Union[int, bool, 'Value', List, Dict]) -> Union[int, List, Dict]:
-        if isinstance(v, List):
-            return list(map(Value.unwrap_values, v))
-        elif isinstance(v, AddressValue):
-            return v.val
-        elif isinstance(v, Dict):
-            return {key: Value.unwrap_values(vals) for key, vals in v.items()}
-        else:
-            return list(v[:]) if isinstance(v, Value) else v
-
-    @staticmethod
-    def flatten(v: Collection) -> List:
-        out = []
-        for elem in v:
-            if isinstance(elem, Collection):
-                out += Value.flatten(elem)
-            else:
-                out.append(elem)
-        return out
-
-    @staticmethod
-    def collection_to_string(v: Union[int, bool, 'Value', Dict, List, Tuple]) -> str:
-        if isinstance(v, List):
-            return f"[{', '.join(map(Value.collection_to_string, v))}]"
-        elif isinstance(v, Tuple):
-            return f"({', '.join(map(Value.collection_to_string, v))})"
-        elif isinstance(v, Dict):
-            return f"{{{', '.join([f'{key}: {Value.collection_to_string(val)}' for key, val in v.items()])}}}"
-        else:
-            return str(v)
-
-
-class CipherValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
-        if contents is None:
-            return super(CipherValue, cls).__new__(cls, [0] * cfg.cipher_len)
-        else:
-            assert len(contents) == cfg.cipher_len
-            return super(CipherValue, cls).__new__(cls, contents)
-
-
-class PrivateKeyValue(Value):
-    def __new__(cls, sk: Optional[Any] = None):
-        return super(PrivateKeyValue, cls).__new__(cls, [sk])
-
-    @property
-    def val(self):
-        return self[0]
-
-
-class PublicKeyValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
-        if contents is None:
-            return super(PublicKeyValue, cls).__new__(cls, [0] * cfg.key_len)
-        else:
-            assert len(contents) == cfg.key_len
-            return super(PublicKeyValue, cls).__new__(cls, contents)
-
-
-class RandomnessValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
-        if contents is None:
-            return super(RandomnessValue, cls).__new__(cls, [0] * cfg.randomness_len)
-        else:
-            assert len(contents) == cfg.randomness_len
-            return super(RandomnessValue, cls).__new__(cls, contents)
-
-
-class AddressValue(Value):
-    def __new__(cls, val: str):
-        return super(AddressValue, cls).__new__(cls, [val])
-
-    @property
-    def val(self):
-        return self[0]
-
-
-class KeyPair:
-    def __init__(self, pk: PublicKeyValue, sk: PrivateKeyValue):
-        self.pk = pk
-        self.sk = sk
 
 
 def parse_manifest(project_dir: str):
@@ -127,6 +32,13 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
     def my_address(self) -> AddressValue:
         #debug_print(f'Requesting own address ("{self._my_address().val}")')
         return self._my_address()
+
+    @abstractmethod
+    def get_special_variables(self, sender: AddressValue, value: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
+        pass
+
+    def get_balance(self, address: AddressValue) -> int:
+        return self._get_balance(address.val)
 
     def pki_verifier_addresses(self, project_dir: str) -> Dict[str, AddressValue]:
         return self._pki_verifier_addresses(parse_manifest(project_dir))
@@ -156,16 +68,16 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Got return value {val}')
         return val
 
-    def transact(self, contract_handle, function: str, actual_args: List, should_encrypt: List[bool]) -> Any:
+    def transact(self, contract_handle, function: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
-        return self._transact(contract_handle, function, *Value.unwrap_values(actual_args))
+        return self._transact(contract_handle, function, *Value.unwrap_values(actual_args), value=value)
 
-    def deploy(self, project_dir: str, contract: str, actual_args: List, should_encrypt: List[bool]) -> Any:
+    def deploy(self, project_dir: str, contract: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
-        return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args))
+        return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args), value=value)
 
     def connect(self, project_dir: str, contract: str, address: AddressValue) -> Any:
         debug_print(f'Connecting to contract {contract}@{address}')
@@ -173,6 +85,10 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def _my_address(self) -> AddressValue:
+        pass
+
+    @abstractmethod
+    def _get_balance(self, address: str) -> int:
         pass
 
     @abstractmethod
@@ -192,11 +108,11 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _transact(self, contract_handle, function: str, *actual_args) -> Any:
+    def _transact(self, contract_handle, function: str, *actual_args, value: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod
-    def _deploy(self, manifest, contract: str, *actual_args) -> Any:
+    def _deploy(self, manifest, contract: str, *actual_args, value: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod

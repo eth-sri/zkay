@@ -2,7 +2,7 @@ import inspect
 from typing import Dict, Union, Callable, Any, Optional, List
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
-from zkay.transaction.interface import AddressValue, RandomnessValue, CipherValue
+from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct
 from zkay.transaction.runtime import Runtime
 
 uint256_scalar_field = 1 << 256
@@ -11,7 +11,7 @@ _bn128_comp_scalar_field = 1 << 252
 
 
 class ContractSimulator:
-    def __init__(self, project_dir: str):
+    def __init__(self, project_dir: str, user_addr: AddressValue):
         self.project_dir = project_dir
         self.conn = Runtime.blockchain()
         self.crypto = Runtime.crypto()
@@ -26,6 +26,11 @@ class ContractSimulator:
         self.is_external: Optional[bool] = None
 
         self.contract_handle = None
+        self.user_addr = user_addr
+
+        self.current_msg: Optional[MsgStruct] = None
+        self.current_block: Optional[BlockStruct] = None
+        self.current_tx: Optional[TxStruct] = None
 
     @property
     def address(self):
@@ -68,10 +73,11 @@ class ContractSimulator:
 
 
 class FunctionCtx:
-    def __init__(self, v: ContractSimulator, trans_sec_size):
+    def __init__(self, v: ContractSimulator, trans_sec_size, *, value: int = 0):
         self.v = v
         self.was_external = None
         self.trans_sec_size = trans_sec_size
+        self.value = value
 
     def __enter__(self):
         self.was_external = self.v.is_external
@@ -81,6 +87,7 @@ class FunctionCtx:
             self.v.all_priv_values = [0 for _ in range(self.trans_sec_size)]
             self.v.current_all_index = 0
             self.v.current_priv_values.clear()
+            self.v.current_msg, self.v.current_block, self.v.current_tx = self.v.conn.get_special_variables(self.v.user_addr, self.value)
         else:
             self.v.is_external = False
 
@@ -90,6 +97,7 @@ class FunctionCtx:
             self.v.all_priv_values = None
             self.v.current_all_index = 0
             self.v.current_priv_values.clear()
+            self.v.current_msg, self.v.current_block, self.v.current_tx = None, None, None
         self.v.is_external = self.was_external
 
 

@@ -153,7 +153,7 @@ class ZkayTransformer(AstTransformerVisitor):
             def param_copy(parameters, new_storage='memory'):
                 return [deep_copy(p, with_types=True).with_changed_storage('memory', new_storage) for p in parameters]
 
-            is_payable = 'payable' in f.modifiers
+            is_payable = f.is_payable
 
             if isinstance(f, ConstructorDefinition):
                 circuit = self.circuit_generators.pop(f)
@@ -173,6 +173,7 @@ class ZkayTransformer(AstTransformerVisitor):
             f.modifiers = ['internal' if mod == 'public' else mod for mod in f.modifiers if mod != 'payable']
             f.can_be_external = False
             f.requires_verification_when_external = False
+            f.is_payable = False
             new_fcts.append(f)
 
             # Create new external wrapper function
@@ -182,6 +183,7 @@ class ZkayTransformer(AstTransformerVisitor):
             new_f.called_functions = f.called_functions
             if is_payable:
                 new_f.modifiers.append('payable')
+                new_f.is_payable = True
             self.create_external_verification_wrapper(new_f, f, global_owners)
 
         c.constructor_definitions = new_constr
