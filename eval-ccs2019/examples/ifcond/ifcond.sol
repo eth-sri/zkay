@@ -13,7 +13,7 @@ contract ifcond {
 
     function set_res(uint@me val) internal {
         require(owner == me);
-        res = val;
+        res = val + 1;
     }
 
     function test_if(uint@me x) public {

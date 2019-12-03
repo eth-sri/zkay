@@ -31,6 +31,16 @@ contract funccall {
     }*/
 
     // Private function used in private expression
+    function some_comp_priv(uint@me v1, uint@me v2) pure internal returns (uint@me) {
+        return v1 + v2 - some_comp_priv2(v1);
+    }
+
+    // Private function used in private expression
+    function some_comp_priv2(uint@me v1) pure internal returns (uint@me) {
+        return v1 * 3;
+    }
+
+    // Private function used in private expression
     function some_comp(uint@me v1, uint@me v2) pure internal returns (uint@me) {
         uint x = some_comp_pub(1, 2);
         return v1 + v2 + x;
@@ -76,9 +86,9 @@ contract funccall {
         require(owner == me);
         res = priv_inc(v) + 1 + get_res();
         uint test = recursive(23) + getself(v) + some_comp_pub(getself3(v), getself3(v)) + getself(42);
-        //uint@me asdf = getself(2);
-        //asdf = getself(getself2(53)) + 1;
-        //res = v + some_comp(v, v) + pure_pub_func(2);
+        uint@me asdf = getself(2);
+        asdf = getself(getself2(53)) + 1;
+        res = v + some_comp_priv(v, v) + pure_pub_func(2); // 42 + (42 + 42 - 3 * 42) + 44 = 44 -> enc(44) = 86
         update_pubval();
         pubval = some_comp_pub(pubval, res);
     }
