@@ -12,14 +12,16 @@ from zkay.my_logging.log_context import log_context
 from zkay.utils.helpers import read_file, lines_of_code
 from zkay.utils.progress_printer import print_step, TermColor, colored_print
 from zkay.utils.timer import time_measure
-from zkay.zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception
+from zkay.zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception, \
+    get_parsed_ast_and_fake_code
 from zkay.zkay_ast.visitor.statement_counter import count_statements
 
 
 def parse_arguments():
     # prepare parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type-check', action='store_true', help="Only type-check, do not compile.")
+    parser.add_argument('--output-fake-solidity', action='store_true', help='Output fake solidity code (zkay code without privacy features and comments)')
+    parser.add_argument('--type-check', action='store_true', help='Only type-check, do not compile.')
     msg = 'The directory to output the compiled contract to. Default: Current directory'
     parser.add_argument('--output', default=os.getcwd(), help=msg)
     parser.add_argument(
@@ -33,20 +35,6 @@ def parse_arguments():
 
     # parse
     a = parser.parse_args()
-
-    # Support for overriding any config value via command line
-    override_dict = {}
-    if a.overrides:
-        overrides = a.overrides.split(';')
-        for o in overrides:
-            key_val = o.split('=')
-            if len(key_val) != 2:
-                raise ValueError(f'Invalid override argument {key_val}')
-            k, v = key_val
-            v = v.strip().replace('\'', '\\\'')
-            override_dict[k.strip()] = f"'{v}'"
-
-    cfg.override_defaults(override_dict)
 
     return a
 
@@ -82,6 +70,19 @@ if __name__ == '__main__':
     # parse arguments
     a = parse_arguments()
 
+    # Support for overriding any config value via command line
+    override_dict = {}
+    if a.overrides:
+        overrides = a.overrides.split(';')
+        for o in overrides:
+            key_val = o.split('=')
+            if len(key_val) != 2:
+                raise ValueError(f'Invalid override argument {key_val}')
+            k, v = key_val
+            v = v.strip().replace('\'', '\\\'')
+            override_dict[k.strip()] = f"'{v}'"
+    cfg.override_defaults(override_dict)
+
     input_file = Path(a.input)
     if not input_file.exists():
         with colored_print(TermColor.FAIL):
@@ -103,6 +104,11 @@ if __name__ == '__main__':
 
     # only type-check
     print(f'Processing file {input_file.name}:')
+
+    if a.output_fake_solidity:
+        _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_file)))
+        with open(os.path.join(output_dir, f'{input_file.name}.fake.sol'), 'w') as f:
+            f.write(fake_code)
 
     if a.type_check:
         code = read_file(str(input_file))
