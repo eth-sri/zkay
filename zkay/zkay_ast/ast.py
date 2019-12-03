@@ -683,9 +683,10 @@ class ExpressionStatement(SimpleStatement):
 
 class RequireStatement(SimpleStatement):
 
-    def __init__(self, condition: Expression):
+    def __init__(self, condition: Expression, unmodified_code: Optional[str] = None):
         super().__init__()
         self.condition = condition
+        self.unmodified_code = self.code() if unmodified_code is None else unmodified_code
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.condition = f(self.condition)

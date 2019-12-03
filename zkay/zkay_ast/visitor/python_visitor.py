@@ -78,7 +78,7 @@ class PythonCodeVisitor(CodeVisitor):
         c = self.visit(ast.condition)
         return dedent(f'''\
             if not ({c}):
-                raise Exception("{ast.code()[:-1]} failed")''')
+                raise RequireException("{ast.unmodified_code[:-1]} failed")''')
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         lhs = self.visit(ast.lhs)
