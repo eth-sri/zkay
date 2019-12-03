@@ -71,6 +71,10 @@ class ContractSimulator:
     def my_address() -> AddressValue:
         return Runtime.blockchain().my_address
 
+    @staticmethod
+    def create_dummy_accounts(count: int):
+        return Runtime.blockchain().create_test_accounts(count)
+
 
 class FunctionCtx:
     def __init__(self, v: ContractSimulator, trans_sec_size, *, value: int = 0):

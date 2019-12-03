@@ -30,8 +30,14 @@ def parse_manifest(project_dir: str):
 class ZkayBlockchainInterface(metaclass=ABCMeta):
     @property
     def my_address(self) -> AddressValue:
-        #debug_print(f'Requesting own address ("{self._my_address().val}")')
         return self._my_address()
+
+    def deploy_libraries(self, sender: AddressValue = None):
+        self._deploy_libraries(self.my_address.val if sender is None else sender.val)
+
+    def create_test_accounts(self, count: int) -> Tuple:
+        # may not be supported by all backends
+        raise NotImplementedError()
 
     @abstractmethod
     def get_special_variables(self, sender: AddressValue, value: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
@@ -39,9 +45,6 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     def get_balance(self, address: AddressValue) -> int:
         return self._get_balance(address.val)
-
-    def pki_verifier_addresses(self, project_dir: str) -> Dict[str, AddressValue]:
-        return self._pki_verifier_addresses(parse_manifest(project_dir))
 
     def req_public_key(self, address: AddressValue) -> PublicKeyValue:
         assert isinstance(address, AddressValue)
@@ -52,36 +55,37 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         assert isinstance(address, AddressValue)
         assert isinstance(pk, PublicKeyValue)
         debug_print(f'Announcing public key "{pk}" for address "{address}"')
-        self._announce_public_key(address, pk[:])
+        self._announce_public_key(address.val, pk[:])
 
-    def req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
+    def req_state_var(self, contract_handle, name: str, *indices, sender: AddressValue = None) -> Union[bool, int, str]:
         assert contract_handle is not None
         debug_print(f'Requesting state variable "{name}"')
-        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)))
+        sender = self.my_address.val if sender is None else sender
+        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)), sender=sender)
         debug_print(f'Got value {val} for state variable "{name}"')
         return val
 
-    def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, List]:
+    def call(self, contract_handle, sender: AddressValue, name: str, *args) -> Union[bool, int, str, List]:
         assert contract_handle is not None
         debug_print(f'Calling contract function {name}{Value.collection_to_string(args)}')
-        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
+        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)), sender=sender.val)
         debug_print(f'Got return value {val}')
         return val
 
-    def transact(self, contract_handle, function: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
+    def transact(self, contract_handle, sender: AddressValue, function: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
-        return self._transact(contract_handle, function, *Value.unwrap_values(actual_args), value=value)
+        return self._transact(contract_handle, sender.val, function, *Value.unwrap_values(actual_args), value=value)
 
-    def deploy(self, project_dir: str, contract: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
+    def deploy(self, project_dir: str, sender: AddressValue, contract: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
-        return self._deploy(parse_manifest(project_dir), contract, *Value.unwrap_values(actual_args), value=value)
+        return self._deploy(parse_manifest(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), value=value)
 
-    def connect(self, project_dir: str, contract: str, address: AddressValue) -> Any:
-        debug_print(f'Connecting to contract {contract}@{address}')
-        return self._connect(parse_manifest(project_dir), contract, address.val)
+    def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
+        debug_print(f'Connecting to contract {contract}@{contract_address}')
+        return self._connect(parse_manifest(project_dir), contract, contract_address.val)
 
     @abstractmethod
     def _my_address(self) -> AddressValue:
@@ -92,27 +96,31 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _pki_verifier_addresses(self, manifest) -> Dict[str, AddressValue]:
+    def _pki_verifier_addresses(self, sender: str, manifest) -> Dict[str, AddressValue]:
         pass
 
     @abstractmethod
-    def _req_public_key(self, address: AddressValue) -> PublicKeyValue:
+    def _req_public_key(self, address: str) -> PublicKeyValue:
         pass
 
     @abstractmethod
-    def _announce_public_key(self, address: AddressValue, pk: Tuple[int, ...]) -> PublicKeyValue:
+    def _announce_public_key(self, address: str, pk: Tuple[int, ...]) -> PublicKeyValue:
         pass
 
     @abstractmethod
-    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
+    def _req_state_var(self, contract_handle, name: str, *indices, sender: str) -> Union[bool, int, str]:
         pass
 
     @abstractmethod
-    def _transact(self, contract_handle, function: str, *actual_args, value: Optional[int] = None) -> Any:
+    def _transact(self, contract_handle, sender: str, function: str, *actual_args, value: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod
-    def _deploy(self, manifest, contract: str, *actual_args, value: Optional[int] = None) -> Any:
+    def _deploy(self, manifest, sender: str, contract: str, *actual_args, value: Optional[int] = None) -> Any:
+        pass
+
+    @abstractmethod
+    def _deploy_libraries(self, sender: str):
         pass
 
     @abstractmethod
