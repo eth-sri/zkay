@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
@@ -8,6 +10,7 @@ from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_c
 from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
 from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects, compute_modified_sets, \
     check_for_undefined_behavior_due_to_eval_order
+from zkay.zkay_ast.ast import AST
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
@@ -36,7 +39,7 @@ class TypeCheckException(Exception):
     pass
 
 
-def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True):
+def get_parsed_ast_and_fake_code(code) -> Tuple[AST, str]:
     with print_step("Parsing"):
         from zkay.solidity_parser.parse import SyntaxException
         try:
@@ -49,9 +52,14 @@ def get_processed_ast(code, parents=True, link_identifiers=True, check_return=Tr
 
     # Solc type checking
     with print_step("Type checking with solc"):
-        from zkay.compiler.solidity.fake_solidity_compiler import fake_solidity_code
+        from zkay.compiler.solidity.fake_solidity_generator import fake_solidity_code
         fake_code = fake_solidity_code(str(code))
         check_for_zkay_solc_errors(code, fake_code)
+    return ast, fake_code
+
+
+def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True) -> AST:
+    ast, _ = get_parsed_ast_and_fake_code(code)
 
     # Zkay preprocessing and type checking
     process_ast(ast, parents, link_identifiers, check_return, alias_analysis, type_check)

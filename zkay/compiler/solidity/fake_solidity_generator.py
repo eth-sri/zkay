@@ -15,6 +15,7 @@ BT_PATTERN = r'(?:address|bool|uint)'
 NONID_START = r'(?:[^a-zA-Z0-9\$_]|^)'
 NONID_END = r'(?:[^a-zA-Z0-9\$_]|$)'
 PARENS_PATTERN = re.compile(r'[()]')
+BRACE_PATTERN = re.compile(r'[{}]')
 STRING_OR_COMMENT_PATTERN = re.compile(
     r'(?P<repl>'
     r'(?://[^\r\n]*)'                           # match line comment
@@ -25,10 +26,7 @@ STRING_OR_COMMENT_PATTERN = re.compile(
 )
 
 # ---------  Parsing ---------
-
-# Regex to match contract declaration
-CONTRACT_DECL_PATTERN = re.compile(f'(?P<keep>{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*{"{"}[^\\n]*?)'
-                                   f'(?<!{ME_DECL})(?P<repl>\\n)')
+CONTRACT_START_PATTERN = re.compile(f'{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])')
 
 # Regex to match annotated types
 ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{BT_PATTERN}{WS_PATTERN}*)'  # match basic type
@@ -57,6 +55,18 @@ def create_surrogate_string(instr: str):
     return ''.join(['\n' if e == '\n' else ' ' for e in instr])
 
 
+def find_matching_parens(code: str, open_parens_loc: int, open_sym: str, close_sym: str) -> int:
+    pattern = re.compile(f'[{open_sym}{close_sym}]')
+    idx = open_parens_loc + 1
+    open = 1
+    while open > 0:
+        cstr = code[idx:]
+        idx += re.search(pattern, cstr).start()
+        open += 1 if code[idx] == open_sym else -1
+        idx += 1
+    return idx - 1
+
+
 # Replacing reveals only with regex is impossible because they could be nested -> do it with a stack
 def strip_reveals(code: str):
     matches = re.finditer(REVEAL_START_PATTERN, code)
@@ -65,17 +75,10 @@ def strip_reveals(code: str):
         reveal_open_parens_loc = m.end()
 
         # Find matching closing parenthesis
-        idx = reveal_open_parens_loc + 1
-        open = 1
-        while open > 0:
-            cstr = code[idx:]
-            idx += re.search(PARENS_PATTERN, cstr).start()
-            open += 1 if code[idx] == '(' else -1
-            idx += 1
+        reveal_close_parens_loc = find_matching_parens(code, reveal_open_parens_loc, '(', ')')
 
         # Go backwards to find comma before owner tag
-        last_comma_loc = code[:idx].rfind(',')
-        reveal_close_parens_loc = idx - 1
+        last_comma_loc = code[:reveal_close_parens_loc].rfind(',')
 
         # Replace reveal by its inner expression + padding
         code = f'{code[:before_reveal_loc]}' \
@@ -84,6 +87,15 @@ def strip_reveals(code: str):
                f'{create_surrogate_string(code[last_comma_loc:reveal_close_parens_loc])}' \
                f'{code[reveal_close_parens_loc:]}'
     return code
+
+
+def inject_me_decls(code: str):
+    matches = re.finditer(CONTRACT_START_PATTERN, code)
+    insert_indices = []
+    for m in matches:
+        insert_indices.append(find_matching_parens(code, m.end(), '{', '}'))
+    parts = [code[i:j] for i, j in zip([0] + insert_indices, insert_indices + [None])]
+    return ME_DECL.join(parts)
 
 
 def replace_with_surrogate(code: str, search_pattern: Pattern, replacement_fstr: str = '{}'):
@@ -135,6 +147,6 @@ def fake_solidity_code(code: str):
 
     # Inject me address declaration (should be okay for type checking, maybe not for program analysis)
     # An alternative would be to replace me by msg.sender, but this would affect code length (error locations)
-    code = replace_with_surrogate(code, CONTRACT_DECL_PATTERN, ME_DECL + '\n')
+    code = inject_me_decls(code)
 
     return code
