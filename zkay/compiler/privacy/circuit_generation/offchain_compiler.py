@@ -17,8 +17,9 @@ PROVER_OBJ_NAME = 'self.prover'
 CRYPTO_OBJ_NAME = 'self.crypto'
 CONN_OBJ_NAME = 'self.conn'
 KEYSTORE_OBJ_NAME = 'self.keystore'
-SK_OBJ_NAME = f'{KEYSTORE_OBJ_NAME}.sk'
-PK_OBJ_NAME = f'{KEYSTORE_OBJ_NAME}.pk'
+SELF_ADDR = 'self.user_addr'
+GET_SK = f'{KEYSTORE_OBJ_NAME}.sk({SELF_ADDR})'
+GET_PK = f'{KEYSTORE_OBJ_NAME}.pk({SELF_ADDR})'
 PRIV_VALUES_NAME = 'self.current_priv_values'
 ALL_PRIV_VALUES_NAME = 'self.all_priv_values'
 STATE_VALUES_NAME = 'self.state_values'
@@ -26,7 +27,6 @@ CONTRACT_NAME = 'self.contract_name'
 CONTRACT_HANDLE = 'self.contract_handle'
 GET_STATE = 'self.get_state'
 IS_EXTERNAL_CALL = 'self.is_external'
-SELF_ADDR = 'self.user_addr'
 
 UINT256_MAX_NAME = 'uint256_scalar_field'
 SCALAR_FIELD_NAME = 'bn128_scalar_field'
@@ -64,7 +64,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         from zkay import my_logging
         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
-        from zkay.transaction.offchain import {UINT256_MAX_NAME}, {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx
+        from zkay.transaction.offchain import {UINT256_MAX_NAME}, {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx, RequireException
 
 
         ''') + contracts + (dedent(f'''
@@ -89,6 +89,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if __name__ == '__main__':
             log_file = my_logging.get_log_file(filename='transactions', parent_dir="", include_timestamp=True, label=None)
             my_logging.prepare_logger(log_file)
+            ContractSimulator.init_key_pair(me)
             code.interact(local=locals())
         ''')
 
@@ -228,7 +229,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 if arg.original_type is not None and arg.original_type.is_private():
                     sname = self.visit(arg.idf)
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {sname}\n'
-                    enc_param_str += f'{sname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {CRYPTO_OBJ_NAME}.enc({sname}, {PK_OBJ_NAME})\n'
+                    enc_param_str += f'{sname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {CRYPTO_OBJ_NAME}.enc({sname}, {GET_PK})\n'
             enc_param_comment_str = '\n# Encrypt parameters' if enc_param_str else ''
             enc_param_str = enc_param_str[:-1] if enc_param_str else ''
 
@@ -345,7 +346,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if in_idf.corresponding_priv_expression is not None:
             plain_idf_name = self.get_priv_value(in_idf.corresponding_priv_expression.idf.name)
             in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")}' \
-                          f' = {CRYPTO_OBJ_NAME}.dec({self.visit(in_idf.get_loc_expr())}, {SK_OBJ_NAME})'
+                          f' = {CRYPTO_OBJ_NAME}.dec({self.visit(in_idf.get_loc_expr())}, {GET_SK})'
             plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
             conv = self.visit(plain_idf.implicitly_converted(in_idf.corresponding_priv_expression.idf.t))
             if conv != plain_idf_name:

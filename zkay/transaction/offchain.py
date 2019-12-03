@@ -1,13 +1,18 @@
 import inspect
-from typing import Dict, Union, Callable, Any, Optional, List
+from typing import Dict, Union, Callable, Any, Optional, List, Tuple
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct
 from zkay.transaction.runtime import Runtime
+from zkay.utils.progress_printer import colored_print, TermColor
 
 uint256_scalar_field = 1 << 256
 bn128_scalar_field = bn128_scalar_field
 _bn128_comp_scalar_field = 1 << 252
+
+
+class RequireException(Exception):
+    pass
 
 
 class ContractSimulator:
@@ -72,8 +77,17 @@ class ContractSimulator:
         return Runtime.blockchain().my_address
 
     @staticmethod
-    def create_dummy_accounts(count: int):
-        return Runtime.blockchain().create_test_accounts(count)
+    def init_key_pair(address: str):
+        account = AddressValue(address)
+        key_pair = Runtime.crypto().generate_or_load_key_pair(account)
+        Runtime.keystore().add_keypair(account, key_pair)
+
+    @staticmethod
+    def create_dummy_accounts(count: int) -> Tuple:
+        accounts = Runtime.blockchain().create_test_accounts(count)
+        for account in accounts:
+            ContractSimulator.init_key_pair(account)
+        return accounts
 
 
 class FunctionCtx:
@@ -95,14 +109,21 @@ class FunctionCtx:
         else:
             self.v.is_external = False
 
-    def __exit__(self, t, value, traceback):
+    def __exit__(self, exec_type, exec_value, traceback):
         if self.v.is_external:
             self.v.state_values.clear()
             self.v.all_priv_values = None
             self.v.current_all_index = 0
             self.v.current_priv_values.clear()
             self.v.current_msg, self.v.current_block, self.v.current_tx = None, None, None
+
         self.v.is_external = self.was_external
+
+        if exec_type == RequireException:
+            if self.v.is_external is None:
+                with colored_print(TermColor.FAIL):
+                    print(f'ERROR: {exec_value}')
+                return True
 
 
 class CallCtx:

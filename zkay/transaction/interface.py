@@ -136,14 +136,8 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
 
 class ZkayCryptoInterface(metaclass=ABCMeta):
-    def __init__(self, conn: ZkayBlockchainInterface, key_dir: str = os.path.dirname(os.path.realpath(__file__))):
-        self.key_dir = key_dir
-        self.__my_keys = self._generate_or_load_key_pair()
-        conn.announce_public_key(conn.my_address, self.local_keys.pk)
-
-    @property
-    def local_keys(self):
-        return self.__my_keys
+    def generate_or_load_key_pair(self, address: AddressValue) -> KeyPair:
+        return self._generate_or_load_key_pair(address.val)
 
     def enc(self, plain: int, pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
         """
@@ -203,7 +197,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
 
     @abstractmethod
-    def _generate_or_load_key_pair(self) -> KeyPair:
+    def _generate_or_load_key_pair(self, address: str) -> KeyPair:
         pass
 
     @abstractmethod
@@ -216,12 +210,18 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
 
 
 class ZkayKeystoreInterface:
-    def __init__(self, conn: ZkayBlockchainInterface, crypto: ZkayCryptoInterface):
+    def __init__(self, conn: ZkayBlockchainInterface):
         self.conn = conn
         self.local_pk_store: Dict[AddressValue, PublicKeyValue] = {}
-        self.my_keys = crypto.local_keys
+        self.local_key_pairs: Dict[AddressValue, KeyPair] = {}
 
-        self.local_pk_store[conn.my_address] = self.my_keys.pk
+    def add_keypair(self, address: AddressValue, key_pair: KeyPair):
+        self.local_key_pairs[address] = key_pair
+        # Announce if not yet in pki
+        try:
+            self.conn.req_public_key(address)
+        except:
+            self.conn.announce_public_key(address, key_pair.pk)
 
     def getPk(self, address: AddressValue) -> PublicKeyValue:
         assert isinstance(address, AddressValue)
@@ -233,13 +233,11 @@ class ZkayKeystoreInterface:
             self.local_pk_store[address] = pk
             return pk
 
-    @property
-    def sk(self) -> PrivateKeyValue:
-        return self.my_keys.sk
+    def sk(self, address: AddressValue) -> PrivateKeyValue:
+        return self.local_key_pairs[address].sk
 
-    @property
-    def pk(self) -> PublicKeyValue:
-        return self.my_keys.pk
+    def pk(self, address: AddressValue) -> PublicKeyValue:
+        return self.local_key_pairs[address].pk
 
 
 class ZkayProverInterface(metaclass=ABCMeta):

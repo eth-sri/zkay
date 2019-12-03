@@ -7,9 +7,9 @@ from zkay.transaction.interface import ZkayCryptoInterface
 
 
 class DummyCrypto(ZkayCryptoInterface):
-
-    def _generate_or_load_key_pair(self) -> KeyPair:
-        return KeyPair(PublicKeyValue(self.serialize_bigint(42, cfg.key_bytes)), PrivateKeyValue(42))
+    def _generate_or_load_key_pair(self, address: str) -> KeyPair:
+        aint = int(address, 16)
+        return KeyPair(PublicKeyValue(self.serialize_bigint(aint, cfg.key_bytes)), PrivateKeyValue(aint))
 
     def _enc(self, plain: int, pk: int) -> Tuple[List[int], List[int]]:
         cipher = (plain + pk) % bn128_scalar_field

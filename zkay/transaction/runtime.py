@@ -46,13 +46,13 @@ class Runtime:
     @staticmethod
     def crypto() -> ZkayCryptoInterface:
         if Runtime.__crypto is None:
-            Runtime.__crypto = get_crypto_class(cfg.crypto_backend)(Runtime.blockchain())
+            Runtime.__crypto = get_crypto_class(cfg.crypto_backend)()
         return Runtime.__crypto
 
     @staticmethod
     def keystore() -> ZkayKeystoreInterface:
         if Runtime.__keystore is None:
-            Runtime.__keystore = SimpleKeystore(Runtime.blockchain(), Runtime.crypto())
+            Runtime.__keystore = SimpleKeystore(Runtime.blockchain())
         return Runtime.__keystore
 
     @staticmethod

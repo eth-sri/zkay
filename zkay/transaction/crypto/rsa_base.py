@@ -51,22 +51,19 @@ class StaticRandomFunc:
 
 
 class RSACrypto(ZkayCryptoInterface):
-    key_file = os.path.join(cfg.config_dir, 'rsa_keypair.bin')
     default_exponent = 65537 # == 0x10001
 
-    def __init__(self, conn: ZkayBlockchainInterface, key_dir: str = os.path.dirname(os.path.realpath(__file__))):
-        super().__init__(conn, key_dir)
-
-    def _generate_or_load_key_pair(self) -> KeyPair:
-        if not os.path.exists(self.key_file):
+    def _generate_or_load_key_pair(self, address: str) -> KeyPair:
+        key_file = os.path.join(cfg.config_dir, f'rsa_{cfg.key_bits}_{address}.bin')
+        if not os.path.exists(key_file):
             print(f'Key pair not found, generating new {cfg.key_bits} bit rsa key pair...')
             key = RSA.generate(cfg.key_bits, e=self.default_exponent)
-            with open(self.key_file, 'wb') as f:
+            with open(key_file, 'wb') as f:
                 f.write(key.export_key())
             print('done')
         else:
-            print(f'Key pair found, loading from file {self.key_file}')
-            with open(self.key_file, 'rb') as f:
+            print(f'Key pair found, loading from file {key_file}')
+            with open(key_file, 'rb') as f:
                 key = RSA.import_key(f.read())
 
         modulus = key.publickey().n
