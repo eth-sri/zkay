@@ -29,7 +29,7 @@ def parse_arguments():
         dest='count',
         help="Count the number of statements in the translated program")
     parser.add_argument('input', type=str, help='The source file')
-    parser.add_argument('--config-overrides', default='', dest='overrides', help='comma separated list of config_val_name=config_val pairs')
+    parser.add_argument('--config-overrides', default='', dest='overrides', help='semicolon separated list of config_val_name=config_val pairs')
 
     # parse
     a = parser.parse_args()
@@ -37,7 +37,7 @@ def parse_arguments():
     # Support for overriding any config value via command line
     override_dict = {}
     if a.overrides:
-        overrides = a.overrides.split(',')
+        overrides = a.overrides.split(';')
         for o in overrides:
             key_val = o.split('=')
             if len(key_val) != 2:
