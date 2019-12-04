@@ -122,7 +122,7 @@ class JsnarkVisitor(AstVisitor):
             elif op == '||':
                 fstr = '{}.or({})'
             elif op == '!':
-                fstr = '{}.invAsBits()'
+                fstr = '{}.invAsBit()'
             else:
                 raise ValueError(f'Unsupported builtin function {ast.func.op}')
 
