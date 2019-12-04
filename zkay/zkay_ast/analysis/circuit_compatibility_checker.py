@@ -25,12 +25,11 @@ class DirectCanBePrivateDetector(FunctionVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
-            can_be_private = ast.func.can_be_private()
-            if ast.func.is_eq():
-                can_be_private |= ast.annotated_type.type_name.can_be_private()
-            elif ast.func.is_ite():
-                can_be_private |= ast.annotated_type.type_name.can_be_private()
-            ast.statement.function.can_be_private &= can_be_private
+            if not ast.func.is_private:
+                can_be_private = ast.func.can_be_private()
+                if ast.func.is_eq() or ast.func.is_ite():
+                    can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
+                ast.statement.function.can_be_private &= can_be_private
         for arg in ast.args:
             self.visit(arg)
 

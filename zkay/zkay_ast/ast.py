@@ -339,18 +339,12 @@ class BuiltinFunction(Expression):
             # parenthesis, ite
             return None
 
-    def can_be_private(self):
-        if self.op in arithmetic and self.op not in ['**', '/', '%']:
-            return True
-        elif self.op in comp:
-            return True
-        elif self.op in bop:
-            return True
-        elif self.op == 'parenthesis':
-            return True
-        else:
-            # also returning False for equality, as this depends on the type
-            return False
+    def can_be_private(self) -> bool:
+        """
+        :return: true if operation itself can be run inside a circuit
+                 for equality and ite it must be checked separately whether the arguments are also supported inside circuits
+        """
+        return self.op not in ['**', '/', '%']
 
 
 class FunctionCallExpr(Expression):

@@ -27,6 +27,13 @@ class TypeCheckVisitor(AstVisitor):
         else:
             return rhs
 
+    @staticmethod
+    def check_for_invalid_private_type(ast):
+        assert hasattr(ast, 'annotated_type')
+        at = ast.annotated_type
+        if at.is_private() and not at.type_name.can_be_private():
+            raise TypeException(f"Type {at.type_name} cannot be private", ast.annotated_type)
+
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         raise TypeException("Subexpressions with side-effects are currently not supported", ast)
 
@@ -63,69 +70,69 @@ class TypeCheckVisitor(AstVisitor):
         if ast.expr:
             ast.expr = self.get_rhs(ast.expr, ast.variable_declaration.annotated_type)
 
-    def handle_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction, private=False):
-        # set parameter type
-        parameter_types = func.input_types()
-        # set output type
-        if private:
-            p = Expression.me_expr()
+    def make_private_if_not_already(self, ast: Expression):
+        if ast.annotated_type.is_private():
+            expected = AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr())
+            if not ast.instanceof(expected):
+                raise TypeMismatchException(expected, ast.annotated_type, ast)
+            return ast
         else:
-            p = Expression.all_expr()
-        output_type = AnnotatedTypeName(func.output_type(), p)
-        # can function be evaluated privately?
-        can_be_private = func.can_be_private()
+            return self.make_private(ast, Expression.me_expr())
 
+    @staticmethod
+    def has_private_type(ast: Expression):
+        return ast.annotated_type.is_private()
+
+    def handle_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction):
         # handle special cases
-        if func.is_eq():
-            # handle eq
+        if func.is_ite():
+            cond_t = ast.args[0].annotated_type
 
-            t = ast.args[0].annotated_type.type_name
-            parameter_types = 2 * [t]
-            can_be_private = t.can_be_private()
+            # Ensure that condition is boolean
+            if cond_t.type_name != TypeName.bool_type():
+                raise TypeMismatchException(TypeName.bool_type(), cond_t.type_name, ast.args[0])
 
-        elif func.is_neg_sign():
-            if isinstance(ast.args[0], NumberLiteralExpr):
-                raise TypeException("Negative number currently not supported", ast)
+            # Check if both branches have the same data type
+            t = ast.args[1].annotated_type.type_name
+            if not ast.args[2].instanceof_data_type(t):
+                raise TypeMismatchException(t, ast.args[2].annotated_type.type_name, ast.args[2])
+
+            # Convert all args to private if one is private
+            private_args = any(map(self.has_private_type, ast.args[1:]))
+            if private_args or cond_t.is_private():
+                ast.args[1:] = map(self.make_private_if_not_already, ast.args[1:])
+
+            if cond_t.is_public():
+                ast.annotated_type = AnnotatedTypeName(t, Expression.me_expr() if private_args else None)
+            else:
+                func.is_private = True
+                ast.annotated_type = AnnotatedTypeName(t, Expression.me_expr())
+            return
         elif func.is_parenthesis():
             ast.annotated_type = ast.args[0].annotated_type
             return
-        elif func.is_ite():
+        elif func.is_neg_sign():
+            raise TypeException('Unary negation is currently not supported (makes no sense for unsigned types)', ast)
 
-            t = ast.args[1].annotated_type.type_name
-            if t == TypeName.uint_type() or t == TypeName.bool_type():
-                can_be_private = True
+        # Check data types
+        parameter_types = func.input_types()
+        if func.is_eq():
+            parameter_types = 2 * [ast.args[0].annotated_type.type_name]
+        for arg, t in zip(ast.args, parameter_types):
+            if not arg.instanceof_data_type(t):
+                raise TypeMismatchException(t, arg.annotated_type.type_name, arg)
 
-            parameter_types = [TypeName.bool_type(), t, t]
-            output_type = AnnotatedTypeName(t, p)
-
-            # Conservatively ensure no side effects in private conditional expressions
-            # (public side effects could leak information about private condition)
-            if ast.args[0].annotated_type.privacy_annotation != Expression.all_expr():
-                for arg in ast.args:
-                    if arg.has_side_effects:
-                        raise TypeException("Expression inside private conditional expression might have side effect", arg)
-
-        for i in range(len(parameter_types)):
-            t = parameter_types[i]
-            arg = ast.args[i]
-            expected = AnnotatedTypeName(t, p)
-            instance = arg.instanceof(expected)
-            if not instance:
-                if can_be_private and not private:
-                    func.is_private = True
-                    return self.handle_builtin_function_call(ast, func, True)
-                else:
-                    raise TypeMismatchException(expected, arg.annotated_type, ast)
-            elif instance == 'make-private':
-                # replace argument
-                ast.args[i] = self.make_private(arg, Expression.me_expr())
+        # Check privacy type and convert if necessary
+        private_args = any(map(self.has_private_type, ast.args))
+        if private_args:
+            if func.can_be_private():
+                func.is_private = True
+                ast.args[:] = map(self.make_private_if_not_already, ast.args)
+                ast.annotated_type = AnnotatedTypeName(func.output_type(), Expression.me_expr())
             else:
-                # no action necessary
-                pass
-
-        assert (output_type is not None)
-        assert (isinstance(output_type, AnnotatedTypeName))
-        ast.annotated_type = output_type
+                raise TypeException(f'Operation \'{func.op}\' does not support private operands', ast)
+        else:
+            ast.annotated_type = AnnotatedTypeName(func.output_type())
 
     @staticmethod
     def is_accessible_by_invoker(ast: Expression):
@@ -144,6 +151,7 @@ class TypeCheckVisitor(AstVisitor):
 
         # set type
         r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, privacy)
+        TypeCheckVisitor.check_for_invalid_private_type(r)
 
         # propagate side effects
         r.has_side_effects = expr.has_side_effects
@@ -199,6 +207,7 @@ class TypeCheckVisitor(AstVisitor):
         ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy)
         if ast.instanceof(ast.expr.annotated_type) is True:
             raise TypeException(f'Redundant "reveal": Expression is already "@{ast.privacy.code()}"', ast)
+        self.check_for_invalid_private_type(ast)
 
     def visitIfStatement(self, ast: IfStatement):
         b = ast.condition
@@ -286,7 +295,6 @@ class TypeCheckVisitor(AstVisitor):
                 raise TypeException(f'Only me/all accepted as privacy type of function parameters', ast)
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
-
         if ast.expr:
             # prevent private operations in declaration
             if contains_private(ast):
