@@ -8,8 +8,10 @@ class FunctionVisitor(AstVisitor):
 
     def visitSourceUnit(self, ast: SourceUnit):
         for c in ast.contracts:
-            list(map(self.visit, c.constructor_definitions))
-            list(map(self.visit, c.function_definitions))
+            for cd in c.constructor_definitions:
+                self.visit(cd)
+            for fd in c.function_definitions:
+                self.visit(fd)
 
     def visitParameter(self, ast: Parameter):
         pass

@@ -363,7 +363,7 @@ class FunctionCallExpr(Expression):
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.func = f(self.func)
-        self.args = list(map(f, self.args))
+        self.args[:] = map(f, self.args)
 
 
 class NewExpr(FunctionCallExpr):
@@ -374,7 +374,7 @@ class NewExpr(FunctionCallExpr):
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
-        self.args = list(map(f, self.args))
+        self.args[:] = map(f, self.args)
 
 
 class CastExpr(FunctionCallExpr):
@@ -1021,8 +1021,8 @@ class FunctionTypeName(TypeName):
         self.return_parameters = return_parameters
 
     def process_children(self, f: Callable[['AST'], 'AST']):
-        self.parameters = list(map(f, self.parameters))
-        self.return_parameters = list(map(f, self.return_parameters))
+        self.parameters[:] = map(f, self.parameters)
+        self.return_parameters[:] = map(f, self.return_parameters)
 
     def clone(self) -> 'FunctionTypeName':
         # TODO deep copy if required
@@ -1123,6 +1123,8 @@ class VariableDeclaration(AST):
         self.idf = idf
         self.storage_location = storage_location
 
+        self.is_final = 'final' in self.keywords
+
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
@@ -1160,6 +1162,8 @@ class Parameter(AST):
         self.idf = idf
         self.storage_location = storage_location
         self.original_type = original_type
+
+        self.is_final = 'final' in self.keywords
 
     def copy(self) -> 'Parameter':
         return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location, self.original_type)
@@ -1203,7 +1207,7 @@ class ConstructorOrFunctionDefinition(AST):
         self.is_payable = 'payable' in self.modifiers
 
     def process_children(self, f: Callable[['AST'], 'AST']):
-        self.parameters = list(map(f, self.parameters))
+        self.parameters[:] = map(f, self.parameters)
         self.body = f(self.body)
 
     def replaced_with(self, replacement: 'ConstructorOrFunctionDefinition') -> 'ConstructorOrFunctionDefinition':
@@ -1214,6 +1218,7 @@ class ConstructorOrFunctionDefinition(AST):
         replacement.requires_verification = self.requires_verification
         replacement.requires_verification_when_external = self.requires_verification_when_external
         replacement.can_be_private = self.can_be_private
+        replacement.unambiguous_name = self.unambiguous_name
         return replacement
 
     def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier], ref_storage_loc: str = 'memory'):
@@ -1250,8 +1255,8 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
-        self.parameters = list(map(f, self.parameters))
-        self.return_parameters = list(map(f, self.return_parameters))
+        self.parameters[:] = map(f, self.parameters)
+        self.return_parameters[:] = map(f, self.return_parameters)
         self.body = f(self.body)
 
     def get_return_type(self):
@@ -1301,7 +1306,7 @@ class StructDefinition(AST):
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
-        self.members = list(map(f, self.members))
+        self.members[:] = map(f, self.members)
 
 
 class ContractDefinition(AST):
@@ -1322,10 +1327,10 @@ class ContractDefinition(AST):
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
-        self.state_variable_declarations = list(map(f, self.state_variable_declarations))
-        self.constructor_definitions = list(map(f, self.constructor_definitions))
-        self.function_definitions = list(map(f, self.function_definitions))
-        self.struct_definitions = list(map(f, self.struct_definitions))
+        self.state_variable_declarations[:] = map(f, self.state_variable_declarations)
+        self.constructor_definitions[:] = map(f, self.constructor_definitions)
+        self.function_definitions[:] = map(f, self.function_definitions)
+        self.struct_definitions[:] = map(f, self.struct_definitions)
 
     def __getitem__(self, key: str):
         if key == 'constructor':
@@ -1354,7 +1359,7 @@ class SourceUnit(AST):
         self.original_code: List[str] = []
 
     def process_children(self, f: Callable[['AST'], 'AST']):
-        self.contracts = list(map(f, self.contracts))
+        self.contracts[:] = map(f, self.contracts)
 
     def __getitem__(self, key: str):
         c_identifier = self.names[key]

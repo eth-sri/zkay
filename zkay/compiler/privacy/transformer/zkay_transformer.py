@@ -32,6 +32,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         return self.visit_children(ast)
 
     def visitParameter(self, ast: Parameter):
+        ast.keywords = [k for k in ast.keywords if k != 'final']
         ast.original_type = ast.annotated_type
         if ast.annotated_type.is_private():
             ast.storage_location = 'memory'
