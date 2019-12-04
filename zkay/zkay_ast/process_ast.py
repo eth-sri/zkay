@@ -39,7 +39,7 @@ class TypeCheckException(Exception):
     pass
 
 
-def get_parsed_ast_and_fake_code(code) -> Tuple[AST, str]:
+def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
     with print_step("Parsing"):
         from zkay.solidity_parser.parse import SyntaxException
         try:
@@ -50,16 +50,17 @@ def get_parsed_ast_and_fake_code(code) -> Tuple[AST, str]:
                 print(f'{str(e)}\n')
             raise ParseExeception()
 
-    # Solc type checking
-    with print_step("Type checking with solc"):
-        from zkay.compiler.solidity.fake_solidity_generator import fake_solidity_code
-        fake_code = fake_solidity_code(str(code))
-        check_for_zkay_solc_errors(code, fake_code)
+    from zkay.compiler.solidity.fake_solidity_generator import fake_solidity_code
+    fake_code = fake_solidity_code(str(code))
+    if solc_check:
+        # Solc type checking
+        with print_step("Type checking with solc"):
+            check_for_zkay_solc_errors(code, fake_code)
     return ast, fake_code
 
 
-def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True) -> AST:
-    ast, _ = get_parsed_ast_and_fake_code(code)
+def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True, solc_check=True) -> AST:
+    ast, _ = get_parsed_ast_and_fake_code(code, solc_check=solc_check)
 
     # Zkay preprocessing and type checking
     process_ast(ast, parents, link_identifiers, check_return, alias_analysis, type_check)
