@@ -11,7 +11,7 @@ ME_DECL = ' address private me = msg.sender;'
 
 WS_PATTERN = r'[ \t\r\n\u000C]'
 ID_PATTERN = r'[a-zA-Z\$_][a-zA-Z0-9\$_]*'
-BT_PATTERN = r'(?:address|bool|uint)'
+ELEM_TYPE_PATTERN = r'(?:address|address payable|bool|uint)'
 NONID_START = r'(?:[^a-zA-Z0-9\$_]|^)'
 NONID_END = r'(?:[^a-zA-Z0-9\$_]|$)'
 PARENS_PATTERN = re.compile(r'[()]')
@@ -29,7 +29,7 @@ STRING_OR_COMMENT_PATTERN = re.compile(
 CONTRACT_START_PATTERN = re.compile(f'{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])')
 
 # Regex to match annotated types
-ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{BT_PATTERN}{WS_PATTERN}*)'  # match basic type
+ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)'  # match basic type
                            f'(?P<repl>@{WS_PATTERN}*{ID_PATTERN})')             # match @owner
 
 # Regexes to match 'all' and 'final'
@@ -39,7 +39,7 @@ ALL_PATTERN = re.compile(MATCH_WORD_FSTR.format('all'))
 
 # Regex to match tagged mapping declarations
 MAP_PATTERN = re.compile(
-    f'(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*address{WS_PATTERN}*)'  # match 'mapping (address'
+    f'(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*{ELEM_TYPE_PATTERN}{WS_PATTERN}*)'  # match 'mapping (address'
     f'(?P<repl>!{WS_PATTERN}*{ID_PATTERN})'                                             # match '!tag'
     f'(?={WS_PATTERN}*=>{WS_PATTERN}*)')                                                # expect '=>'
 
