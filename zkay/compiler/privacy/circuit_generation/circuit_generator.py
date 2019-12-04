@@ -39,9 +39,11 @@ class CircuitGenerator(metaclass=ABCMeta):
         c_count = len(self.circuits_to_prove)
         print(f'Compiling {c_count} circuits...')
         with time_measure('circuit_compilation', True):
-            #modified = list(map(self._generate_zkcircuit, self.circuits_to_prove))
-            with Pool(processes=self.p_count) as pool:
-                modified = pool.map(self._generate_zkcircuit, self.circuits_to_prove)
+            if cfg.is_unit_test:
+                modified = list(map(self._generate_zkcircuit, self.circuits_to_prove))
+            else:
+                with Pool(processes=self.p_count) as pool:
+                    modified = pool.map(self._generate_zkcircuit, self.circuits_to_prove)
 
         modified_circuits_to_prove = [circ for t, circ in zip(modified, self.circuits_to_prove)
                                       if t or not all(map(os.path.exists, self._get_vk_and_pk_paths(circ)))]
@@ -54,7 +56,7 @@ class CircuitGenerator(metaclass=ABCMeta):
             print(f'Generating keys for {c_count} circuits...')
             with time_measure('key_generation', True):
                 counter = Value('i', 0)
-                if self.parallel_keygen:
+                if self.parallel_keygen and not cfg.is_unit_test:
                     with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
                         pool.map(self._generate_keys_par, modified_circuits_to_prove)
                 else:
