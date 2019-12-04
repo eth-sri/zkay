@@ -40,18 +40,26 @@ def collect_children_names(ast: AST):
     return merge_dicts(*names)
 
 
-class SymbolTableFiller(AstVisitor):
+def get_builtin_globals():
+    sf = SymbolTableFiller()
+    return sf.get_builtin_globals()
 
-    def visitSourceUnit(self, ast: SourceUnit):
-        ast.names = {c.idf.name: c.idf for c in ast.contracts}
+
+class SymbolTableFiller(AstVisitor):
+    def get_builtin_globals(self):
         global_defs = [d for d in [getattr(GlobalDefs, var) for var in vars(GlobalDefs) if not var.startswith('__')]]
         for d in global_defs:
             self.visit(d)
-        ast.names.update({d.idf.name: d.idf for d in global_defs})
+        global_defs = {d.idf.name: d.idf for d in global_defs}
+        global_vars = {d.idf.name: d.idf for d in [getattr(GlobalVars, var) for var in vars(GlobalVars) if not var.startswith('__')]}
+        return merge_dicts(global_defs, global_vars)
+
+    def visitSourceUnit(self, ast: SourceUnit):
+        ast.names = {c.idf.name: c.idf for c in ast.contracts}
+        ast.names.update(self.get_builtin_globals())
 
     def visitContractDefinition(self, ast: ContractDefinition):
         state_vars = {d.idf.name: d.idf for d in ast.state_variable_declarations if not isinstance(d, Comment)}
-        state_vars.update({d.idf.name: d.idf for d in [getattr(GlobalVars, var) for var in vars(GlobalVars) if not var.startswith('__')]})
         funcs = {f.idf.name: f.idf for f in ast.function_definitions}
         structs = {s.idf.name: s.idf for s in ast.struct_definitions}
         ast.names = merge_dicts(state_vars, funcs, structs)
