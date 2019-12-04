@@ -4,7 +4,7 @@ contract ControlFlow {
 
 	uint@all x;
 
-	function f(uint@all a, uint@me b) {
+	function f(uint@all a, uint@me b) public {
 		if (b > 0){
 			x = a;
 		}

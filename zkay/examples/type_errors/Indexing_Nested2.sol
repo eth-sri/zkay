@@ -5,7 +5,7 @@ contract Indexing_Nested {
     mapping(address => mapping(address!y => uint@y)) values;
 
 
-	function f(address a, uint@me value) {
+	function f(address a, uint@me value) public {
 		values[me][a] = value;
 	}
 

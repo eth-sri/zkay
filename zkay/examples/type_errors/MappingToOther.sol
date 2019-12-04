@@ -5,7 +5,7 @@ contract MappingToOther {
     mapping(address!x => uint@x) values;
 
 
-	function f(address a, uint@me value) {
+	function f(address a, uint@me value) public {
 		values[a] = value;
 	}
 

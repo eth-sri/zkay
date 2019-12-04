@@ -4,7 +4,7 @@ contract Functions {
 
 	address owner;
 
-    function f(uint@owner x) {
+    function f(uint@owner x) public {
     }
 
 }

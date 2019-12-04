@@ -8,7 +8,7 @@ contract Addition {
     uint a2;
     uint@all b;
 
-	function f() {
+	function f() public {
 	    require(owner == me);
 		b = a1 + a2;
 	}

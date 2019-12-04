@@ -7,7 +7,7 @@ contract Addition {
     uint@owner a;
     uint@owner b;
 
-	function f() {
+	function f() public {
 		b = a + 1;
 	}
 }

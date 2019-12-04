@@ -4,7 +4,7 @@ contract Addition {
 
 	uint@all x;
 
-	function f(uint@me a, uint@all b) {
+	function f(uint@me a, uint@all b) public {
 		x = a+b;
 	}
 }

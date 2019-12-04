@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 contract BoolToUInt {
 
-	function f() {
+	function f() public {
 		uint x;
 		x = false;
 	}

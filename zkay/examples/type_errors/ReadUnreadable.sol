@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 contract ReadUnreadable {
     final address business;
 
-    constructor() {
+    constructor() public {
         business = me;
     }
 

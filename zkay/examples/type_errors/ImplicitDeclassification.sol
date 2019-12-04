@@ -7,7 +7,7 @@ contract ImplicitDeclassification {
     uint@owner a;
     uint@all b;
 
-	function f() {
+	function f() public {
 	    require(owner == me);
 		b = a;
 	}

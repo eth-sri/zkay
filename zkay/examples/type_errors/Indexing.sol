@@ -6,7 +6,7 @@ contract Indexing {
 	uint@all x;
 
 
-	function f() {
+	function f() public {
 		x = values[me];
 	}
 

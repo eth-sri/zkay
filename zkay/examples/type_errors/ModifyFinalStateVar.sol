@@ -8,7 +8,7 @@ contract ModifyFinalStateVar {
 	    x = 0;
 	}
 
-	function f() {
+	function f() public {
 		x = 10;
 	}
 }
