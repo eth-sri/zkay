@@ -11,6 +11,8 @@ class Config:
     def __init__(self):
         self.config_dir = os.path.dirname(os.path.realpath(__file__))
 
+        self.is_unit_test = False
+
         # proving scheme to use for nizk proof [gm17]
         self.proving_scheme = 'gm17'
         # prover backend [zokrates, jsnark]
@@ -88,3 +90,16 @@ class Config:
 
 
 cfg = Config()
+
+
+class UnitTesting:
+    def __init__(self):
+        super().__init__()
+        self.old_is_unit_testing = None
+
+    def __enter__(self):
+        self.old_is_unit_testing = cfg.is_unit_test
+        cfg.is_unit_test = True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        cfg.is_unit_test = self.old_is_unit_testing

@@ -1,4 +1,5 @@
 /examples/*/compiled*
+/examples/*/old*
 /examples/*/truffle-app
 /examples/*/scenario
 *.csv

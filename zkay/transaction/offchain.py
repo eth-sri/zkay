@@ -1,6 +1,7 @@
 import inspect
 from typing import Dict, Union, Callable, Any, Optional, List, Tuple
 
+from zkay.config import cfg
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct
 from zkay.transaction.runtime import Runtime
@@ -83,11 +84,14 @@ class ContractSimulator:
         Runtime.keystore().add_keypair(account, key_pair)
 
     @staticmethod
-    def create_dummy_accounts(count: int) -> Tuple:
+    def create_dummy_accounts(count: int) -> Union[str, Tuple]:
         accounts = Runtime.blockchain().create_test_accounts(count)
         for account in accounts:
             ContractSimulator.init_key_pair(account)
-        return accounts
+        if len(accounts) == 1:
+            return accounts[0]
+        else:
+            return accounts
 
 
 class FunctionCtx:
@@ -120,7 +124,7 @@ class FunctionCtx:
         self.v.is_external = self.was_external
 
         if exec_type == RequireException:
-            if self.v.is_external is None:
+            if self.v.is_external is None and not cfg.is_unit_test:
                 with colored_print(TermColor.FAIL):
                     print(f'ERROR: {exec_value}')
                 return True
