@@ -2,7 +2,6 @@ import os
 from typing import List
 
 from zkay.config import cfg
-from zkay.utils.output_suppressor import output_suppressed
 from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent
 
@@ -22,18 +21,14 @@ def compile_circuit(circuit_dir: str, javacode: str):
     run_command(['javac', '-cp', f'{circuit_builder_jar}', jfile], cwd=circuit_dir)
 
     # Run jsnark to generate the circuit
-    with output_suppressed('jsnark'):
-        out, err = run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir)
-        print(out, err)
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, key='jsnark')
 
 
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     serialized_arg_str = [hex(arg)[2:] for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
-    with output_suppressed('jsnark'):
-        out, err = run_command(['java', '-Xms8196m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir)
-        print(out, err)
+    run_command(['java', '-Xms8196m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, key='jsnark')
 
 
 _class_template_str = '''\
