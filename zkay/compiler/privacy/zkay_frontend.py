@@ -5,6 +5,7 @@ import shutil
 import tempfile
 import uuid
 from copy import deepcopy
+from typing import Tuple
 
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.circuit_generation.backends.jsnark_generator import JsnarkGenerator
@@ -14,13 +15,21 @@ from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformer.zkay_contract_transformer import transform_ast
-from zkay.compiler.solidity.compiler import check_compilation
+from zkay.compiler.solidity.compiler import check_compilation, SolcException
 from zkay.config import cfg
 from zkay.utils.progress_printer import print_step
-from zkay.zkay_ast.ast import AST
+from zkay.zkay_ast.process_ast import get_processed_ast, ParseExeception, PreprocessAstException, TypeCheckException
 
 
-def compile_zkay(ast: AST, output_dir: str, filename: str):
+def compile_zkay(code: str, output_dir: str, filename: str) -> Tuple[CircuitGenerator, str]:
+    try:
+        ast = get_processed_ast(code)
+    except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException) as e:
+        if cfg.is_unit_test:
+            raise e
+        else:
+            exit(3)
+
     with print_step("Transforming zkay -> public contract"):
         ast, zkt = transform_ast(deepcopy(ast))
 
@@ -39,7 +48,8 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
     with print_step('Write public solidity code'):
         contract_filename = os.path.join(output_dir, filename)
         with open(contract_filename, 'w') as f:
-            f.write(ast.code())
+            solidity_code_output = ast.code()
+            f.write(solidity_code_output)
 
     with print_step("Dry-run solc compilation (libs)"):
         for f in [pki_filename, verifylib_filename]:
@@ -54,19 +64,20 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
         raise ValueError(f"Selected invalid backend {cfg.snark_backend}")
 
     # Generate manifest
-    manifest = {
-        Manifest.uuid: uuid.uuid1().hex,
-        Manifest.contract_filename: filename,
-        Manifest.proving_scheme: ps.name,
-        Manifest.pki_lib: f'{cfg.pki_contract_name}.sol',
-        Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
-        Manifest.verifier_names: {
-            f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract_type.code() for cc in
-            cg.circuits_to_prove
+    with print_step("Writing manifest file"):
+        manifest = {
+            Manifest.uuid: uuid.uuid1().hex,
+            Manifest.contract_filename: filename,
+            Manifest.proving_scheme: ps.name,
+            Manifest.pki_lib: f'{cfg.pki_contract_name}.sol',
+            Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
+            Manifest.verifier_names: {
+                f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract_type.code() for cc in
+                cg.circuits_to_prove
+            }
         }
-    }
-    with open(os.path.join(output_dir, 'manifest.json'), 'w') as f:
-        f.write(json.dumps(manifest))
+        with open(os.path.join(output_dir, 'manifest.json'), 'w') as f:
+            f.write(json.dumps(manifest))
 
     # Generate circuits and corresponding verification contracts
     cg.generate_circuits(import_keys=False)
@@ -76,7 +87,7 @@ def compile_zkay(ast: AST, output_dir: str, filename: str):
         for f in [contract_filename] + cg.get_verification_contract_filenames():
             check_compilation(f, show_errors=False)
 
-    return cg
+    return cg, solidity_code_output
 
 
 def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):

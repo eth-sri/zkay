@@ -54,12 +54,7 @@ def compile(file_location: str, d, count, get_binaries=False):
 
     # compile
     with time_measure('compileFull'):
-        try:
-            ast = get_processed_ast(code)
-        except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
-            exit(3)
-
-        cg = compile_zkay(ast, d, filename)
+        cg, _ = compile_zkay(code, d, filename)
         #package_zkay(file_location, cg)
 
     if count:
