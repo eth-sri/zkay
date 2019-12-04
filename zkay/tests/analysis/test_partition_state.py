@@ -1,9 +1,8 @@
-from unittest import TestCase
-
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 
 
-class TestPartitionState(TestCase):
+class TestPartitionState(ZkayTestCase):
 
     def test_same_partition(self):
         s = PartitionState()

@@ -1,7 +1,7 @@
 from parameterized import parameterized_class
 
 from zkay.examples.examples import all_examples
-from zkay.examples.test_examples import TestExamples
+from zkay.tests.utils.test_examples import TestExamples
 from zkay.zkay_ast.process_ast import get_processed_ast
 
 

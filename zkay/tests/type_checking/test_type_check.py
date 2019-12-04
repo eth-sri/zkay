@@ -1,9 +1,8 @@
-import unittest
-
 from parameterized import parameterized_class
 
 from zkay.examples.examples import all_examples, type_error_examples, final_use_before_write
-from zkay.examples.test_examples import TestExamples
+from zkay.tests.utils.test_examples import TestExamples
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.type_check.type_checker import type_check
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.process_ast import get_processed_ast
@@ -22,16 +21,16 @@ class TestTypeCheck(TestExamples):
 class TestNoTypeCheck(TestExamples):
 
     def test_no_type_check(self):
-        ast = get_processed_ast(self.example.code(), type_check=False)
+        ast = get_processed_ast(self.example.code(), type_check=False, solc_check=False)
         # type check
         with self.assertRaises(TypeException):
             type_check(ast)
 
 
-class TestFinal(unittest.TestCase):
+class TestFinal(ZkayTestCase):
 
     def test_final(self):
-        ast = get_processed_ast(final_use_before_write.code(), type_check=False)
+        ast = get_processed_ast(final_use_before_write.code(), type_check=False, solc_check=False)
 
         with self.assertRaises(TypeException):
             type_check(ast)

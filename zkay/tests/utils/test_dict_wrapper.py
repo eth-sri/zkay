@@ -1,9 +1,8 @@
-import unittest
-
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.dict_wrapper import DictWrapper
 
 
-class TestDictWrapoper(unittest.TestCase):
+class TestDictWrapoper(ZkayTestCase):
 
     def test_indexing(self):
         d = DictWrapper()

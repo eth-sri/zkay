@@ -79,8 +79,11 @@ class Config:
     def proof_len(self):
         return provingschemeparams[self.proving_scheme]['proof_len']
 
-    def should_use_hash(self, pub_arg_count: int):
-        return True
+    def should_use_hash(self, pub_arg_size: int):
+        if self.is_unit_test:
+            return pub_arg_size > 70
+        else:
+            return True
 
     def get_internal_name(self, fct) -> str:
         if fct.requires_verification_when_external:
@@ -90,16 +93,3 @@ class Config:
 
 
 cfg = Config()
-
-
-class UnitTesting:
-    def __init__(self):
-        super().__init__()
-        self.old_is_unit_testing = None
-
-    def __enter__(self):
-        self.old_is_unit_testing = cfg.is_unit_test
-        cfg.is_unit_test = True
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        cfg.is_unit_test = self.old_is_unit_testing

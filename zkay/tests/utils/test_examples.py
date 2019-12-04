@@ -1,11 +1,10 @@
-from unittest import TestCase
-
 from parameterized import parameterized_class
 
 from zkay.examples.examples import all_examples, Example
+from zkay.tests.zkay_unit_test import ZkayTestCase
 
 
-class TestExamples(TestCase):
+class TestExamples(ZkayTestCase):
     name: str = None
     example: Example = None
 

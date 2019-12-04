@@ -1,5 +1,4 @@
-from unittest import TestCase
-
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.helpers import lines_of_code
 
 example_code = """pragma solidity ^0.5.0;
@@ -28,7 +27,7 @@ contract MedStats {
 }"""
 
 
-class TestHelpers(TestCase):
+class TestHelpers(ZkayTestCase):
 
     def test_lines_of_code(self):
         loc = lines_of_code(example_code)

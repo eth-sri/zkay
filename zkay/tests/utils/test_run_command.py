@@ -1,10 +1,10 @@
 from subprocess import SubprocessError
-from unittest import TestCase
 
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.run_command import run_command
 
 
-class TestRunCommand(TestCase):
+class TestRunCommand(ZkayTestCase):
 
     def test_echo(self):
         output, error = run_command(['echo', 'abc'])

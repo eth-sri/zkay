@@ -1,14 +1,14 @@
 import json
-import unittest
 import warnings
 
 from zkay import my_logging
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.helpers import read_file
 
 default_log_file = my_logging.get_log_file(label='TestLogger')
 
 
-class TestLogger(unittest.TestCase):
+class TestLogger(ZkayTestCase):
     def test_logger(self):
         # ignore warnings
         warnings.simplefilter("ignore")

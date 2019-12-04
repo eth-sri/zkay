@@ -1,7 +1,7 @@
 from parameterized import parameterized_class
 
 from zkay.examples.examples import all_examples
-from zkay.examples.test_examples import TestExamples
+from zkay.tests.utils.test_examples import TestExamples
 from zkay.zkay_ast.ast import SourceUnit
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents

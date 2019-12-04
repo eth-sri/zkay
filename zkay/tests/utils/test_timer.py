@@ -1,8 +1,8 @@
 import json
 import time
-import unittest
 
 from zkay import my_logging
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.helpers import read_file
 from zkay.utils.timer import Timer, time_measure
 
@@ -15,7 +15,7 @@ def sleep(n):
 base_log_file = my_logging.get_log_file(label='TestTimer')
 
 
-class TestTimer(unittest.TestCase):
+class TestTimer(ZkayTestCase):
 
     def test_timer_decorator(self):
         log_file = base_log_file + '_decorator'

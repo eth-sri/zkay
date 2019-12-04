@@ -1,17 +1,16 @@
-from unittest import TestCase
-
 from parameterized import parameterized_class
 
 from zkay.examples.examples import simple, simple_storage, all_examples
-from zkay.examples.test_examples import TestExamples
+from zkay.tests.utils.test_examples import TestExamples
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.zkay_ast.ast import SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
     AssignmentStatement
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
-from zkay.zkay_ast.pointers.symbol_table import fill_symbol_table, link_identifiers
+from zkay.zkay_ast.pointers.symbol_table import fill_symbol_table, link_identifiers, get_builtin_globals
 
 
-class TestSimpleAST(TestCase):
+class TestSimpleAST(ZkayTestCase):
 
     def get_ast_elements(self, ast: SourceUnit):
         self.contract = ast.contracts[0]
@@ -31,7 +30,9 @@ class TestSimpleAST(TestCase):
 
         self.get_ast_elements(ast)
 
-        self.assertDictEqual(ast.names, {'Simple': self.contract.idf})
+        s = get_builtin_globals()
+        s.update({'Simple': self.contract.idf})
+        self.assertDictEqual(ast.names, s)
         self.assertDictEqual(self.contract.names, {'f': self.f.idf})
         self.assertDictEqual(self.body.names, {'x': self.decl.idf})
 
@@ -46,14 +47,17 @@ class TestSimpleAST(TestCase):
         self.assertEqual(self.identifier_expr.get_annotated_type(), self.decl.annotated_type)
 
 
-class TestSimpleStorageAST(TestCase):
+class TestSimpleStorageAST(ZkayTestCase):
 
     def test_fill_symbol_table(self):
         ast = build_ast(simple_storage.code())
         fill_symbol_table(ast)
 
         contract = ast.contracts[0]
-        self.assertDictEqual(ast.names, {'SimpleStorage': contract.idf})
+
+        s = get_builtin_globals()
+        s.update({'SimpleStorage': contract.idf})
+        self.assertDictEqual(ast.names, s)
 
     def test_link_identifiers(self):
         ast = build_ast(simple_storage.code())

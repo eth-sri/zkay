@@ -1,11 +1,11 @@
 import re
-from unittest import TestCase
 
 from parameterized import parameterized_class
 
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.examples.examples import analysis, all_examples
-from zkay.examples.test_examples import TestExamples
+from zkay.tests.utils.test_examples import TestExamples
+from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.zkay_ast.analysis.alias_analysis import alias_analysis
 from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
 from zkay.zkay_ast.ast import Statement, Comment, BlankLine
@@ -14,7 +14,7 @@ from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 
 
-class TestAliasAnalysisDetail(TestCase):
+class TestAliasAnalysisDetail(ZkayTestCase):
 
     def test_alias_analysis(self):
         # perform analysis
