@@ -26,6 +26,49 @@ def deep_copy(ast: AST, with_types=False, with_analysis=False):
 
 
 class DeepCopyVisitor(AstVisitor):
+    setting_later = {
+        # General fields
+        'line',
+        'column',
+        'modified_values',
+        'read_values',
+
+        # Specialized fields
+        'parent',
+        'names',
+        'had_privacy_annotation',
+        'annotated_type',
+        'statement',
+        'before_analysis',
+        'after_analysis',
+        'target',
+        'instantiated_key',
+        'function',
+        'is_private',
+        'has_side_effects',
+        'contains_inlined_function',
+
+        # Function stuff
+        'unambiguous_name',
+        'called_functions',
+        'is_recursive',
+        'has_static_body',
+        'can_be_private',
+        'requires_verification',
+        'requires_verification_when_external',
+        'has_side_effects',
+        'can_be_external',
+        'is_payable',
+        'original_body',
+        'original_code',
+
+        'pre_statements',
+        'is_final',
+
+        # For array children (ciphertext, key etc.)
+        'expr',
+        'value_type'
+    }
 
     def __init__(self, with_types, with_analysis):
         super().__init__('node-or-children')
@@ -40,37 +83,8 @@ class DeepCopyVisitor(AstVisitor):
             old_field = getattr(ast, arg_name)
             new_fields[arg_name] = self.copy_field(old_field)
 
-        setting_later = [
-            # General fields
-            'line',
-            'column',
-            'modified_values',
-            'read_values',
-
-            # Specialized fields
-            'parent',
-            'names',
-            'had_privacy_annotation',
-            'annotated_type',
-            'statement',
-            'before_analysis',
-            'after_analysis',
-            'target',
-            'instantiated_key',
-            'function',
-            'is_private',
-            'has_side_effects',
-            'contains_inlined_function',
-
-            'pre_statements',
-            'is_final',
-
-            # For array children (ciphertext, key etc.)
-            'expr',
-            'value_type'
-        ]
         for k in ast.__dict__.keys():
-            if k not in new_fields and k not in setting_later:
+            if k not in new_fields and k not in self.setting_later:
                 raise ValueError("Not copying", k)
         ast_copy = c(**new_fields)
 
