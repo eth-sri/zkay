@@ -164,6 +164,10 @@ class TypeCheckVisitor(AstVisitor):
         r.annotated_type.parent = r
         expr.parent = r
 
+        # set source location
+        r.line = expr.line
+        r.column = expr.column
+
         return r
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
