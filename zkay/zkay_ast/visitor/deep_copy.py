@@ -45,6 +45,7 @@ class DeepCopyVisitor(AstVisitor):
         'instantiated_key',
         'function',
         'is_private',
+        'evaluate_privately',
         'has_side_effects',
         'contains_inlined_function',
 
@@ -111,7 +112,7 @@ class DeepCopyVisitor(AstVisitor):
         ast_copy = self.visitChildren(ast)
         if self.with_types and ast.annotated_type is not None:
             ast_copy.annotated_type = ast.annotated_type.clone()
-        ast_copy.is_private = ast.is_private
+        ast_copy.evaluate_privately = ast.evaluate_privately
         return ast_copy
 
     def visitStatement(self, ast: Statement):

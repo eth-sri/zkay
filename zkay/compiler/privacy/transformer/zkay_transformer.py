@@ -226,7 +226,11 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (15) """
-        return self.visit(ast.expr)
+        if ast.expr.evaluate_privately:
+            return self.visit(ast.expr)
+        else:
+            assert ast.expr.annotated_type.is_public()
+            return self.gen.add_to_circuit_inputs(ast.expr)[1]
 
     def visitExpression(self, ast: Expression):
         """ Rule (16) """

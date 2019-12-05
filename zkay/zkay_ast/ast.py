@@ -143,7 +143,7 @@ class Expression(AST):
         self.statement: Statement = None
 
         self.has_side_effects = False
-        self.is_private = False
+        self.evaluate_privately = False
 
     def is_all_expr(self):
         return self == Expression.all_expr()

@@ -23,7 +23,7 @@ class ContainsPrivVisitor(AstVisitor):
         self.visitExpression(ast)
 
     def visitExpression(self, ast: Expression):
-        if ast.is_private:
+        if ast.evaluate_privately:
             self.contains_private = True
         self.visitAST(ast)
 

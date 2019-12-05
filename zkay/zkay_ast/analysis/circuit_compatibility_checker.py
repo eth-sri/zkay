@@ -1,8 +1,8 @@
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
-    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, Block, StatementList, Expression, FunctionTypeName
+    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, NumberLiteralExpr, \
+    BooleanLiteralExpr
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
-from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
 def check_circuit_compliance(ast):
@@ -20,9 +20,6 @@ def check_circuit_compliance(ast):
 
 
 class DirectCanBePrivateDetector(FunctionVisitor):
-    def visitBuiltinFunction(self, ast: BuiltinFunction):
-        self.visitChildren(ast)
-
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             if not ast.func.is_private:
@@ -91,33 +88,53 @@ class CircuitComplianceChecker(FunctionVisitor):
             # Cannot evaluate inside circuit -> never do it
             return False
 
+        if isinstance(expr, (BooleanLiteralExpr, NumberLiteralExpr)):
+            # TODO More generally, never evaluate constant expressions inside private expression outside circuit
+            #  (introduces unnecessary inputs)
+            return True
+
         # Could evaluate in circuit, use analysis to determine whether this would be better performance wise
         # (If this avoids unnecessary encryption operations it may be cheaper)
         return False
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
+        ast.evaluate_privately = True
         if ast.expr.annotated_type.is_public() and not self.should_evaluate_public_expr_in_circuit(ast.expr):
-            ast.is_private = True
-            self.visit(ast.expr)
+            self.priv_setter.set_evaluation(ast.expr, evaluate_privately=False)
         else:
             check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
-            self.priv_setter.visit(ast)
+            self.priv_setter.set_evaluation(ast.expr, evaluate_privately=True)
+        self.visit(ast.expr)
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:
             for arg in ast.args:
                 check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(arg)
-            self.priv_setter.visit(ast)
-        else:
-            self.visitChildren(ast)
+            self.priv_setter.set_evaluation(ast, evaluate_privately=True)
+        self.visitChildren(ast)
 
 
-class PrivateSetter(AstVisitor):
+class PrivateSetter(FunctionVisitor):
+    def __init__(self):
+        super().__init__()
+        self.evaluate_privately = None
+
+    def set_evaluation(self, ast: Expression, evaluate_privately: bool):
+        self.evaluate_privately = evaluate_privately
+        self.visit(ast)
+        self.evaluate_privately = None
+
     def visitExpression(self, ast: Expression):
-        ast.is_private = True
+        assert self.evaluate_privately is not None
+        ast.evaluate_privately = self.evaluate_privately
+        self.visitChildren(ast)
+
+    def visitReclassifyExpr(self, ast: ReclassifyExpr):
+        # this subtree will be set later
+        return
 
 
-class NonstaticOrIncompatibilityDetector(AstVisitor):
+class NonstaticOrIncompatibilityDetector(FunctionVisitor):
     def __init__(self):
         super().__init__()
         self.has_nonstatic_fcall = False
@@ -129,3 +146,12 @@ class NonstaticOrIncompatibilityDetector(AstVisitor):
             assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
             self.has_nonstatic_fcall |= not ast.func.target.has_static_body
             self.can_be_private &= ast.func.target.can_be_private
+        elif isinstance(ast.func, BuiltinFunction):
+            self.can_be_private &= ast.func.can_be_private()
+            if ast.func.is_eq() or ast.func.is_ite():
+                self.can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
+        self.visitChildren(ast)
+
+    def visitReclassifyExpr(self, ast: ReclassifyExpr):
+        # This subtree will be checked later
+        return
