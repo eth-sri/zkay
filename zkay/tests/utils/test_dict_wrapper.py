@@ -2,7 +2,7 @@ from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.dict_wrapper import DictWrapper
 
 
-class TestDictWrapoper(ZkayTestCase):
+class TestDictWrapper(ZkayTestCase):
 
     def test_indexing(self):
         d = DictWrapper()

@@ -144,6 +144,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
 class Web3TesterBlockchain(Web3Blockchain):
     def __init__(self) -> None:
+        self.eth_tester = None
         super().__init__()
         self.deploy_libraries(self.my_address)
         self.next_acc_idx = 1
@@ -151,7 +152,8 @@ class Web3TesterBlockchain(Web3Blockchain):
     def _create_w3_instance(self) -> Web3:
         genesis_overrides = {'gas_limit': int(max_gas_limit * 1.2)}
         custom_genesis_params = PyEVMBackend._generate_genesis_params(overrides=genesis_overrides)
-        w3 = Web3(Web3.EthereumTesterProvider(EthereumTester(backend=PyEVMBackend(genesis_parameters=custom_genesis_params))))
+        self.eth_tester = EthereumTester(backend=PyEVMBackend(genesis_parameters=custom_genesis_params))
+        w3 = Web3(Web3.EthereumTesterProvider(self.eth_tester))
         w3.eth.defaultAccount = w3.eth.accounts[0]
         return w3
 

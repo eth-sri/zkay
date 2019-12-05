@@ -36,6 +36,13 @@ class Runtime:
     __prover = None
 
     @staticmethod
+    def reset():
+        Runtime.__blockchain = None
+        Runtime.__crypto = None
+        Runtime.__keystore = None
+        Runtime.__prover = None
+
+    @staticmethod
     def blockchain() -> ZkayBlockchainInterface:
         if Runtime.__blockchain is None:
             Runtime.__blockchain = Web3TesterBlockchain()
