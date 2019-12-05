@@ -64,13 +64,21 @@ class ContractSimulator:
         if loc in self.state_values:
             return self.state_values[loc]
         else:
+            if self.is_external is None and count == 0 and is_encrypted:
+                count = cfg.cipher_len
+
             if count == 0:
                 val = val_constructor(self.conn.req_state_var(self.contract_handle, name, *indices))
             else:
                 val = val_constructor([self.conn.req_state_var(self.contract_handle, name, *indices, i) for i in range(count)])
             if is_encrypted:
                 val = CipherValue(val)
-            self.state_values[loc] = val
+
+            if self.is_external is not None:
+                self.state_values[loc] = val
+            elif is_encrypted:
+                # Decrypt encrypted values if get state was called standalone
+                val = self.crypto.dec(val, self.keystore.sk(self.user_addr))[0]
             return val
 
     @staticmethod
