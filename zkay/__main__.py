@@ -57,8 +57,8 @@ def compile(file_location: str, d, count, get_binaries=False):
         cg, _ = compile_zkay(code, d, filename)
         #package_zkay(file_location, cg)
 
-    if count:
-        my_logging.data('nStatements', count_statements(ast))
+    #if count:
+    #    my_logging.data('nStatements', count_statements(ast))
 
 
 if __name__ == '__main__':

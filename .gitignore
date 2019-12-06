@@ -3,7 +3,11 @@ build/
 
 # Ignoring Python virtual environments
 .venv/
+venv
 
 # Misc
 .idea
 __pycache__
+
+*.egg-info
+dist
