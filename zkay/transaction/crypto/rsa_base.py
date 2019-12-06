@@ -39,17 +39,6 @@ class PersistentLocals(object):
         return self._locals
 
 
-class StaticRandomFunc:
-    def __init__(self, rnd_bytes) -> None:
-        self.rnd_bytes = rnd_bytes
-
-    def get_random_bytes(self, n):
-        assert len(self.rnd_bytes) >= n
-        ret = self.rnd_bytes[:n]
-        self.rnd_bytes = self.rnd_bytes[n:]
-        return ret
-
-
 class RSACrypto(ZkayCryptoInterface):
     default_exponent = 65537 # == 0x10001
 

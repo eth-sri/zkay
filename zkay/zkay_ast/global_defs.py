@@ -38,7 +38,7 @@ class GlobalDefs:
 
     msg_struct: StructDefinition = StructDefinition(
         Identifier('<msg>'), [
-            VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('sender')),
+            VariableDeclaration([], AnnotatedTypeName(TypeName.address_payable_type()), Identifier('sender')),
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('value')),
         ]
     )
@@ -46,7 +46,7 @@ class GlobalDefs:
 
     block_struct: StructDefinition = StructDefinition(
         Identifier('<block>'), [
-            VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('coinbase')),
+            VariableDeclaration([], AnnotatedTypeName(TypeName.address_payable_type()), Identifier('coinbase')),
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('difficulty')),
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('gaslimit')),
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('number')),
@@ -58,7 +58,7 @@ class GlobalDefs:
     tx_struct: StructDefinition = StructDefinition(
         Identifier('<tx>'), [
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('gasprice')),
-            VariableDeclaration([], AnnotatedTypeName.all(TypeName.address_payable_type()), Identifier('origin')),
+            VariableDeclaration([], AnnotatedTypeName(TypeName.address_payable_type()), Identifier('origin')),
         ]
     )
     set_parents(tx_struct)
