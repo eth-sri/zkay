@@ -105,7 +105,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
                 with Guarded(self.gen, guard_var, False):
                     ast.else_branch = self.visit(ast.else_branch)
         else:
-            ast.condition = self.expr_trafo.visit_children(ast.condition)
+            ast.condition = self.expr_trafo.visit(ast.condition)
             ast.then_branch = self.visit(ast.then_branch)
             if ast.else_branch is not None:
                 ast.else_branch = self.visit(ast.else_branch)
