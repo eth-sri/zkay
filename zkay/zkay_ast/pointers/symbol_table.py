@@ -124,7 +124,7 @@ class SymbolTableLinker(AstVisitor):
             assert isinstance(t, UserDefinedTypeName)
             if t.target is None:
                 t = t.clone()
-                t.parent = ast.expr.target
+                t.parent = ast
                 self.visit(t)
             if t.target is not None:
                 ast.target = t.target.names[ast.member.name].parent
