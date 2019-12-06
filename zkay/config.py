@@ -3,8 +3,18 @@ import math
 import os
 from typing import Dict
 
+import solcx
+
 from zkay.compiler.privacy.proving_schemes.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
+
+# Set solc version (and automatically install if missing)
+SOLC_VERSION = 'v0.5.13'
+if SOLC_VERSION not in solcx.get_installed_solc_versions():
+    assert SOLC_VERSION in solcx.get_available_solc_versions()
+    solcx.install_solc(SOLC_VERSION, allow_osx=True)
+solcx.set_solc_version(SOLC_VERSION)
+assert SOLC_VERSION in solcx.get_installed_solc_versions()
 
 
 class Config:
