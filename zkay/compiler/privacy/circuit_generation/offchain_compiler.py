@@ -51,6 +51,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitSourceUnit(self, ast: SourceUnit):
         contracts = self.visit_list(ast.contracts)
+        is_payable = ast.contracts[0].constructor_definitions and ast.contracts[0].constructor_definitions[0].is_payable
+        val_param = ', value=0' if is_payable else ''
+        val_arg = ', value=value' if is_payable else ''
+
         return dedent(f'''\
         ###########################################
         ## THIS CODE WAS GENERATED AUTOMATICALLY ##
@@ -68,8 +72,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
 
         ''') + contracts + (dedent(f'''
-        def deploy(*args, user: str = ContractSimulator.my_address().val):
-            return {self.visit(ast.contracts[0].idf)}.deploy(os.path.dirname(os.path.realpath(__file__)), *args, user=user)
+        def deploy(*args, user: str = ContractSimulator.my_address().val{val_param}):
+            return {self.visit(ast.contracts[0].idf)}.deploy(os.path.dirname(os.path.realpath(__file__)), *args, user=user{val_arg})
 
 
         def connect(address: str, *, user: str = ContractSimulator.my_address().val):
@@ -98,10 +102,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         # State values: if key not in dict -> pull value from chain on read, otherwise retrieve cached value
         name = self.visit(ast.idf)
 
+        is_payable = ast.constructor_definitions and ast.constructor_definitions[0].is_payable
+        val_param = ', value=0' if is_payable else ''
+        val_arg = ', value=value' if is_payable else ''
+
         if not ast.constructor_definitions:
-            deploy_cmd = f'c.conn.deploy(project_dir, c.user_addr, \'{ast.idf.name}\', [], [])'
+            deploy_cmd = f'c.conn.deploy(project_dir, c.user_addr, \'{ast.idf.name}\', [], []{val_arg})'
         else:
-            deploy_cmd = f'c.constructor(*constructor_args)'
+            deploy_cmd = f'c.constructor(*constructor_args{val_arg})'
 
         return indent(dedent(f'''\
             def __init__(self, project_dir: str, user_addr: AddressValue):
@@ -115,7 +123,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 return c
 
             @staticmethod
-            def deploy(project_dir: str, *constructor_args, user: str) -> '{name}':
+            def deploy(project_dir: str, *constructor_args, user: str{val_param}) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
                 c.contract_handle = {deploy_cmd}
                 return c
