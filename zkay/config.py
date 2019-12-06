@@ -12,6 +12,7 @@ class Config:
         self.config_dir = os.path.dirname(os.path.realpath(__file__))
 
         self.is_unit_test = False
+        self.use_circuit_cache_during_testing_with_encryption = True
 
         # proving scheme to use for nizk proof [gm17]
         self.proving_scheme = 'gm17'

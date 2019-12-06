@@ -33,18 +33,22 @@ class StateValueAssertion(TransactionAssertion):
         self.expected = expected_value
 
     def check_assertion(self, test: TestCase, user_terminals: Dict[str, Any]):
+        # Replace user names by the corresponding address
+        indices = [user_terminals[user].user_addr if user in user_terminals else user for user in self.indices]
+
         user = next(iter(user_terminals.values())) if self.user is None else user_terminals[self.user]
-        actual_val = user.get_state(self.name, *self.indices, is_encrypted=self.should_decrypt)
+        actual_val = user.get_state(self.name, *indices, is_encrypted=self.should_decrypt)
         test.assertEqual(self.expected, actual_val)
 
 
 class Transaction:
-    def __init__(self, user: str, name: str, *args: Any, amount: Optional[int] = None):
+    def __init__(self, user: str, name: str, *args: Any, amount: Optional[int] = None, expected_exception: Optional[Exception] = None):
         super().__init__()
         self.user = user
         self.name = name
         self.args = args
         self.amount = amount
+        self.expected_exception = expected_exception
 
 
 class Scenario:
@@ -94,8 +98,8 @@ class ScenarioBuilder:
         self.scenario._deployment_transaction = t
         return t
 
-    def add_transaction(self, fname: str, args: List,  user: str, amount=None):
-        t = Transaction(user, fname, *args, amount=amount)
+    def add_transaction(self, fname: str, args: List,  user: str, amount=None, expected_exception=None):
+        t = Transaction(user, fname, *args, amount=amount, expected_exception=expected_exception)
         self.scenario._transactions_or_assertions.append(t)
         return t
 

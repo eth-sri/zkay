@@ -8,7 +8,7 @@ from parameterized import parameterized_class
 from zkay.compiler.privacy.zkay_frontend import compile_zkay
 from zkay.config import cfg
 from zkay.examples.scenario import TransactionAssertion, Transaction
-from zkay.examples.scenarios import all_scenarios
+from zkay.examples.scenarios import all_scenarios, enc_scenarios
 from zkay.tests.utils.test_examples import TestScenarios
 from zkay.transaction.runtime import Runtime
 
@@ -18,22 +18,23 @@ output_dir = os.path.join(script_dir, 'output')
 
 
 class TestOffchainBase(TestScenarios):
-    def get_directory(self):
-        d = os.path.join(output_dir, self.name)
+    def get_directory(self, suffix: str, use_cache: bool):
+        d = os.path.join(output_dir, f'{self.name}{suffix}')
 
-        if os.path.isdir(d):
+        if os.path.isdir(d) and not use_cache:
             shutil.rmtree(d)
-        os.mkdir(d)
-        with open(os.path.join(d, '__init__.py'), 'w'):
-            pass
+        if not os.path.isdir(d):
+            os.mkdir(d)
+            with open(os.path.join(d, '__init__.py'), 'w'):
+                pass
 
         return d
 
-    def run_scenario(self):
+    def run_scenario(self, *, suffix: str = '', use_cache: bool = False):
         Runtime.reset()
 
         c = self.scenario.code()
-        d = self.get_directory()
+        d = self.get_directory(suffix, use_cache)
 
         # Compile contract
         cg, code = compile_zkay(c, d, self.scenario.filename)
@@ -42,7 +43,7 @@ class TestOffchainBase(TestScenarios):
 
         # Import dynamically generated offchain code
         sys.path.append(output_dir)
-        oc = importlib.import_module(f'{self.name}.contract')
+        oc = importlib.import_module(f'{self.name}{suffix}.contract')
         importlib.reload(oc)
         sys.path.pop()
 
@@ -85,13 +86,17 @@ class TestOffchainBase(TestScenarios):
                 trans_or_assert.check_assertion(self, users)
             else:
                 assert isinstance(trans_or_assert, Transaction)
-                # Execute transaction
-                transact = getattr(users[trans_or_assert.user], trans_or_assert.name)
-                if trans_or_assert.amount is None:
-                    receipt = transact(*trans_or_assert.args)
-                else:
-                    receipt = transact(*trans_or_assert.args, value=trans_or_assert.amount)
-                self.assertIsNotNone(receipt)
+                try:
+                    # Execute transaction
+                    transact = getattr(users[trans_or_assert.user], trans_or_assert.name)
+                    args = [users[user].user_addr.val if user in users else user for user in trans_or_assert.args]
+                    if trans_or_assert.amount is None:
+                        receipt = transact(*args)
+                    else:
+                        receipt = transact(*args, value=trans_or_assert.amount)
+                    self.assertIsNotNone(receipt)
+                except Exception as e:
+                    self.assertEqual(trans_or_assert.expected_exception, type(e))
 
 
 @parameterized_class(('name', 'scenario'), all_scenarios)
@@ -103,26 +108,25 @@ class TestOffchainDummyEnc(TestOffchainBase):
         cfg.crypto_backend = old
 
 
-# TODO only use real encryption for very simple scenarios
-@parameterized_class(('name', 'scenario'), all_scenarios)
+@parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainRsaPkcs15Enc(TestOffchainBase):
     def test_offchain_simulation_rsa_pkcs_15(self):
         old = cfg.crypto_backend
         old_sh = cfg.should_use_hash
         cfg.crypto_backend = 'rsa_pkcs1_5'
         cfg.should_use_hash = lambda _: True
-        self.run_scenario()
+        self.run_scenario(suffix='RsaPkcs15', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
         cfg.crypto_backend = old
         cfg.should_use_hash = old_sh
 
 
-# @parameterized_class(('name', 'scenario'), all_scenarios)
+# @parameterized_class(('name', 'scenario'), enc_scenarios)
 # class TestOffchainRsaOaepEnc(TestOffchainBase):
 #     def test_offchain_simulation_rsa_oaep(self):
 #         old = cfg.crypto_backend
 #         old_sh = cfg.should_use_hash
 #         cfg.crypto_backend = 'rsa_oaep'
 #         cfg.should_use_hash = lambda _: True
-#         self.run_scenario()
+#         self.run_scenario(suffix='RsaOaep', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 #         cfg.crypto_backend = old
 #         cfg.should_use_hash = old_sh
