@@ -98,7 +98,8 @@ class ScenarioBuilder:
         self.scenario._deployment_transaction = t
         return t
 
-    def add_transaction(self, fname: str, args: List,  user: str, amount=None, expected_exception=None):
+    def add_transaction(self, fname: str, args: Optional[List] = None, *, user: str, amount=None, expected_exception=None):
+        args = [] if args is None else args
         t = Transaction(user, fname, *args, amount=amount, expected_exception=expected_exception)
         self.scenario._transactions_or_assertions.append(t)
         return t

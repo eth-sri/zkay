@@ -1,0 +1,99 @@
+pragma solidity ^0.5.0;
+
+contract CrowdFunding {
+    final address owner;
+    final uint goal;
+    final uint auto_close_time;
+
+    // Funding state
+    bool success;
+    bool closed;
+
+    uint@owner pot_balance;
+    bool pending;
+    uint@owner new_pledge;
+
+    mapping (address!x => uint@x) funds;
+    mapping (address!x => uint@x) pledged;
+
+    constructor(uint _goal, uint _max_duration) public payable {
+        owner = me;
+        goal = _goal;
+        pot_balance = msg.value;
+        pledged[owner] = msg.value;
+        auto_close_time = block.timestamp + _max_duration;
+
+        // Block stats
+        address payable coinbase = block.coinbase;
+        uint difficulty = block.difficulty;
+        uint gaslimit = block.gaslimit;
+        uint number = block.number;
+        uint gasprice = tx.gasprice;
+    }
+
+    function has_ended() internal view returns(bool) {
+        return closed || auto_close_time <= block.timestamp;
+    }
+
+    // Add funds which can be used to pledge money
+    function fund() public payable {
+        require(tx.origin == msg.sender);
+        funds[me] = funds[me] + msg.value;
+    }
+
+    // Retrieve unpledged funds
+    function retrieve_unpledged_funds() public {
+        require(tx.origin == msg.sender);
+        uint@me amount = funds[me];
+        funds[me] = 0;
+        msg.sender.transfer(reveal(amount, all));
+    }
+
+    // Pay secret amount of money into the pot
+    function pledge(uint@me amount) public {
+        require(!pending && !has_ended());
+        require(reveal(funds[me] >= amount, all));
+
+        funds[me] = funds[me] - amount;
+        pledged[me] = pledged[me] + amount;
+
+        new_pledge = reveal(amount, owner);
+        pending = true;
+    }
+
+    function accept_pledge() public {
+        require(me == owner);
+        require(pending && !has_ended());
+
+        pot_balance = pot_balance + new_pledge;
+        pending = false;
+        if (reveal(pot_balance >= goal, all)) {
+            success = true;
+            closed = true;
+        }
+    }
+
+    // Terminate funding early
+    function refund_everyone() public {
+        require(me == owner);
+        require(!closed);
+        closed = true;
+        pending = false;
+    }
+
+    function request_refund() public {
+        require(has_ended() && !success);
+        uint@me amount = pledged[me];
+        pledged[me] = 0;
+        msg.sender.transfer(reveal(amount, all));
+    }
+
+    // Withdraw money after successful funding
+    function collect_pot() public {
+        require(me == owner);
+        require(closed && success);
+        uint@me amount = pot_balance;
+        pot_balance = 0;
+        msg.sender.transfer(reveal(amount, all));
+    }
+}

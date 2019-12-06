@@ -2,6 +2,7 @@ import importlib
 import os
 import shutil
 import sys
+from contextlib import nullcontext
 
 from parameterized import parameterized_class
 
@@ -86,7 +87,8 @@ class TestOffchainBase(TestScenarios):
                 trans_or_assert.check_assertion(self, users)
             else:
                 assert isinstance(trans_or_assert, Transaction)
-                try:
+                exception = trans_or_assert.expected_exception
+                with nullcontext() if exception is None else self.assertRaises(exception):
                     # Execute transaction
                     transact = getattr(users[trans_or_assert.user], trans_or_assert.name)
                     args = [users[user].user_addr.val if user in users else user for user in trans_or_assert.args]
@@ -95,8 +97,6 @@ class TestOffchainBase(TestScenarios):
                     else:
                         receipt = transact(*args, value=trans_or_assert.amount)
                     self.assertIsNotNone(receipt)
-                except Exception as e:
-                    self.assertEqual(trans_or_assert.expected_exception, type(e))
 
 
 @parameterized_class(('name', 'scenario'), all_scenarios)
