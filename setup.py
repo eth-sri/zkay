@@ -1,15 +1,14 @@
 from setuptools import setup, find_packages
+test_package = 'zkay.tests'
 
 setup(
     name='zkay',
     version='0.2',
-    packages=find_packages(),
+    packages=find_packages(exclude=[f'{test_package}.compiler.output', f'{test_package}.compiler.output.*',
+                                    f'{test_package}.transaction.output', f'{test_package}.transaction.output.*']),
     package_data={
         'zkay.examples': ['**/*.sol', 'scenarios/*.py'],
         'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'run_snark'],
-
-        'zkay.compiler.privacy.legacy': ['pki.sol'],
-        'zkay.compiler.zokrates': ['verify_libs.sol'],
     },
     url='',
     license='',
