@@ -104,8 +104,7 @@ if __name__ == '__main__':
         _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_file)))
         with open(os.path.join(output_dir, f'{input_file.name}.fake.sol'), 'w') as f:
             f.write(fake_code)
-
-    if a.type_check:
+    elif a.type_check:
         code = read_file(str(input_file))
 
         try:
