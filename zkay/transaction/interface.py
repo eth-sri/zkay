@@ -4,20 +4,13 @@ from abc import ABCMeta, abstractmethod
 from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
-from zkay.config import cfg
+from zkay.config import cfg, debug_print
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, PrivateKeyValue, CipherValue, \
     RandomnessValue, KeyPair
 from zkay.utils.timer import time_measure
-
-__debug_print = True
-
-
-def debug_print(*args):
-    if __debug_print:
-        print(*args)
 
 
 def parse_manifest(project_dir: str):

@@ -6,7 +6,7 @@ from typing import List
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.circuit_generation.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
-from zkay.config import cfg
+from zkay.config import cfg, debug_print
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.ast import AST
@@ -37,7 +37,7 @@ class CircuitGenerator(metaclass=ABCMeta):
 
         # Generate proof circuit code
         c_count = len(self.circuits_to_prove)
-        print(f'Compiling {c_count} circuits...')
+        debug_print(f'Compiling {c_count} circuits...')
         with time_measure('circuit_compilation', True):
             if cfg.is_unit_test:
                 modified = list(map(self._generate_zkcircuit, self.circuits_to_prove))
@@ -53,7 +53,7 @@ class CircuitGenerator(metaclass=ABCMeta):
             pass
         else:
             # Generate keys in parallel
-            print(f'Generating keys for {c_count} circuits...')
+            debug_print(f'Generating keys for {c_count} circuits...')
             with time_measure('key_generation', True):
                 counter = Value('i', 0)
                 if self.parallel_keygen and not cfg.is_unit_test:
@@ -93,7 +93,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         self._generate_keys(circuit)
         with finish_counter.get_lock():
             finish_counter.value += 1
-            print(f'Generated keys for circuit '
+            debug_print(f'Generated keys for circuit '
                   f'\'{circuit.verifier_contract_type.code()}\' [{finish_counter.value}/{c_count}]')
 
     def _generate_offchain_code(self):

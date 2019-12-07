@@ -1,12 +1,14 @@
 import contextlib
 from enum import Enum
 
+from zkay.config import debug_print
+
 
 @contextlib.contextmanager
 def print_step(name):
-    print(f'{name}... ', end='', flush=True)
+    debug_print(f'{name}... ', end='', flush=True)
     yield
-    print('done')
+    debug_print('done')
 
 
 class TermColor(Enum):

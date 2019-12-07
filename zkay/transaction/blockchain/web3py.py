@@ -11,7 +11,7 @@ from web3 import Web3
 
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
-from zkay.config import cfg
+from zkay.config import cfg, debug_print
 from zkay.transaction.interface import Manifest, ZkayBlockchainInterface
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 
@@ -98,7 +98,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         if tx_receipt['status'] == 0:
             raise Exception("Transaction failed")
-        print(f"Consumed gas: {tx_receipt['gasUsed']}")
+        debug_print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
     def _deploy(self, manifest, sender: str, contract: str, *actual_args, value: Optional[int] = None):

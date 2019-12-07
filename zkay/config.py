@@ -8,6 +8,7 @@ import solcx
 from zkay.compiler.privacy.proving_schemes.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
 
+
 # Set solc version (and automatically install if missing)
 SOLC_VERSION = 'v0.5.13'
 if SOLC_VERSION not in solcx.get_installed_solc_versions():
@@ -15,6 +16,13 @@ if SOLC_VERSION not in solcx.get_installed_solc_versions():
     solcx.install_solc(SOLC_VERSION, allow_osx=True)
 solcx.set_solc_version(SOLC_VERSION)
 assert SOLC_VERSION in solcx.get_installed_solc_versions()
+
+__debug_print = True
+
+
+def debug_print(*args, **kwargs):
+    if __debug_print and not cfg.is_unit_test:
+        print(*args, **kwargs)
 
 
 class Config:
@@ -26,7 +34,7 @@ class Config:
 
         # proving scheme to use for nizk proof [gm17]
         self.proving_scheme = 'gm17'
-        # prover backend [zokrates, jsnark]
+        # prover backend [jsnark]
         self.snark_backend = 'jsnark'
         # encryption algorithm [dummy, rsa_pkcs1_5, rsa_oaep]
         self.crypto_backend = 'dummy'
