@@ -7,14 +7,50 @@ private smart contracts.
 ## Warning
 
 This is a prototype implementation not intended for use in production. In
-particular, it uses "dummy" encryption `Enc(v,R,k)=v+k`, which is **insecure**.
+particular, it uses "dummy" encryption `Enc(v,R,k)=v+k` by default, which is **insecure**.
 
 ## Install
 
+First make sure to install the Java Development Kit: `openjdk-{>=8}-jdk (on debian derivatives)` and `python >= 3.7`.
+
+### Using PIP
+
+To build the python package:
+
+```bash
+python3 setup.py sdist
+```
+
+Variant 1: Install zkay in default package location
+```bash
+pip3 install dist/zkay-{VERSION}.tar.gz
+```
+
+Variant 2: Install zkay in new virtual environment
+
+```bash
+# Create new venv
+python3 -m venv zkay-venv
+
+# Source venv
+source zkay-venv/bin/activate
+
+# Install zkay
+(zkay-venv) pip3 install dist/zkay-{VERSION}.tar.gz
+```
+
+From now on this readme assumes that your shell is in the python environment in which you installed zkay.
+So if you used variant 2, you have to activate the venv (once per shell) before issuing any other zkay commands or using
+`contract.py` (contract interface generated during compilation):
+```bash
+source zkay-venv/bin/activate
+(zkay-venv)  ...
+```
+
 ### Using Docker
 
-The simplest way to run zkay is using docker. After installing docker, the docker image can be run
-as follows:
+Alternatively you can also use docker to install and run zkay.
+First install docker, then you can run the image as follows:
 
 ```bash
 /path/to/zkay$ ./zkay-docker.sh
@@ -26,87 +62,61 @@ within the docker container. You can run `zkay-docker.sh` also from any other di
 In this case, `d` is mounted as `/d_host` inside the container.
 This allows you to operate on files from your host machine.
 
-### Directly On Host
-
-As an alternative to docker, you may install zkay on your host directly. To this end, follow
-the instructions in the [Dockerfile](./install/Dockerfile) marked by `To install on host`.
-
-Below we show how to test your zkay installation, and how to type-check and
-compile zkay contracts from _within the docker container_. However, the
-respective commands can similarly be _run directly on the host_ after having
-installed zkay properly.
-
 ## Unit Tests
 
 To run all unit tests of zkay, run:
-
 ```bash
-# run docker container
-/path/to/zkay$ ./zkay-docker.sh
-# run tests within docker
-(base) root@ae09e165bd19:/zkay_host$ cd src
-(base) root@ae09e165bd19:/zkay_host$ make test
+(zkay-venv) python3 -m unittest discover --verbose zkay
 ```
-
-If all tests pass, your zkay installation is likely set up correctly.
-Note that running all unit tests *may take several hours*.
 
 ## Type-Check Contracts
 
-To type-check a zkay file `test.zkay` in `/path/to/contract` without compiling it, run:
+To type-check a zkay file `test.zkay` without compiling it, run:
 
 ```bash
-# run docker container
-/path/to/contract$ /path/to/zkay-docker.sh
-# run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay/src/main.py test.zkay --type-check
+(zkay-venv) python3 -m zkay --type-check test.zkay
+```
+
+## Fake solidity transformation
+
+To output a source-location-preserving public solidity
+contract which corresponds to `test.zkay` but with all privacy features removed, run:
+
+```bash
+(zkay-venv) python3 -m zkay --output-fake-solidity --output "<output_dir>" test.zkay
 ```
 
 ## Compile Contracts
 
-To compile and type-check a zkay file `test.zkay` in `/path/to/contract`, run:
+To compile a zkay file `test.zkay`
 
 ```bash
-# run docker container
-/path/to/contract$ /path/to/zkay-docker.sh
-# run compilation
-(base) root@ff2ddb8da49c:/contract_host$ python3 /zkay/src/main.py test.zkay
+(zkay-venv) python3 -m zkay --output "<output_dir>" test.zkay
 ```
 
-The output comprises the transformed zkay contract, the contracts for proof verification, 
-and the proof circuits in ZoKrates' domain-specific language. By default, it is placed
-in the current working directory. A different output directory can be specified using
-the `--output` command line argument.
+This performs the following steps
+- Type checking
+- Transformation from zkay -> solidity
+- NIZK proof circuit compilation and key generation
+- Generation of `contract.py` (interface code which does automatic transaction transformation to interact with the zkay contract)
 
-Note that the compilation *may take a couple of minutes*.
+## Interact with contract
 
-## Transform and Run Transactions
-
-To run a specific sequence of transactions (i.e., a _scenario_) for the `exam`
-example contract, run:
+Assuming you have previously compiled a file `test.zkay` with --output "output_dir"
 
 ```bash
-# run docker container
-/path/to/eval-ccs-2019$ ../zkay-docker.sh
-# compile contract (omit if already compiled)
-(base) root@ff2ddb8da49c:/eval-ccs-2019_host$ python3 "$ZKAYSRC/main.py" --output ./examples/exam/compiled ./examples/exam/exam.sol
-# transform scenario
-(base) root@ff2ddb8da49c:/eval-ccs-2019_host$ ./generate-scenario.sh ./examples/exam
-# run scenario
-(base) root@ff2ddb8da49c:/eval-ccs-2019_host$ ./examples/exam/scenario/runner.sh
+(zkay-venv) cd output_dir
+(zkay-venv) python contract.py
+>>> ...
 ```
 
-To transform and run your own transactions, you may follow analogous steps. In
-particular, see [scenario.py](./eval-ccs2019/examples/exam/scenario.py) for the
-specification of the scenario ran by the above code.
-
-## Run Evaluation from CCS 2019
-
-To reproduce the evaluation results from the paper, run:
-
-```bash
-/path/to/zkay/eval-ccs2019$ ./zkay-eval-docker.sh
-```
-
-Note that running this command *may take several hours* and requires docker
-to be installed.
+You are now in a python shell where you can issue the following commands:
+- `help()`: Get a list of all contract functions with arguments
+- `user1, user2, ..., userN = create_dummy_accounts(N)`: Get addresses of pre-funded test accounts for experimentation (only supported in eth-tester backend)
+- `handle = deploy(*constructor_args, user: str)`: Issue a deployment transaction for the contract from the account `user` (address literal).
+- `handle = connect(contract_addr: str, user: str)`: Create a handle to interact with the deployed contract at address `contract_addr` from account `user`
+- `handle.address`: Get the address of the deployed contract corresponding to this handle
+- `handle.some_func(*args[, value: int])`: The account which created handle issues a zkay transaction which calls the zkay contract function `some_func` with the given arguments.
+Encryption, transaction transformation and proof generation happen automatically. If the function is payable, the additional argument `value` can be used to set the wei amount to be transferred.
+- `handle.get_state(name: str, *indices, is_encrypted: bool=False)`: Retrieve the current value of state variable `name[indices[0]][indices[1]][...]`.
+If the state variable is not owned by @all, you can specify is_encrypted=True to get the decrypted value.
