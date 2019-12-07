@@ -1,10 +1,8 @@
-from typing import List
-
 from parameterized import parameterized_class
 
+from zkay.examples.scenario import Scenario
+from zkay.examples.example_scenarios import all_scenarios
 from zkay.examples.examples import all_examples, Example
-from zkay.examples.scenario import TransactionAssertion
-from zkay.examples.scenarios import Scenario, all_scenarios
 from zkay.tests.zkay_unit_test import ZkayTestCase
 
 
