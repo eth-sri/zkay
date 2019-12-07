@@ -4,8 +4,7 @@ test_package = 'zkay.tests'
 setup(
     name='zkay',
     version='0.2',
-    packages=find_packages(exclude=[f'{test_package}.compiler.output', f'{test_package}.compiler.output.*',
-                                    f'{test_package}.transaction.output', f'{test_package}.transaction.output.*']),
+    packages=find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*']),
     package_data={
         'zkay.examples': ['**/*.sol', 'scenarios/*.py'],
         'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'run_snark'],
