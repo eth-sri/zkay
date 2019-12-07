@@ -6,7 +6,7 @@ from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterf
 from zkay.transaction.blockchain import Web3TesterBlockchain
 from zkay.transaction.crypto.dummy import DummyCrypto
 from zkay.transaction.keystore import SimpleKeystore
-from zkay.transaction.prover import ZokratesProver, JsnarkProver
+from zkay.transaction.prover import JsnarkProver
 
 
 def get_crypto_class(name: str):
@@ -21,9 +21,7 @@ def get_crypto_class(name: str):
 
 
 def get_prover_class(name: str):
-    if name == 'zokrates':
-        return ZokratesProver
-    elif name == 'jsnark':
+    if name == 'jsnark':
         return JsnarkProver
     else:
         raise ValueError(f'Invalid prover backend {name}')

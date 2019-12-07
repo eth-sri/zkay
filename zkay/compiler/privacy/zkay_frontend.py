@@ -9,7 +9,6 @@ from typing import Tuple
 
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.circuit_generation.backends.jsnark_generator import JsnarkGenerator
-from zkay.compiler.privacy.circuit_generation.backends.zokrates_generator import ZokratesGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
@@ -56,9 +55,7 @@ def compile_zkay(code: str, output_dir: str, filename: str) -> Tuple[CircuitGene
             check_compilation(f, show_errors=False)
 
     ps = ProvingSchemeGm17()
-    if cfg.snark_backend == 'zokrates':
-        cg = ZokratesGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
-    elif cfg.snark_backend == 'jsnark':
+    if cfg.snark_backend == 'jsnark':
         cg = JsnarkGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
     else:
         raise ValueError(f"Selected invalid backend {cfg.snark_backend}")
