@@ -58,7 +58,7 @@ class ZkayTransformer(AstTransformerVisitor):
             gen.verifier_contract_filename = import_filename
 
         out_filenames.append(import_filename)
-        out_ext_vars_decls.append(StateVariableDeclaration(AnnotatedTypeName(c_type), ['constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0))))
+        out_ext_vars_decls.append(StateVariableDeclaration(AnnotatedTypeName(c_type), ['public', 'constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0))))
 
     def include_verification_contracts(self, c: ContractDefinition, ext_var_decls: List[StateVariableDeclaration]):
         import_filenames = []

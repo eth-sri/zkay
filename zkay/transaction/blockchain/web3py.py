@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from abc import abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List, Union
 
 from eth_tester import PyEVMBackend, EthereumTester
 from web3 import Web3
@@ -14,6 +14,8 @@ from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, debug_print
 from zkay.transaction.interface import Manifest, ZkayBlockchainInterface
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
+from zkay.utils.helpers import get_contract_names, without_extension
+from zkay.utils.progress_printer import colored_print, TermColor
 
 max_gas_limit = 10000000
 
@@ -32,7 +34,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
         jout = compile_solidity_json(sol_filename, libs, optimizer_runs=10)['contracts'][solp.name][contract_name]
         return {
             'abi': json.loads(jout['metadata'])['output']['abi'],
-            'bin': jout['evm']['bytecode']['object']
+            'bin': jout['evm']['bytecode']['object'],
+            'deployed_bin': jout['evm']['deployedBytecode']['object']
         }
 
     def deploy_contract(self, sender: str, contract_interface, *args, value: Optional[int] = None):
@@ -102,18 +105,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
         return tx_receipt
 
     def _deploy(self, manifest, sender: str, contract: str, *actual_args, value: Optional[int] = None):
-        filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
-        with open(filename) as f:
-            c = f.read()
-        ext_contracts = self._pki_verifier_addresses(sender, manifest)
-        for key, val in ext_contracts.items():
-            c = c.replace(f'{key}(0)', f'{key}({val.val})')
-
-        filename += '.inst.sol'
-        with open(filename, 'w') as f:
-            f.write(c)
+        filename = self.__hardcode_external_contracts(os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename]),
+                                                      self._pki_verifier_addresses(sender, manifest))
         cout = self.compile_contract(filename, contract)
-
         return self.deploy_contract(sender, cout, *actual_args, value=value)
 
     def _deploy_libraries(self, sender: str):
@@ -130,7 +124,6 @@ class Web3Blockchain(ZkayBlockchainInterface):
         self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
         self.lib_addresses = {
             f'BN256G2': self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2')).address,
-            f'Pairing': self.deploy_contract(sender, self.compile_contract(verify_sol, 'Pairing')).address
         }
         shutil.rmtree(tmpdir)
 
@@ -140,6 +133,64 @@ class Web3Blockchain(ZkayBlockchainInterface):
         return self.w3.eth.contract(
             address=address, abi=cout['abi']
         )
+
+    def _verify_contract_integrity(self, address: str, sol_filename: str, *,
+                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False):
+        if contract_name is None:
+            contract_name = get_contract_names(sol_filename)[0]
+        actual_byte_code = self.__normalized_hex(self.w3.eth.getCode(address))
+        cout = self.compile_contract(sol_filename, contract_name, libs=libraries)
+        expected_byte_code = self.__normalized_hex(cout['deployed_bin'])
+
+        if is_library:
+            # https://github.com/ethereum/solidity/issues/7101
+            expected_byte_code = expected_byte_code[:2] + self.__normalized_hex(address) + expected_byte_code[42:]
+
+        if actual_byte_code != expected_byte_code:
+            raise ValueError(f'Deployed contract at address {address} does not match local contract {sol_filename}')
+        debug_print(f'Contract@{address} matches {sol_filename[sol_filename.rfind("/")+1:]}:{contract_name}')
+
+    def _verify_library_integrity(self, libraries: List[Tuple[str, str]], contract_with_libs_addr: str, sol_with_libs_filename: str) -> Dict[str, str]:
+        cname = get_contract_names(sol_with_libs_filename)[0]
+        actual_code = self.__normalized_hex(self.w3.eth.getCode(contract_with_libs_addr))
+        code_with_placeholders = self.__normalized_hex(self.compile_contract(sol_with_libs_filename, cname)['deployed_bin'])
+
+        addresses = {}
+        for lib_name, lib_sol in libraries:
+            # Compute placeholder according to
+            # https://solidity.readthedocs.io/en/v0.5.13/using-the-compiler.html#using-the-commandline-compiler
+            hash = self.w3.solidityKeccak(['string'], [f'{lib_sol[lib_sol.rfind("/") + 1:]}:{lib_name}'])
+            placeholder = f'__${self.__normalized_hex(hash)[:34]}$__'
+
+            # Retrieve concrete address in deployed code at placeholder offset in local code and verify library contract integrity
+            lib_address_offset = code_with_placeholders.find(placeholder)
+            if lib_address_offset != -1:
+                lib_address = self.w3.toChecksumAddress(actual_code[lib_address_offset:lib_address_offset+40])
+                self._verify_contract_integrity(lib_address, lib_sol, contract_name=lib_name, is_library=True)
+                addresses[lib_name] = lib_address
+        return addresses
+
+    def _verify_zkay_contract_integrity(self, address: str, sol_file: str, pki_verifier_addresses):
+        sol_file = self.__hardcode_external_contracts(sol_file, pki_verifier_addresses)
+        self._verify_contract_integrity(address, sol_file)
+
+    @staticmethod
+    def __hardcode_external_contracts(input_filename, pki_verifier_addresses):
+        with open(input_filename) as f:
+            c = f.read()
+        for key, val in pki_verifier_addresses.items():
+            c = c.replace(f'{key}(0)', f'{key}({val.val})')
+
+        output_filename = f'{without_extension(input_filename)}.inst.sol'
+        with open(output_filename, 'w') as f:
+            f.write(c)
+        return output_filename
+
+    def __normalized_hex(self, val: Union[str, bytes]) -> str:
+        if not isinstance(val, str):
+            val = val.hex()
+        val = val[2:] if val.startswith('0x') else val
+        return val.lower()
 
 
 class Web3TesterBlockchain(Web3Blockchain):

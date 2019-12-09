@@ -21,7 +21,7 @@ class SolcException(Exception):
     pass
 
 
-def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimizer_runs: int = -1, output_selection: Tuple = ('metadata', 'evm.bytecode')):
+def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimizer_runs: int = -1, output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode')):
     solp = pathlib.Path(sol_filename)
     json_in = {
         'language': 'Solidity',

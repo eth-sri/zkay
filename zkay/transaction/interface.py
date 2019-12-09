@@ -4,12 +4,14 @@ from abc import ABCMeta, abstractmethod
 from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
+from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
 from zkay.config import cfg, debug_print
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, PrivateKeyValue, CipherValue, \
     RandomnessValue, KeyPair
+from zkay.utils.progress_printer import colored_print, TermColor
 from zkay.utils.timer import time_measure
 
 
@@ -77,8 +79,69 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         return self._deploy(parse_manifest(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), value=value)
 
     def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
-        debug_print(f'Connecting to contract {contract}@{contract_address}')
-        return self._connect(parse_manifest(project_dir), contract, contract_address.val)
+        manifest = parse_manifest(project_dir)
+
+        # Check if zkay version matches
+        if manifest[Manifest.zkay_version] != cfg.zkay_version:
+            with colored_print(TermColor.WARNING):
+                print(f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
+                      f'Compilation or integrity check with deployed bytecode might fail due to version differences')
+
+        # Set correct solc version
+        old_solc = cfg.solc_version
+        cfg.override_solc(manifest[Manifest.solc_version])
+
+        # Compile zkay file, generate circuits and verification contracts (but don't generate new prover/verification keys and manifest)
+        compile_zkay_file(os.path.join(project_dir, manifest[Manifest.zkay_contract_filename]), project_dir, import_keys=True)
+
+        debug_print(f'Connecting to contract {contract}@{contract_address.val}')
+        contract_on_chain = self._connect(manifest, contract, contract_address.val)
+
+        pki_verifier_addresses = {}
+
+        # Check pki integrity
+        pki_address = self._req_state_var(contract_on_chain, f'{cfg.pki_contract_name}_inst', sender=self.my_address.val)
+        pki_verifier_addresses[cfg.pki_contract_name] = AddressValue(pki_address)
+        self._verify_contract_integrity(pki_address, os.path.join(project_dir, manifest[Manifest.pki_lib]))
+
+        # Check verifier contract and library integrity
+        verifier_names = manifest[Manifest.verifier_names].values()
+        if verifier_names:
+            some_vname = next(iter(verifier_names))
+            libraries = [('BN256G2', os.path.join(project_dir, manifest[Manifest.verify_lib]))]
+            some_vcontract = self._req_state_var(contract_on_chain, f'{some_vname}_inst', sender=self.my_address.val)
+            libs = self._verify_library_integrity(libraries, some_vcontract, os.path.join(project_dir, f'{some_vname}.sol'))
+
+            for verifier in verifier_names:
+                v_address = self._req_state_var(contract_on_chain, f'{verifier}_inst', sender=self.my_address.val)
+                pki_verifier_addresses[verifier] = AddressValue(v_address)
+                self._verify_contract_integrity(v_address, os.path.join(project_dir, f'{verifier}.sol'), libraries=libs)
+
+        # Check zkay contract integrity
+        self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, manifest[Manifest.contract_filename]), pki_verifier_addresses)
+        cfg.override_solc(old_solc)
+
+        with colored_print(TermColor.OKGREEN):
+            debug_print(f'OK: Bytecode on blockchain matches local zkay contract')
+
+        return contract_on_chain
+
+    @abstractmethod
+    def _verify_contract_integrity(self, address: str, sol_filename: str, *,
+                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False):
+        pass
+
+    @abstractmethod
+    def _verify_library_integrity(self, libraries: List[Tuple[str, str]], contract_with_libs_addr: str, sol_with_libs_filename: str) -> Dict[str, str]:
+        """
+        Checks if the libraries linked in contract_with_libs match library_sol and returns the addresses of the library contracts
+        :param libraries: = List of (library name, library.sol) tuples
+        :return Dict of library name -> address for all libs from libraries which occurred in contract@contract_with_libs_addr
+        """
+        pass
+
+    def _verify_zkay_contract_integrity(self, address: str, sol_file: str, pki_verifier_addresses):
+        pass
 
     @abstractmethod
     def _my_address(self) -> AddressValue:
