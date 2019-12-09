@@ -5,6 +5,7 @@ from typing import List, Tuple
 from antlr4 import FileStream
 
 from zkay.config import cfg
+from zkay.utils.helpers import get_contract_names
 
 examples_dir = os.path.dirname(os.path.abspath(__file__))
 code_dir = os.path.join(examples_dir, 'code')
@@ -26,9 +27,9 @@ class Example:
         return FileStream(self.file_location)
 
     def name(self):
-        c = self.code()
-        m = re.search('contract ([^ {]*)', c)
-        return m.group(1)
+        names = get_contract_names(self.file_location)
+        assert len(names) == 1
+        return names[0]
 
     def normalized(self):
         if self.name() == 'Empty':
