@@ -3,26 +3,25 @@ import math
 import os
 from typing import Dict
 
-import solcx
-
 from zkay.compiler.privacy.proving_schemes.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
 
-
-# Set solc version (and automatically install if missing)
-SOLC_VERSION = 'v0.5.13'
-if SOLC_VERSION not in solcx.get_installed_solc_versions():
-    assert SOLC_VERSION in solcx.get_available_solc_versions()
-    solcx.install_solc(SOLC_VERSION, allow_osx=True)
-solcx.set_solc_version(SOLC_VERSION)
-assert SOLC_VERSION in solcx.get_installed_solc_versions()
-
 __debug_print = True
-
-
 def debug_print(*args, **kwargs):
     if __debug_print and not cfg.is_unit_test:
         print(*args, **kwargs)
+
+
+def _init_solc(version):
+    if not version.startswith('v0.5'):
+        raise ValueError('Currently only solc 0.5 is supported.')
+
+    import solcx
+    if version not in solcx.get_installed_solc_versions():
+        assert version in solcx.get_available_solc_versions()
+        solcx.install_solc(version, allow_osx=True)
+    solcx.set_solc_version(version)
+    assert version in solcx.get_installed_solc_versions()
 
 
 class Config:
@@ -65,6 +64,18 @@ class Config:
             if not hasattr(self, arg):
                 raise ValueError(f'Tried to override non-existing config value {arg}')
             setattr(self, arg, ast.literal_eval(val))
+
+    @property
+    def zkay_version(self):
+        return '0.2'
+
+    @property
+    def solc_version(self):
+        return 'v0.5.13'
+
+    @staticmethod
+    def override_solc(new_version):
+        _init_solc(new_version)
 
     @property
     def zk_data_var_name(self):
@@ -112,3 +123,4 @@ class Config:
 
 
 cfg = Config()
+_init_solc(cfg.solc_version)
