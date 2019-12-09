@@ -49,14 +49,15 @@ class CircuitGenerator(metaclass=ABCMeta):
                                       if t or not all(map(os.path.exists, self._get_vk_and_pk_paths(circ)))]
 
         if import_keys:
-            # Import TODO
-            pass
+            for path in self.get_all_key_paths():
+                if not os.path.exists(path):
+                    raise RuntimeError("Zkay contract import failed: Missing keys")
         else:
             # Generate keys in parallel
             debug_print(f'Generating keys for {c_count} circuits...')
             with time_measure('key_generation', True):
-                counter = Value('i', 0)
                 if self.parallel_keygen and not cfg.is_unit_test:
+                    counter = Value('i', 0)
                     with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool:
                         pool.map(self._generate_keys_par, modified_circuits_to_prove)
                 else:

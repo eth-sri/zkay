@@ -14,6 +14,8 @@ from zkay.tests.utils.test_examples import TestScenarios
 from zkay.transaction.runtime import Runtime
 
 # get relevant paths
+from zkay.utils.helpers import without_extension
+
 script_dir = os.path.dirname(os.path.realpath(__file__))
 output_dir = os.path.join(script_dir, 'output')
 
@@ -38,7 +40,7 @@ class TestOffchainBase(TestScenarios):
         d = self.get_directory(suffix, use_cache)
 
         # Compile contract
-        cg, code = compile_zkay(c, d, self.scenario.filename)
+        cg, code = compile_zkay(c, d, without_extension(self.scenario.filename))
         self.assertIsNotNone(cg)
         self.assertIsNotNone(code)
 

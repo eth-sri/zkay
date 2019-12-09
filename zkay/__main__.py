@@ -1,20 +1,16 @@
 import argparse
 import os
-import re
 from pathlib import Path
 
-from zkay.config import cfg
-
 from zkay import my_logging
-from zkay.compiler.privacy.zkay_frontend import compile_zkay, package_zkay
+from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
 from zkay.compiler.solidity.compiler import SolcException
+from zkay.config import cfg
 from zkay.my_logging.log_context import log_context
-from zkay.utils.helpers import read_file, lines_of_code
-from zkay.utils.progress_printer import print_step, TermColor, colored_print
-from zkay.utils.timer import time_measure
+from zkay.utils.helpers import read_file
+from zkay.utils.progress_printer import TermColor, colored_print
 from zkay.zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception, \
     get_parsed_ast_and_fake_code
-from zkay.zkay_ast.visitor.statement_counter import count_statements
 
 
 def parse_arguments():
@@ -37,28 +33,6 @@ def parse_arguments():
     a = parser.parse_args()
 
     return a
-
-
-def compile(file_location: str, d, count, get_binaries=False):
-    code = read_file(file_location)
-
-    # log specific features of compiled program
-    my_logging.data('originalLoc', lines_of_code(code))
-    m = re.search(r'\/\/ Description: (.*)', code)
-    if m:
-        my_logging.data('description', m.group(1))
-    m = re.search(r'\/\/ Domain: (.*)', code)
-    if m:
-        my_logging.data('domain', m.group(1))
-    _, filename = os.path.split(file_location)
-
-    # compile
-    with time_measure('compileFull'):
-        cg, _ = compile_zkay(code, d, filename)
-        #package_zkay(file_location, cg)
-
-    #if count:
-    #    my_logging.data('nStatements', count_statements(ast))
 
 
 if __name__ == '__main__':
@@ -106,7 +80,6 @@ if __name__ == '__main__':
             f.write(fake_code)
     elif a.type_check:
         code = read_file(str(input_file))
-
         try:
             ast = get_processed_ast(code)
         except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
@@ -114,7 +87,7 @@ if __name__ == '__main__':
     else:
         # compile
         with log_context('inputfile', os.path.basename(a.input)):
-            compile(str(input_file), str(output_dir), a.count)
+            compile_zkay_file(str(input_file), str(output_dir))
 
     with colored_print(TermColor.OKGREEN):
         print("Finished successfully")
