@@ -21,8 +21,13 @@ class SolcException(Exception):
     pass
 
 
-def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimizer_runs: int = -1, output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode')):
+def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimizer_runs: int = -1,
+                          output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode'),
+                          output_dir: str = None):
     solp = pathlib.Path(sol_filename)
+    if output_dir is None:
+        output_dir = solp.absolute().parent
+
     json_in = {
         'language': 'Solidity',
         'sources': {
@@ -51,7 +56,7 @@ def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimi
         }
 
     cwd = os.getcwd()
-    os.chdir(solp.absolute().parent)
+    os.chdir(output_dir)
     ret = compile_standard(json_in, allow_paths='.')
     os.chdir(cwd)
     return ret
@@ -135,11 +140,4 @@ def compile_solidity_code(code: str, output_directory: str):
     with open(file_path, "w") as f:
         f.write(code)
 
-    return compile_solidity(output_directory, source_name)
-
-
-def compile_solidity(path: str, source_file: str, output_directory: str = None):
-    if not output_directory:
-        output_directory = path
-    output_directory = os.path.abspath(output_directory)
-    return run_command([solc, '--bin', '--overwrite', '-o', output_directory, source_file], path)
+    return compile_solidity_json(file_path)
