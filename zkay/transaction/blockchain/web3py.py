@@ -112,20 +112,19 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
     def _deploy_libraries(self, sender: str):
         # Compile and deploy global libraries
-        tmpdir = tempfile.mkdtemp()
-        pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
-        with open(pki_sol, 'w') as f:
-            f.write(library_contracts.get_pki_contract())
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
+            with open(pki_sol, 'w') as f:
+                f.write(library_contracts.get_pki_contract())
 
-        verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
-        with open(verify_sol, 'w') as f:
-            f.write(library_contracts.get_verify_libs_code())
+            verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
+            with open(verify_sol, 'w') as f:
+                f.write(library_contracts.get_verify_libs_code())
 
-        self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
-        self.lib_addresses = {
-            f'BN256G2': self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2')).address,
-        }
-        shutil.rmtree(tmpdir)
+            self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
+            self.lib_addresses = {
+                f'BN256G2': self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2')).address,
+            }
 
     def _connect(self, manifest, contract: str, address: str) -> Any:
         filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])

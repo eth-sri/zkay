@@ -9,11 +9,7 @@ from solcx import compile_standard
 from solcx.exceptions import SolcError
 
 from zkay.config import debug_print
-from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import get_code_error_msg
-
-# could also be 'solc'
-solc = 'solc'
 
 
 class SolcException(Exception):
@@ -25,9 +21,6 @@ def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimi
                           output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode'),
                           output_dir: str = None):
     solp = pathlib.Path(sol_filename)
-    if output_dir is None:
-        output_dir = solp.absolute().parent
-
     json_in = {
         'language': 'Solidity',
         'sources': {
@@ -56,8 +49,8 @@ def compile_solidity_json(sol_filename: str, libs: Optional[Dict] = None, optimi
         }
 
     cwd = os.getcwd()
-    os.chdir(output_dir)
-    ret = compile_standard(json_in, allow_paths='.')
+    os.chdir(solp.absolute().parent)
+    ret = compile_standard(json_in, allow_paths='.', output_dir=output_dir)
     os.chdir(cwd)
     return ret
 
@@ -123,21 +116,17 @@ def check_compilation(filename: str, show_errors: bool = False, code: str = None
 
 def check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str):
     # dump fake solidity code into temporary file
-    _, file = tempfile.mkstemp('.sol')
-    path = pathlib.Path(file)
-    with open(path, 'w') as f:
+    with tempfile.NamedTemporaryFile('w', suffix='.sol') as f:
         f.write(fake_solidity_code)
-    check_compilation(file, True, fake_solidity_code, zkay_code)
-    os.remove(str(path))
+        f.flush()
+        check_compilation(f.name, True, fake_solidity_code, zkay_code)
 
 
 def compile_solidity_code(code: str, output_directory: str):
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    source_name = 'code.sol'
-    file_path = os.path.join(output_directory, source_name)
-    with open(file_path, "w") as f:
+    with tempfile.NamedTemporaryFile('w', suffix='.sol') as f:
         f.write(code)
-
-    return compile_solidity_json(file_path)
+        f.flush()
+        return compile_solidity_json(f.name, output_dir=output_directory)

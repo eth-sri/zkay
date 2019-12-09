@@ -29,7 +29,6 @@ class TestCompileSolidity(TestCase):
         compile_output = compile_solidity_code(simple_storage, output_dir)
         self.assertIsNotNone(compile_output)
 
-    #def test_compile_with_import(self):
-        # TODO working/output dir
-    #    compile_output = compile_solidity_json(os.path.join(others_dir, 'AddUser.sol'), output_dir=output_dir)
-    #    self.assertIsNotNone(compile_output)
+    def test_compile_with_import(self):
+        compile_output = compile_solidity_json(os.path.join(others_dir, 'AddUser.sol'), output_dir=output_dir)
+        self.assertIsNotNone(compile_output)

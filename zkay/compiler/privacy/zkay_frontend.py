@@ -136,19 +136,18 @@ def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):
             if not p.exists():
                 raise FileNotFoundError()
 
-        tmpdir = tempfile.mkdtemp()
-        shutil.copyfile(infile, os.path.join(tmpdir, infile.name))
-        shutil.copyfile(manifestfile, os.path.join(tmpdir, manifestfile.name))
-        for p in filenames:
-            pdir = os.path.join(tmpdir, p.relative_to(root).parent)
-            if not os.path.exists(pdir):
-                os.makedirs(pdir)
-            shutil.copyfile(p.absolute(), os.path.join(tmpdir, p.relative_to(root)))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            shutil.copyfile(infile, os.path.join(tmpdir, infile.name))
+            shutil.copyfile(manifestfile, os.path.join(tmpdir, manifestfile.name))
+            for p in filenames:
+                pdir = os.path.join(tmpdir, p.relative_to(root).parent)
+                if not os.path.exists(pdir):
+                    os.makedirs(pdir)
+                shutil.copyfile(p.absolute(), os.path.join(tmpdir, p.relative_to(root)))
 
-        output_basename = infile.name.replace('.sol', '')
+            output_basename = infile.name.replace('.sol', '')
 
-        shutil.make_archive(os.path.join(cg.output_dir, output_basename), 'zip', tmpdir)
-        shutil.rmtree(tmpdir)
+            shutil.make_archive(os.path.join(cg.output_dir, output_basename), 'zip', tmpdir)
 
         os.rename(os.path.join(cg.output_dir, f'{output_basename}.zip'), os.path.join(cg.output_dir, f'{output_basename}.zkpkg'))
 
