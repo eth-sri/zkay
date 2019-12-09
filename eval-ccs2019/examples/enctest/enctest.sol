@@ -1,9 +1,15 @@
 pragma solidity ^0.5.0;
 
-contract enctest {
-    uint v;
-    function test(uint@me val) public {
-        uint@me vals2 = val;
-        //v = reveal(val + 2, all);
+contract EncTest {
+    final address owner;
+    uint@owner v;
+
+    constructor() public {
+        owner = msg.sender;
+    }
+
+    function test(uint val) public {
+        require(owner == me);
+        v = v + val + 2;
     }
 }
