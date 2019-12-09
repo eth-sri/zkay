@@ -35,3 +35,5 @@ class TestCompiler(TestExamples):
         self.assertIsNotNone(cg)
         self.assertIsNotNone(code)
         self.assertIn(self.example.name(), code)
+
+        shutil.rmtree(d)

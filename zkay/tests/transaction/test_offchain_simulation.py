@@ -100,6 +100,9 @@ class TestOffchainBase(TestScenarios):
                         receipt = transact(*args, value=trans_or_assert.amount)
                     self.assertIsNotNone(receipt)
 
+        if not use_cache:
+            shutil.rmtree(d)
+
 
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainDummyEnc(TestOffchainBase):
