@@ -1,0 +1,99 @@
+variables:
+  ZKAY_SKIP_REAL_ENC_TESTS: "1"
+
+default:
+  # To run locally:
+  # $ sudo docker run -it -v=$(pwd):/zkay --workdir=/zkay --rm ethsrilab/zkay-prerequisites:version-1.1
+  image: ethsrilab/zkay-prerequisites:version-1.2
+
+
+# BUILD
+
+build_grammar:
+  stage: build
+  script:
+    - cd zkay/solidity_parser && antlr4 -o generated -visitor -Dlanguage=Python3 Solidity.g4 && cd ../../
+  artifacts:
+    paths:
+      - zkay/solidity_parser/generated/*.py
+    expire_in: 1 hour
+
+build_libsnark:
+  stage: build
+  script:
+    - bash -c "[ -d 'libsnark' ] || git clone --recursive https://zkay-gitlab-ci-runner:${ZKAY_LIBSNARK_TOKEN}@gitlab.inf.ethz.ch/OU-VECHEV/zkay-libsnark.git libsnark"
+    - cd libsnark && git fetch && git reset --hard origin/master && bash -c './build.sh $(grep -c ^processor /proc/cpuinfo)' && cd ../
+    - cp libsnark/build/libsnark/zkay_interface/run_snark zkay/jsnark_interface/run_snark
+  artifacts:
+    paths:
+      - zkay/jsnark_interface/run_snark
+    expire_in: 1 hour
+  cache:
+    key: "zkay_libsnark_cache"
+    paths:
+      - libsnark/
+
+build_prepare_venv:
+  stage: build
+  script:
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip3 install -r install/requirements.txt
+  artifacts:
+    paths:
+      - venv/
+    expire_in: 1 hour
+
+# TEST
+
+test_compilation:
+  stage: test
+  dependencies:
+    - build_grammar
+    - build_libsnark
+    - build_prepare_venv
+  script:
+    - virtualenv venv
+    - source venv/bin/activate
+    - python3 -m unittest discover --failfast --verbose zkay.tests.compiler
+
+test_transactions:
+  stage: test
+  dependencies:
+    - build_grammar
+    - build_libsnark
+    - build_prepare_venv
+  script:
+    - virtualenv venv
+    - source venv/bin/activate
+    - python3 -m unittest discover --failfast --verbose zkay.tests.transaction
+
+test_other:
+  stage: test
+  dependencies:
+    - build_grammar
+    - build_libsnark
+    - build_prepare_venv
+  script:
+    - virtualenv venv
+    - source venv/bin/activate
+    - python3 -m unittest discover --failfast --verbose zkay.tests.analysis
+    - python3 -m unittest discover --failfast --verbose zkay.tests.parser
+    - python3 -m unittest discover --failfast --verbose zkay.tests.type_checking
+    - python3 -m unittest discover --failfast --verbose zkay.tests.utils
+    - python3 -m unittest discover --failfast --verbose zkay.tests.zkay_ast
+
+# DEPLOY
+
+deploy_tag:
+  stage: deploy
+  only:
+    - tags
+  dependencies:
+    - build_grammar
+    - build_libsnark
+  script:
+    - python3 setup.py sdist
+  artifacts:
+    paths:
+      - dist/zkay-*.tar.gz
