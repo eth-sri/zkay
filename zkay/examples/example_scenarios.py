@@ -27,5 +27,9 @@ def collect_scenarios(directory: str):
     return scenario
 
 
+def get_scenario(name: str):
+    return [load_scenario(scenario_dir, name)]
+
+
 enc_scenarios = [load_scenario(scenario_dir, 'enctest.py')]
 all_scenarios = collect_scenarios(scenario_dir)

@@ -4,7 +4,7 @@ import shutil
 from parameterized import parameterized_class
 
 from zkay.compiler.privacy.zkay_frontend import compile_zkay
-from zkay.examples.examples import all_examples
+from zkay.examples.examples import all_examples, get_code_example
 from zkay.tests.utils.test_examples import TestExamples
 
 from zkay.utils.helpers import without_extension
@@ -14,6 +14,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 output_dir = os.path.join(script_dir, 'output')
 
 
+#@parameterized_class(('name', 'example'), get_code_example('MultipleReturnValues.sol'))
 @parameterized_class(('name', 'example'), all_examples)
 class TestCompiler(TestExamples):
 

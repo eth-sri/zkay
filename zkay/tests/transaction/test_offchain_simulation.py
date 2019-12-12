@@ -10,7 +10,7 @@ from parameterized import parameterized_class
 from zkay.compiler.privacy.zkay_frontend import compile_zkay
 from zkay.config import cfg
 from zkay.examples.scenario import TransactionAssertion, Transaction
-from zkay.examples.example_scenarios import all_scenarios, enc_scenarios
+from zkay.examples.example_scenarios import all_scenarios, enc_scenarios, get_scenario
 from zkay.tests.utils.test_examples import TestScenarios
 from zkay.transaction.runtime import Runtime
 
@@ -105,6 +105,7 @@ class TestOffchainBase(TestScenarios):
             shutil.rmtree(d)
 
 
+#@parameterized_class(('name', 'scenario'), get_scenario('multipleret.py'))
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainDummyEnc(TestOffchainBase):
     def test_offchain_simulation_dummy(self):

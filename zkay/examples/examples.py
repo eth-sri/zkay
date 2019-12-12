@@ -68,5 +68,10 @@ def collect_examples(directory: str):
     return examples
 
 
+def get_code_example(name: str):
+    e = Example(os.path.join(code_dir, name))
+    return [(e.name(), e)]
+
+
 all_examples = collect_examples(code_dir)
 type_error_examples = collect_examples(type_error_dir)
