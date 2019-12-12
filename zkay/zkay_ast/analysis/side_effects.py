@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Union
 
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, AST, \
-    Expression, Statement, IdentifierExpr, MemberAccessExpr, IndexExpr, StateVariableDeclaration, BuiltinFunction
+    Expression, Statement, IdentifierExpr, MemberAccessExpr, IndexExpr, StateVariableDeclaration, BuiltinFunction, TupleExpr
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -58,16 +58,32 @@ class DirectModificationDetector(FunctionVisitor):
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         return self.visitAssignmentExpr(ast)
 
+    @staticmethod
+    def _get_location(expr: LocationExpr):
+        assert isinstance(expr, LocationExpr)
+        if isinstance(expr, IdentifierExpr):
+            mod_value = (expr.target, None)
+        elif isinstance(expr, MemberAccessExpr):
+            mod_value = (expr.expr.target, expr.member.clone())
+        else:
+            assert isinstance(expr, IndexExpr)
+            # over approximation (since index can be dynamic)
+            mod_value = (expr.arr.target, None)
+        return mod_value
+
+    def collect_modified_values(self, target: Union[Expression, Statement], expr: Expression):
+        if isinstance(expr, TupleExpr):
+            for elem in expr.elements:
+                self.collect_modified_values(target, elem)
+        else:
+            mod_value = self._get_location(expr)
+            if mod_value in target.modified_values:
+                raise TypeException(f'Undefined behavior due multiple different assignments to the same target in tuple assignment', expr)
+            target.modified_values.add(mod_value)
+
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         self.visitAST(ast)
-        if isinstance(ast.lhs, IdentifierExpr):
-            ast.modified_values.add((ast.lhs.target, None))
-        elif isinstance(ast.lhs, MemberAccessExpr):
-            ast.modified_values.add((ast.lhs.expr.target, ast.lhs.member.clone()))
-        else:
-            assert isinstance(ast.lhs, IndexExpr)
-            # over approximation (since index can be dynamic)
-            ast.modified_values.add((ast.lhs.arr.target, None))
+        self.collect_modified_values(ast, ast.lhs)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         ast.read_values.clear()

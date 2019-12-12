@@ -10,7 +10,8 @@ from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
     Comment, FunctionDefinition, NumberLiteralExpr, CastExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, ConstructorDefinition, SliceExpr, LabeledBlock
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, ConstructorDefinition, SliceExpr, LabeledBlock, \
+    TupleExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -213,9 +214,8 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Declare return variable if necessary
         if isinstance(ast, FunctionDefinition) and ast.return_parameters:
-            assert len(ast.return_parameters) == 1  # for now
-            stmts += Comment.comment_list("Declare return variable", [
-                Identifier(cfg.return_var_name).decl_var(ast.return_parameters[0].annotated_type)
+            stmts += Comment.comment_list("Declare return variables", [
+                Identifier(f'{cfg.return_var_name}_{idx}').decl_var(ast.return_parameters[idx].annotated_type) for idx in range(len(ast.return_parameters))
             ])
 
         # Deserialize out array (if any)
@@ -243,7 +243,7 @@ class ZkayTransformer(AstTransformerVisitor):
         # Add return statement at the end if necessary
         # (was previously replaced by assignment to return_var by ZkayStatementTransformer)
         if circuit.has_return_var:
-            stmts.append(ReturnStatement(IdentifierExpr(cfg.return_var_name)))
+            stmts.append(ReturnStatement(TupleExpr([IdentifierExpr(f'{cfg.return_var_name}_{idx}') for idx in range(len(ast.return_parameters))])))
 
         ast.body.statements[:] = stmts
 
@@ -299,7 +299,11 @@ class ZkayTransformer(AstTransformerVisitor):
                      IdentifierExpr(cfg.zk_out_name), NumberLiteralExpr(circuit.out_size)]
 
         if int_fct.return_parameters:
-            in_call = Identifier(cfg.return_var_name).decl_var(int_fct.return_parameters[0].annotated_type, internal_call)
+            ret_var_idfs = [Identifier(f'{cfg.return_var_name}_{idx}') for idx in range(len(int_fct.return_parameters))]
+            stmts += Comment.comment_list("Declare return variables", [
+                ret_idf.decl_var(int_fct.return_parameters[idx].annotated_type) for idx, ret_idf in enumerate(ret_var_idfs)
+            ])
+            in_call = TupleExpr([IdentifierExpr(idf.clone()) for idf in ret_var_idfs]).assign(internal_call)
         else:
             in_call = ExpressionStatement(internal_call)
         stmts.append(in_call)
@@ -318,6 +322,6 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Add return statement at the end if necessary
         if int_fct.return_parameters:
-            stmts.append(ReturnStatement(IdentifierExpr(cfg.return_var_name)))
+            stmts.append(ReturnStatement(TupleExpr([IdentifierExpr(idf.clone()) for idf in ret_var_idfs])))
 
         ext_fct.body.statements = stmts

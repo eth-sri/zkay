@@ -153,6 +153,13 @@ class BuildASTVisitor(SolidityVisitor):
 
         return StringLiteralExpr(s)
 
+    def visitTupleExpr(self, ctx:SolidityParser.TupleExprContext):
+        contents = ctx.expr.children[1:-1]
+        elements = []
+        for idx in range(0, len(contents), 2):
+            elements.append(self.visit(contents[idx]))
+        return ast.TupleExpr(elements)
+
     def visitModifier(self, ctx: SolidityParser.ModifierContext):
         return ctx.getText()
 

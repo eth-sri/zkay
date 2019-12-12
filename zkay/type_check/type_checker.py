@@ -6,7 +6,7 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
-    LocationExpr, CastExpr, NewExpr
+    LocationExpr, CastExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -19,6 +19,11 @@ def type_check(ast):
 class TypeCheckVisitor(AstVisitor):
 
     def get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName):
+        if isinstance(rhs, TupleExpr) or isinstance(expected_type, TupleType):
+            if not isinstance(rhs, TupleExpr) or not isinstance(expected_type.type_name, TupleType) or len(rhs.elements) != len(expected_type.type_name.types):
+                raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
+            return TupleExpr([self.get_rhs(a, e) for e, a, in zip(expected_type.type_name.types, rhs.elements)])
+
         instance = rhs.instanceof(expected_type)
         if not instance:
             raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
@@ -37,6 +42,21 @@ class TypeCheckVisitor(AstVisitor):
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         raise TypeException("Subexpressions with side-effects are currently not supported", ast)
 
+    def check_final(self, fct: ConstructorOrFunctionDefinition, ast: Expression):
+        if isinstance(ast, IdentifierExpr):
+            target = ast.target
+            if hasattr(target, 'keywords'):
+                if 'final' in target.keywords:
+                    if isinstance(target, StateVariableDeclaration) and isinstance(fct, ConstructorDefinition):
+                        # assignment allowed
+                        pass
+                    else:
+                        raise TypeException('Modifying "final" variable', ast)
+        else:
+            assert isinstance(ast, TupleExpr)
+            for elem in ast.elements:
+                self.check_final(fct, elem)
+
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         # NB TODO? Should we optionally disallow writes to variables which are owned by someone else (with e.g. a new modifier)
         #if ast.lhs.annotated_type.is_private():
@@ -44,7 +64,7 @@ class TypeCheckVisitor(AstVisitor):
         #    if not ast.lhs.instanceof(expected_rhs_type):
         #        raise TypeException("Only owner can assign to its private variables", ast)
 
-        if not isinstance(ast.lhs, LocationExpr):
+        if not isinstance(ast.lhs, (TupleExpr, LocationExpr)):
             raise TypeException("Assignment target is not a location", ast.lhs)
 
         expected_type = ast.lhs.annotated_type
@@ -52,19 +72,9 @@ class TypeCheckVisitor(AstVisitor):
         ast.annotated_type = expected_type
 
         # prevent modifying final
-        if isinstance(ast, AssignmentExpr):
-            f = ast.statement.function
-        else:
-            f = ast.function
-        if isinstance(ast.lhs, IdentifierExpr):
-            target = ast.lhs.target
-            if hasattr(target, 'keywords'):
-                if 'final' in target.keywords:
-                    if isinstance(target, StateVariableDeclaration) and isinstance(f, ConstructorDefinition):
-                        # assignment allowed
-                        pass
-                    else:
-                        raise TypeException('Modifying "final" variable', ast)
+        f = ast.statement.function if isinstance(ast, AssignmentExpr) else ast.function
+        if isinstance(ast.lhs, (IdentifierExpr, TupleExpr)):
+            self.check_final(f, ast.lhs)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         if ast.expr:
@@ -215,22 +225,24 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         b = ast.condition
-        expected = AnnotatedTypeName.bool_all()
-        if not b.instanceof(expected):
-            raise TypeMismatchException(expected, b.annotated_type, b)
+        if not b.instanceof_data_type(TypeName.bool_type()):
+            raise TypeMismatchException(TypeName.bool_type(), b.annotated_type.type_name, b)
+        if ast.condition.annotated_type.is_private():
+            expected = AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr())
+            if not b.instanceof(expected):
+                raise TypeMismatchException(expected, b.annotated_type, b)
+            # TODO check that bodies no public side effects if condition private and that it can be transformed
+            #  into seq of cond assignments (only assignment, vardcl and ifstatement)
+            raise TypeMismatchException(AnnotatedTypeName.bool_all(), b.annotated_type, b)
 
     def visitReturnStatement(self, ast: ReturnStatement):
         assert (isinstance(ast.function, FunctionDefinition))
-        expected_types = ast.function.get_return_type()
-
-        if ast.expr is None and expected_types is not None:
-            raise TypeMismatchException(expected_types, None, ast)
-        elif ast.expr is not None:
-            instance = ast.expr.instanceof(expected_types)
-            if not instance:
-                raise TypeMismatchException(expected_types, ast.expr.annotated_type, ast)
-            elif instance == 'make-private':
-                ast.expr = self.make_private(ast.expr, expected_types.privacy_annotation)
+        if ast.expr is None:
+            self.get_rhs(TupleExpr([]), ast.function.get_return_type())
+        elif not isinstance(ast.expr, TupleExpr):
+            ast.expr = self.get_rhs(TupleExpr([ast.expr]), ast.function.get_return_type())
+        else:
+            ast.expr = self.get_rhs(ast.expr, ast.function.get_return_type())
 
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
         ast.annotated_type = AnnotatedTypeName.bool_all()
@@ -239,6 +251,9 @@ class TypeCheckVisitor(AstVisitor):
         # Number literal does not include sign
         assert ast.value >= 0
         ast.annotated_type = AnnotatedTypeName.uint_all()
+
+    def visitTupleExpr(self, ast: TupleExpr):
+        ast.annotated_type = AnnotatedTypeName(TupleType([elem.annotated_type.clone() for elem in ast.elements]))
 
     def visitMeExpr(self, ast: MeExpr):
         ast.annotated_type = AnnotatedTypeName.address_all()

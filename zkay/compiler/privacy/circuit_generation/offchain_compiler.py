@@ -309,19 +309,24 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, {SELF_ADDR}, '{ast.name}', actual_params, [{should_encrypt}]{", value=value" if ast.is_payable else ""})
             '''
         elif ast.return_parameters:
-            assert len(ast.return_parameters) == 1
-            t = ast.return_parameters[0].annotated_type.type_name
-            constr = '{}'
-            if isinstance(t, AddressTypeName) or isinstance(t, AddressPayableTypeName):
-                constr = 'AddressValue({})'
-            elif isinstance(t, CipherText):
-                constr = 'CipherValue({})'
-            elif isinstance(t, Key):
-                constr = 'PublicKeyValue({})'
+            lambda_params = []
+            ret_args = []
+            for idx, retparam in enumerate(ast.return_parameters):
+                t = retparam.annotated_type.type_name
+                constr = '{}'
+                if isinstance(t, AddressTypeName) or isinstance(t, AddressPayableTypeName):
+                    constr = 'AddressValue({})'
+                elif isinstance(t, CipherText):
+                    constr = 'CipherValue({})'
+                elif isinstance(t, Key):
+                    constr = 'PublicKeyValue({})'
+                lambda_params.append(f'_{idx}')
+                ret_args.append(constr.format(f'_{idx}'))
+            lambda_str = f'(lambda {", ".join(lambda_params)}: {", ".join(ret_args)})({{}})'
 
             invoke_transact_str = f'''
             # Call pure/view function and return value
-            return {constr.format(f"{CONN_OBJ_NAME}.call({CONTRACT_HANDLE}, {SELF_ADDR}, '{ast.name}', *actual_params)")}
+            return {lambda_str.format(f"{CONN_OBJ_NAME}.call({CONTRACT_HANDLE}, {SELF_ADDR}, '{ast.name}', *actual_params)")}
             '''
         else:
             invoke_transact_str = ''
@@ -329,7 +334,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         post_body_code = self.do_if_external(ast, [
             generate_proof_str,
             invoke_transact_str
-        ], [f'return {cfg.return_var_name}' if isinstance(ast, FunctionDefinition) and ast.requires_verification and ast.return_parameters else None])
+        ], [f'return {", ".join([f"{cfg.return_var_name}_{idx}" for idx in range(len(ast.return_parameters))])}' if isinstance(ast, FunctionDefinition) and ast.requires_verification else None])
 
         code = '\n\n'.join(s.strip() for s in [
             f'assert not {IS_EXTERNAL_CALL}' if not ast.can_be_external else None,
@@ -366,9 +371,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         out_idf = ast.idf
         out_val = out_idf.corresponding_priv_expression
         if isinstance(out_val, EncryptionExpression):
-            s = f'{self.visit(out_idf.get_loc_expr())}, {self.get_priv_value(f"{out_idf.name}_R")} = {self.visit(out_val)}'
+            s = f'{self.visit(out_idf.get_loc_expr())}, {self.get_priv_value(f"{out_idf.name}_R")}'
         else:
-            s = f'{self.visit(out_idf.get_loc_expr())} = {self.visit(out_val)}'
+            s = f'{self.visit(out_idf.get_loc_expr())}'
+        with CircuitComputation(self, follow_private=True):
+            s = f'{s} = {self.visit(out_val)}'
         out_initializations += f'{s}\n'
         return out_initializations
 
@@ -377,9 +384,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitEncryptionExpression(self, ast: EncryptionExpression):
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())
-        with CircuitComputation(self, True):
-            plain = self.visit(ast.expr)
-            return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'
+        plain = self.visit(ast.expr)
+        return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():

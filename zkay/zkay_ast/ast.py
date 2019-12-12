@@ -188,6 +188,9 @@ class Expression(AST):
     def binop(self, op: str, rhs: 'Expression') -> 'Expression':
         return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
 
+    def ite(self, e_true: 'Expression', e_false: 'Expression') -> 'Expression':
+        return FunctionCallExpr(BuiltinFunction('ite').with_privacy(self.annotated_type.is_private()), [self, e_true, e_false])
+
     def is_parent_of(self, child):
         e = child
         while e != self and isinstance(e.parent, Expression):
@@ -346,6 +349,14 @@ class BuiltinFunction(Expression):
         """
         return self.op not in ['**', '/', '%']
 
+    def with_privacy(self, is_private: bool) -> 'BuiltinFunction':
+        if is_private:
+            assert self.can_be_private()
+            self.is_private = True
+        else:
+            self.is_private = False
+        return self
+
 
 class FunctionCallExpr(Expression):
 
@@ -418,6 +429,18 @@ class StringLiteralExpr(LiteralExpr):
     def __init__(self, value: str):
         super().__init__()
         self.value = value
+
+
+class TupleExpr(Expression):
+    def __init__(self, elements: List[Expression]):
+        super().__init__()
+        self.elements = elements
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.elements[:] = map(f, self.elements)
+
+    def assign(self, val: Expression) -> 'AssignmentStatement':
+        return AssignmentStatement(self, val)
 
 
 class LocationExpr(Expression):
@@ -688,7 +711,7 @@ class RequireStatement(SimpleStatement):
 
 class AssignmentStatement(SimpleStatement):
 
-    def __init__(self, lhs: LocationExpr, rhs: Expression):
+    def __init__(self, lhs: Union[TupleExpr, LocationExpr], rhs: Expression):
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
@@ -764,10 +787,6 @@ class TypeName(AST):
         return AddressPayableTypeName()
 
     @staticmethod
-    def void_type():
-        return TupleType([])
-
-    @staticmethod
     def cipher_type():
         return CipherText()
 
@@ -781,7 +800,6 @@ class TypeName(AST):
 
     @staticmethod
     def proof_type():
-        # TODO correct type
         return Proof()
 
     @property
@@ -961,7 +979,9 @@ class TupleType(TypeName):
 
     @staticmethod
     def ensure_tuple(t: 'AnnotatedTypeName'):
-        if isinstance(t.type_name, TupleType):
+        if t is None:
+            return TupleType.empty()
+        elif isinstance(t.type_name, TupleType):
             return t
         else:
             return TupleType([t])
@@ -969,6 +989,10 @@ class TupleType(TypeName):
     def __init__(self, types: List['AnnotatedTypeName']):
         super().__init__()
         self.types = types
+
+        # Tuple type can be used as annotated type as well as a normal typename
+        self.type_name = self
+        self.privacy_annotation = AllExpr()
 
     def __len__(self):
         return len(self.types)
@@ -1002,6 +1026,10 @@ class TupleType(TypeName):
 
     def clone(self) -> 'TupleType':
         return TupleType(list(map(AnnotatedTypeName.clone, self.types)))
+
+    @staticmethod
+    def empty() -> 'TupleType':
+        return TupleType([])
 
     def __eq__(self, other):
         return self.check_component_wise(other, lambda x, y: x == y)
@@ -1075,10 +1103,6 @@ class AnnotatedTypeName(AST):
     @staticmethod
     def address_all():
         return AnnotatedTypeName(TypeName.address_type())
-
-    @staticmethod
-    def void_all():
-        return AnnotatedTypeName(TypeName.void_type())
 
     @staticmethod
     def cipher_type():
@@ -1254,12 +1278,7 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
         self.body = f(self.body)
 
     def get_return_type(self):
-        if len(self.return_parameters) == 0:
-            return None
-        elif len(self.return_parameters) == 1:
-            return self.return_parameters[0].annotated_type
-        else:
-            raise AstException(f'Multiple return types are not yet supported', self)
+        return TupleType([p.annotated_type for p in self.return_parameters])
 
     def get_parameter_types(self):
         types = [p.annotated_type for p in self.parameters]
@@ -1512,6 +1531,9 @@ class CodeVisitor(AstVisitor):
     def visitStringLiteralExpr(self, ast: StringLiteralExpr):
         return f'\'{ast.value}\''
 
+    def visitTupleExpr(self, ast: TupleExpr):
+        return f'({self.visit_list(ast.elements, sep=", ")})'
+
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return self.visit(ast.idf)
 
@@ -1685,7 +1707,7 @@ class CodeVisitor(AstVisitor):
         m = ' '.join(modifiers)
         if m != '':
             m = f' {m}'
-        r = self.visit_list(return_parameters, ' ')
+        r = self.visit_list(return_parameters, ', ')
         if r != '':
             r = f' returns ({r})'
 

@@ -10,7 +10,7 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, Identifier, \
     AnnotatedTypeName, HybridArgType, CircuitInputStatement, CircuitComputationStatement, AllExpr, MeExpr, \
-    StructDefinition, SliceExpr, Statement, StateVariableDeclaration
+    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr
 
 
 class CircuitHelper:
@@ -215,7 +215,7 @@ class CircuitHelper:
     # 3. assign return value to temporary var
     # return temp ret var
 
-    def inline_circuit_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition):
+    def inline_circuit_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition) -> TupleExpr:
         with InlineRemap(self):
             with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
                 for param, arg in zip(fdef.parameters, ast.args):
@@ -224,8 +224,10 @@ class CircuitHelper:
                 for stmt in inlined_stmts:
                     self._circ_trafo.visit(stmt)
                     ast.statement.pre_statements += stmt.pre_statements
-                ret_var_idf = self._inline_var_remap[cfg.return_var_name]
-                ret = IdentifierExpr(ret_var_idf.clone()).as_type(ret_var_idf.t)
+                ret_idfs = [self._inline_var_remap[f'{cfg.return_var_name}_{idx}'] for idx in range(len(fdef.return_parameters))]
+                ret = TupleExpr([IdentifierExpr(idf.clone()).as_type(idf.t) for idf in ret_idfs])
+        if len(ret.elements) == 1:
+            ret = ret.elements[0]
         return ret
 
     def get_remapped_idf(self, idf: IdentifierExpr) -> LocationExpr:
@@ -239,12 +241,22 @@ class CircuitHelper:
         self._inline_var_remap[ast.variable_declaration.idf.name] = tmp_var
 
     def _add_assign(self, lhs: Expression, rhs: Expression):
-        lhs = self._circ_trafo.visit(lhs)
-        assert isinstance(lhs, IdentifierExpr)
-        self.create_temporary_circuit_variable(lhs.idf.decl_var(lhs.idf.t, rhs))
+        if isinstance(lhs, LocationExpr):
+            lhs = self._circ_trafo.visit(lhs)
+            assert isinstance(lhs, IdentifierExpr)
+            self.create_temporary_circuit_variable(lhs.idf.decl_var(lhs.idf.t, rhs))
+        else:
+            if isinstance(rhs, FunctionCallExpr):
+                rhs = self._circ_trafo.visit(rhs)
+            assert isinstance(lhs, TupleExpr) and isinstance(rhs, TupleExpr) and len(lhs.elements) == len(rhs.elements)
+            for e_l, e_r in zip(lhs.elements, rhs.elements):
+                self._add_assign(e_l, e_r)
 
     def add_assignment_to_circuit(self, ast: AssignmentStatement):
         self._add_assign(ast.lhs, ast.rhs)
+
+    def add_if_statement_to_circuit(self, ast: IfStatement):
+        raise NotImplementedError()
 
     def _evaluate_private_expression(self, expr: Expression):
         priv_expr = self._circ_trafo.visit(expr)

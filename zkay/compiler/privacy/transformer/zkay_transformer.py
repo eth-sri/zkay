@@ -9,7 +9,8 @@ from zkay.zkay_ast.analysis.contains_private_checker import contains_private_exp
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
     Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction
+    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, TypeName, \
+    NumberLiteralExpr, MemberAccessExpr
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -96,19 +97,22 @@ class ZkayStatementTransformer(AstTransformerVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         """ Rule (6) """
-        assert ast.condition.annotated_type.is_public()
-        if contains_private_expr(ast.then_branch) or contains_private_expr(ast.else_branch):
-            guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
-            with Guarded(self.gen, guard_var, True):
+        if ast.condition.annotated_type.is_public():
+            if contains_private_expr(ast.then_branch) or contains_private_expr(ast.else_branch):
+                guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
+                with Guarded(self.gen, guard_var, True):
+                    ast.then_branch = self.visit(ast.then_branch)
+                if ast.else_branch is not None:
+                    with Guarded(self.gen, guard_var, False):
+                        ast.else_branch = self.visit(ast.else_branch)
+            else:
+                ast.condition = self.expr_trafo.visit(ast.condition)
                 ast.then_branch = self.visit(ast.then_branch)
-            if ast.else_branch is not None:
-                with Guarded(self.gen, guard_var, False):
+                if ast.else_branch is not None:
                     ast.else_branch = self.visit(ast.else_branch)
         else:
-            ast.condition = self.expr_trafo.visit(ast.condition)
-            ast.then_branch = self.visit(ast.then_branch)
-            if ast.else_branch is not None:
-                ast.else_branch = self.visit(ast.else_branch)
+            raise NotImplementedError()
+
         return ast
 
     def visitReturnStatement(self, ast: ReturnStatement):
@@ -118,7 +122,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             assert not self.gen.has_return_var
             self.gen.has_return_var = True
             expr = self.expr_trafo.visit(ast.expr)
-            return ast.replaced_with(IdentifierExpr(cfg.return_var_name).assign(expr))
+            return ast.replaced_with(TupleExpr([IdentifierExpr(f'{cfg.return_var_name}_{idx}') for idx in range(len(ast.function.return_parameters))]).assign(expr))
         else:
             ast.expr = self.expr_trafo.visit(ast.expr)
             return ast
@@ -150,6 +154,12 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         """ Rule (9) """
         return ast.replaced_with(self.visit(ast.arr).index(self.visit(ast.key)))
 
+    def visitMemberAccessExpr(self, ast: MemberAccessExpr):
+        return self.visit_children(ast)
+
+    def visitTupleExpr(self, ast: TupleExpr):
+        return self.visit_children(ast)
+
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (11) """
         return self.gen.get_circuit_output_for_private_expression(ast.expr, ast.privacy.privacy_annotation_label())
@@ -163,6 +173,9 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             cond_expr = guard_var.get_loc_expr() if if_true else guard_var.get_loc_expr().unop('!')
             expr.statement.pre_statements = expr.statement.pre_statements[:prelen] + [IfStatement(cond_expr, Block(new_pre_stmts), None)]
         return ret
+
+    def visitBuiltinFunction(self, ast: BuiltinFunction):
+        return ast
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
@@ -196,6 +209,9 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             if ast.func.target.requires_verification:
                 self.gen.call_function(ast)
             return ast
+
+    def visitExpression(self, ast: Expression):
+        raise NotImplementedError()
 
 
 class ZkayCircuitTransformer(AstTransformerVisitor):
@@ -253,15 +269,27 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitReturnStatement(self, ast: ReturnStatement):
         assert ast.expr is not None
-        e = self.visit(ast.expr)
-        ret_var_decl = ast.replaced_with(Identifier(cfg.return_var_name).decl_var(ast.expr.annotated_type.type_name, e))
-        self.gen.create_temporary_circuit_variable(ret_var_decl)
+        if not isinstance(ast.expr, TupleExpr):
+            ast.expr = TupleExpr([ast.expr])
+        ast = self.visit_children(ast)
+
+        ast.pre_statements += [
+            self.gen.create_temporary_circuit_variable(ast.replaced_with(Identifier(f'{cfg.return_var_name}_{idx}').decl_var(ast.expr.elements[idx].annotated_type.type_name, ast.expr.elements[idx])))
+            for idx in range(len(ast.function.return_parameters))
+        ]
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.add_assignment_to_circuit(ast)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
+        if ast.expr is None:
+            t = ast.variable_declaration.annotated_type.type_name
+            assert t == TypeName.uint_type() or t == TypeName.bool_type()
+            ast.expr = NumberLiteralExpr(0)
         self.gen.create_temporary_circuit_variable(ast)
+
+    def visitIfStatement(self, ast: IfStatement):
+        self.gen.add_if_statement_to_circuit(ast)
 
     def visitStatement(self, ast: Statement):
         raise NotImplementedError("Unsupported statement")

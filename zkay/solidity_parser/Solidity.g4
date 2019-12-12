@@ -259,6 +259,7 @@ expression
   | BooleanLiteral # BooleanLiteralExpr
   | numberLiteral # NumberLiteralExpr
   | StringLiteral # StringLiteralExpr
+  | expr=tupleExpression # TupleExpr
   | idf=identifier # IdentifierExpr ;
 
 // CHANGED:
@@ -270,6 +271,9 @@ functionCallArguments
 
 // REMOVED
 // - functionCall (already covered by expressions)
+
+tupleExpression
+  : '(' ( expression? ( ',' expression? )* ) ')' ;
 
 elementaryTypeNameExpression
   : elementaryTypeName ;
