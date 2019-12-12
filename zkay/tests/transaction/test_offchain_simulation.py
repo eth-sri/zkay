@@ -2,6 +2,7 @@ import importlib
 import os
 import shutil
 import sys
+import unittest
 from contextlib import nullcontext
 
 from parameterized import parameterized_class
@@ -115,6 +116,7 @@ class TestOffchainDummyEnc(TestOffchainBase):
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainRsaPkcs15Enc(TestOffchainBase):
+    @unittest.skipIf('ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_rsa_pkcs_15(self):
         old = cfg.crypto_backend
         old_sh = cfg.should_use_hash

@@ -11,29 +11,24 @@ def run_command(cmd: List[str], cwd=None, key: str = None):
 
     if key in cfg.debug_output_whitelist and not cfg.is_unit_test:
         process = subprocess.Popen(cmd, cwd=cwd)
-        process.communicate()
-        if process.returncode != 0:
-            cmd = get_command(cmd)
-            msg = f"Non-zero exit status {process.returncode} for command:\n{cwd}: $ {cmd}\n"
-            raise subprocess.SubprocessError(msg)
     else:
         # run
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
 
-        # collect output
-        output, error = process.communicate()
+    # collect output
+    output, error = process.communicate()
 
-        # decode output
-        output = output.decode('utf-8').rstrip()
-        error = error.decode('utf-8').rstrip()
+    # decode output
+    output = output.decode('utf-8').rstrip()
+    error = error.decode('utf-8').rstrip()
 
-        # check for error
-        if process.returncode != 0:
-            cmd = get_command(cmd)
-            msg = f"Non-zero exit status {process.returncode} for command:\n{cwd}: $ {cmd}\n\n{output}\n{error}"
-            raise subprocess.SubprocessError(msg)
+    # check for error
+    if process.returncode != 0:
+        cmd = get_command(cmd)
+        msg = f"Non-zero exit status {process.returncode} for command:\n{cwd}: $ {cmd}\n\n{output}\n{error}"
+        raise subprocess.SubprocessError(msg)
 
-        return output, error
+    return output, error
 
 
 def get_command(cmd: List[str]):

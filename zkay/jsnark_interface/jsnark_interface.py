@@ -28,7 +28,7 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     serialized_arg_str = [hex(arg)[2:] for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(['java', '-Xms8196m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, key='jsnark')
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, key='jsnark')
 
 
 _class_template_str = '''\
