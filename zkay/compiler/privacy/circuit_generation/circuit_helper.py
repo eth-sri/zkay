@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Tuple, Callable, Set, Union
 
 from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
-    CircEqConstraint, CircAssignment, CircComment, CircIndentBlock, CircGuardModification, CircCall
+    CircEqConstraint, CircComment, CircIndentBlock, CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
@@ -235,14 +235,16 @@ class CircuitHelper:
             return idf
 
     def create_temporary_circuit_variable(self, ast: VariableDeclarationStatement):
-        tmp_var, priv_expr = self._evaluate_private_expression(ast.expr)
+        tmp_var, _ = self._evaluate_private_expression(ast.expr)
         self._inline_var_remap[ast.variable_declaration.idf.name] = tmp_var
 
+    def _add_assign(self, lhs: Expression, rhs: Expression):
+        lhs = self._circ_trafo.visit(lhs)
+        assert isinstance(lhs, IdentifierExpr)
+        self.create_temporary_circuit_variable(lhs.idf.decl_var(lhs.idf.t, rhs))
+
     def add_assignment_to_circuit(self, ast: AssignmentStatement):
-        lhs = self._circ_trafo.visit(ast.lhs)
-        rhs = self._circ_trafo.visit(ast.rhs)
-        assert isinstance(lhs, LocationExpr)
-        self._phi.append(CircAssignment(lhs, rhs))
+        self._add_assign(ast.lhs, ast.rhs)
 
     def _evaluate_private_expression(self, expr: Expression):
         priv_expr = self._circ_trafo.visit(expr)

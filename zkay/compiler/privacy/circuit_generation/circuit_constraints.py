@@ -48,13 +48,6 @@ class CircGuardModification(CircuitStatement):
         return CircGuardModification(None)
 
 
-class CircAssignment(CircuitStatement):
-    def __init__(self, lhs: LocationExpr, rhs: Expression):
-        super().__init__()
-        self.lhs = lhs
-        self.rhs = rhs
-
-
 class CircEncConstraint(CircuitStatement):
     def __init__(self, plain: HybridArgumentIdf, rnd: HybridArgumentIdf, pk: HybridArgumentIdf, cipher: HybridArgumentIdf, is_dec: bool):
         super().__init__()

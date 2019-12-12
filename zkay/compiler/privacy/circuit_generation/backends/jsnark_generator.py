@@ -5,7 +5,7 @@ from typing import List, Optional
 from zkay.config import cfg
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
-from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircAssignment, CircComment, CircIndentBlock, \
+from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircComment, CircIndentBlock, \
     CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
@@ -51,10 +51,6 @@ class JsnarkVisitor(AstVisitor):
             return f'checkDec("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
         else:
             return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
-
-    def visitCircAssignment(self, stmt: CircAssignment):
-        assert isinstance(stmt.lhs, IdentifierExpr)
-        return f'assign("{stmt.lhs.names}", {self.visit(stmt.rhs)});'
 
     def visitCircGuardModification(self, stmt: CircGuardModification):
         if stmt.new_cond is None:
