@@ -186,7 +186,10 @@ block
 statement
   : ifStatement
   | whileStatement
+  | forStatement
   | block
+  | continueStatement
+  | breakStatement
   | returnStatement
   | simpleStatement ;
 
@@ -201,6 +204,16 @@ whileStatement
 
 simpleStatement
   : ( variableDeclarationStatement | expressionStatement ) ;
+
+forStatement
+  : 'for' '(' ( init=simpleStatement | ';' ) condition=expression? ';' update=expression? ')' body=statement ;
+
+continueStatement
+  : 'continue' ';' ;
+
+breakStatement
+  : 'break' ';' ;
+
 
 returnStatement
   : 'return' expr=expression? ';' ;

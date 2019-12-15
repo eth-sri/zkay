@@ -8,7 +8,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
-    StatementList, IdentifierExpr, NewExpr
+    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
 
@@ -66,6 +66,28 @@ class PythonCodeVisitor(CodeVisitor):
             e = self.visit(ast.else_branch)
             ret += f'\nelse:\n{indent(e)}'
         return ret
+
+    def visitWhileStatement(self, ast: WhileStatement):
+        c = self.visit(ast.condition)
+        b = self.visit(ast.body)
+        ret = f'while {c}:\n{indent(b)}'
+        return ret
+
+    def visitForStatement(self, ast: ForStatement):
+        i = '' if ast.init is None else self.visit(ast.init)
+        c = self.visit(ast.condition)
+        u = '' if ast.update is None else self.visit(ast.update)
+        b = indent(self.visit_single_or_list(ast.body))
+        if u:
+            b = f'try:\n{b if b else indent("pass")}\nfinally:\n{indent(u)}'
+        ret = f'{i}\nwhile {c}:\n{indent(b)}'
+        return ret
+
+    def visitBreakStatement(self, _: BreakStatement):
+        return 'break'
+
+    def visitContinueStatement(self, _: ContinueStatement):
+        return 'continue'
 
     def visitReturnStatement(self, ast: ReturnStatement):
         e = '' if ast.expr is None else self.visit(ast.expr)

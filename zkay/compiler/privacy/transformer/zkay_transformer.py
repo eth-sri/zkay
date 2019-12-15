@@ -10,7 +10,7 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, Statement
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
     Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, TypeName, \
-    NumberLiteralExpr, MemberAccessExpr
+    NumberLiteralExpr, MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -113,6 +113,23 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         else:
             raise NotImplementedError()
 
+        return ast
+
+    def visitWhileStatement(self, ast: WhileStatement):
+        assert not contains_private_expr(ast.condition)
+        assert not contains_private_expr(ast.body)
+        return ast
+
+    def visitForStatement(self, ast: ForStatement):
+        assert not contains_private_expr(ast.condition)
+        assert not ast.update or not contains_private_expr(ast.update)
+        assert not contains_private_expr(ast.body) # OR fixed size loop -> static analysis can prove that loop terminates in fixed # iterations
+        return ast
+
+    def visitContinueStatement(self, ast: ContinueStatement):
+        return ast
+
+    def visitBreakStatement(self, ast: BreakStatement):
         return ast
 
     def visitReturnStatement(self, ast: ReturnStatement):

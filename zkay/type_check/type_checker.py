@@ -6,7 +6,7 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     FunctionDefinition, StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ConstructorDefinition, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
-    LocationExpr, CastExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition
+    LocationExpr, CastExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -19,7 +19,7 @@ def type_check(ast):
 class TypeCheckVisitor(AstVisitor):
 
     def get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName):
-        if isinstance(rhs, TupleExpr) or isinstance(expected_type, TupleType):
+        if isinstance(rhs, TupleExpr):
             if not isinstance(rhs, TupleExpr) or not isinstance(expected_type.type_name, TupleType) or len(rhs.elements) != len(expected_type.type_name.types):
                 raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
             return TupleExpr([self.get_rhs(a, e) for e, a, in zip(expected_type.type_name.types, rhs.elements)])
@@ -234,6 +234,16 @@ class TypeCheckVisitor(AstVisitor):
             # TODO check that bodies no public side effects if condition private and that it can be transformed
             #  into seq of cond assignments (only assignment, vardcl and ifstatement)
             raise TypeMismatchException(AnnotatedTypeName.bool_all(), b.annotated_type, b)
+
+    def visitWhileStatement(self, ast: WhileStatement):
+        if not ast.condition.instanceof(AnnotatedTypeName.bool_all()):
+            raise TypeMismatchException(AnnotatedTypeName.bool_all(), ast.condition.annotated_type, ast.condition)
+        # must also later check that body and condition do not contain private expressions
+
+    def visitForStatement(self, ast: ForStatement):
+        if not ast.condition.instanceof(AnnotatedTypeName.bool_all()):
+            raise TypeMismatchException(AnnotatedTypeName.bool_all(), ast.condition.annotated_type, ast.condition)
+        # must also later check that body, update and condition do not contain private expressions
 
     def visitReturnStatement(self, ast: ReturnStatement):
         assert (isinstance(ast.function, FunctionDefinition))

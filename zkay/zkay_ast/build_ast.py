@@ -267,6 +267,22 @@ class BuildASTVisitor(SolidityVisitor):
 
         return ast.IfStatement(cond, then_branch, else_branch)
 
+    def visitWhileStatement(self, ctx:SolidityParser.WhileStatementContext):
+        cond = self.visit(ctx.condition)
+        body = self.visit(ctx.body)
+        if not isinstance(body, ast.Block):
+            body = ast.Block([body])
+        return ast.WhileStatement(cond, body)
+
+    def visitForStatement(self, ctx:SolidityParser.ForStatementContext):
+        init = None if ctx.init is None else self.visit(ctx.init)
+        cond = self.visit(ctx.condition)
+        update = None if ctx.update is None else self.visit(ctx.update)
+        body = self.visit(ctx.body)
+        if not isinstance(body, ast.Block):
+            body = ast.Block([body])
+        return ast.ForStatement(init, cond, update, body)
+
     def visitExpressionStatement(self, ctx:SolidityParser.ExpressionStatementContext):
         e = self.visit(ctx.expr)
         if isinstance(e, ast.AssignmentExpr):

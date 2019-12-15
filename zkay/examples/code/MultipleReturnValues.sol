@@ -33,6 +33,9 @@ contract MultipleReturnValues {
         (a1, (a2, a3)) = (x, replicate2(x)); // a1 = x, a2 = x + 1, a3 = x + 2
         uint@me k = 5; // k = 5
         uint@me p; // p = 0
+        (k, p) = true ? (reveal(5, me), reveal(0, me)) : (k, p);
+        (k, p) = (p, k);
+        (k, p) = (p, k);
         require(reveal(k + p + a1 == 5+x, all));
         require(reveal(k * (a2 + a3) == 10*x + 15, all));
         require(reveal(single_circ(k + p + a1) == 2*x + 31, all));

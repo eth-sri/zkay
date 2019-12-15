@@ -1,2 +1,4 @@
 /tmp
 *.pyc
+jsnark_interface/run_snark
+rsa_*.bin

@@ -1,5 +1,5 @@
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
-    FunctionDefinition
+    FunctionDefinition, ForStatement, WhileStatement
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -25,6 +25,14 @@ class DirectCalledFunctionDetector(FunctionVisitor):
             fdef = ast.func.target
             assert isinstance(fdef, FunctionDefinition)
             ast.statement.function.called_functions[fdef] = None
+        self.visitChildren(ast)
+
+    def visitForStatement(self, ast: ForStatement):
+        ast.function.has_static_body = False
+        self.visitChildren(ast)
+
+    def visitWhileStatement(self, ast: WhileStatement):
+        ast.function.has_static_body = False
         self.visitChildren(ast)
 
 

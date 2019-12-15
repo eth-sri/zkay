@@ -674,6 +674,40 @@ class IfStatement(Statement):
         self.else_branch = f(self.else_branch)
 
 
+class WhileStatement(Statement):
+    def __init__(self, condition: Expression, body: 'Block'):
+        super().__init__()
+        self.condition = condition
+        self.body = body
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.condition = f(self.condition)
+        self.body = f(self.body)
+
+
+class ForStatement(Statement):
+    def __init__(self, init: Optional['SimpleStatement'], condition: Expression, update: Optional[Expression], body: 'Block'):
+        super().__init__()
+        self.init = init
+        self.condition = condition
+        self.update = update
+        self.body = body
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.init = f(self.init)
+        self.condition = f(self.condition)
+        self.update = f(self.update)
+        self.body = f(self.body)
+
+
+class BreakStatement(Statement):
+    pass
+
+
+class ContinueStatement(Statement):
+    pass
+
+
 class ReturnStatement(Statement):
 
     def __init__(self, expr: Expression):
@@ -1562,6 +1596,26 @@ class CodeVisitor(AstVisitor):
             e = self.visit_single_or_list(ast.else_branch)
             ret += f'\n else {e}'
         return ret
+
+    def visitWhileStatement(self, ast: WhileStatement):
+        c = self.visit(ast.condition)
+        b = self.visit_single_or_list(ast.body)
+        ret = f'while ({c}) {b}'
+        return ret
+
+    def visitForStatement(self, ast: ForStatement):
+        i = ';' if ast.init is None else f'{self.visit(ast.init)}'
+        c = self.visit(ast.condition)
+        u = '' if ast.update is None else f' {self.visit(ast.update)}'
+        b = self.visit_single_or_list(ast.body)
+        ret = f'for ({i} {c};{u}) {b}'
+        return ret
+
+    def visitBreakStatement(self, _: BreakStatement):
+        return 'break;'
+
+    def visitContinueStatement(self, _: ContinueStatement):
+        return 'continue;'
 
     def visitReturnStatement(self, ast: ReturnStatement):
         if ast.expr:
