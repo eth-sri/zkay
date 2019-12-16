@@ -188,6 +188,7 @@ statement
   | whileStatement
   | forStatement
   | block
+  | doWhileStatement
   | continueStatement
   | breakStatement
   | returnStatement
@@ -207,6 +208,9 @@ simpleStatement
 
 forStatement
   : 'for' '(' ( init=simpleStatement | ';' ) condition=expression? ';' update=expression? ')' body=statement ;
+
+doWhileStatement
+  : 'do' body=statement 'while' '(' condition=expression ')' ';' ;
 
 continueStatement
   : 'continue' ';' ;

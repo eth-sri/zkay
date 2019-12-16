@@ -274,6 +274,13 @@ class BuildASTVisitor(SolidityVisitor):
             body = ast.Block([body])
         return ast.WhileStatement(cond, body)
 
+    def visitDoWhileStatement(self, ctx:SolidityParser.DoWhileStatementContext):
+        body = self.visit(ctx.body)
+        cond = self.visit(ctx.condition)
+        if not isinstance(body, ast.Block):
+            body = ast.Block([body])
+        return ast.DoWhileStatement(body, cond)
+
     def visitForStatement(self, ctx:SolidityParser.ForStatementContext):
         init = None if ctx.init is None else self.visit(ctx.init)
         cond = self.visit(ctx.condition)

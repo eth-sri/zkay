@@ -1,6 +1,6 @@
 from zkay.examples.scenario import ScenarioBuilder
 a = 'a'
-sb = ScenarioBuilder('SimpleAddition', 'code/PublicLoops.sol').set_users(a)
+sb = ScenarioBuilder('PublicLoops', 'code/PublicLoops.sol').set_users(a)
 sb.set_deployment_transaction(owner=a)
 sb.add_balance_assertion(0)
 sb.add_transaction('test', [42], user=a)

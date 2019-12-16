@@ -1,5 +1,6 @@
 # Ignoring all build/ folders in truffle projects
 build/
+libsnark/
 
 # Ignoring Python virtual environments
 .venv/

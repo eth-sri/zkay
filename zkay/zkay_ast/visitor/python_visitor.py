@@ -8,7 +8,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
-    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement
+    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
 
@@ -71,6 +71,12 @@ class PythonCodeVisitor(CodeVisitor):
         c = self.visit(ast.condition)
         b = self.visit(ast.body)
         ret = f'while {c}:\n{indent(b)}'
+        return ret
+
+    def visitDoWhileStatement(self, ast: DoWhileStatement):
+        c = self.visit(ast.condition)
+        b = f'{self.visit(ast.body)}\nif not ({c}): break'
+        ret = f'while True:\n{indent(b)}'
         return ret
 
     def visitForStatement(self, ast: ForStatement):

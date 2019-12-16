@@ -685,6 +685,17 @@ class WhileStatement(Statement):
         self.body = f(self.body)
 
 
+class DoWhileStatement(Statement):
+    def __init__(self, body: 'Block', condition: Expression):
+        super().__init__()
+        self.body = body
+        self.condition = condition
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.body = f(self.body)
+        self.condition = f(self.condition)
+
+
 class ForStatement(Statement):
     def __init__(self, init: Optional['SimpleStatement'], condition: Expression, update: Optional[Expression], body: 'Block'):
         super().__init__()
@@ -1601,6 +1612,12 @@ class CodeVisitor(AstVisitor):
         c = self.visit(ast.condition)
         b = self.visit_single_or_list(ast.body)
         ret = f'while ({c}) {b}'
+        return ret
+
+    def visitDoWhileStatement(self, ast: DoWhileStatement):
+        b = self.visit_single_or_list(ast.body)
+        c = self.visit(ast.condition)
+        ret = f'do {b} while ({c});'
         return ret
 
     def visitForStatement(self, ast: ForStatement):

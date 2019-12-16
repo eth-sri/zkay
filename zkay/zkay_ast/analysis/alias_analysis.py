@@ -2,7 +2,7 @@ from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.ast import FunctionDefinition, VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     ConstructorDefinition, FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
-    ContinueStatement, BreakStatement
+    ContinueStatement, BreakStatement, DoWhileStatement
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -77,37 +77,50 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.after_analysis = before.separate_all()
 
     def visitWhileStatement(self, ast: WhileStatement):
-        if ast.condition.has_side_effects:
+        if ast.condition.has_side_effects or ast.body.has_side_effects:
             ast.before_analysis = ast.before_analysis.separate_all()
 
-        before = ast.before_analysis.separate_all()
         self.visit(ast.condition)
 
-        # Imprecise join, don't know if there was a previous loop iteration or not
-        ast.body.before_analysis = before
+        ast.body.before_analysis = ast.before_analysis.copy()
         self.visit(ast.body)
 
-        # Imprecise join for while loop (don't know if there was a loop iteration)
-        ast.after_analysis = before
+        # Imprecise join (don't know if there was a loop iteration)
+        ast.after_analysis = ast.before_analysis.separate_all()
+
+    def visitDoWhileStatement(self, ast: DoWhileStatement):
+        # Could be subsequent loop iteration after condition with side effect
+        if ast.condition.has_side_effects or ast.body.has_side_effects:
+            ast.before_analysis = ast.before_analysis.separate_all()
+
+        ast.body.before_analysis = ast.before_analysis.copy()
+        self.visit(ast.body)
+
+        # ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
+        ast.before_analysis = ast.body.after_analysis.copy()
+        self.visit(ast.condition)
+        if ast.condition.has_side_effects:
+            ast.after_analysis = ast.body.after_analysis.separate_all()
+        else:
+            ast.after_analysis = ast.body.after_analysis.copy()
 
     def visitForStatement(self, ast: ForStatement):
-        if (ast.init is not None and ast.init.has_side_effects) or ast.condition.has_side_effects:
+        if ast.init is not None:
+            ast.init.before_analysis = ast.before_analysis.copy()
+            self.visit(ast.init)
+            ast.before_analysis = ast.init.after_analysis.copy()
+
+        if ast.condition.has_side_effects or ast.body.has_side_effects or (ast.update is not None and ast.update.has_side_effects):
             ast.before_analysis = ast.before_analysis.separate_all()
 
-        before = ast.before_analysis.separate_all()
-
-        if ast.init is not None:
-            ast.init.before_analysis = before
-            self.visit(ast.init)
-
         self.visit(ast.condition)
-
-        # Imprecise join, don't know if there was a previous loop iteration or not
-        ast.body.before_analysis = before
+        ast.body.before_analysis = ast.before_analysis.copy()
         self.visit(ast.body)
+        if ast.update is not None:
+            self.visit(ast.update)
 
-        # Imprecise join for for loop (don't know if there was a loop iteration, init could have been overwritten by loop iteration)
-        ast.after_analysis = before
+        # Imprecise join (don't know if there was a loop iteration)
+        ast.after_analysis = ast.before_analysis.copy()
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         e = ast.expr

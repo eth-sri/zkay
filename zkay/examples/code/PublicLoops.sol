@@ -7,7 +7,10 @@ contract PublicLoops {
         ret = ret + 1;
     }
 
-    function test(uint x) public {
+    function test(uint@me some_x) public {
+        uint x = reveal(some_x, all);
+        uint@me value = 5;
+
         uint i = 0;
         ret = 0;
         while (true) {
@@ -21,9 +24,19 @@ contract PublicLoops {
             }
         }
         require(i == x && ret == x);
+        value = 2;
 
-        ret = 0;
-        for (i = 0; i < x; ) {
+        do {
+            ret = 0;
+            if (true) {
+                break;
+            }
+            ret = 42;
+        } while(false);
+
+        value = 3;
+        i = 0;
+        for (value = 0; i < x; ) {
             i = i + 1;
             inc();
         }
