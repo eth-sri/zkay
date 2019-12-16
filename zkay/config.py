@@ -71,7 +71,7 @@ class Config:
 
     @property
     def solc_version(self):
-        return 'v0.5.13'
+        return 'v0.5.14'
 
     @staticmethod
     def override_solc(new_version):
