@@ -3,7 +3,7 @@
 ANTLR_VERSION="4.7.2"
 
 # Download antlr if not installed
-if $(command -v antlr4); then # && [ "$(antlr4 | head -n 1)" == "*${ANTLR_VERSION}" ]; then
+if $(command -v antlr4) && [[ "$(antlr4 | head -n 1)" == *"${ANTLR_VERSION}" ]]; then
 	ANTLR_CMD='antlr4'
 else
 	ANTLR_CMD='java -jar antlr4.jar'
@@ -16,7 +16,7 @@ cd zkay/solidity_parser && eval "${ANTLR_CMD} -o generated -visitor -Dlanguage=P
 if command -v sudo; then
 	if command -v apt-get; then
 		sudo apt-get update && \
-		sudo apt-get install default-openjdk-headless git build-essential cmake libgmp-dev pkg-config libssl-dev libboost-dev libboost-program-options-dev
+		sudo apt-get install default-jdk-headless git build-essential cmake libgmp-dev pkg-config libssl-dev libboost-dev libboost-program-options-dev
 	elif command -v pacman; then
 		sudo pacman -Sy && sudo pacman -S --needed jdk-openjdk cmake pkgconf openssl gmp boost
 	fi
