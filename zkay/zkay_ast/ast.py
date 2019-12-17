@@ -1465,6 +1465,15 @@ class InstanceTarget(tuple):
     def key(self):
         return self[1]
 
+    def in_scope_at(self, ast: AST) -> bool:
+        from zkay.zkay_ast.pointers.symbol_table import SymbolTableLinker
+        from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
+        try:
+            _ = SymbolTableLinker.find_identifier_declaration(ast, self.target.idf.name)
+            return True
+        except UnknownIdentifierException:
+            return False
+
 # UTIL FUNCTIONS
 
 

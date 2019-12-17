@@ -156,7 +156,7 @@ class TypeCheckVisitor(AstVisitor):
 
         pl = privacy.privacy_annotation_label().clone()
         if isinstance(pl, Identifier):
-            pl = IdentifierExpr(pl, AnnotatedTypeName.address_all())
+            pl = IdentifierExpr(pl.clone(), AnnotatedTypeName.address_all()).with_target(privacy.privacy_annotation_label().parent)
         r = ReclassifyExpr(expr, pl)
 
         # set type
