@@ -1428,7 +1428,42 @@ class SourceUnit(AST):
 
 PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
 TargetDefinition = Union[VariableDeclaration, Parameter, FunctionDefinition, StateVariableDeclaration, StructDefinition, ContractDefinition]
-InstanceTarget = Tuple[Union[VariableDeclaration, Parameter, StateVariableDeclaration], Optional[Identifier]]
+
+
+class InstanceTarget(tuple):
+    def __new__(cls, expr: Union[tuple, VariableDeclaration, LocationExpr]):
+        if isinstance(expr, tuple):
+            # copy constructor
+            target_key = expr[:]
+        else:
+            target_key = [None, None]
+            if isinstance(expr, VariableDeclaration):
+                target_key[0] = expr
+            elif isinstance(expr, IdentifierExpr):
+                target_key[0] = expr.target
+            elif isinstance(expr, MemberAccessExpr):
+                target_key[0] = expr.expr.target
+                target_key[1] = expr.member.clone()
+            else:
+                assert isinstance(expr, IndexExpr)
+                target_key[0] = expr.arr.target
+                target_key[1] = expr.key
+
+        return super(InstanceTarget, cls).__new__(cls, target_key)
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self[:])
+
+    @property
+    def target(self):
+        return self[0]
+
+    @property
+    def key(self):
+        return self[1]
 
 # UTIL FUNCTIONS
 

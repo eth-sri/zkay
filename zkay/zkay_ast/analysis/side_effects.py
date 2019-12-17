@@ -1,8 +1,9 @@
 from typing import List, Union
 
 from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, AST, \
-    Expression, Statement, IdentifierExpr, MemberAccessExpr, IndexExpr, StateVariableDeclaration, BuiltinFunction, TupleExpr
+from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, \
+    AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
+    TupleExpr, InstanceTarget, VariableDeclaration
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -58,25 +59,12 @@ class DirectModificationDetector(FunctionVisitor):
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         return self.visitAssignmentExpr(ast)
 
-    @staticmethod
-    def _get_location(expr: LocationExpr):
-        assert isinstance(expr, LocationExpr)
-        if isinstance(expr, IdentifierExpr):
-            mod_value = (expr.target, None)
-        elif isinstance(expr, MemberAccessExpr):
-            mod_value = (expr.expr.target, expr.member.clone())
-        else:
-            assert isinstance(expr, IndexExpr)
-            # over approximation (since index can be dynamic)
-            mod_value = (expr.arr.target, None)
-        return mod_value
-
     def collect_modified_values(self, target: Union[Expression, Statement], expr: Expression):
         if isinstance(expr, TupleExpr):
             for elem in expr.elements:
                 self.collect_modified_values(target, elem)
         else:
-            mod_value = self._get_location(expr)
+            mod_value = InstanceTarget(expr)
             if mod_value in target.modified_values:
                 raise TypeException(f'Undefined behavior due multiple different assignments to the same target in tuple assignment', expr)
             target.modified_values.add(mod_value)
@@ -85,10 +73,13 @@ class DirectModificationDetector(FunctionVisitor):
         self.visitAST(ast)
         self.collect_modified_values(ast, ast.lhs)
 
-    def visitIdentifierExpr(self, ast: IdentifierExpr):
-        ast.read_values.clear()
+    def visitLocationExpr(self, ast: LocationExpr):
+        self.visitAST(ast)
         if ast.is_rvalue():
-            ast.read_values.add((ast.target, None))
+            ast.read_values.add(InstanceTarget(ast))
+
+    def visitVariableDeclaration(self, ast: VariableDeclaration):
+        ast.modified_values.add(InstanceTarget(ast))
 
     def visitAST(self, ast: AST):
         ast.modified_values.clear()
@@ -120,8 +111,8 @@ class IndirectModificationDetector(FunctionVisitor):
                 fdef = ast.func.target
                 mlen = len(ast.modified_values)
                 rlen = len(ast.read_values)
-                ast.modified_values.update({v for v in fdef.modified_values if isinstance(v[0], StateVariableDeclaration)})
-                ast.read_values.update({v for v in fdef.read_values if isinstance(v[0], StateVariableDeclaration)})
+                ast.modified_values.update({v for v in fdef.modified_values if isinstance(v.target, StateVariableDeclaration)})
+                ast.read_values.update({v for v in fdef.read_values if isinstance(v.target, StateVariableDeclaration)})
                 self.fixed_point_reached &= mlen == len(ast.modified_values)
                 self.fixed_point_reached &= rlen == len(ast.read_values)
 
