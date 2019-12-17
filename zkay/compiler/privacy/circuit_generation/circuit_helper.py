@@ -230,15 +230,19 @@ class CircuitHelper:
             ret = ret.elements[0]
         return ret
 
-    def get_remapped_idf(self, idf: IdentifierExpr) -> LocationExpr:
-        if idf.idf.name in self._inline_var_remap:
-            return idf.replaced_with(self._inline_var_remap[idf.idf.name].get_loc_expr()).as_type(idf.annotated_type)
-        else:
+    def get_remapped_idf(self, idf: Identifier) -> Union[HybridArgumentIdf, Identifier]:
+        while idf.name in self._inline_var_remap:
+            idf = self._inline_var_remap[idf.name]
+        return idf
+
+    def get_remapped_idf_expr(self, idf: IdentifierExpr) -> LocationExpr:
+        if idf.idf.name not in self._inline_var_remap:
             return idf
+        return idf.replaced_with(self.get_remapped_idf(idf.idf).get_loc_expr()).as_type(idf.annotated_type)
 
     def create_temporary_circuit_variable(self, ast: VariableDeclarationStatement):
-        tmp_var, _ = self._evaluate_private_expression(ast.expr)
-        self._inline_var_remap[ast.variable_declaration.idf.name] = tmp_var
+        tmp_var, _ = self._evaluate_private_expression(ast.expr, tmp_suffix=f'_{ast.variable_declaration.idf.name}')
+        self._inline_var_remap[self.get_remapped_idf(ast.variable_declaration.idf).name] = tmp_var
 
     def _add_assign(self, lhs: Expression, rhs: Expression):
         if isinstance(lhs, LocationExpr):
@@ -258,9 +262,10 @@ class CircuitHelper:
     def add_if_statement_to_circuit(self, ast: IfStatement):
         raise NotImplementedError()
 
-    def _evaluate_private_expression(self, expr: Expression):
+    def _evaluate_private_expression(self, expr: Expression, tmp_suffix=''):
         priv_expr = self._circ_trafo.visit(expr)
-        sec_circ_var_idf = self._circ_temp_name_factory.get_new_idf(expr.annotated_type.type_name, priv_expr)
+        tname = f'{self._circ_temp_name_factory.get_new_name(expr.annotated_type.type_name, False)}{tmp_suffix}'
+        sec_circ_var_idf = self._circ_temp_name_factory.add_idf(tname, expr.annotated_type.type_name, priv_expr)
         stmt = CircVarDecl(sec_circ_var_idf, priv_expr)
         self.phi.append(stmt)
         return sec_circ_var_idf, priv_expr
@@ -314,12 +319,10 @@ class InlineRemap:
         self.prev = None
 
     def __enter__(self):
-        self.prev = self.c._inline_var_remap
-        self.c._inline_var_remap = {}
-        self.c._inline_var_remap.update(self.prev)
+        self.prev = self.c._inline_var_remap.copy()
 
     def __exit__(self, t, value, traceback):
-        self._inline_var_remap = self.prev
+        self.c._inline_var_remap = self.prev
 
 
 class Guarded:

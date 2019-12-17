@@ -254,7 +254,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         return self.transform_location(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        ast = self.gen.get_remapped_idf(ast)
+        ast = self.gen.get_remapped_idf_expr(ast)
         if isinstance(ast, IdentifierExpr) and isinstance(ast.idf, HybridArgumentIdf):
             assert ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
             return ast
@@ -296,7 +296,6 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         assert ast.expr is not None
         if not isinstance(ast.expr, TupleExpr):
             ast.expr = TupleExpr([ast.expr])
-        ast = self.visit_children(ast)
 
         ast.pre_statements += [
             self.gen.create_temporary_circuit_variable(ast.replaced_with(Identifier(f'{cfg.return_var_name}_{idx}').decl_var(ast.expr.elements[idx].annotated_type.type_name, ast.expr.elements[idx])))

@@ -1314,7 +1314,7 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
         self.idf = idf
         self.return_parameters = return_parameters if return_parameters else []
         self.annotated_type: AnnotatedTypeName = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
-        self.original_body = body
+        self.original_body = None
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)

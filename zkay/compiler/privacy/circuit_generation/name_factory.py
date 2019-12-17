@@ -35,8 +35,8 @@ class NameFactory(BaseNameFactory):
         self.idfs.append(idf)
         return idf
 
-    def add_idf(self, name: str, t: TypeName):
-        idf = HybridArgumentIdf(name, t, self.arg_type)
+    def add_idf(self, name: str, t: TypeName, priv_expr: Optional[Expression] = None):
+        idf = HybridArgumentIdf(name, t, self.arg_type, priv_expr)
         self.count += 1
         self.size += t.size_in_uints
         self.idfs.append(idf)

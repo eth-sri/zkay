@@ -90,11 +90,17 @@ class ZkayTransformer(AstTransformerVisitor):
         return ast
 
     def transform_contract(self, su: SourceUnit, c: ContractDefinition, ext_var_decls: List[StateVariableDeclaration]):
+        all_fcts = c.constructor_definitions + c.function_definitions
+
         # Get list of static owner labels for this contract
         global_owners = [Expression.me_expr()]
         for var in c.state_variable_declarations:
             if var.annotated_type.is_address() and 'final' in var.keywords:
                 global_owners.append(var.idf)
+
+        # Backup untransformed function bodies
+        for fct in all_fcts:
+            fct.original_body = fct.body
 
         # Transform types of normal state variables
         c.state_variable_declarations = self.var_decl_trafo.visit_list(c.state_variable_declarations)
@@ -102,7 +108,6 @@ class ZkayTransformer(AstTransformerVisitor):
         self.set_unique_fct_names(c)
 
         # Split into functions which require verification and those which don't and create generators
-        all_fcts = c.constructor_definitions + c.function_definitions
         req_ext_fcts = {}
         new_fcts, new_constr = [], []
         for fct in all_fcts:
@@ -129,8 +134,7 @@ class ZkayTransformer(AstTransformerVisitor):
         # Transform bodies
         for fct in all_fcts:
             gen = self.circuit_generators.get(fct, None)
-            fct.original_body = fct.body
-            fct.body = ZkayStatementTransformer(gen).visit(fct.body.clone())
+            fct.body = ZkayStatementTransformer(gen).visit(fct.original_body.clone())
 
         # Transform hybrid functions to support verification
         hybrid_fcts = [fct for fct in all_fcts if fct.requires_verification]
