@@ -8,9 +8,10 @@ from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformer
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
-    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, Identifier, \
-    AnnotatedTypeName, HybridArgType, CircuitInputStatement, CircuitComputationStatement, AllExpr, MeExpr, \
-    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr
+    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, \
+    Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, CircuitComputationStatement, AllExpr, MeExpr, \
+    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, \
+    ReturnStatement, Block, MemberAccessExpr
 
 
 class CircuitHelper:
@@ -157,10 +158,10 @@ class CircuitHelper:
         """
         ecode = expr.code()
         with CircIndentBlockBuilder(f'{ecode}', self._phi):
-            if expr.evaluate_privately:
-                plain_result_idf, private_expr = self._evaluate_private_expression(expr)
-            else:
+            if expr.annotated_type.is_public() and not expr.evaluate_privately:
                 plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
+            else:
+                plain_result_idf, private_expr = self._evaluate_private_expression(expr)
 
             if isinstance(new_privacy, AllExpr):
                 new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
@@ -180,6 +181,47 @@ class CircuitHelper:
 
         expr.statement.pre_statements.append(CircuitComputationStatement(new_out_param))
         return out_var
+
+    def evaluate_if_stmt_in_circuit(self, ast: IfStatement):
+        assert ast.condition.annotated_type.is_private()
+        args = []
+        arg_names = set()
+        for var in ast.read_values:
+            if var.in_scope_at(ast): # defined outside if statement -> need to be passed in as arg
+                assert var.target.annotated_type.type_name.can_be_private()
+                assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
+                args.append(IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.clone()).with_target(var.target))
+                arg_names.add(var.target.idf.name)
+                # technically only need to add those, which are not written before they are read
+
+        ret_params = []
+        for var in ast.modified_values:
+            if var.in_scope_at(ast): # side effect visible outside -> return it
+                assert var.target.annotated_type.is_private()
+                assert var.target.annotated_type.type_name.can_be_private()
+                assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
+                ret_params.append(IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.clone()).with_target(var.target))
+
+        astmt = AssignmentStatement(None, None)
+        fdef = FunctionDefinition(Identifier('<if_fct>'),
+                                  [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
+                                  [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params], Block([
+            ast,
+            ReturnStatement(TupleExpr(ret_params))
+        ]))
+        fcall = FunctionCallExpr(IdentifierExpr('<if_fct>'), args)
+        fcall.statement = astmt
+
+        ret_args = self.inline_circuit_function(fcall, fdef)
+        ret_arg_outs = [
+            self.get_circuit_output_for_private_expression(ret_arg, ret_param.annotated_type.privacy_annotation.privacy_annotation_label())
+            for ret_param, ret_arg in zip(ret_params, ret_args.elements)
+        ]
+
+        astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
+        astmt.rhs = TupleExpr(ret_arg_outs)
+        return astmt
+
 
     def add_to_circuit_inputs(self, expr: Expression) -> Tuple[HybridArgumentIdf, LocationExpr]:
         """
@@ -245,14 +287,13 @@ class CircuitHelper:
         self._inline_var_remap[self.get_remapped_idf(ast.variable_declaration.idf).name] = tmp_var
 
     def _add_assign(self, lhs: Expression, rhs: Expression):
-        if isinstance(lhs, LocationExpr):
-            lhs = self._circ_trafo.visit(lhs)
-            assert isinstance(lhs, IdentifierExpr)
-            self.create_temporary_circuit_variable(lhs.idf.decl_var(lhs.idf.t, rhs))
+        if isinstance(lhs, IdentifierExpr): # for now no ref types
+            self.create_temporary_circuit_variable(lhs.idf.decl_var(lhs.target.annotated_type.clone(), rhs))
         else:
+            assert isinstance(lhs, TupleExpr)
             if isinstance(rhs, FunctionCallExpr):
                 rhs = self._circ_trafo.visit(rhs)
-            assert isinstance(lhs, TupleExpr) and isinstance(rhs, TupleExpr) and len(lhs.elements) == len(rhs.elements)
+            assert isinstance(rhs, TupleExpr) and len(lhs.elements) == len(rhs.elements)
             for e_l, e_r in zip(lhs.elements, rhs.elements):
                 self._add_assign(e_l, e_r)
 
@@ -263,6 +304,12 @@ class CircuitHelper:
         raise NotImplementedError()
 
     def _evaluate_private_expression(self, expr: Expression, tmp_suffix=''):
+        assert not (isinstance(expr, MemberAccessExpr) and isinstance(expr.member, HybridArgumentIdf))
+        if isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) \
+                and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL:
+            # Already evaluated in circuit
+            return expr.idf.clone(), expr
+
         priv_expr = self._circ_trafo.visit(expr)
         tname = f'{self._circ_temp_name_factory.get_new_name(expr.annotated_type.type_name, False)}{tmp_suffix}'
         sec_circ_var_idf = self._circ_temp_name_factory.add_idf(tname, expr.annotated_type.type_name, priv_expr)

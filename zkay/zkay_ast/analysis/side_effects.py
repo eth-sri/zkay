@@ -107,14 +107,14 @@ class IndirectModificationDetector(FunctionVisitor):
         self.visitAST(ast)
         if isinstance(ast.func, LocationExpr):
             # for now no reference types -> only state could have been modified
+            fdef = ast.func.target
+            rlen = len(ast.read_values)
+            ast.read_values.update({v for v in fdef.read_values if isinstance(v.target, StateVariableDeclaration)})
+            self.fixed_point_reached &= rlen == len(ast.read_values)
             if ast.has_side_effects:
-                fdef = ast.func.target
                 mlen = len(ast.modified_values)
-                rlen = len(ast.read_values)
                 ast.modified_values.update({v for v in fdef.modified_values if isinstance(v.target, StateVariableDeclaration)})
-                ast.read_values.update({v for v in fdef.read_values if isinstance(v.target, StateVariableDeclaration)})
                 self.fixed_point_reached &= mlen == len(ast.modified_values)
-                self.fixed_point_reached &= rlen == len(ast.read_values)
 
     def visitAST(self, ast: AST):
         mlen = len(ast.modified_values)

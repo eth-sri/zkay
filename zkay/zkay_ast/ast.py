@@ -480,7 +480,7 @@ class IdentifierExpr(LocationExpr):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
 
-    def with_target(self, target: AST) -> 'IdentifierExpr':
+    def with_target(self, target: 'TargetDefinition') -> 'IdentifierExpr':
         self.target = target
         return self
 

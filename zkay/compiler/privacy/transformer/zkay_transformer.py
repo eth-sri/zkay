@@ -111,7 +111,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
                 if ast.else_branch is not None:
                     ast.else_branch = self.visit(ast.else_branch)
         else:
-            raise NotImplementedError()
+            self.gen.evaluate_if_stmt_in_circuit(ast)
 
         return ast
 
