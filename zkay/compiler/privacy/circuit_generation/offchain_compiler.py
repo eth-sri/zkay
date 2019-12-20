@@ -151,7 +151,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def get_rvalue(self, idf: IdentifierExpr, val_type: AnnotatedTypeName, indices: List[str]) -> str:
         if isinstance(idf.target, StateVariableDeclaration) and not self._is_builtin_var(idf):
-            is_encrypted = bool(val_type.old_priv_text)
+            is_encrypted = val_type.declared_type is not None and val_type.declared_type.is_private()
             name_str = f"'{idf.idf.name}'"
             constr = ''
             if val_type.is_address():
@@ -297,7 +297,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                                              f"proof = {PROVER_OBJ_NAME}.generate_proof({PROJECT_DIR_NAME}, {CONTRACT_NAME}, '{ast.name}', {ALL_PRIV_VALUES_NAME}, {cfg.zk_in_name}, {cfg.zk_out_name})",
                                              'actual_params.append(proof)'])
 
-        should_encrypt = ", ".join([str(bool(p.annotated_type.old_priv_text)) for p in self.current_f.parameters])
+        should_encrypt = ", ".join([str(p.annotated_type.declared_type is not None and p.annotated_type.declared_type.is_private()) for p in self.current_f.parameters])
         if isinstance(ast, ConstructorDefinition):
             invoke_transact_str = f'''
             # Deploy contract

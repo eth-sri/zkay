@@ -23,7 +23,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name.clone()))
         if ast.is_private():
-            new_t.old_priv_text = f'{ast.code()}' if ast.type_name != new_t.type_name else f'@{ast.privacy_annotation.code()}'
+            new_t.declared_type = ast.clone()
         return new_t
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
@@ -110,10 +110,9 @@ class ZkayStatementTransformer(AstTransformerVisitor):
                 ast.then_branch = self.visit(ast.then_branch)
                 if ast.else_branch is not None:
                     ast.else_branch = self.visit(ast.else_branch)
+            return ast
         else:
-            self.gen.evaluate_if_stmt_in_circuit(ast)
-
-        return ast
+            return self.gen.evaluate_if_stmt_in_circuit(ast)
 
     def visitWhileStatement(self, ast: WhileStatement):
         assert not contains_private_expr(ast.condition)
@@ -297,10 +296,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         if not isinstance(ast.expr, TupleExpr):
             ast.expr = TupleExpr([ast.expr])
 
-        ast.pre_statements += [
+        for idx in range(len(ast.function.return_parameters)):
             self.gen.create_temporary_circuit_variable(ast.replaced_with(Identifier(f'{cfg.return_var_name}_{idx}').decl_var(ast.expr.elements[idx].annotated_type.type_name, ast.expr.elements[idx])))
-            for idx in range(len(ast.function.return_parameters))
-        ]
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.add_assignment_to_circuit(ast)
@@ -314,6 +311,9 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         self.gen.add_if_statement_to_circuit(ast)
+
+    def visitBlock(self, ast: Block):
+        self.visit_list(ast.statements)
 
     def visitStatement(self, ast: Statement):
         raise NotImplementedError("Unsupported statement")

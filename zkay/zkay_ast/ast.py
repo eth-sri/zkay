@@ -1102,11 +1102,11 @@ class FunctionTypeName(TypeName):
 
 class AnnotatedTypeName(AST):
 
-    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, old_priv_text: str = ''):
+    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, declared_type: 'AnnotatedTypeName' = None):
         super().__init__()
         self.type_name = type_name
         self.had_privacy_annotation = privacy_annotation is not None
-        self.old_priv_text = old_priv_text
+        self.declared_type = declared_type
         if self.had_privacy_annotation:
             self.privacy_annotation = privacy_annotation
         else:
@@ -1118,7 +1118,7 @@ class AnnotatedTypeName(AST):
 
     def clone(self) -> 'AnnotatedTypeName':
         assert not self.privacy_annotation is None
-        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.old_priv_text)
+        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.declared_type)
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
 
@@ -1742,13 +1742,19 @@ class CodeVisitor(AstVisitor):
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         t = self.visit(ast.type_name)
-        if ast.old_priv_text != '':
-            t = f'{t}/*{ast.old_priv_text}*/'
-        p = self.visit(ast.privacy_annotation)
-        if ast.had_privacy_annotation:
-            return f'{t}@{p}'
-        else:
+        if ast.declared_type is not None:
+            assert not ast.had_privacy_annotation
+            if ast.declared_type.type_name == ast.type_name:
+                t = f'{t}/*@{ast.declared_type.privacy_annotation.code()}*/'
+            else:
+                t = f'{t}/*{self.visit(ast.declared_type)}*/'
             return t
+        else:
+            p = self.visit(ast.privacy_annotation)
+            if ast.had_privacy_annotation:
+                return f'{t}@{p}'
+            return t
+
 
     def visitMapping(self, ast: Mapping):
         k = self.visit(ast.key_type)
