@@ -1,7 +1,9 @@
+from typing import Union
+
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
     Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, NumberLiteralExpr, \
-    BooleanLiteralExpr
+    BooleanLiteralExpr, IfStatement
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -47,6 +49,9 @@ class DirectCanBePrivateDetector(FunctionVisitor):
     def visitReturnStatement(self, ast: ReturnStatement):
         self.visitChildren(ast)
 
+    def visitIfStatement(self, ast: IfStatement):
+        self.visitChildren(ast)
+
     def visitStatementList(self, ast: StatementList):
         self.visitChildren(ast)
 
@@ -64,8 +69,8 @@ class IndirectCanBePrivateDetector(FunctionVisitor):
                     return
 
 
-def check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast: Expression):
-    if ast.has_side_effects:
+def check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast: Union[Statement, Expression], check_side_effects: bool = True):
+    if check_side_effects and ast.has_side_effects:
         raise TypeException('Expressions with side effects are not allowed inside private expressions', ast)
 
     v = NonstaticOrIncompatibilityDetector()
@@ -113,13 +118,27 @@ class CircuitComplianceChecker(FunctionVisitor):
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visitChildren(ast)
 
+    def visitIfStatement(self, ast: IfStatement):
+        if ast.condition.annotated_type.is_private():
+            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.condition)
+            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.then_branch, check_side_effects=False)
+            mod_vals = ast.then_branch.modified_values
+            if ast.else_branch is not None:
+                check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.else_branch, check_side_effects=False)
+                mod_vals = mod_vals.union(ast.else_branch.modified_values)
+            for val in mod_vals:
+                if val.in_scope_at(ast) and val.target.annotated_type.is_public():
+                    raise TypeException('If statement with private condition must not contain side effects to public variables', ast)
+            self.priv_setter.set_evaluation(ast, evaluate_privately=True)
+        self.visitChildren(ast)
+
 
 class PrivateSetter(FunctionVisitor):
     def __init__(self):
         super().__init__()
         self.evaluate_privately = None
 
-    def set_evaluation(self, ast: Expression, evaluate_privately: bool):
+    def set_evaluation(self, ast: Union[Expression, Statement], evaluate_privately: bool):
         self.evaluate_privately = evaluate_privately
         self.visit(ast)
         self.evaluate_privately = None

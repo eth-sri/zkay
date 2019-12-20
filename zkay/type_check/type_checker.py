@@ -231,9 +231,6 @@ class TypeCheckVisitor(AstVisitor):
             expected = AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr())
             if not b.instanceof(expected):
                 raise TypeMismatchException(expected, b.annotated_type, b)
-            # TODO check that bodies no public side effects if condition private and that it can be transformed
-            #  into seq of cond assignments (only assignment, vardcl and ifstatement)
-            raise TypeMismatchException(AnnotatedTypeName.bool_all(), b.annotated_type, b)
 
     def visitWhileStatement(self, ast: WhileStatement):
         if not ast.condition.instanceof(AnnotatedTypeName.bool_all()):

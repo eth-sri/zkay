@@ -69,9 +69,9 @@ class CircuitHelper:
         else:
             self.trans_priv_size, self.trans_in_size, self.trans_out_size = None, None, None
 
-        # Current inlining remapping dictionary
-        # (maps inlined function parameter and variable identifiers to the corresponding temporary variables)
-        self._inline_var_remap: Dict[str, HybridArgumentIdf] = {}
+        # Current inlining remapping dictionary (is_local, name)
+        # (if is_local = true, it does not persist after current inline function returns)
+        self._inline_var_remap: Dict[Tuple[bool, str], HybridArgumentIdf] = {}
 
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
@@ -158,10 +158,11 @@ class CircuitHelper:
         """
         ecode = expr.code()
         with CircIndentBlockBuilder(f'{ecode}', self._phi):
-            if expr.annotated_type.is_public() and not expr.evaluate_privately:
-                plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
-            else:
+            is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
+            if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
                 plain_result_idf, private_expr = self._evaluate_private_expression(expr)
+            else:
+                plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
 
             if isinstance(new_privacy, AllExpr):
                 new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
@@ -184,35 +185,49 @@ class CircuitHelper:
 
     def evaluate_if_stmt_in_circuit(self, ast: IfStatement):
         assert ast.condition.annotated_type.is_private()
+
+        astmt = AssignmentStatement(None, None)
+        astmt.before_analysis = ast.before_analysis
+
         args = []
         arg_names = set()
         for var in ast.read_values:
             if var.in_scope_at(ast): # defined outside if statement -> need to be passed in as arg
-                assert var.target.annotated_type.type_name.can_be_private()
                 assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                args.append(IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.clone()).with_target(var.target))
+                arg = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).with_target(var.target)
+                arg.statement = astmt
+                args.append(arg)
                 arg_names.add(var.target.idf.name)
                 # technically only need to add those, which are not written before they are read
 
         ret_params = []
         for var in ast.modified_values:
             if var.in_scope_at(ast): # side effect visible outside -> return it
-                assert var.target.annotated_type.is_private()
-                assert var.target.annotated_type.type_name.can_be_private()
+                assert var.target.annotated_type.declared_type.is_private()
                 assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                ret_params.append(IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.clone()).with_target(var.target))
+                ret_param = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).with_target(var.target)
+                ret_param.statement = astmt
+                ret_params.append(ret_param)
 
-        astmt = AssignmentStatement(None, None)
+
         fdef = FunctionDefinition(Identifier('<if_fct>'),
                                   [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
                                   [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params], Block([
             ast,
             ReturnStatement(TupleExpr(ret_params))
         ]))
+        fdef.original_body = fdef.body
+        fdef.body.parent = fdef
+        fdef.parent = ast.function.body
+
         fcall = FunctionCallExpr(IdentifierExpr('<if_fct>'), args)
         fcall.statement = astmt
 
         ret_args = self.inline_circuit_function(fcall, fdef)
+        if not isinstance(ret_args, TupleExpr):
+            ret_args = TupleExpr([ret_args])
+        for ret_arg in ret_args.elements:
+            ret_arg.statement = astmt
         ret_arg_outs = [
             self.get_circuit_output_for_private_expression(ret_arg, ret_param.annotated_type.privacy_annotation.privacy_annotation_label())
             for ret_param, ret_arg in zip(ret_params, ret_args.elements)
@@ -221,7 +236,6 @@ class CircuitHelper:
         astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
         astmt.rhs = TupleExpr(ret_arg_outs)
         return astmt
-
 
     def add_to_circuit_inputs(self, expr: Expression) -> Tuple[HybridArgumentIdf, LocationExpr]:
         """
@@ -261,34 +275,32 @@ class CircuitHelper:
         with InlineRemap(self):
             with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
                 for param, arg in zip(fdef.parameters, ast.args):
-                    self.create_temporary_circuit_variable(Identifier(param.idf.name).decl_var(param.annotated_type, arg))
+                    self.create_temporary_circuit_variable(Identifier(param.idf.name), arg)
                 inlined_stmts = fdef.original_body.clone().statements
                 for stmt in inlined_stmts:
                     self._circ_trafo.visit(stmt)
                     ast.statement.pre_statements += stmt.pre_statements
-                ret_idfs = [self._inline_var_remap[f'{cfg.return_var_name}_{idx}'] for idx in range(len(fdef.return_parameters))]
+                ret_idfs = [self._inline_var_remap[(True, f'{cfg.return_var_name}_{idx}')] for idx in range(len(fdef.return_parameters))]
                 ret = TupleExpr([IdentifierExpr(idf.clone()).as_type(idf.t) for idf in ret_idfs])
         if len(ret.elements) == 1:
             ret = ret.elements[0]
         return ret
 
-    def get_remapped_idf(self, idf: Identifier) -> Union[HybridArgumentIdf, Identifier]:
-        while idf.name in self._inline_var_remap:
-            idf = self._inline_var_remap[idf.name]
-        return idf
+    def get_remapped_idf(self, idf: Identifier, is_local: bool) -> Union[HybridArgumentIdf, Identifier]:
+        return self._inline_var_remap.get((is_local, idf.name), idf)
 
     def get_remapped_idf_expr(self, idf: IdentifierExpr) -> LocationExpr:
-        if idf.idf.name not in self._inline_var_remap:
-            return idf
-        return idf.replaced_with(self.get_remapped_idf(idf.idf).get_loc_expr()).as_type(idf.annotated_type)
+        is_local = not isinstance(idf.target, StateVariableDeclaration)
+        remapped_idf = self.get_remapped_idf(idf.idf, is_local)
+        return idf if remapped_idf == idf.idf else idf.replaced_with(remapped_idf.get_loc_expr()).as_type(idf.annotated_type)
 
-    def create_temporary_circuit_variable(self, ast: VariableDeclarationStatement):
-        tmp_var, _ = self._evaluate_private_expression(ast.expr, tmp_suffix=f'_{ast.variable_declaration.idf.name}')
-        self._inline_var_remap[self.get_remapped_idf(ast.variable_declaration.idf).name] = tmp_var
+    def create_temporary_circuit_variable(self, orig_idf: Identifier, expr: Expression, is_local: bool = True):
+        tmp_var, _ = self._evaluate_private_expression(expr, tmp_suffix=f'_{orig_idf.name}')
+        self._inline_var_remap[(is_local, orig_idf.name)] = tmp_var
 
     def _add_assign(self, lhs: Expression, rhs: Expression):
         if isinstance(lhs, IdentifierExpr): # for now no ref types
-            self.create_temporary_circuit_variable(lhs.idf.decl_var(lhs.target.annotated_type.clone(), rhs))
+            self.create_temporary_circuit_variable(lhs.idf, rhs, is_local=not isinstance(lhs.target, StateVariableDeclaration))
         else:
             assert isinstance(lhs, TupleExpr)
             if isinstance(rhs, FunctionCallExpr):
@@ -301,7 +313,37 @@ class CircuitHelper:
         self._add_assign(ast.lhs, ast.rhs)
 
     def add_if_statement_to_circuit(self, ast: IfStatement):
-        raise NotImplementedError()
+        with CircIndentBlockBuilder(f'if {ast.condition.code()}', self.phi):
+            cond, _ = self._evaluate_private_expression(ast.condition)
+            self._phi.append(CircComment(f'if ({cond.name})'))
+
+            # handle if branch
+            prev_remap = self._inline_var_remap.copy()
+            with Guarded(self, cond, True):
+                self._circ_trafo.visit(ast.then_branch)
+            then_remap = self._inline_var_remap.copy()
+
+            # handle else branch
+            self._inline_var_remap = prev_remap
+            if ast.else_branch is not None:
+                self._phi.append(CircComment(f'else ({cond.name})'))
+                with Guarded(self, cond, False):
+                    self._circ_trafo.visit(ast.else_branch)
+            else_remap = self._inline_var_remap.copy()
+
+            # SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
+            self._inline_var_remap = {}
+            self._phi.append(CircComment(f'join ({cond.name})'))
+            for key, val in then_remap.items():
+                if key not in else_remap or else_remap[key].name == val.name:
+                    self._inline_var_remap[key] = val
+                else:
+                    # Add conditional assignment and remap to its result
+                    then_idf = then_remap[key]
+                    else_idf = else_remap[key]
+                    rhs = IdentifierExpr(cond.clone(), AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr())).ite(IdentifierExpr(then_idf).as_type(then_idf.t), IdentifierExpr(else_idf).as_type(else_idf.t))
+                    rhs = rhs.as_type(then_idf.t)
+                    self.create_temporary_circuit_variable(Identifier(key[1]), rhs)
 
     def _evaluate_private_expression(self, expr: Expression, tmp_suffix=''):
         assert not (isinstance(expr, MemberAccessExpr) and isinstance(expr.member, HybridArgumentIdf))
@@ -363,12 +405,13 @@ class CircIndentBlockBuilder:
 class InlineRemap:
     def __init__(self, c: CircuitHelper):
         self.c = c
-        self.prev = None
+        self.prev: Optional[Dict] = None
 
     def __enter__(self):
         self.prev = self.c._inline_var_remap.copy()
 
     def __exit__(self, t, value, traceback):
+        self.prev.update({(is_loc, key): val for (is_loc, key), val in self.c._inline_var_remap.items() if not is_loc})
         self.c._inline_var_remap = self.prev
 
 

@@ -297,7 +297,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             ast.expr = TupleExpr([ast.expr])
 
         for idx in range(len(ast.function.return_parameters)):
-            self.gen.create_temporary_circuit_variable(ast.replaced_with(Identifier(f'{cfg.return_var_name}_{idx}').decl_var(ast.expr.elements[idx].annotated_type.type_name, ast.expr.elements[idx])))
+            self.gen.create_temporary_circuit_variable(Identifier(f'{cfg.return_var_name}_{idx}'), ast.expr.elements[idx])
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.add_assignment_to_circuit(ast)
@@ -307,7 +307,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             t = ast.variable_declaration.annotated_type.type_name
             assert t == TypeName.uint_type() or t == TypeName.bool_type()
             ast.expr = NumberLiteralExpr(0)
-        self.gen.create_temporary_circuit_variable(ast)
+        self.gen.create_temporary_circuit_variable(ast.variable_declaration.idf, ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):
         self.gen.add_if_statement_to_circuit(ast)
