@@ -256,12 +256,12 @@ class BuildASTVisitor(SolidityVisitor):
         cond = self.visit(ctx.condition)
         then_branch = self.visit(ctx.then_branch)
         if not isinstance(then_branch, ast.Block):
-            then_branch = ast.Block([then_branch])
+            then_branch = ast.Block([then_branch], was_single_statement=True)
 
         if ctx.else_branch is not None:
             else_branch = self.visit(ctx.else_branch)
             if not isinstance(else_branch, ast.Block):
-                else_branch = ast.Block([else_branch])
+                else_branch = ast.Block([else_branch], was_single_statement=True)
         else:
             else_branch = None
 
@@ -271,14 +271,14 @@ class BuildASTVisitor(SolidityVisitor):
         cond = self.visit(ctx.condition)
         body = self.visit(ctx.body)
         if not isinstance(body, ast.Block):
-            body = ast.Block([body])
+            body = ast.Block([body], was_single_statement=True)
         return ast.WhileStatement(cond, body)
 
     def visitDoWhileStatement(self, ctx:SolidityParser.DoWhileStatementContext):
         body = self.visit(ctx.body)
         cond = self.visit(ctx.condition)
         if not isinstance(body, ast.Block):
-            body = ast.Block([body])
+            body = ast.Block([body], was_single_statement=True)
         return ast.DoWhileStatement(body, cond)
 
     def visitForStatement(self, ctx:SolidityParser.ForStatementContext):
@@ -287,7 +287,7 @@ class BuildASTVisitor(SolidityVisitor):
         update = None if ctx.update is None else self.visit(ctx.update)
         body = self.visit(ctx.body)
         if not isinstance(body, ast.Block):
-            body = ast.Block([body])
+            body = ast.Block([body], was_single_statement=True)
         return ast.ForStatement(init, cond, update, body)
 
     def visitExpressionStatement(self, ctx:SolidityParser.ExpressionStatementContext):

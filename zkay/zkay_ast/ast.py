@@ -794,6 +794,9 @@ class StatementList(Statement):
 
 
 class Block(StatementList):
+    def __init__(self, statements: List[Statement], was_single_statement=False):
+        super().__init__(statements)
+        self.was_single_statement = was_single_statement
 
     def clone(self) -> 'Block':
         from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -1719,7 +1722,11 @@ class CodeVisitor(AstVisitor):
         return self.visit_list(ast.statements)
 
     def visitBlock(self, ast: Block):
-        return f'{{\n{self.handle_block(ast).rstrip()}\n}}'
+        b = self.handle_block(ast).rstrip()
+        if ast.was_single_statement and len(ast.statements) == 1:
+            return b
+        else:
+            return f'{{\n{b}\n}}'
 
     def visitIndentBlock(self, ast: IndentBlock):
         fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"
