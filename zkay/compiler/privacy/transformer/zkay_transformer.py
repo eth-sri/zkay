@@ -310,10 +310,20 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         self.gen.create_temporary_circuit_variable(ast.variable_declaration.idf, ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):
+        # Bubble up nested pre statements
         self.gen.add_if_statement_to_circuit(ast)
+        ast.pre_statements += ast.then_branch.pre_statements
+        ast.then_branch.pre_statements = []
+        if ast.else_branch is not None:
+            ast.pre_statements += ast.else_branch.pre_statements
+            ast.else_branch.pre_statements = []
 
     def visitBlock(self, ast: Block):
-        self.visit_list(ast.statements)
+        # Bubble up nested pre statements
+        for i in range(len(ast.statements)):
+            self.visit(ast.statements[i])
+            ast.pre_statements += ast.statements[i].pre_statements
+            ast.statements[i].pre_statements = []
 
     def visitStatement(self, ast: Statement):
         raise NotImplementedError("Unsupported statement")

@@ -3,7 +3,7 @@ from typing import List, Union
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, \
     AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
-    TupleExpr, InstanceTarget, VariableDeclaration
+    TupleExpr, InstanceTarget, VariableDeclaration, FunctionDefinition, Parameter
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -75,7 +75,7 @@ class DirectModificationDetector(FunctionVisitor):
 
     def visitLocationExpr(self, ast: LocationExpr):
         self.visitAST(ast)
-        if ast.is_rvalue():
+        if ast.is_rvalue() and isinstance(ast.target, (VariableDeclaration, StateVariableDeclaration, Parameter)):
             ast.read_values.add(InstanceTarget(ast))
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):

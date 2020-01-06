@@ -209,13 +209,12 @@ class CircuitHelper:
                 ret_param.statement = astmt
                 ret_params.append(ret_param)
 
-
-        fdef = FunctionDefinition(Identifier('<if_fct>'),
-                                  [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
-                                  [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params], Block([
-            ast,
-            ReturnStatement(TupleExpr(ret_params))
-        ]))
+        fdef = FunctionDefinition(
+            Identifier('<if_fct>'),
+            [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
+            [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params],
+            Block([ast, ReturnStatement(TupleExpr(ret_params))])
+        )
         fdef.original_body = fdef.body
         fdef.body.parent = fdef
         fdef.parent = ast.function.body
@@ -276,10 +275,9 @@ class CircuitHelper:
             with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
                 for param, arg in zip(fdef.parameters, ast.args):
                     self.create_temporary_circuit_variable(Identifier(param.idf.name), arg)
-                inlined_stmts = fdef.original_body.clone().statements
-                for stmt in inlined_stmts:
-                    self._circ_trafo.visit(stmt)
-                    ast.statement.pre_statements += stmt.pre_statements
+                inlined_body = fdef.original_body.clone()
+                self._circ_trafo.visit(inlined_body)
+                ast.statement.pre_statements += inlined_body.pre_statements
                 ret_idfs = [self._inline_var_remap[(True, f'{cfg.return_var_name}_{idx}')] for idx in range(len(fdef.return_parameters))]
                 ret = TupleExpr([IdentifierExpr(idf.clone()).as_type(idf.t) for idf in ret_idfs])
         if len(ret.elements) == 1:
@@ -343,7 +341,7 @@ class CircuitHelper:
                     else_idf = else_remap[key]
                     rhs = IdentifierExpr(cond.clone(), AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr())).ite(IdentifierExpr(then_idf).as_type(then_idf.t), IdentifierExpr(else_idf).as_type(else_idf.t))
                     rhs = rhs.as_type(then_idf.t)
-                    self.create_temporary_circuit_variable(Identifier(key[1]), rhs)
+                    self.create_temporary_circuit_variable(Identifier(key[1]), rhs, is_local=key[0])
 
     def _evaluate_private_expression(self, expr: Expression, tmp_suffix=''):
         assert not (isinstance(expr, MemberAccessExpr) and isinstance(expr.member, HybridArgumentIdf))
