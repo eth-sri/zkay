@@ -16,7 +16,7 @@ setup(
         'web3[tester]==v5.4.0',
         'antlr4-python3-runtime==4.7.2',
         'parameterized==0.7.1',
-        'py-solc-x==0.6.0',
+        'py-solc-x==0.7.0',
         'pycryptodome==3.9.4',
     ],
     python_requires='>=3.7,<4',
