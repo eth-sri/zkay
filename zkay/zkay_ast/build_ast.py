@@ -129,7 +129,8 @@ class BuildASTVisitor(SolidityVisitor):
         state_vars = [p for p in parts if isinstance(p, StateVariableDeclaration)]
         constructors = [p for p in parts if isinstance(p, ConstructorDefinition)]
         functions = [p for p in parts if isinstance(p, FunctionDefinition)]
-        return ContractDefinition(identifier, state_vars, constructors, functions)
+        enums = [p for p in parts if isinstance(p, ast.EnumDefinition)]
+        return ContractDefinition(identifier, state_vars, constructors, functions, enums)
 
     # Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
     def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):

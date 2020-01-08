@@ -64,6 +64,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         import os
         import code
         import inspect
+        from enum import Enum
         from typing import Dict, List, Tuple, Optional, Union, Any, Callable
 
         from zkay import my_logging

@@ -8,7 +8,8 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
-    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement
+    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
+    EnumDefinition
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
 
@@ -43,6 +44,10 @@ class PythonCodeVisitor(CodeVisitor):
 
     def visitConstructorDefinition(self, ast: ConstructorDefinition):
         return self.visitConstructorOrFunctionDefinition(ast)
+
+    def visitEnumDefinition(self, ast: EnumDefinition):
+        body = '\n'.join([f'{self.visit(val)} = {idx}' for idx, val in enumerate(ast.values)])
+        return f'class {self.visit(ast.idf)}(Enum):\n{indent(body)}'
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         params = self.handle_function_params(ast, ast.parameters)

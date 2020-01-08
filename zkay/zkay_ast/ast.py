@@ -895,6 +895,11 @@ class UserDefinedTypeName(TypeName):
         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
 
 
+class EnumTypeName(UserDefinedTypeName):
+    def clone(self) -> 'EnumTypeName':
+        return EnumTypeName(self.names.copy(), self.target)
+
+
 class StructTypeName(UserDefinedTypeName):
     def clone(self) -> 'StructTypeName':
         return StructTypeName(self.names.copy(), self.target)
@@ -1359,6 +1364,17 @@ class StateVariableDeclaration(AST):
         self.expr = f(self.expr)
 
 
+class EnumDefinition(AST):
+    def __init__(self, idf: Identifier, values: List[Identifier]):
+        super().__init__()
+        self.idf = idf
+        self.values = values
+
+    def process_children(self, f: Callable[['AST'], 'AST']):
+        self.idf = f(self.idf)
+        self.values[:] = map(f, self.values)
+
+
 class StructDefinition(AST):
     def __init__(self, idf: Identifier, members: List[VariableDeclaration]):
         super().__init__()
@@ -1378,12 +1394,14 @@ class ContractDefinition(AST):
             state_variable_declarations: List[StateVariableDeclaration],
             constructor_definitions: List[ConstructorDefinition],
             function_definitions: List[FunctionDefinition],
+            enum_definitions: List[EnumDefinition],
             struct_definitions: Optional[List[StructDefinition]] = None):
         super().__init__()
         self.idf = idf
         self.state_variable_declarations = state_variable_declarations
         self.constructor_definitions = constructor_definitions
         self.function_definitions = function_definitions
+        self.enum_definitions = enum_definitions
         self.struct_definitions = [] if struct_definitions is None else struct_definitions
 
     def process_children(self, f: Callable[['AST'], 'AST']):
@@ -1391,6 +1409,7 @@ class ContractDefinition(AST):
         self.state_variable_declarations[:] = map(f, self.state_variable_declarations)
         self.constructor_definitions[:] = map(f, self.constructor_definitions)
         self.function_definitions[:] = map(f, self.function_definitions)
+        self.enum_definitions[:] = map(f, self.enum_definitions)
         self.struct_definitions[:] = map(f, self.struct_definitions)
 
     def __getitem__(self, key: str):
@@ -1846,6 +1865,10 @@ class CodeVisitor(AstVisitor):
         b = self.visit_single_or_list(ast.body)
         return self.function_definition_to_str(None, ast.parameters, ast.modifiers, [], b)
 
+    def visitEnumDefinition(self, ast: EnumDefinition):
+        values = self.visit_list(ast.values)
+        return f'enum {self.visit(ast.idf)} {{\n{indent(values)}\n}}'
+
     def visitStructDefinition(self, ast: StructDefinition):
         # Define struct with members in order of descending size (to get maximum space savings through packing)
         members_by_descending_size = sorted(ast.members, key=lambda x: x.annotated_type.type_name.size_in_uints, reverse=True)
@@ -1871,14 +1894,16 @@ class CodeVisitor(AstVisitor):
             state_vars: List[str],
             constructors: List[str],
             functions: List[str],
+            enums: List[str],
             structs: List[str]):
 
         i = str(idf)
         structs = '\n\n'.join(structs)
+        enums = '\n\n'.join(enums)
         state_vars = '\n'.join(state_vars)
         constructors = '\n\n'.join(constructors)
         functions = '\n\n'.join(functions)
-        body = '\n\n'.join(filter(''.__ne__, [structs, state_vars, constructors, functions]))
+        body = '\n\n'.join(filter(''.__ne__, [structs, enums, state_vars, constructors, functions]))
         body = indent(body)
         return f"contract {i} {{\n{body}\n}}"
 
@@ -1886,6 +1911,7 @@ class CodeVisitor(AstVisitor):
         state_vars = [self.visit(e) for e in ast.state_variable_declarations]
         constructors = [self.visit(e) for e in ast.constructor_definitions]
         functions = [self.visit(e) for e in ast.function_definitions]
+        enums = [self.visit(e) for e in ast.enum_definitions]
         structs = [self.visit(e) for e in ast.struct_definitions]
 
         return self.contract_definition_to_str(
@@ -1893,6 +1919,7 @@ class CodeVisitor(AstVisitor):
             state_vars,
             constructors,
             functions,
+            enums,
             structs)
 
     def visitSourceUnit(self, ast: SourceUnit):
