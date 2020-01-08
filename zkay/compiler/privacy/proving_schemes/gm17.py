@@ -3,7 +3,7 @@ from typing import List
 from zkay.config import cfg
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
-from zkay.compiler.privacy.library_contracts import bn128_scalar_field
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field, bn128_scalar_field_bits
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
 from zkay.utils.multiline_formatter import MultiLineFormatter
 
@@ -91,7 +91,7 @@ class ProvingSchemeGm17(ProvingScheme):
                 proof.a = Pairing.G1Point(proof_[0], proof_[1]);
                 proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
                 proof.c = Pairing.G1Point(proof_[6], proof_[7]);''' * (
-                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({cfg.zk_in_name}, {cfg.zk_out_name}))) % {self.snark_scalar_field_var_name};' if should_hash else '') *  \
+                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({cfg.zk_in_name}, {cfg.zk_out_name})) >> {256 - bn128_scalar_field_bits});' if should_hash else '') *  \
                 'VerifyingKey memory vk = verifyingKey();' * \
                 f"Pairing.G1Point memory vk_x = {(f'Pairing.scalar_mul(vk.query[1], {first_pi})' if first_pi != '1' else f'vk.query[1]')};" * [
                 f"vk_x = Pairing.addition(vk_x, {(f'Pairing.scalar_mul(vk.query[{idx + 2}], {pi})' if pi != '1' else f'vk.query[{idx + 2}]')});" for idx, pi in enumerate(primary_inputs[1:])] * '''\

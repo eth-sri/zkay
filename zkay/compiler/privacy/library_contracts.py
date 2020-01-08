@@ -1,3 +1,4 @@
+import math
 from textwrap import dedent
 
 from zkay.config import cfg
@@ -8,6 +9,7 @@ def get_verify_libs_code():
 
 
 bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+bn128_scalar_field_bits = int(math.log2(bn128_scalar_field))
 
 
 def get_pki_contract() -> str:

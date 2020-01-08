@@ -108,10 +108,23 @@ class TestOffchainBase(TestScenarios):
 #@parameterized_class(('name', 'scenario'), get_scenario('multipleret.py'))
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainDummyEnc(TestOffchainBase):
+    #@unittest.skipIf(True, "No reason")
     def test_offchain_simulation_dummy(self):
         old = cfg.crypto_backend
         cfg.crypto_backend = 'dummy'
         self.run_scenario()
+        cfg.crypto_backend = old
+
+
+@parameterized_class(('name', 'scenario'), get_scenario('enctest.py'))
+class TestOffchainWithHashing(TestOffchainBase):
+    def test_offchain_simulation_dummy_with_hashing(self):
+        old = cfg.crypto_backend
+        old_sh = cfg.should_use_hash
+        cfg.crypto_backend = 'dummy'
+        cfg.should_use_hash = lambda _: True
+        self.run_scenario(suffix='WithHashing')
+        cfg.should_use_hash = old_sh
         cfg.crypto_backend = old
 
 
