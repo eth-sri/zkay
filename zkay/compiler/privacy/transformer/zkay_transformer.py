@@ -305,7 +305,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         if ast.expr is None:
             t = ast.variable_declaration.annotated_type.type_name
-            assert t == TypeName.uint_type() or t == TypeName.bool_type()
+            assert t.can_be_private()
             ast.expr = NumberLiteralExpr(0)
         self.gen.create_temporary_circuit_variable(ast.variable_declaration.idf, ast.expr)
 

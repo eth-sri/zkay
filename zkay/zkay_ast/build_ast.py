@@ -178,10 +178,17 @@ class BuildASTVisitor(SolidityVisitor):
         return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa)
 
     def visitElementaryTypeName(self, ctx: SolidityParser.ElementaryTypeNameContext):
-        if ctx.getText() == 'address':
+        t = ctx.getText()
+        if t == 'address':
             return ast.AddressTypeName()
-        elif ctx.getText() == 'address payable':
+        elif t == 'address payable':
             return ast.AddressPayableTypeName()
+        elif t == 'bool':
+            return ast.BoolTypeName()
+        elif t.startswith('int'):
+            return ast.IntTypeName(t)
+        elif t.startswith('uint'):
+            return ast.UintTypeName(t)
         return super().visitElementaryTypeName(ctx)
 
     def visitIndexExpr(self, ctx: SolidityParser.IndexExprContext):

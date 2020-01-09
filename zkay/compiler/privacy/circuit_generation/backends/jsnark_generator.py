@@ -90,14 +90,16 @@ class JsnarkVisitor(AstVisitor):
             elif op == 'sign+':
                 fstr = '{}'
             elif op == 'sign-':
-                fstr = '{}.mul(-1)'
+                fstr = f'mul({{}}, val(-1), {ast.annotated_type.type_name.elem_bitwidth})'
 
-            elif op == '*':
-                fstr = '{}.mul({})'
             elif op == '+':
-                fstr = '{}.add({})'
+                fstr = f'add({{}}, {{}}, {ast.annotated_type.type_name.elem_bitwidth})'
             elif op == '-':
-                fstr = '{}.sub({})'
+                fstr = f'sub({{}}, {{}}, {ast.annotated_type.type_name.elem_bitwidth})'
+            elif op == '*':
+                fstr = f'mul({{}}, {{}}, {ast.annotated_type.type_name.elem_bitwidth})'
+            elif op == '/':
+                fstr = f'div({{}}, {{}})'
 
             elif op == '==':
                 fstr = '{}.isEqualTo({})'
@@ -130,7 +132,7 @@ class JsnarkVisitor(AstVisitor):
 def add_function_circuit_arguments(circuit: CircuitHelper):
     input_init_stmts = []
     for sec_input in circuit.sec_idfs:
-        input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints});')
+        input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {sec_input.t.elem_bitwidth});')
 
     for pub_input in circuit.input_idfs:
         addf = 'addK' if pub_input.t == TypeName.key_type() else 'addIn'

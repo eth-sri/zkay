@@ -3,6 +3,7 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.config import cfg
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
@@ -28,7 +29,6 @@ CONTRACT_HANDLE = 'self.contract_handle'
 GET_STATE = 'self.get_state'
 IS_EXTERNAL_CALL = 'self.is_external'
 
-UINT256_MAX_NAME = 'uint256_scalar_field'
 SCALAR_FIELD_NAME = 'bn128_scalar_field'
 
 
@@ -69,7 +69,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         from zkay import my_logging
         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
-        from zkay.transaction.offchain import {UINT256_MAX_NAME}, {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx, RequireException
+        from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx, RequireException
 
 
         ''') + contracts + (dedent(f'''
@@ -390,7 +390,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
-            modulo = SCALAR_FIELD_NAME if self.inside_circuit else UINT256_MAX_NAME
+            elem_bitwidth = ast.annotated_type.type_name.elem_bitwidth if ast.annotated_type is not None else 256
+            if self.inside_circuit and elem_bitwidth == 256:
+                modulo = SCALAR_FIELD_NAME
+            else:
+                modulo = f'(1 << {elem_bitwidth})'
             return f'({super().visitFunctionCallExpr(ast)}) % {modulo}'
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]

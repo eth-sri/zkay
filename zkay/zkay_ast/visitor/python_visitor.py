@@ -9,7 +9,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition
+    EnumDefinition, NumberTypeName
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
 
@@ -187,7 +187,7 @@ class PythonCodeVisitor(CodeVisitor):
         return '' if not ast.text else '# ' + ast.text.replace("\n", "\n# ")
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
-        if ast == TypeName.uint_type():
+        if isinstance(ast, NumberTypeName):
             return 'int'
         else:
             return ast.code()

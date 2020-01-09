@@ -7,7 +7,6 @@ from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, M
 from zkay.transaction.runtime import Runtime
 from zkay.utils.progress_printer import colored_print, TermColor
 
-uint256_scalar_field = 1 << 256
 bn128_scalar_field = bn128_scalar_field
 _bn128_comp_scalar_field = 1 << 252
 

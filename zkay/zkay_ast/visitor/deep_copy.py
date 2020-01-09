@@ -48,6 +48,7 @@ class DeepCopyVisitor(AstVisitor):
         'evaluate_privately',
         'has_side_effects',
         'contains_inlined_function',
+        '_size_in_bits',
 
         # Function stuff
         'unambiguous_name',

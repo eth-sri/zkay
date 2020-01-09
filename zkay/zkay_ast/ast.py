@@ -127,7 +127,7 @@ class Expression(AST):
     def implicitly_converted(self, expected: 'TypeName'):
         if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
-        elif expected == TypeName.uint_type() and self.instanceof_data_type(TypeName.bool_type()):
+        elif isinstance(expected, NumberTypeName) and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
             assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
@@ -347,7 +347,7 @@ class BuiltinFunction(Expression):
         :return: true if operation itself can be run inside a circuit
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
-        return self.op not in ['**', '/', '%']
+        return self.op not in ['**', '%']
 
     def with_privacy(self, is_private: bool) -> 'BuiltinFunction':
         if is_private:
@@ -820,11 +820,11 @@ class TypeName(AST):
 
     @staticmethod
     def bool_type():
-        return ElementaryTypeName('bool')
+        return BoolTypeName()
 
     @staticmethod
     def uint_type():
-        return ElementaryTypeName('uint')
+        return UintTypeName()
 
     @staticmethod
     def address_type():
@@ -854,11 +854,20 @@ class TypeName(AST):
     def size_in_uints(self):
         return 1
 
+    @property
+    def elem_bitwidth(self):
+        # Bitwidth, only defined for primitive types
+        raise NotImplementedError()
+
     def is_primitive_type(self):
-        return self == TypeName.bool_type() or self == TypeName.uint_type() or self == TypeName.address_type() or self == TypeName.address_payable_type()
+        return self == TypeName.bool_type() or isinstance(self, NumberTypeName) or isinstance(self, EnumTypeName) or self == TypeName.address_type() or self == TypeName.address_payable_type()
 
     def can_be_private(self):
-        return self == TypeName.bool_type() or self == TypeName.uint_type()
+        return self.is_primitive_type()
+        #if isinstance(self, NumberTypeName):
+        #    return self.size_in_bytes == 32 # Only full size ints are supported because other ints would require expensive modulo operations in the circuit
+        #else:
+        #    return self.is_primitive_type()
 
     def clone(self) -> 'TypeName':
         raise NotImplementedError()
@@ -877,9 +886,53 @@ class ElementaryTypeName(TypeName):
         return ElementaryTypeName(self.name)
 
     def __eq__(self, other):
-        if isinstance(other, ElementaryTypeName):
-            return self.name == other.name
-        return False
+        return isinstance(other, ElementaryTypeName) and self.name == other.name
+
+
+class BoolTypeName(ElementaryTypeName):
+    def __init__(self, name='bool'):
+        super().__init__(name)
+
+    def clone(self) -> 'BoolTypeName':
+        return BoolTypeName()
+
+    @property
+    def elem_bitwidth(self):
+        return 1
+
+    def __eq__(self, other):
+        return isinstance(other, BoolTypeName)
+
+
+class NumberTypeName(ElementaryTypeName):
+    def __init__(self, name: str, prefix: str):
+        assert name.startswith(prefix)
+        prefix_len = len(prefix)
+        super().__init__(name)
+        self._size_in_bits = int(name[prefix_len:]) if len(name) > prefix_len else 0
+
+    @property
+    def elem_bitwidth(self):
+        return 256 if self._size_in_bits == 0 else self._size_in_bits
+
+    def __eq__(self, other):
+        return isinstance(other, NumberTypeName) and self.name == other.name
+
+
+class IntTypeName(NumberTypeName):
+    def __init__(self, name: str = 'int'):
+        super().__init__(name, 'int')
+
+    def clone(self) -> 'IntTypeName':
+        return IntTypeName(self.name)
+
+
+class UintTypeName(NumberTypeName):
+    def __init__(self, name: str = 'uint'):
+        super().__init__(name, 'uint')
+
+    def clone(self) -> 'UintTypeName':
+        return UintTypeName(self.name)
 
 
 class UserDefinedTypeName(TypeName):
@@ -899,6 +952,10 @@ class EnumTypeName(UserDefinedTypeName):
     def clone(self) -> 'EnumTypeName':
         return EnumTypeName(self.names.copy(), self.target)
 
+    @property
+    def elem_bitwidth(self):
+        return 256
+
 
 class StructTypeName(UserDefinedTypeName):
     def clone(self) -> 'StructTypeName':
@@ -914,6 +971,10 @@ class AddressTypeName(UserDefinedTypeName):
     def __init__(self):
         super().__init__([Identifier('<address>')], None)
 
+    @property
+    def elem_bitwidth(self):
+        return 160
+
     def clone(self) -> 'UserDefinedTypeName':
         return AddressTypeName()
 
@@ -924,6 +985,10 @@ class AddressTypeName(UserDefinedTypeName):
 class AddressPayableTypeName(UserDefinedTypeName):
     def __init__(self):
         super().__init__([Identifier('<address_payable>')], None)
+
+    @property
+    def elem_bitwidth(self):
+        return 160
 
     def clone(self) -> 'UserDefinedTypeName':
         return AddressPayableTypeName()
@@ -979,6 +1044,10 @@ class Array(TypeName):
             return -1
         else:
             return self.expr.value
+
+    @property
+    def elem_bitwidth(self):
+        return self.value_type.type_name.elem_bitwidth
 
     def __eq__(self, other):
         if not isinstance(other, Array):
