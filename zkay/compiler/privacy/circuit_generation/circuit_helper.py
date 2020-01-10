@@ -11,7 +11,7 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, \
     Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, CircuitComputationStatement, AllExpr, MeExpr, \
     StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, \
-    ReturnStatement, Block, MemberAccessExpr
+    ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, BooleanLiteralExpr, NumberLiteralExpr
 
 
 class CircuitHelper:
@@ -42,7 +42,7 @@ class CircuitHelper:
         self._secret_input_name_factory = NameFactory('secret', arg_type=HybridArgType.PRIV_CIRCUIT_VAL)
 
         # Circuit internal variables
-        self._circ_temp_name_factory = NameFactory('tmp', arg_type=HybridArgType.PRIV_CIRCUIT_VAL)
+        self._circ_temp_name_factory = NameFactory('tmp', arg_type=HybridArgType.TMP_CIRCUIT_VAL)
 
         # Public circuit inputs
         self._out_name_factory = NameFactory(cfg.zk_out_name, arg_type=HybridArgType.PUB_CIRCUIT_ARG)
@@ -246,6 +246,12 @@ class CircuitHelper:
 
         expr_text = expr.code()
         input_expr = self._expr_trafo.visit(expr)
+        t = input_expr.annotated_type.type_name
+        if isinstance(t, BooleanLiteralType):
+            return self._evaluate_private_expression(input_expr, str(t.value))
+        elif isinstance(t, NumberLiteralType):
+            return self._evaluate_private_expression(input_expr, str(t.value))
+
         if privacy.is_all_expr():
             input_idf = self._in_name_factory.get_new_idf(expr.annotated_type.type_name)
             locally_decrypted_idf = input_idf

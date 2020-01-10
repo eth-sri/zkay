@@ -10,7 +10,8 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, Statement
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
     Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
     Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, TypeName, \
-    NumberLiteralExpr, MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement
+    NumberLiteralExpr, MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
+    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -194,7 +195,11 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             ret = self.visit(expr)
         new_pre_stmts = expr.statement.pre_statements[prelen:]
         if new_pre_stmts:
-            cond_expr = guard_var.get_loc_expr() if if_true else guard_var.get_loc_expr().unop('!')
+            if guard_var.arg_type == HybridArgType.TMP_CIRCUIT_VAL:
+                assert isinstance(guard_var.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType)
+                cond_expr = BooleanLiteralExpr(guard_var.corresponding_priv_expression.annotated_type.type_name.value ^ (not if_true))
+            else:
+                cond_expr = guard_var.get_loc_expr() if if_true else guard_var.get_loc_expr().unop('!')
             expr.statement.pre_statements = expr.statement.pre_statements[:prelen] + [IfStatement(cond_expr, Block(new_pre_stmts), None)]
         return ret
 
@@ -279,6 +284,14 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
     # INLINED FUNCTION CALLS
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        t = ast.annotated_type.type_name
+
+        # Constant folding
+        if isinstance(t, BooleanLiteralType):
+            return ast.replaced_with(BooleanLiteralExpr(t.value))
+        elif isinstance(t, NumberLiteralType):
+            return ast.replaced_with(NumberLiteralExpr(t.value))
+
         if isinstance(ast.func, BuiltinFunction):
             return self.visit_children(ast)
 

@@ -3,7 +3,7 @@ from typing import Union
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
     Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, NumberLiteralExpr, \
-    BooleanLiteralExpr, IfStatement
+    BooleanLiteralExpr, IfStatement, NumberLiteralType, BooleanLiteralType
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -93,9 +93,9 @@ class CircuitComplianceChecker(FunctionVisitor):
             # Cannot evaluate inside circuit -> never do it
             return False
 
-        if isinstance(expr, (BooleanLiteralExpr, NumberLiteralExpr)):
-            # TODO More generally, never evaluate constant expressions inside private expression outside circuit
-            #  (introduces unnecessary inputs)
+        assert expr.annotated_type is not None
+        if isinstance(expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
+            # Expressions for which the value is known at compile time -> embed constant expression value into the circuit
             return True
 
         # Could evaluate in circuit, use analysis to determine whether this would be better performance wise

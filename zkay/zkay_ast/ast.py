@@ -1,9 +1,11 @@
 import abc
+import math
+import operator
 import textwrap
 from collections import OrderedDict
 from enum import IntEnum
 from os import linesep
-from typing import List, Dict, Union, Optional, Callable, Set, Tuple
+from typing import List, Dict, Union, Optional, Callable, Set
 
 from zkay.config import cfg
 from zkay.zkay_ast.analysis.partition_state import PartitionState
@@ -98,13 +100,13 @@ class Comment(AST):
         if not block:
             return block
         return [
-            Comment('-' * 31),
-            Comment(text),
-            Comment('-' * 31),
-        ] + block + [
-            Comment('-' * 31),
-            BlankLine(),
-        ]
+                   Comment('-' * 31),
+                   Comment(text),
+                   Comment('-' * 31),
+               ] + block + [
+                   Comment('-' * 31),
+                   BlankLine(),
+               ]
 
 
 class BlankLine(Comment):
@@ -119,7 +121,7 @@ class Expression(AST):
         return AllExpr()
 
     @staticmethod
-    def me_expr(stmt: Optional['Statement']=None):
+    def me_expr(stmt: Optional['Statement'] = None):
         me = MeExpr()
         me.statement = stmt
         return me
@@ -165,15 +167,7 @@ class Expression(AST):
             return None
 
     def instanceof_data_type(self, expected: 'TypeName') -> bool:
-        assert (isinstance(expected, TypeName))
-
-        # Implicit conversions
-        if isinstance(self.annotated_type.type_name, AddressPayableTypeName) and expected == TypeName.address_type():
-            return True
-
-        # check data type
-        actual = self.annotated_type.type_name
-        return expected == actual
+        return self.annotated_type.type_name.implicitly_convertible_to(expected)
 
     def is_lvalue(self) -> bool:
         # TODO not really correct once we have reference types (there can be nested rvalues in left assignment subexpressions)
@@ -244,6 +238,17 @@ class Expression(AST):
             return self.statement.before_analysis
 
 
+builtin_op_fct = {
+    '+': operator.add, '-': operator.sub,
+    '**': operator.pow, '*': operator.mul, '/': operator.floordiv, '%': operator.mod,
+    'sign+': lambda a: a, 'sign-': operator.neg,
+    '<': operator.lt, '>': operator.gt, '<=': operator.le, '>=': operator.ge,
+    '==': operator.eq, '!=': operator.ne,
+    '&&': lambda a, b: a and b, '||': lambda a, b: a or b, '!': lambda a: not a,
+    'ite': lambda a, b, c: b if a else c,
+    'parenthesis': lambda a: a
+}
+
 builtin_functions = {
     'parenthesis': '({})',
     'ite': '{} ? {} : {}'
@@ -265,6 +270,8 @@ builtin_functions.update(comp)
 builtin_functions.update(eq)
 builtin_functions.update(bop)
 
+assert builtin_op_fct.keys() == builtin_functions.keys()
+
 
 class BuiltinFunction(Expression):
 
@@ -280,6 +287,10 @@ class BuiltinFunction(Expression):
 
     def format_string(self):
         return builtin_functions[self.op]
+
+    @property
+    def op_func(self):
+        return builtin_op_fct[self.op]
 
     def is_arithmetic(self):
         return self.op in arithmetic
@@ -314,7 +325,7 @@ class BuiltinFunction(Expression):
         :return: None if the type is generic
         """
         if self.is_arithmetic():
-            t = TypeName.uint_type()
+            t = NumberTypeName.any()
         elif self.is_comp():
             t = TypeName.uint_type()
         elif self.is_bop():
@@ -331,7 +342,7 @@ class BuiltinFunction(Expression):
         :return: None if the type is generic
         """
         if self.is_arithmetic():
-            return TypeName.uint_type()
+            return NumberTypeName.any()
         elif self.is_comp():
             return TypeName.bool_type()
         elif self.is_bop():
@@ -413,7 +424,7 @@ class BooleanLiteralExpr(LiteralExpr):
     def __init__(self, value: bool):
         super().__init__()
         self.value = value
-        self.annotated_type = AnnotatedTypeName.bool_all()
+        self.annotated_type = AnnotatedTypeName(BooleanLiteralType(self.value))
 
 
 class NumberLiteralExpr(LiteralExpr):
@@ -421,7 +432,7 @@ class NumberLiteralExpr(LiteralExpr):
     def __init__(self, value: int):
         super().__init__()
         self.value = value
-        self.annotated_type = AnnotatedTypeName.uint_all()
+        self.annotated_type = AnnotatedTypeName(NumberLiteralType(self.value))
 
 
 class StringLiteralExpr(LiteralExpr):
@@ -570,20 +581,26 @@ class HybridArgType(IntEnum):
     PRIV_CIRCUIT_VAL = 0
     PUB_CIRCUIT_ARG = 1
     PUB_CONTRACT_VAL = 2
+    TMP_CIRCUIT_VAL = 3
 
 
 class HybridArgumentIdf(Identifier):
     def __init__(self, name: str, t: 'TypeName', arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None):
         super().__init__(name)
-        self.t = t # transformed type of this idf
+        self.t = t  # transformed type of this idf
+        if isinstance(t, BooleanLiteralType):
+            self.t = TypeName.bool_type()
+        elif isinstance(t, NumberLiteralType):
+            self.t = t.to_int_type()
         self.arg_type = arg_type
         self.corresponding_priv_expression = corresponding_priv_expression
         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
 
     def get_loc_expr(self) -> LocationExpr:
-        if self.arg_type == HybridArgType.PRIV_CIRCUIT_VAL:
+        if self.arg_type == HybridArgType.PRIV_CIRCUIT_VAL or self.arg_type == HybridArgType.TMP_CIRCUIT_VAL:
             return IdentifierExpr(self.clone()).as_type(self.t)
         else:
+            assert self.arg_type == HybridArgType.PUB_CIRCUIT_ARG
             return IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
 
     def clone(self):
@@ -616,7 +633,8 @@ class HybridArgumentIdf(Identifier):
         if isinstance(self.t, Array):
             return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints))
         elif base is not None:
-            return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
+            return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(
+                self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
         else:
             return tgt.clone().index(start_offset).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
 
@@ -860,14 +878,16 @@ class TypeName(AST):
         raise NotImplementedError()
 
     def is_primitive_type(self):
-        return self == TypeName.bool_type() or isinstance(self, NumberTypeName) or isinstance(self, EnumTypeName) or self == TypeName.address_type() or self == TypeName.address_payable_type()
+        return self == TypeName.bool_type() or isinstance(self, BooleanLiteralType) or \
+               isinstance(self, NumberTypeName) or isinstance(self, EnumTypeName) or \
+               self == TypeName.address_type() or self == TypeName.address_payable_type()
 
     def can_be_private(self):
         return self.is_primitive_type()
-        #if isinstance(self, NumberTypeName):
-        #    return self.size_in_bytes == 32 # Only full size ints are supported because other ints would require expensive modulo operations in the circuit
-        #else:
-        #    return self.is_primitive_type()
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        assert isinstance(expected, TypeName)
+        return expected == self
 
     def clone(self) -> 'TypeName':
         raise NotImplementedError()
@@ -904,24 +924,102 @@ class BoolTypeName(ElementaryTypeName):
         return isinstance(other, BoolTypeName)
 
 
+class BooleanLiteralType(ElementaryTypeName):
+    def __init__(self, name: bool):
+        super().__init__(str(name).lower())
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        return super().implicitly_convertible_to(expected) or isinstance(expected, BoolTypeName)
+
+    @property
+    def value(self):
+        return self.name == 'true'
+
+    @property
+    def elem_bitwidth(self):
+        return 1
+
+    def clone(self) -> 'BooleanLiteralType':
+        return BooleanLiteralType(self.value)
+
+    def __eq__(self, other):
+        return isinstance(other, BooleanLiteralType)
+
+
 class NumberTypeName(ElementaryTypeName):
-    def __init__(self, name: str, prefix: str):
+    def __init__(self, name: str, prefix: str, signed: bool, bitwidth=None):
         assert name.startswith(prefix)
         prefix_len = len(prefix)
         super().__init__(name)
-        self._size_in_bits = int(name[prefix_len:]) if len(name) > prefix_len else 0
+        if bitwidth is None:
+            self._size_in_bits = int(name[prefix_len:]) if len(name) > prefix_len else 0
+        else:
+            self._size_in_bits = bitwidth
+        self.signed = signed
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        return super().implicitly_convertible_to(expected) or type(expected) == NumberTypeName
+
+    @staticmethod
+    def any():
+        return NumberTypeName('', '', True, 256)
 
     @property
     def elem_bitwidth(self):
         return 256 if self._size_in_bits == 0 else self._size_in_bits
 
+    def can_represent(self, value: int):
+        """ Return true if value can be represented by this type """
+        lo = - (1 << self.elem_bitwidth - 1) if self.signed else 0
+        hi = (1 << self.elem_bitwidth - 1) if self.signed else (1 << self.elem_bitwidth)
+        return lo <= value < hi
+
     def __eq__(self, other):
         return isinstance(other, NumberTypeName) and self.name == other.name
 
 
+class NumberLiteralType(NumberTypeName):
+    def __init__(self, name: int):
+        bitwidth = name.bit_length()
+        if name < 0:
+            bitwidth += 1
+        bitwidth = max(int(math.ceil(bitwidth / 8.0)) * 8, 8)
+        assert 8 <= bitwidth <= 256 and bitwidth % 8 == 0
+
+        name = str(name)
+        super().__init__(name, name, False, bitwidth)
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        if isinstance(expected, NumberTypeName):
+            # Allow implicit conversion only if it fits
+            return expected.can_represent(self.value)
+        return super().implicitly_convertible_to(expected)
+
+    def to_int_type(self):
+        if self.value < 0:
+            return IntTypeName(f'int{self.elem_bitwidth}')
+        else:
+            return UintTypeName(f'uint{self.elem_bitwidth}')
+
+    @property
+    def value(self):
+        return int(self.name)
+
+    def clone(self) -> 'NumberLiteralType':
+        return NumberLiteralType(self.value)
+
+    def __eq__(self, other):
+        return isinstance(other, NumberLiteralType)
+
+
 class IntTypeName(NumberTypeName):
     def __init__(self, name: str = 'int'):
-        super().__init__(name, 'int')
+        super().__init__(name, 'int', True)
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        # Implicitly convert smaller int types to larger int types
+        return super().implicitly_convertible_to(expected) or (
+                isinstance(expected, IntTypeName) and expected.elem_bitwidth >= self.elem_bitwidth)
 
     def clone(self) -> 'IntTypeName':
         return IntTypeName(self.name)
@@ -929,7 +1027,12 @@ class IntTypeName(NumberTypeName):
 
 class UintTypeName(NumberTypeName):
     def __init__(self, name: str = 'uint'):
-        super().__init__(name, 'uint')
+        super().__init__(name, 'uint', False)
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        # Implicitly convert smaller uint types to larger uint types
+        return super().implicitly_convertible_to(expected) or (
+                isinstance(expected, UintTypeName) and expected.elem_bitwidth >= self.elem_bitwidth)
 
     def clone(self) -> 'UintTypeName':
         return UintTypeName(self.name)
@@ -985,6 +1088,10 @@ class AddressTypeName(UserDefinedTypeName):
 class AddressPayableTypeName(UserDefinedTypeName):
     def __init__(self):
         super().__init__([Identifier('<address_payable>')], None)
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        # Implicit conversions
+        return super().implicitly_convertible_to(expected) or expected == TypeName.address_type()
 
     @property
     def elem_bitwidth(self):
@@ -1052,9 +1159,11 @@ class Array(TypeName):
     def __eq__(self, other):
         if not isinstance(other, Array):
             return False
-        if self.value_type == other.value_type and isinstance(self.expr, NumberLiteralExpr) and isinstance(other.expr, NumberLiteralExpr) and self.expr.value == other.expr.value:
+        if self.value_type != other.value_type:
+            return False
+        if isinstance(self.expr, NumberLiteralExpr) and isinstance(other.expr, NumberLiteralExpr) and self.expr.value == other.expr.value:
             return True
-        if self.value_type == other.value_type and self.expr is None and other.expr is None:
+        if self.expr is None and other.expr is None:
             return True
         return False
 
@@ -1139,6 +1248,9 @@ class TupleType(TypeName):
                 return True
         else:
             return False
+
+    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+        return self.check_component_wise(expected, lambda x, y: x.type_name.implicitly_convertible_to(y.type_name))
 
     def perfect_privacy_match(self, other):
         def privacy_match(self: AnnotatedTypeName, other: AnnotatedTypeName):
@@ -1306,7 +1418,8 @@ class Parameter(AST):
         self.is_final = 'final' in self.keywords
 
     def copy(self) -> 'Parameter':
-        return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location, self.original_type)
+        return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location,
+                         self.original_type)
 
     def with_changed_storage(self, match_storage: str, new_storage: str) -> 'Parameter':
         if self.storage_location == match_storage:
@@ -1564,6 +1677,7 @@ class InstanceTarget(tuple):
             return True
         except UnknownIdentifierException:
             return False
+
 
 # UTIL FUNCTIONS
 
@@ -1849,7 +1963,6 @@ class CodeVisitor(AstVisitor):
             if ast.had_privacy_annotation:
                 return f'{t}@{p}'
             return t
-
 
     def visitMapping(self, ast: Mapping):
         k = self.visit(ast.key_type)

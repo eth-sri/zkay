@@ -171,6 +171,8 @@ class PythonCodeVisitor(CodeVisitor):
                 fstr = '{} or {}'
             elif ast.func.op == '!':
                 fstr = 'not {}'
+            elif ast.func.op == '/':
+                fstr = '{} // {}'
             elif ast.func.is_ite():
                 fstr = '({1} if {0} else {2})'
 
