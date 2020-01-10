@@ -14,8 +14,8 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 output_dir = os.path.join(script_dir, 'output')
 
 
-#@parameterized_class(('name', 'example'), get_code_example(''))
-@parameterized_class(('name', 'example'), all_examples)
+@parameterized_class(('name', 'example'), get_code_example('MultipleReturnValues.sol'))
+#@parameterized_class(('name', 'example'), all_examples)
 class TestCompiler(TestExamples):
 
     def get_directory(self):

@@ -205,20 +205,29 @@ class Expression(AST):
             return False
 
         # check privacy type
-        p_expected = expected.privacy_annotation.privacy_annotation_label()
-        p_actual = actual.privacy_annotation.privacy_annotation_label()
-        if not p_expected or not p_actual:
+        #BOOKMARK
+        combined_label = actual.combined_privacy(self.analysis, expected)
+        if combined_label is None:
             return False
+        elif combined_label.privacy_annotation_label() == actual.privacy_annotation.privacy_annotation_label():
+            return True
         else:
-            if p_expected == p_actual:
-                return True
-            elif self.analysis is not None and self.analysis.same_partition(p_expected, p_actual):
-                # analysis is not available, e.g., for state variables
-                return True
-            elif actual.privacy_annotation.is_all_expr():
-                return 'make-private'
-            else:
-                return False
+            return 'make-private'
+
+        # p_expected = expected.privacy_annotation.privacy_annotation_label()
+        # p_actual = actual.privacy_annotation.privacy_annotation_label()
+        # if not p_expected or not p_actual:
+        #     return False
+        # else:
+        #     if p_expected == p_actual:
+        #         return True
+        #     elif self.analysis is not None and self.analysis.same_partition(p_expected, p_actual):
+        #         # analysis is not available, e.g., for state variables
+        #         return True
+        #     elif actual.privacy_annotation.is_all_expr():
+        #         return 'make-private'
+        #     else:
+        #         return False
 
     def replaced_with(self, replacement: 'Expression') -> 'Expression':
         repl = super().replaced_with(replacement)
@@ -591,7 +600,7 @@ class HybridArgumentIdf(Identifier):
         if isinstance(t, BooleanLiteralType):
             self.t = TypeName.bool_type()
         elif isinstance(t, NumberLiteralType):
-            self.t = t.to_int_type()
+            self.t = t.to_abstract_type()
         self.arg_type = arg_type
         self.corresponding_priv_expression = corresponding_priv_expression
         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
@@ -889,6 +898,20 @@ class TypeName(AST):
         assert isinstance(expected, TypeName)
         return expected == self
 
+    def compatible_with(self, other_type: 'TypeName') -> bool:
+        assert isinstance(other_type, TypeName)
+        return self.implicitly_convertible_to(other_type) or other_type.implicitly_convertible_to(self)
+
+    def combined_type(self, other_type: 'TypeName', literal_combine_fct):
+        if other_type.implicitly_convertible_to(self):
+            return self
+        elif self.implicitly_convertible_to(other_type):
+            return other_type
+        return None
+
+    def annotate(self, privacy_annotation):
+        return AnnotatedTypeName(self, privacy_annotation)
+
     def clone(self) -> 'TypeName':
         raise NotImplementedError()
 
@@ -931,6 +954,12 @@ class BooleanLiteralType(ElementaryTypeName):
     def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
         return super().implicitly_convertible_to(expected) or isinstance(expected, BoolTypeName)
 
+    def combined_type(self, other_type: 'TypeName', literal_combine_fct):
+        if isinstance(other_type, BooleanLiteralType):
+            return literal_combine_fct(self, other_type)
+        else:
+            return super().combined_type(other_type, literal_combine_fct)
+
     @property
     def value(self):
         return self.name == 'true'
@@ -938,6 +967,9 @@ class BooleanLiteralType(ElementaryTypeName):
     @property
     def elem_bitwidth(self):
         return 1
+
+    def to_abstract_type(self):
+        return TypeName.bool_type()
 
     def clone(self) -> 'BooleanLiteralType':
         return BooleanLiteralType(self.value)
@@ -995,7 +1027,13 @@ class NumberLiteralType(NumberTypeName):
             return expected.can_represent(self.value)
         return super().implicitly_convertible_to(expected)
 
-    def to_int_type(self):
+    def combined_type(self, other_type: 'TypeName', literal_combine_fct):
+        if isinstance(other_type, NumberLiteralType):
+            return literal_combine_fct(self, other_type)
+        else:
+            return super().combined_type(other_type, literal_combine_fct)
+
+    def to_abstract_type(self):
         if self.value < 0:
             return IntTypeName(f'int{self.elem_bitwidth}')
         else:
@@ -1252,6 +1290,21 @@ class TupleType(TypeName):
     def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
         return self.check_component_wise(expected, lambda x, y: x.type_name.implicitly_convertible_to(y.type_name))
 
+    def compatible_with(self, other_type: 'TypeName') -> bool:
+        return self.check_component_wise(other_type, lambda x, y: x.type_name.compatible_with(y.type_name))
+
+    def combined_type(self, other_type: 'TupleType', literal_combine_fct):
+        if not isinstance(other_type, TupleType) or len(self.types) != len(other_type.types):
+            return None
+        return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, literal_combine_fct)) for e1, e2 in zip(self.types, other_type.types)])
+
+    def annotate(self, privacy_annotation):
+        if isinstance(privacy_annotation, Expression):
+            return TupleType([t.type_name.annotate(privacy_annotation) for t in self.types])
+        else:
+            assert len(self.types) == len(privacy_annotation)
+            return TupleType([t.type_name.annotate(a) for t, a in zip(self.types, privacy_annotation)])
+
     def perfect_privacy_match(self, other):
         def privacy_match(self: AnnotatedTypeName, other: AnnotatedTypeName):
             return self.privacy_annotation == other.privacy_annotation
@@ -1316,6 +1369,22 @@ class AnnotatedTypeName(AST):
             return self.type_name == other.type_name and self.privacy_annotation == other.privacy_annotation
         else:
             return False
+
+    def combined_privacy(self, analysis: PartitionState, other: 'AnnotatedTypeName'):
+        if isinstance(self.type_name, TupleType):
+            assert isinstance(other.type_name, TupleType) and len(self.type_name.types) == len(other.type_name.types)
+            # tODO
+            return [e1.combined_privacy(analysis, e2) for e1, e2 in zip(self.type_name.types, other.type_name.types)]
+
+        p_expected = other.privacy_annotation.privacy_annotation_label()
+        p_actual = self.privacy_annotation.privacy_annotation_label()
+        if p_expected and p_actual:
+            if p_expected == p_actual or (analysis is not None and analysis.same_partition(p_expected, p_actual)):
+                return self.privacy_annotation.clone()
+            elif self.privacy_annotation.is_all_expr():
+                return other.privacy_annotation.clone()
+        else:
+            return None
 
     def is_public(self):
         return self.privacy_annotation.is_all_expr()

@@ -1,3 +1,5 @@
+from typing import Union
+
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
@@ -97,17 +99,58 @@ class TypeCheckVisitor(AstVisitor):
     def has_literal_type(ast: Expression):
         return isinstance(ast.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType))
 
-    def find_common_data_type(self, ast: Expression, t1: TypeName, t2: TypeName):
-        if isinstance(t1, NumberLiteralType) and isinstance(t2, NumberLiteralType):
-            return 'nlit'
-        elif isinstance(t1, BooleanLiteralType) and isinstance(t2, BooleanLiteralType):
-            return 'blit'
-        elif t1.implicitly_convertible_to(t2):
-            return t2
-        elif t2.implicitly_convertible_to(t1):
-            return t1
-        else:
-            raise TypeMismatchException(t2, t1, ast)
+    # def find_common_data_type(self, ast: Expression, t1: TypeName, t2: TypeName):
+    #     if isinstance(t1, NumberLiteralType) and isinstance(t2, NumberLiteralType):
+    #         return 'nlit'
+    #     elif isinstance(t1, BooleanLiteralType) and isinstance(t2, BooleanLiteralType):
+    #         return 'blit'
+    #     elif t1.implicitly_convertible_to(t2):
+    #         return t2
+    #     elif t2.implicitly_convertible_to(t1):
+    #         return t1
+    #     else:
+    #         raise TypeMismatchException(t2, t1, ast)
+
+    # def handle_ite(self, lhs: Expression, cond_t: AnnotatedTypeName, true_expr: Expression, false_expr: Expression):
+    #     # Check that branch types are compatible and determine output type
+    #     t_true, t_false = true_expr.annotated_type.type_name, false_expr.annotated_type.type_name
+    #
+    #     if isinstance(t_true, TupleType) and isinstance(t_false, TupleType):
+    #         if len(t_true.types) != len(t_false.types):
+    #             raise TypeException('Branches return tuples of different lengths', lhs)
+    #         assert isinstance(lhs, TupleExpr)
+    #         return TupleType([self.handle_ite(ast, cond_t, tt, ft) for ast, tt, ft in zip(lhs.elements, t_true.types, t_false.types)])
+    #     else:
+    #         t = self.find_common_data_type(lhs, t_true, t_false)  # better tuple handling
+    #         if t == 'nlit':
+    #             if isinstance(cond_t.type_name, BooleanLiteralType):
+    #                 # Branch is known at compile time
+    #                 t = NumberLiteralType(t_true.value if cond_t.type_name.value else t_false.value)
+    #             else:
+    #                 if t_true.value < 0 or t_false.value < 0:
+    #                     t = IntTypeName(f'int{max(t_true.elem_bitwidth, t_false.elem_bitwidth)}')
+    #                 else:
+    #                     t = UintTypeName(f'uint{max(t_true.elem_bitwidth, t_false.elem_bitwidth)}')
+    #         elif t == 'blit':
+    #             if isinstance(cond_t.type_name, BooleanLiteralType):
+    #                 # Branch is known at compile time
+    #                 t = BooleanLiteralType(t_true.value if cond_t.type_name.value else t_false.value)
+    #             else:
+    #                 t = TypeName.bool_type()
+    #
+    #                 # PROBLEM MAKE PRIVATE CANNOT WORK FOR TUPLE ELEMENTS -> TUPLE REQUIRES MATCHING PRIVACY
+    #
+    #         # Convert all args to private if one is private
+    #         private_args = self.has_private_type(true_expr) or self.has_private_type(false_expr)
+    #         if private_args or cond_t.is_private():
+    #             # PROBLEM NO POINTER
+    #             ast.args[1:] = map(self.make_private_if_not_already, ast.args[1:])
+    #
+    #         if cond_t.is_public():
+    #             return AnnotatedTypeName(t, Expression.me_expr() if private_args else None)
+    #         else:
+    #             func.is_private = True
+    #             return AnnotatedTypeName(t, Expression.me_expr())
 
     def handle_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction):
         # handle special cases
@@ -118,35 +161,25 @@ class TypeCheckVisitor(AstVisitor):
             if not cond_t.type_name.implicitly_convertible_to(TypeName.bool_type()):
                 raise TypeMismatchException(TypeName.bool_type(), cond_t.type_name, ast.args[0])
 
-            # Check that branch types are compatible and determine output type
-            t1, t2 = ast.args[1].annotated_type.type_name, ast.args[2].annotated_type.type_name
-            t = self.find_common_data_type(ast.args[1], t1, t2) # better tuple handling
-            if t == 'nlit':
-                if isinstance(cond_t.type_name, BooleanLiteralType):
-                    # Branch is known at compile time
-                    t = NumberLiteralType(t1.value if cond_t.type_name.value else t2.value)
-                else:
-                    if t1.value < 0 or t2.value < 0:
-                        t = IntTypeName(f'int{max(t1.elem_bitwidth, t2.elem_bitwidth)}')
-                    else:
-                        t = UintTypeName(f'uint{max(t1.elem_bitwidth, t2.elem_bitwidth)}')
-            elif t == 'blit':
-                if isinstance(cond_t.type_name, BooleanLiteralType):
-                    # Branch is known at compile time
-                    t = BooleanLiteralType(t1.value if cond_t.type_name.value else t2.value)
-                else:
-                    t = TypeName.bool_type()
+            def combine(t1, t2):
+                return t1.to_abstract_type().combined_type(t2.to_abstract_type(), combine)
+            t = ast.args[1].annotated_type.type_name.combined_type(ast.args[2].annotated_type.type_name, combine)
+            del combine
 
-            # Convert all args to private if one is private
-            private_args = any(map(self.has_private_type, ast.args[1:]))
-            if private_args or cond_t.is_private():
-                ast.args[1:] = map(self.make_private_if_not_already, ast.args[1:])
-
-            if cond_t.is_public():
-                ast.annotated_type = AnnotatedTypeName(t, Expression.me_expr() if private_args else None)
-            else:
+            if cond_t.is_private():
+                # Everything is turned private
                 func.is_private = True
-                ast.annotated_type = AnnotatedTypeName(t, Expression.me_expr())
+                a = t.annotate(Expression.me_expr())
+            else:
+                p = ast.args[1].annotated_type.combined_privacy(ast.analysis, ast.args[2].annotated_type)
+                a = t.annotate(p)
+            ast.args[1] = self.get_rhs(ast.args[1], a)
+            ast.args[2] = self.get_rhs(ast.args[2], a)
+
+            ast.annotated_type = a
+
+            # t1, t2 = ast.args[1].annotated_type.type_name, ast.args[2].annotated_type.type_name
+            # self.handle_ite(ast.args[1], cond_t, t1, t2)
             return
         elif func.is_parenthesis():
             ast.annotated_type = ast.args[0].annotated_type
@@ -159,22 +192,35 @@ class TypeCheckVisitor(AstVisitor):
                 if not arg.instanceof_data_type(t):
                     raise TypeMismatchException(t, arg.annotated_type.type_name, arg)
 
-        if len(ast.args) == 1:
-            out_type = self.find_common_data_type(ast.args[0], ast.args[0].annotated_type.type_name, ast.args[0].annotated_type.type_name)
-        else:
-            assert len(ast.args) == 2
-            out_type = self.find_common_data_type(ast.args[0], ast.args[0].annotated_type.type_name, ast.args[1].annotated_type.type_name)
-
-        if out_type == 'nlit' or out_type == 'blit':
-            # Literal expressions are evaluated at compile time
-            res = func.op_func(*[arg.annotated_type.type_name.value for arg in ast.args])
+        def combine(*types):
+            res = func.op_func(*[t.value for t in types])
             if func.output_type() == TypeName.bool_type():
-                out_type = BooleanLiteralType(res != 0)
+                return BooleanLiteralType(res != 0)
             else:
                 assert func.output_type() == NumberTypeName.any()
-                out_type = NumberLiteralType(res)
-        elif func.output_type() == TypeName.bool_type():
+                return NumberLiteralType(res)
+
+        if func.output_type() == TypeName.bool_type():
             out_type = TypeName.bool_type()
+        else:
+            out_type = ast.args[0].annotated_type.type_name.combined_type(ast.args[0 if len(ast.args) == 1 else 1].annotated_type.type_name, combine)
+
+        # if len(ast.args) == 1:
+        #     out_type = self.find_common_data_type(ast.args[0], ast.args[0].annotated_type.type_name, ast.args[0].annotated_type.type_name)
+        # else:
+        #     assert len(ast.args) == 2
+        #     out_type = self.find_common_data_type(ast.args[0], ast.args[0].annotated_type.type_name, ast.args[1].annotated_type.type_name)
+        #
+        # if out_type == 'nlit' or out_type == 'blit':
+        #     # Literal expressions are evaluated at compile time
+        #     res = func.op_func(*[arg.annotated_type.type_name.value for arg in ast.args])
+        #     if func.output_type() == TypeName.bool_type():
+        #         out_type = BooleanLiteralType(res != 0)
+        #     else:
+        #         assert func.output_type() == NumberTypeName.any()
+        #         out_type = NumberLiteralType(res)
+        # elif func.output_type() == TypeName.bool_type():
+        #     out_type = TypeName.bool_type()
 
         # Check privacy type and convert if necessary
         private_args = any(map(self.has_private_type, ast.args))
