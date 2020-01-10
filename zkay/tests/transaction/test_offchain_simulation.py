@@ -105,10 +105,10 @@ class TestOffchainBase(TestScenarios):
             shutil.rmtree(d)
 
 
-#@parameterized_class(('name', 'scenario'), get_scenario('multipleret.py'))
+#@parameterized_class(('name', 'scenario'), get_scenario(''))
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainDummyEnc(TestOffchainBase):
-    #@unittest.skipIf(True, "No reason")
+    @unittest.skipIf(False, "No reason")
     def test_offchain_simulation_dummy(self):
         old = cfg.crypto_backend
         cfg.crypto_backend = 'dummy'
@@ -118,6 +118,7 @@ class TestOffchainDummyEnc(TestOffchainBase):
 
 @parameterized_class(('name', 'scenario'), get_scenario('enctest.py'))
 class TestOffchainWithHashing(TestOffchainBase):
+    @unittest.skipIf(False, "No reason")
     def test_offchain_simulation_dummy_with_hashing(self):
         old = cfg.crypto_backend
         old_sh = cfg.should_use_hash
@@ -130,7 +131,7 @@ class TestOffchainWithHashing(TestOffchainBase):
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainRsaPkcs15Enc(TestOffchainBase):
-    @unittest.skipIf('ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
+    @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_rsa_pkcs_15(self):
         old = cfg.crypto_backend
         old_sh = cfg.should_use_hash

@@ -13,7 +13,7 @@ contract NestedPrivateIfCond {
 
     function priv_if(uint@me v, uint@me v2) view internal returns(uint@me) {
         uint@me ret;
-        uint hans;
+        uint@me hans;
         if (v > v2) {
             uint@me x = 42;
             if (v2 + v < 100) {
@@ -22,6 +22,7 @@ contract NestedPrivateIfCond {
             } else {
                 x = 42;
                 ret = v - v2 + x - 42;
+                hans = 42;
             }
             v = v2;
         } else if (v < v2) {
