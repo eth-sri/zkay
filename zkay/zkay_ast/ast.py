@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 import math
 import operator
@@ -18,7 +20,7 @@ class ChildListBuilder:
     def __init__(self):
         self.children = []
 
-    def add_child(self, ast: 'AST') -> 'AST':
+    def add_child(self, ast: AST) -> AST:
         if ast is not None:
             self.children.append(ast)
         return ast
@@ -42,7 +44,7 @@ class AST:
         self.modified_values: Set[InstanceTarget] = set()
         self.read_values: Set[InstanceTarget] = set()
 
-    def children(self) -> List['AST']:
+    def children(self) -> List[AST]:
         cb = ChildListBuilder()
         self.process_children(cb.add_child)
         return cb.children
@@ -54,7 +56,7 @@ class AST:
             setattr(self, key, val)
         return self
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         pass
 
     def code(self) -> str:
@@ -76,10 +78,10 @@ class Identifier(AST):
     def is_final(self):
         return isinstance(self.parent, StateVariableDeclaration) and self.parent.is_final
 
-    def clone(self) -> 'Identifier':
+    def clone(self) -> Identifier:
         return Identifier(self.name)
 
-    def decl_var(self, t: Union['TypeName', 'AnnotatedTypeName'], expr: Optional['Expression'] = None):
+    def decl_var(self, t: Union[TypeName, AnnotatedTypeName], expr: Optional[Expression] = None):
         if isinstance(t, TypeName):
             t = AnnotatedTypeName(t)
         storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
@@ -122,12 +124,12 @@ class Expression(AST):
         return AllExpr()
 
     @staticmethod
-    def me_expr(stmt: Optional['Statement'] = None):
+    def me_expr(stmt: Optional[Statement] = None):
         me = MeExpr()
         me.statement = stmt
         return me
 
-    def implicitly_converted(self: T, expected: 'TypeName') -> Union[T, 'FunctionCallExpr']:
+    def implicitly_converted(self: T, expected: TypeName) -> Union[T, FunctionCallExpr]:
         if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
         elif isinstance(expected, NumberTypeName) and self.instanceof_data_type(TypeName.bool_type()):
@@ -167,7 +169,7 @@ class Expression(AST):
         else:
             return None
 
-    def instanceof_data_type(self, expected: 'TypeName') -> bool:
+    def instanceof_data_type(self, expected: TypeName) -> bool:
         return self.annotated_type.type_name.implicitly_convertible_to(expected)
 
     def is_lvalue(self) -> bool:
@@ -177,13 +179,13 @@ class Expression(AST):
     def is_rvalue(self) -> bool:
         return not self.is_lvalue()
 
-    def unop(self, op: str) -> 'FunctionCallExpr':
+    def unop(self, op: str) -> FunctionCallExpr:
         return FunctionCallExpr(BuiltinFunction(op), [self])
 
-    def binop(self, op: str, rhs: 'Expression') -> 'FunctionCallExpr':
+    def binop(self, op: str, rhs: Expression) -> FunctionCallExpr:
         return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
 
-    def ite(self, e_true: 'Expression', e_false: 'Expression') -> 'FunctionCallExpr':
+    def ite(self, e_true: Expression, e_false: Expression) -> FunctionCallExpr:
         return FunctionCallExpr(BuiltinFunction('ite').with_privacy(self.annotated_type.is_private()), [self, e_true, e_false])
 
     def is_parent_of(self, child):
@@ -217,7 +219,7 @@ class Expression(AST):
         else:
             return 'make-private'
 
-    def as_type(self: T, t: Union['TypeName', 'AnnotatedTypeName']) -> T:
+    def as_type(self: T, t: Union[TypeName, AnnotatedTypeName]) -> T:
         return self.override(annotated_type=t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t))
 
     @property
@@ -350,7 +352,7 @@ class BuiltinFunction(Expression):
         """
         return self.op not in ['**', '%']
 
-    def with_privacy(self, is_private: bool) -> 'BuiltinFunction':
+    def with_privacy(self, is_private: bool) -> BuiltinFunction:
         if is_private:
             assert self.can_be_private()
             self.is_private = True
@@ -367,40 +369,40 @@ class FunctionCallExpr(Expression):
         self.args = args
         self.sec_start_offset = sec_start_offset
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.func = f(self.func)
         self.args[:] = map(f, self.args)
 
 
 class NewExpr(FunctionCallExpr):
-    def __init__(self, annotated_type: 'AnnotatedTypeName', args: List[Expression]):
+    def __init__(self, annotated_type: AnnotatedTypeName, args: List[Expression]):
         assert not isinstance(annotated_type, ElementaryTypeName)
         super().__init__(Identifier(f'new {annotated_type.code()}'), args)
         self.annotated_type = annotated_type
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.annotated_type = f(self.annotated_type)
         self.args[:] = map(f, self.args)
 
 
 class CastExpr(FunctionCallExpr):
-    def __init__(self, t: 'TypeName', expr: 'Expression'):
+    def __init__(self, t: TypeName, expr: Expression):
         self.t = t
         super().__init__(Identifier(t.code()), [expr])
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.t = f(self.t)
         self.args[0] = f(self.args[0])
 
 
 class AssignmentExpr(Expression):
 
-    def __init__(self, lhs: 'LocationExpr', rhs: Expression):
+    def __init__(self, lhs: LocationExpr, rhs: Expression):
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
 
@@ -437,10 +439,10 @@ class TupleExpr(Expression):
         super().__init__()
         self.elements = elements
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.elements[:] = map(f, self.elements)
 
-    def assign(self, val: Expression) -> 'AssignmentStatement':
+    def assign(self, val: Expression) -> AssignmentStatement:
         return AssignmentStatement(self, val)
 
 
@@ -450,27 +452,27 @@ class LocationExpr(Expression):
         # set later by symbol table
         self.target: Optional[TargetDefinition] = None
 
-    def call(self, member: Union[str, Identifier], args: List[Expression]) -> 'FunctionCallExpr':
+    def call(self, member: Union[str, Identifier], args: List[Expression]) -> FunctionCallExpr:
         member = Identifier(member) if isinstance(member, str) else member.clone()
         return FunctionCallExpr(MemberAccessExpr(self, member), args)
 
-    def dot(self, member: Union[str, Identifier]) -> 'MemberAccessExpr':
+    def dot(self, member: Union[str, Identifier]) -> MemberAccessExpr:
         member = Identifier(member) if isinstance(member, str) else member.clone()
         return MemberAccessExpr(self, member)
 
-    def index(self, item: Union[int, Expression]) -> 'IndexExpr':
+    def index(self, item: Union[int, Expression]) -> IndexExpr:
         assert isinstance(self.annotated_type.type_name, (Array, Mapping))
         if isinstance(item, int):
             item = NumberLiteralExpr(item)
         return IndexExpr(self, item).as_type(self.annotated_type.type_name.value_type)
 
-    def assign(self, val: Expression) -> 'AssignmentStatement':
+    def assign(self, val: Expression) -> AssignmentStatement:
         return AssignmentStatement(self, val)
 
 
 class IdentifierExpr(LocationExpr):
 
-    def __init__(self, idf: Union[str, Identifier], annotated_type: Optional['AnnotatedTypeName'] = None):
+    def __init__(self, idf: Union[str, Identifier], annotated_type: Optional[AnnotatedTypeName] = None):
         super().__init__()
         self.idf = idf if isinstance(idf, Identifier) else Identifier(idf)
         self.annotated_type = annotated_type
@@ -478,10 +480,10 @@ class IdentifierExpr(LocationExpr):
     def get_annotated_type(self):
         return self.target.annotated_type
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
 
-    def clone(self) -> 'IdentifierExpr':
+    def clone(self) -> IdentifierExpr:
         idf = IdentifierExpr(self.idf.clone()).as_type(self.annotated_type)
         idf.target = self.target
         return idf
@@ -494,7 +496,7 @@ class MemberAccessExpr(LocationExpr):
         self.expr = expr
         self.member = member
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.expr = f(self.expr)
         self.member = f(self.member)
 
@@ -506,7 +508,7 @@ class IndexExpr(LocationExpr):
         self.arr = arr
         self.key = key
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.arr = f(self.arr)
         self.key = f(self.key)
 
@@ -524,7 +526,7 @@ class MeExpr(Expression):
     name = 'me'
     is_final = True
 
-    def clone(self) -> 'MeExpr':
+    def clone(self) -> MeExpr:
         return MeExpr()
 
     def __eq__(self, other):
@@ -538,7 +540,7 @@ class AllExpr(Expression):
     name = 'all'
     is_final = True
 
-    def clone(self) -> 'AllExpr':
+    def clone(self) -> AllExpr:
         return AllExpr()
 
     def __eq__(self, other):
@@ -558,7 +560,7 @@ class ReclassifyExpr(Expression):
         # TODO FIXME? this is violated because privacy_annotation_label returns idf, not idfexpr
         # assert privacy is None or isinstance(privacy, MeExpr) or isinstance(privacy, AllExpr) or isinstance(privacy, IdentifierExpr)
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.expr = f(self.expr)
         self.privacy = f(self.privacy)
 
@@ -571,7 +573,7 @@ class HybridArgType(IntEnum):
 
 
 class HybridArgumentIdf(Identifier):
-    def __init__(self, name: str, t: 'TypeName', arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None):
+    def __init__(self, name: str, t: TypeName, arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None):
         super().__init__(name)
         self.t = t  # transformed type of this idf
         if isinstance(t, BooleanLiteralType):
@@ -590,7 +592,7 @@ class HybridArgumentIdf(Identifier):
             ie = IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
         return ie.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
 
-    def clone(self) -> 'HybridArgumentIdf':
+    def clone(self) -> HybridArgumentIdf:
         ha = HybridArgumentIdf(self.name, self.t, self.arg_type, self.corresponding_priv_expression)
         ha.serialized_loc = self.serialized_loc
         return ha
@@ -602,7 +604,7 @@ class HybridArgumentIdf(Identifier):
         self.serialized_loc.start_offset = start_offset
         self.serialized_loc.size = self.t.size_in_uints
 
-    def deserialize(self, source_idf: str, base: Optional[Expression], start_offset: int) -> 'AssignmentStatement':
+    def deserialize(self, source_idf: str, base: Optional[Expression], start_offset: int) -> AssignmentStatement:
         self._set_serialized_loc(source_idf, base, start_offset)
 
         src = IdentifierExpr(source_idf).as_type(Array(AnnotatedTypeName.uint_all()))
@@ -613,7 +615,7 @@ class HybridArgumentIdf(Identifier):
         else:
             return self.get_loc_expr().assign(src.index(start_offset).implicitly_converted(self.t))
 
-    def serialize(self, target_idf: str, base: Optional[Expression], start_offset: int) -> 'AssignmentStatement':
+    def serialize(self, target_idf: str, base: Optional[Expression], start_offset: int) -> AssignmentStatement:
         self._set_serialized_loc(target_idf, base, start_offset)
 
         tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName.uint_all()))
@@ -627,7 +629,7 @@ class HybridArgumentIdf(Identifier):
 
 
 class EncryptionExpression(ReclassifyExpr):
-    def __init__(self, expr: Expression, privacy: 'PrivacyLabelExpr'):
+    def __init__(self, expr: Expression, privacy: PrivacyLabelExpr):
         if isinstance(privacy, Identifier):
             privacy = IdentifierExpr(privacy)
         super().__init__(expr, privacy)
@@ -658,49 +660,49 @@ class CircuitComputationStatement(Statement):
 
 class IfStatement(Statement):
 
-    def __init__(self, condition: Expression, then_branch: 'Block', else_branch: Optional['Block']):
+    def __init__(self, condition: Expression, then_branch: Block, else_branch: Optional[Block]):
         super().__init__()
         self.condition = condition
         self.then_branch = then_branch
         self.else_branch = else_branch
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.condition = f(self.condition)
         self.then_branch = f(self.then_branch)
         self.else_branch = f(self.else_branch)
 
 
 class WhileStatement(Statement):
-    def __init__(self, condition: Expression, body: 'Block'):
+    def __init__(self, condition: Expression, body: Block):
         super().__init__()
         self.condition = condition
         self.body = body
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.condition = f(self.condition)
         self.body = f(self.body)
 
 
 class DoWhileStatement(Statement):
-    def __init__(self, body: 'Block', condition: Expression):
+    def __init__(self, body: Block, condition: Expression):
         super().__init__()
         self.body = body
         self.condition = condition
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.body = f(self.body)
         self.condition = f(self.condition)
 
 
 class ForStatement(Statement):
-    def __init__(self, init: Optional['SimpleStatement'], condition: Expression, update: Optional[Expression], body: 'Block'):
+    def __init__(self, init: Optional[SimpleStatement], condition: Expression, update: Optional[Expression], body: Block):
         super().__init__()
         self.init = init
         self.condition = condition
         self.update = update
         self.body = body
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.init = f(self.init)
         self.condition = f(self.condition)
         self.update = f(self.update)
@@ -721,7 +723,7 @@ class ReturnStatement(Statement):
         super().__init__()
         self.expr = expr
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.expr = f(self.expr)
 
 
@@ -735,7 +737,7 @@ class ExpressionStatement(SimpleStatement):
         super().__init__()
         self.expr = expr
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.expr = f(self.expr)
 
 
@@ -746,7 +748,7 @@ class RequireStatement(SimpleStatement):
         self.condition = condition
         self.unmodified_code = self.code() if unmodified_code is None else unmodified_code
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.condition = f(self.condition)
 
 
@@ -757,7 +759,7 @@ class AssignmentStatement(SimpleStatement):
         self.lhs = lhs
         self.rhs = rhs
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
 
@@ -774,7 +776,7 @@ class StatementList(Statement):
         # Special case, if processing a statement returns a list of statements,
         # all statements will be integrated into this block
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         new_stmts = []
         for idx, stmt in enumerate(self.statements):
             new_stmt = f(stmt)
@@ -794,7 +796,7 @@ class Block(StatementList):
         super().__init__(statements)
         self.was_single_statement = was_single_statement
 
-    def clone(self) -> 'Block':
+    def clone(self) -> Block:
         from zkay.zkay_ast.visitor.deep_copy import deep_copy
         return deep_copy(self, with_types=True, with_analysis=True)
 
@@ -863,15 +865,15 @@ class TypeName(AST):
     def can_be_private(self):
         return self.is_primitive_type()
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         assert isinstance(expected, TypeName)
         return expected == self
 
-    def compatible_with(self, other_type: 'TypeName') -> bool:
+    def compatible_with(self, other_type: TypeName) -> bool:
         assert isinstance(other_type, TypeName)
         return self.implicitly_convertible_to(other_type) or other_type.implicitly_convertible_to(self)
 
-    def combined_type(self, other_type: 'TypeName', literal_combine_fct):
+    def combined_type(self, other_type: TypeName, literal_combine_fct):
         if other_type.implicitly_convertible_to(self):
             return self
         elif self.implicitly_convertible_to(other_type):
@@ -881,7 +883,7 @@ class TypeName(AST):
     def annotate(self, privacy_annotation):
         return AnnotatedTypeName(self, privacy_annotation)
 
-    def clone(self) -> 'TypeName':
+    def clone(self) -> TypeName:
         raise NotImplementedError()
 
     def __eq__(self, other):
@@ -894,7 +896,7 @@ class ElementaryTypeName(TypeName):
         super().__init__()
         self.name = name
 
-    def clone(self) -> 'ElementaryTypeName':
+    def clone(self) -> ElementaryTypeName:
         return ElementaryTypeName(self.name)
 
     def __eq__(self, other):
@@ -905,7 +907,7 @@ class BoolTypeName(ElementaryTypeName):
     def __init__(self, name='bool'):
         super().__init__(name)
 
-    def clone(self) -> 'BoolTypeName':
+    def clone(self) -> BoolTypeName:
         return BoolTypeName()
 
     @property
@@ -920,10 +922,10 @@ class BooleanLiteralType(ElementaryTypeName):
     def __init__(self, name: bool):
         super().__init__(str(name).lower())
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         return super().implicitly_convertible_to(expected) or isinstance(expected, BoolTypeName)
 
-    def combined_type(self, other_type: 'TypeName', literal_combine_fct):
+    def combined_type(self, other_type: TypeName, literal_combine_fct):
         if isinstance(other_type, BooleanLiteralType):
             return literal_combine_fct(self, other_type)
         else:
@@ -940,7 +942,7 @@ class BooleanLiteralType(ElementaryTypeName):
     def to_abstract_type(self):
         return TypeName.bool_type()
 
-    def clone(self) -> 'BooleanLiteralType':
+    def clone(self) -> BooleanLiteralType:
         return BooleanLiteralType(self.value)
 
     def __eq__(self, other):
@@ -958,7 +960,7 @@ class NumberTypeName(ElementaryTypeName):
             self._size_in_bits = bitwidth
         self.signed = signed
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         return super().implicitly_convertible_to(expected) or type(expected) == NumberTypeName
 
     @staticmethod
@@ -990,13 +992,13 @@ class NumberLiteralType(NumberTypeName):
         name = str(name)
         super().__init__(name, name, False, bitwidth)
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         if isinstance(expected, NumberTypeName):
             # Allow implicit conversion only if it fits
             return expected.can_represent(self.value)
         return super().implicitly_convertible_to(expected)
 
-    def combined_type(self, other_type: 'TypeName', literal_combine_fct):
+    def combined_type(self, other_type: TypeName, literal_combine_fct):
         if isinstance(other_type, NumberLiteralType):
             return literal_combine_fct(self, other_type)
         else:
@@ -1012,7 +1014,7 @@ class NumberLiteralType(NumberTypeName):
     def value(self):
         return int(self.name)
 
-    def clone(self) -> 'NumberLiteralType':
+    def clone(self) -> NumberLiteralType:
         return NumberLiteralType(self.value)
 
     def __eq__(self, other):
@@ -1023,12 +1025,12 @@ class IntTypeName(NumberTypeName):
     def __init__(self, name: str = 'int'):
         super().__init__(name, 'int', True)
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         # Implicitly convert smaller int types to larger int types
         return super().implicitly_convertible_to(expected) or (
                 isinstance(expected, IntTypeName) and expected.elem_bitwidth >= self.elem_bitwidth)
 
-    def clone(self) -> 'IntTypeName':
+    def clone(self) -> IntTypeName:
         return IntTypeName(self.name)
 
 
@@ -1036,22 +1038,22 @@ class UintTypeName(NumberTypeName):
     def __init__(self, name: str = 'uint'):
         super().__init__(name, 'uint', False)
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         # Implicitly convert smaller uint types to larger uint types
         return super().implicitly_convertible_to(expected) or (
                 isinstance(expected, UintTypeName) and expected.elem_bitwidth >= self.elem_bitwidth)
 
-    def clone(self) -> 'UintTypeName':
+    def clone(self) -> UintTypeName:
         return UintTypeName(self.name)
 
 
 class UserDefinedTypeName(TypeName):
-    def __init__(self, names: List[Identifier], target: Optional[Union['ContractDefinition', 'StructDefinition']] = None):
+    def __init__(self, names: List[Identifier], target: Optional[Union[ContractDefinition, StructDefinition]] = None):
         super().__init__()
         self.names = names
         self.target = target
 
-    def clone(self) -> 'UserDefinedTypeName':
+    def clone(self) -> UserDefinedTypeName:
         return UserDefinedTypeName(self.names.copy(), self.target)
 
     def __eq__(self, other):
@@ -1059,7 +1061,7 @@ class UserDefinedTypeName(TypeName):
 
 
 class EnumTypeName(UserDefinedTypeName):
-    def clone(self) -> 'EnumTypeName':
+    def clone(self) -> EnumTypeName:
         return EnumTypeName(self.names.copy(), self.target)
 
     @property
@@ -1068,12 +1070,12 @@ class EnumTypeName(UserDefinedTypeName):
 
 
 class StructTypeName(UserDefinedTypeName):
-    def clone(self) -> 'StructTypeName':
+    def clone(self) -> StructTypeName:
         return StructTypeName(self.names.copy(), self.target)
 
 
 class ContractTypeName(UserDefinedTypeName):
-    def clone(self) -> 'ContractTypeName':
+    def clone(self) -> ContractTypeName:
         return ContractTypeName(self.names.copy(), self.target)
 
 
@@ -1085,7 +1087,7 @@ class AddressTypeName(UserDefinedTypeName):
     def elem_bitwidth(self):
         return 160
 
-    def clone(self) -> 'UserDefinedTypeName':
+    def clone(self) -> UserDefinedTypeName:
         return AddressTypeName()
 
     def __eq__(self, other):
@@ -1096,7 +1098,7 @@ class AddressPayableTypeName(UserDefinedTypeName):
     def __init__(self):
         super().__init__([Identifier('<address_payable>')], None)
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         # Implicit conversions
         return super().implicitly_convertible_to(expected) or expected == TypeName.address_type()
 
@@ -1104,7 +1106,7 @@ class AddressPayableTypeName(UserDefinedTypeName):
     def elem_bitwidth(self):
         return 160
 
-    def clone(self) -> 'UserDefinedTypeName':
+    def clone(self) -> UserDefinedTypeName:
         return AddressPayableTypeName()
 
     def __eq__(self, other):
@@ -1113,7 +1115,7 @@ class AddressPayableTypeName(UserDefinedTypeName):
 
 class Mapping(TypeName):
 
-    def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: 'AnnotatedTypeName'):
+    def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: AnnotatedTypeName):
         super().__init__()
         self.key_type = key_type
         self.key_label: Union[str, Optional[Identifier]] = key_label
@@ -1121,13 +1123,13 @@ class Mapping(TypeName):
         # set by type checker: instantiation of the key by IndexExpr
         self.instantiated_key: Expression = None
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.key_type = f(self.key_type)
         if isinstance(self.key_label, Identifier):
             self.key_label = f(self.key_label)
         self.value_type = f(self.value_type)
 
-    def clone(self) -> 'Mapping':
+    def clone(self) -> Mapping:
         from zkay.zkay_ast.visitor.deep_copy import deep_copy
         return deep_copy(self)
 
@@ -1140,16 +1142,16 @@ class Mapping(TypeName):
 
 class Array(TypeName):
 
-    def __init__(self, value_type: 'AnnotatedTypeName', expr: Union[int, Expression] = None):
+    def __init__(self, value_type: AnnotatedTypeName, expr: Union[int, Expression] = None):
         super().__init__()
         self.value_type = value_type
         self.expr = NumberLiteralExpr(expr) if isinstance(expr, int) else expr
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.value_type = f(self.value_type)
         self.expr = f(self.expr)
 
-    def clone(self) -> 'Array':
+    def clone(self) -> Array:
         return Array(self.value_type.clone(), self.expr)
 
     @property
@@ -1220,7 +1222,7 @@ class TupleType(TypeName):
     """
 
     @staticmethod
-    def ensure_tuple(t: 'AnnotatedTypeName'):
+    def ensure_tuple(t: AnnotatedTypeName):
         if t is None:
             return TupleType.empty()
         elif isinstance(t.type_name, TupleType):
@@ -1228,7 +1230,7 @@ class TupleType(TypeName):
         else:
             return TupleType([t])
 
-    def __init__(self, types: List['AnnotatedTypeName']):
+    def __init__(self, types: List[AnnotatedTypeName]):
         super().__init__()
         self.types = types
 
@@ -1256,13 +1258,13 @@ class TupleType(TypeName):
         else:
             return False
 
-    def implicitly_convertible_to(self, expected: 'TypeName') -> bool:
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
         return self.check_component_wise(expected, lambda x, y: x.type_name.implicitly_convertible_to(y.type_name))
 
-    def compatible_with(self, other_type: 'TypeName') -> bool:
+    def compatible_with(self, other_type: TypeName) -> bool:
         return self.check_component_wise(other_type, lambda x, y: x.type_name.compatible_with(y.type_name))
 
-    def combined_type(self, other_type: 'TupleType', literal_combine_fct):
+    def combined_type(self, other_type: TupleType, literal_combine_fct):
         if not isinstance(other_type, TupleType) or len(self.types) != len(other_type.types):
             return None
         return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, literal_combine_fct), DummyAnnotation()) for e1, e2 in zip(self.types, other_type.types)])
@@ -1280,11 +1282,11 @@ class TupleType(TypeName):
 
         self.check_component_wise(other, privacy_match)
 
-    def clone(self) -> 'TupleType':
+    def clone(self) -> TupleType:
         return TupleType(list(map(AnnotatedTypeName.clone, self.types)))
 
     @staticmethod
-    def empty() -> 'TupleType':
+    def empty() -> TupleType:
         return TupleType([])
 
     def __eq__(self, other):
@@ -1292,17 +1294,17 @@ class TupleType(TypeName):
 
 
 class FunctionTypeName(TypeName):
-    def __init__(self, parameters: List['Parameter'], modifiers: List[str], return_parameters: List['Parameter']):
+    def __init__(self, parameters: List[Parameter], modifiers: List[str], return_parameters: List[Parameter]):
         super().__init__()
         self.parameters = parameters
         self.modifiers = modifiers
         self.return_parameters = return_parameters
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.parameters[:] = map(f, self.parameters)
         self.return_parameters[:] = map(f, self.return_parameters)
 
-    def clone(self) -> 'FunctionTypeName':
+    def clone(self) -> FunctionTypeName:
         # TODO deep copy if required
         return FunctionTypeName(self.parameters, self.modifiers, self.return_parameters)
 
@@ -1313,7 +1315,7 @@ class FunctionTypeName(TypeName):
 
 class AnnotatedTypeName(AST):
 
-    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, declared_type: 'AnnotatedTypeName' = None):
+    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, declared_type: AnnotatedTypeName = None):
         super().__init__()
         self.type_name = type_name
         self.had_privacy_annotation = privacy_annotation is not None
@@ -1323,11 +1325,11 @@ class AnnotatedTypeName(AST):
         else:
             self.privacy_annotation = AllExpr()
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.type_name = f(self.type_name)
         self.privacy_annotation = f(self.privacy_annotation)
 
-    def clone(self) -> 'AnnotatedTypeName':
+    def clone(self) -> AnnotatedTypeName:
         assert self.privacy_annotation is not None
         at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.declared_type)
         at.had_privacy_annotation = self.had_privacy_annotation
@@ -1339,7 +1341,7 @@ class AnnotatedTypeName(AST):
         else:
             return False
 
-    def combined_privacy(self, analysis: PartitionState, other: 'AnnotatedTypeName'):
+    def combined_privacy(self, analysis: PartitionState, other: AnnotatedTypeName):
         if isinstance(self.type_name, TupleType):
             assert isinstance(other.type_name, TupleType) and len(self.type_name.types) == len(other.type_name.types)
             return [e1.combined_privacy(analysis, e2) for e1, e2 in zip(self.type_name.types, other.type_name.types)]
@@ -1396,7 +1398,7 @@ class AnnotatedTypeName(AST):
         return AnnotatedTypeName(type, Expression.me_expr())
 
     @staticmethod
-    def array_all(value_type: 'AnnotatedTypeName', *length: int):
+    def array_all(value_type: AnnotatedTypeName, *length: int):
         t = value_type
         for l in length:
             t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)))
@@ -1414,7 +1416,7 @@ class VariableDeclaration(AST):
 
         self.is_final = 'final' in self.keywords
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
 
@@ -1431,7 +1433,7 @@ class VariableDeclarationStatement(SimpleStatement):
         self.variable_declaration = variable_declaration
         self.expr = expr
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.variable_declaration = f(self.variable_declaration)
         self.expr = f(self.expr)
 
@@ -1454,16 +1456,16 @@ class Parameter(AST):
 
         self.is_final = 'final' in self.keywords
 
-    def copy(self) -> 'Parameter':
+    def copy(self) -> Parameter:
         return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location,
                          self.original_type)
 
-    def with_changed_storage(self, match_storage: str, new_storage: str) -> 'Parameter':
+    def with_changed_storage(self, match_storage: str, new_storage: str) -> Parameter:
         if self.storage_location == match_storage:
             self.storage_location = new_storage
         return self
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
 
@@ -1537,7 +1539,7 @@ class ConstructorOrFunctionDefinition(AST):
     def _update_fct_type(self):
         self.annotated_type = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
         self.parameters[:] = map(f, self.parameters)
         self.return_parameters[:] = map(f, self.return_parameters)
@@ -1563,7 +1565,7 @@ class StateVariableDeclaration(AST):
 
         self.is_final = 'final' in self.keywords
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
         self.expr = f(self.expr)
@@ -1575,7 +1577,7 @@ class EnumDefinition(AST):
         self.idf = idf
         self.values = values
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
         self.values[:] = map(f, self.values)
 
@@ -1586,7 +1588,7 @@ class StructDefinition(AST):
         self.idf = idf
         self.members = members
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
         self.members[:] = map(f, self.members)
 
@@ -1609,7 +1611,7 @@ class ContractDefinition(AST):
         self.enum_definitions = enum_definitions
         self.struct_definitions = [] if struct_definitions is None else struct_definitions
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
         self.state_variable_declarations[:] = map(f, self.state_variable_declarations)
         self.constructor_definitions[:] = map(f, self.constructor_definitions)
@@ -1643,7 +1645,7 @@ class SourceUnit(AST):
 
         self.original_code: List[str] = []
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
+    def process_children(self, f: Callable[[AST], AST]):
         self.contracts[:] = map(f, self.contracts)
 
     def __getitem__(self, key: str):
