@@ -1129,6 +1129,10 @@ class Mapping(TypeName):
         from zkay.zkay_ast.visitor.deep_copy import deep_copy
         return deep_copy(self)
 
+    @property
+    def has_key_label(self):
+        return self.key_label is not None
+
     def __eq__(self, other):
         if isinstance(other, Mapping):
             return self.key_type == other.key_type and self.value_type == other.value_type
@@ -1330,6 +1334,13 @@ class AnnotatedTypeName(AST):
         at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.declared_type)
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
+
+    @property
+    def zkay_type(self) -> AnnotatedTypeName:
+        if self.declared_type is None:
+            return self
+        else:
+            return self.declared_type
 
     def __eq__(self, other):
         if isinstance(other, AnnotatedTypeName):
@@ -1691,6 +1702,18 @@ class InstanceTarget(tuple):
     @property
     def key(self) -> Optional[Union[Identifier, Expression]]:
         return self[1]
+
+    @property
+    def privacy(self) -> PrivacyLabelExpr:
+        if self.key is None or not isinstance(self.target.annotated_type.type_name, Mapping):
+            return self.target.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
+        else:
+            t = self.target.annotated_type.zkay_type.type_name
+            assert isinstance(t, Mapping)
+            if t.has_key_label:
+                return self.key.privacy_annotation_label()
+            else:
+                t.value_type.privacy_annotation.privacy_annotation_label()
 
     def in_scope_at(self, ast: AST) -> bool:
         from zkay.zkay_ast.pointers.symbol_table import SymbolTableLinker

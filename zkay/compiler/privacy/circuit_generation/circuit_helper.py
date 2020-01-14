@@ -10,13 +10,13 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
     CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
-    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration
+    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, Mapping, IndexExpr
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
 class CircuitHelper:
     def __init__(self, fct: ConstructorOrFunctionDefinition,
-                 static_owner_labels: List[Union[MeExpr, AllExpr, Identifier]],
+                 static_owner_labels: List[PrivacyLabelExpr],
                  expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
                  circ_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
                  internal_circuit: Optional['CircuitHelper'] = None):
@@ -136,6 +136,16 @@ class CircuitHelper:
         else:
             return plabel.clone()
 
+    def lookup_privacy_label(self, analysis, privacy):
+        """
+            If privacy is equivalent to a static privacy label or MeExpr (according to program analysis)
+            -> Return the corresponding static label, otherwise itself
+        """
+        for owner in self._static_owner_labels:
+            if analysis.same_partition(owner, privacy):
+                return owner
+        return privacy
+
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
         req = self.in_size_trans > 0 or self.out_size_trans > 0 or self.priv_in_size_trans > 0
@@ -149,94 +159,66 @@ class CircuitHelper:
         self._ensure_encryption(fct.body, plain_idf, Expression.me_expr(), cipher_idf, True, False)
         return SliceExpr(IdentifierExpr(cfg.zk_in_name), None, offset, cipher_idf.t.size_in_uints).assign(SliceExpr(IdentifierExpr(param.idf.clone()), None, 0, cipher_idf.t.size_in_uints))
 
-    def get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
-        """
-        Corresponds to out() from paper
-        :param expr: The expression which should be evaluated privately
-        :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
-        :return: Location expression which references the encrypted circuit result
-        """
-        ecode = expr.code()
-        with CircIndentBlockBuilder(f'{ecode}', self._phi):
-            is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
-            if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
-                plain_result_idf, private_expr = self._evaluate_private_expression(expr)
-            else:
-                plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
+    def evaluate_expr_in_circuit(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
+        assert not self._inline_var_remap
+        with InlineRemap(self, persist_globals=False):
+            return self._get_circuit_output_for_private_expression(expr, new_privacy)
 
-            if isinstance(new_privacy, AllExpr):
-                new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
-                self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
-                out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
-            else:
-                for owner in self._static_owner_labels:
-                    if expr.statement.before_analysis.same_partition(owner, new_privacy):
-                        new_privacy = owner
-                        break
-                privacy_label_expr = self._get_privacy_expr_from_label(new_privacy)
-                new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
-                self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
-                out_var = new_out_param.get_loc_expr()
+    def evaluate_stmt_in_circuit(self, ast: Statement):
+        assert not self._inline_var_remap
+        with InlineRemap(self, persist_globals=False):
+            astmt = AssignmentStatement(None, None)
+            astmt.before_analysis = ast.before_analysis
 
-        self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
+            args = []
+            arg_names = set()
+            for var in ast.read_values:
+                if var.in_scope_at(ast): # defined outside if statement -> need to be passed in as arg
+                    assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
+                    arg = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).override(target=var.target)
+                    arg.statement = astmt
+                    args.append(arg)
+                    arg_names.add(var.target.idf.name)
+                    # technically only need to add those, which are not written before they are read
 
-        expr.statement.pre_statements.append(CircuitComputationStatement(new_out_param))
-        return out_var
+            ret_params = []
+            for var in ast.modified_values:
+                if var.in_scope_at(ast): # side effect visible outside -> return it
+                    assert ast.before_analysis.same_partition(var.privacy, Expression.me_expr()) # otherwise control flow could potentially leak info to someone
+                    assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
+                    t = var.target.annotated_type.zkay_type.type_name
+                    if not t.is_primitive_type():
+                        raise NotImplementedError('Reference types inside private if statements are not supported')
+                    ret_param = IdentifierExpr(var.target.idf.clone(), AnnotatedTypeName(t, Expression.me_expr())).override(target=var.target)
+                    ret_param.statement = astmt
+                    ret_params.append(ret_param)
 
-    def evaluate_if_stmt_in_circuit(self, ast: IfStatement):
-        assert ast.condition.annotated_type.is_private()
+            fdef = ConstructorOrFunctionDefinition(
+                Identifier('<stmt_fct>'),
+                [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
+                [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params],
+                Block([ast, ReturnStatement(TupleExpr(ret_params))])
+            )
+            fdef.original_body = fdef.body
+            fdef.body.parent = fdef
+            fdef.parent = ast.function.body
 
-        astmt = AssignmentStatement(None, None)
-        astmt.before_analysis = ast.before_analysis
+            fcall = FunctionCallExpr(IdentifierExpr('<stmt_fct>'), args)
+            fcall.statement = astmt
 
-        args = []
-        arg_names = set()
-        for var in ast.read_values:
-            if var.in_scope_at(ast): # defined outside if statement -> need to be passed in as arg
-                assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                arg = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).override(target=var.target)
-                arg.statement = astmt
-                args.append(arg)
-                arg_names.add(var.target.idf.name)
-                # technically only need to add those, which are not written before they are read
+            ret_args = self.inline_circuit_function(fcall, fdef)
+            if not isinstance(ret_args, TupleExpr):
+                ret_args = TupleExpr([ret_args])
+            for ret_arg in ret_args.elements:
+                ret_arg.statement = astmt
+            ret_arg_outs = [
+                self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr())
+                for ret_param, ret_arg in zip(ret_params, ret_args.elements)
+            ]
 
-        ret_params = []
-        for var in ast.modified_values:
-            if var.in_scope_at(ast): # side effect visible outside -> return it
-                assert var.target.annotated_type.declared_type.is_private()
-                assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                if not var.target.annotated_type.declared_type.type_name.is_primitive_type():
-                    raise NotImplementedError('Reference types are not yet supported')
-                ret_param = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).override(target=var.target)
-                ret_param.statement = astmt
-                ret_params.append(ret_param)
-
-        fdef = ConstructorOrFunctionDefinition(
-            Identifier('<if_fct>'),
-            [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
-            [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params],
-            Block([ast, ReturnStatement(TupleExpr(ret_params))])
-        )
-        fdef.original_body = fdef.body
-        fdef.body.parent = fdef
-        fdef.parent = ast.function.body
-
-        fcall = FunctionCallExpr(IdentifierExpr('<if_fct>'), args)
-        fcall.statement = astmt
-
-        ret_args = self.inline_circuit_function(fcall, fdef)
-        if not isinstance(ret_args, TupleExpr):
-            ret_args = TupleExpr([ret_args])
-        for ret_arg in ret_args.elements:
-            ret_arg.statement = astmt
-        ret_arg_outs = [
-            self.get_circuit_output_for_private_expression(ret_arg, ret_param.annotated_type.privacy_annotation.privacy_annotation_label())
-            for ret_param, ret_arg in zip(ret_params, ret_args.elements)
-        ]
-
-        astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
-        astmt.rhs = TupleExpr(ret_arg_outs)
-        return astmt
+            astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
+            astmt.rhs = TupleExpr(ret_arg_outs)
+            return astmt
 
     def add_to_circuit_inputs(self, expr: Expression) -> Tuple[HybridArgumentIdf, LocationExpr]:
         """
@@ -280,7 +262,7 @@ class CircuitHelper:
 
     def inline_circuit_function(self, ast: FunctionCallExpr, fdef: ConstructorOrFunctionDefinition) -> TupleExpr:
         assert not fdef.is_constructor
-        with InlineRemap(self):
+        with InlineRemap(self, persist_globals=True):
             with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
                 for param, arg in zip(fdef.parameters, ast.args):
                     self.create_temporary_circuit_variable(Identifier(param.idf.name), arg)
@@ -308,6 +290,8 @@ class CircuitHelper:
     def _add_assign(self, lhs: Expression, rhs: Expression):
         if isinstance(lhs, IdentifierExpr): # for now no ref types
             self.create_temporary_circuit_variable(lhs.idf, rhs, is_local=not isinstance(lhs.target, StateVariableDeclaration))
+        elif isinstance(lhs, IndexExpr):
+            raise NotImplementedError()
         else:
             assert isinstance(lhs, TupleExpr)
             if isinstance(rhs, FunctionCallExpr):
@@ -351,6 +335,37 @@ class CircuitHelper:
                     rhs = IdentifierExpr(cond.clone(), AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr())).ite(IdentifierExpr(then_idf).as_type(then_idf.t), IdentifierExpr(else_idf).as_type(else_idf.t))
                     rhs = rhs.as_type(then_idf.t)
                     self.create_temporary_circuit_variable(Identifier(key[1]), rhs, is_local=key[0])
+
+    def _get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
+        """
+        Corresponds to out() from paper
+        :param expr: The expression which should be evaluated privately
+        :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
+        :return: Location expression which references the encrypted circuit result
+        """
+        ecode = expr.code()
+        with CircIndentBlockBuilder(f'{ecode}', self._phi):
+            is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
+            if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
+                plain_result_idf, private_expr = self._evaluate_private_expression(expr)
+            else:
+                plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
+
+            if isinstance(new_privacy, AllExpr):
+                new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
+                self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
+                out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
+            else:
+                new_privacy = self.lookup_privacy_label(expr.analysis, new_privacy)
+                privacy_label_expr = self._get_privacy_expr_from_label(new_privacy)
+                new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
+                self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
+                out_var = new_out_param.get_loc_expr()
+
+        self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
+
+        expr.statement.pre_statements.append(CircuitComputationStatement(new_out_param))
+        return out_var
 
     def _evaluate_private_expression(self, expr: Expression, tmp_suffix=''):
         assert not (isinstance(expr, MemberAccessExpr) and isinstance(expr.member, HybridArgumentIdf))
@@ -410,15 +425,17 @@ class CircIndentBlockBuilder:
 
 
 class InlineRemap:
-    def __init__(self, c: CircuitHelper):
+    def __init__(self, c: CircuitHelper, *, persist_globals):
         self.c = c
+        self.persist_globals = persist_globals
         self.prev: Optional[Dict] = None
 
     def __enter__(self):
         self.prev = self.c._inline_var_remap.copy()
 
     def __exit__(self, t, value, traceback):
-        self.prev.update({(is_loc, key): val for (is_loc, key), val in self.c._inline_var_remap.items() if not is_loc})
+        if self.persist_globals:
+            self.prev.update({(is_loc, key): val for (is_loc, key), val in self.c._inline_var_remap.items() if not is_loc})
         self.c._inline_var_remap = self.prev
 
 

@@ -24,8 +24,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name.clone()))
-        if ast.is_private():
-            new_t.declared_type = ast.clone()
+        new_t.declared_type = ast.clone()
         return new_t
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
@@ -114,7 +113,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
                     ast.else_branch = self.visit(ast.else_branch)
             return ast
         else:
-            return self.gen.evaluate_if_stmt_in_circuit(ast)
+            return self.gen.evaluate_stmt_in_circuit(ast)
 
     def visitWhileStatement(self, ast: WhileStatement):
         assert not contains_private_expr(ast.condition)
@@ -189,7 +188,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """ Rule (11) """
-        return self.gen.get_circuit_output_for_private_expression(ast.expr, ast.privacy.privacy_annotation_label())
+        return self.gen.evaluate_expr_in_circuit(ast.expr, ast.privacy.privacy_annotation_label())
 
     def visit_guarded_expression(self, guard_var: HybridArgumentIdf, if_true: bool, expr: Expression):
         prelen = len(expr.statement.pre_statements)
@@ -212,7 +211,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         if isinstance(ast.func, BuiltinFunction):
             if ast.func.is_private:
                 """ Modified Rule (12) (priv expression on its own does not trigger verification) """
-                return self.gen.get_circuit_output_for_private_expression(ast, Expression.me_expr())
+                return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr())
             else:
                 """ Rule (10) """
                 # handle short-circuiting

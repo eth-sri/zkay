@@ -151,7 +151,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def get_rvalue(self, idf: IdentifierExpr, val_type: AnnotatedTypeName, indices: List[str]) -> str:
         if isinstance(idf.target, StateVariableDeclaration) and not self._is_builtin_var(idf):
-            is_encrypted = val_type.declared_type is not None and val_type.declared_type.is_private()
+            is_encrypted = val_type.zkay_type.is_private()
             name_str = f"'{idf.idf.name}'"
             constr = ''
             if val_type.is_address():

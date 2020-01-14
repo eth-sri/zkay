@@ -177,7 +177,7 @@ class TypeCheckVisitor(AstVisitor):
         r = ReclassifyExpr(expr, pl)
 
         # set type
-        r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, privacy)
+        r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl.clone())
         TypeCheckVisitor.check_for_invalid_private_type(r)
 
         # propagate side effects

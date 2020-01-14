@@ -120,6 +120,7 @@ class CircuitComplianceChecker(FunctionVisitor):
 
     def visitIfStatement(self, ast: IfStatement):
         if ast.condition.annotated_type.is_private():
+            # FIXME check that no side effect expressions and no money flow (assignment statements are the only allowed side effect)
             check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.condition)
             check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.then_branch, check_side_effects=False)
             mod_vals = ast.then_branch.modified_values
@@ -127,8 +128,10 @@ class CircuitComplianceChecker(FunctionVisitor):
                 check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.else_branch, check_side_effects=False)
                 mod_vals = mod_vals.union(ast.else_branch.modified_values)
             for val in mod_vals:
-                if val.in_scope_at(ast) and val.target.annotated_type.is_public():
-                    raise TypeException('If statement with private condition must not contain side effects to public variables', ast)
+                if not val.target.annotated_type.zkay_type.type_name.is_primitive_type():
+                    raise TypeException('Writes to non-primitive type variables are not allowed inside private if statements', ast)
+                if val.in_scope_at(ast) and not ast.before_analysis.same_partition(val.privacy, Expression.me_expr()):
+                    raise TypeException('If statement with private condition must not contain side effects to variables with owner != me', ast)
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visitChildren(ast)
 
