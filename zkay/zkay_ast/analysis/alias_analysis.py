@@ -1,7 +1,7 @@
 from zkay.zkay_ast.analysis.partition_state import PartitionState
-from zkay.zkay_ast.ast import FunctionDefinition, VariableDeclarationStatement, IfStatement, \
+from zkay.zkay_ast.ast import VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
-    ConstructorDefinition, FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
+    FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
     ContinueStatement, BreakStatement, DoWhileStatement
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -16,7 +16,7 @@ class AliasAnalysisVisitor(AstVisitor):
     def __init__(self, log=False):
         super().__init__('node-or-children', log)
 
-    def handle_function_definition(self, ast: ConstructorOrFunctionDefinition):
+    def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         s = PartitionState()
         s.insert(MeExpr().privacy_annotation_label())
         s.insert(AllExpr().privacy_annotation_label())
@@ -26,12 +26,6 @@ class AliasAnalysisVisitor(AstVisitor):
             s.insert(p.idf)
         ast.body.before_analysis = s
         return self.visit(ast.body)
-
-    def visitFunctionDefinition(self, ast: FunctionDefinition):
-        return self.handle_function_definition(ast)
-
-    def visitConstructorDefinition(self, ast: ConstructorDefinition):
-        return self.handle_function_definition(ast)
 
     def visitStatementList(self, ast: StatementList):
         return self.visitChildren(ast)

@@ -1,17 +1,16 @@
 from typing import List, Dict, Optional, Tuple, Callable, Set, Union
 
-from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
     CircEqConstraint, CircComment, CircIndentBlock, CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.config import cfg
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
-    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, FunctionDefinition, VariableDeclarationStatement, \
-    Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, CircuitComputationStatement, AllExpr, MeExpr, \
-    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, \
-    ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, BooleanLiteralExpr, NumberLiteralExpr
+    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
+    CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
+    StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration
 
 
 class CircuitHelper:
@@ -132,7 +131,7 @@ class CircuitHelper:
     @staticmethod
     def _get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
         if isinstance(plabel, Identifier):
-            return IdentifierExpr(plabel.clone(), AnnotatedTypeName.address_all()).with_target(plabel.parent)
+            return IdentifierExpr(plabel.clone(), AnnotatedTypeName.address_all()).override(target=plabel.parent)
         else:
             return plabel.clone()
 
@@ -194,7 +193,7 @@ class CircuitHelper:
         for var in ast.read_values:
             if var.in_scope_at(ast): # defined outside if statement -> need to be passed in as arg
                 assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                arg = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).with_target(var.target)
+                arg = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).override(target=var.target)
                 arg.statement = astmt
                 args.append(arg)
                 arg_names.add(var.target.idf.name)
@@ -205,11 +204,13 @@ class CircuitHelper:
             if var.in_scope_at(ast): # side effect visible outside -> return it
                 assert var.target.annotated_type.declared_type.is_private()
                 assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                ret_param = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).with_target(var.target)
+                if not var.target.annotated_type.declared_type.type_name.is_primitive_type():
+                    raise NotImplementedError('Reference types are not yet supported')
+                ret_param = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).override(target=var.target)
                 ret_param.statement = astmt
                 ret_params.append(ret_param)
 
-        fdef = FunctionDefinition(
+        fdef = ConstructorOrFunctionDefinition(
             Identifier('<if_fct>'),
             [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
             [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params],
@@ -276,7 +277,8 @@ class CircuitHelper:
     # 3. assign return value to temporary var
     # return temp ret var
 
-    def inline_circuit_function(self, ast: FunctionCallExpr, fdef: FunctionDefinition) -> TupleExpr:
+    def inline_circuit_function(self, ast: FunctionCallExpr, fdef: ConstructorOrFunctionDefinition) -> TupleExpr:
+        assert not fdef.is_constructor
         with InlineRemap(self):
             with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
                 for param, arg in zip(fdef.parameters, ast.args):
@@ -296,7 +298,7 @@ class CircuitHelper:
     def get_remapped_idf_expr(self, idf: IdentifierExpr) -> LocationExpr:
         is_local = not isinstance(idf.target, StateVariableDeclaration)
         remapped_idf = self.get_remapped_idf(idf.idf, is_local)
-        return idf if remapped_idf == idf.idf else idf.replaced_with(remapped_idf.get_loc_expr()).as_type(idf.annotated_type)
+        return idf if remapped_idf == idf.idf else remapped_idf.get_loc_expr(idf.parent).as_type(idf.annotated_type)
 
     def create_temporary_circuit_variable(self, orig_idf: Identifier, expr: Expression, is_local: bool = True):
         tmp_var, _ = self._evaluate_private_expression(expr, tmp_suffix=f'_{orig_idf.name}')

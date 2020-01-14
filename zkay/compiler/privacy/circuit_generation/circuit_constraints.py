@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from zkay.zkay_ast.ast import HybridArgumentIdf, Expression, LocationExpr, FunctionDefinition
+from zkay.zkay_ast.ast import HybridArgumentIdf, Expression, LocationExpr, ConstructorOrFunctionDefinition
 
 
 class CircuitStatement:
@@ -21,7 +21,7 @@ class CircIndentBlock(CircuitStatement):
 
 
 class CircCall(CircuitStatement):
-    def __init__(self, fct: FunctionDefinition):
+    def __init__(self, fct: ConstructorOrFunctionDefinition):
         super().__init__()
         self.fct = fct
 

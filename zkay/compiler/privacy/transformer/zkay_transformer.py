@@ -1,17 +1,18 @@
 import re
 from typing import Optional
 
-from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, Guarded
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
+from zkay.config import cfg
 from zkay.zkay_ast.analysis.contains_private_checker import contains_private_expr
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
     Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
-    Comment, LiteralExpr, Statement, SimpleStatement, FunctionDefinition, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, TypeName, \
-    NumberLiteralExpr, MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
+    Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, NumberLiteralExpr, \
+    MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
     BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr
+from zkay.zkay_ast.visitor.deep_copy import replace_expr
 
 
 class ZkayVarDeclTransformer(AstTransformerVisitor):
@@ -147,7 +148,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             assert not self.gen.has_return_var
             self.gen.has_return_var = True
             expr = self.expr_trafo.visit(ast.expr)
-            return ast.replaced_with(TupleExpr([IdentifierExpr(f'{cfg.return_var_name}_{idx}') for idx in range(len(ast.function.return_parameters))]).assign(expr))
+            ret_params = [IdentifierExpr(f'{cfg.return_var_name}_{idx}') for idx in range(len(ast.function.return_parameters))]
+            return TupleExpr(ret_params).assign(expr).override(pre_statements=ast.pre_statements)
         else:
             ast.expr = self.expr_trafo.visit(ast.expr)
             return ast
@@ -165,7 +167,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     @staticmethod
     def visitMeExpr(ast: MeExpr):
-        return ast.replaced_with(IdentifierExpr('msg').dot('sender').as_type(AnnotatedTypeName.address_all()))
+        return replace_expr(ast, IdentifierExpr('msg').dot('sender')).as_type(AnnotatedTypeName.address_all())
 
     def visitLiteralExpr(self, ast: LiteralExpr):
         """ Rule (7) """
@@ -177,7 +179,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visitIndexExpr(self, ast: IndexExpr):
         """ Rule (9) """
-        return ast.replaced_with(self.visit(ast.arr).index(self.visit(ast.key)))
+        return replace_expr(ast, self.visit(ast.arr).index(self.visit(ast.key)))
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         return self.visit_children(ast)
@@ -288,15 +290,15 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
         # Constant folding
         if isinstance(t, BooleanLiteralType):
-            return ast.replaced_with(BooleanLiteralExpr(t.value))
+            return replace_expr(ast, BooleanLiteralExpr(t.value))
         elif isinstance(t, NumberLiteralType):
-            return ast.replaced_with(NumberLiteralExpr(t.value))
+            return replace_expr(ast, NumberLiteralExpr(t.value))
 
         if isinstance(ast.func, BuiltinFunction):
             return self.visit_children(ast)
 
         fdef = ast.func.target
-        assert isinstance(fdef, FunctionDefinition)
+        assert fdef.is_function
         assert fdef.return_parameters
         assert fdef.has_static_body
         assert not fdef.has_side_effects or ast.has_side_effects

@@ -5,7 +5,7 @@ from typing import Union, List
 from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
-    ElementaryTypeName, TypeName, UserDefinedTypeName, FunctionDefinition, ConstructorDefinition, \
+    ElementaryTypeName, TypeName, UserDefinedTypeName, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
@@ -38,12 +38,6 @@ class PythonCodeVisitor(CodeVisitor):
 
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
         return self.visit(ast.body)
-
-    def visitFunctionDefinition(self, ast: FunctionDefinition):
-        return self.visitConstructorOrFunctionDefinition(ast)
-
-    def visitConstructorDefinition(self, ast: ConstructorDefinition):
-        return self.visitConstructorOrFunctionDefinition(ast)
 
     def visitEnumDefinition(self, ast: EnumDefinition):
         body = '\n'.join([f'{self.visit(val)} = {idx}' for idx, val in enumerate(ast.values)])

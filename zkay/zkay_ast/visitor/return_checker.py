@@ -1,4 +1,4 @@
-from zkay.zkay_ast.ast import ReturnStatement, Block, FunctionDefinition
+from zkay.zkay_ast.ast import ReturnStatement, Block, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -21,7 +21,7 @@ class ReturnCheckVisitor(AstVisitor):
         ok = True
         if container.statements[-1] != ast:
             ok = False
-        if not isinstance(container.parent, FunctionDefinition):
+        if not isinstance(container.parent, ConstructorOrFunctionDefinition) or container.parent.is_constructor:
             ok = False
         if not ok:
             raise ReturnPositionException(ast)

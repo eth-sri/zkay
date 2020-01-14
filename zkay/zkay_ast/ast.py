@@ -5,11 +5,13 @@ import textwrap
 from collections import OrderedDict
 from enum import IntEnum
 from os import linesep
-from typing import List, Dict, Union, Optional, Callable, Set
+from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 
 from zkay.config import cfg
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.visitor.visitor import AstVisitor
+
+T = TypeVar('T')
 
 
 class ChildListBuilder:
@@ -23,7 +25,6 @@ class ChildListBuilder:
 
 
 class AST:
-
     def __init__(self):
         # set later by parent setter
         self.parent: AST = None
@@ -46,6 +47,13 @@ class AST:
         self.process_children(cb.add_child)
         return cb.children
 
+    def override(self: T, **kwargs) -> T:
+        for key, val in kwargs.items():
+            if not hasattr(self, key):
+                raise ValueError(f'Class "{type(self).__name__}" does not have property "{key}"')
+            setattr(self, key, val)
+        return self
+
     def process_children(self, f: Callable[['AST'], 'AST']):
         pass
 
@@ -53,13 +61,6 @@ class AST:
         v = CodeVisitor()
         s = v.visit(self)
         return s
-
-    def replaced_with(self, replacement: 'AST') -> 'AST':
-        replacement.parent = self.parent
-        replacement.names = self.names
-        replacement.line = self.line
-        replacement.column = self.column
-        return replacement
 
     def __str__(self):
         return self.code()
@@ -126,7 +127,7 @@ class Expression(AST):
         me.statement = stmt
         return me
 
-    def implicitly_converted(self, expected: 'TypeName'):
+    def implicitly_converted(self: T, expected: 'TypeName') -> Union[T, 'FunctionCallExpr']:
         if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
         elif isinstance(expected, NumberTypeName) and self.instanceof_data_type(TypeName.bool_type()):
@@ -176,13 +177,13 @@ class Expression(AST):
     def is_rvalue(self) -> bool:
         return not self.is_lvalue()
 
-    def unop(self, op: str) -> 'Expression':
+    def unop(self, op: str) -> 'FunctionCallExpr':
         return FunctionCallExpr(BuiltinFunction(op), [self])
 
-    def binop(self, op: str, rhs: 'Expression') -> 'Expression':
+    def binop(self, op: str, rhs: 'Expression') -> 'FunctionCallExpr':
         return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
 
-    def ite(self, e_true: 'Expression', e_false: 'Expression') -> 'Expression':
+    def ite(self, e_true: 'Expression', e_false: 'Expression') -> 'FunctionCallExpr':
         return FunctionCallExpr(BuiltinFunction('ite').with_privacy(self.annotated_type.is_private()), [self, e_true, e_false])
 
     def is_parent_of(self, child):
@@ -205,39 +206,19 @@ class Expression(AST):
             return False
 
         # check privacy type
-        #BOOKMARK
         combined_label = actual.combined_privacy(self.analysis, expected)
         if combined_label is None:
             return False
+        elif isinstance(combined_label, List):
+            assert isinstance(self.annotated_type.type_name, TupleType) and not isinstance(self, TupleExpr)
+            return combined_label == [t.privacy_annotation for t in self.annotated_type.type_name.types]
         elif combined_label.privacy_annotation_label() == actual.privacy_annotation.privacy_annotation_label():
             return True
         else:
             return 'make-private'
 
-        # p_expected = expected.privacy_annotation.privacy_annotation_label()
-        # p_actual = actual.privacy_annotation.privacy_annotation_label()
-        # if not p_expected or not p_actual:
-        #     return False
-        # else:
-        #     if p_expected == p_actual:
-        #         return True
-        #     elif self.analysis is not None and self.analysis.same_partition(p_expected, p_actual):
-        #         # analysis is not available, e.g., for state variables
-        #         return True
-        #     elif actual.privacy_annotation.is_all_expr():
-        #         return 'make-private'
-        #     else:
-        #         return False
-
-    def replaced_with(self, replacement: 'Expression') -> 'Expression':
-        repl = super().replaced_with(replacement)
-        assert isinstance(repl, Expression)
-        repl.statement = self.statement
-        return repl
-
-    def as_type(self, t: Union['TypeName', 'AnnotatedTypeName']):
-        self.annotated_type = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
-        return self
+    def as_type(self: T, t: Union['TypeName', 'AnnotatedTypeName']) -> T:
+        return self.override(annotated_type=t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t))
 
     @property
     def analysis(self):
@@ -500,11 +481,7 @@ class IdentifierExpr(LocationExpr):
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
 
-    def with_target(self, target: 'TargetDefinition') -> 'IdentifierExpr':
-        self.target = target
-        return self
-
-    def clone(self):
+    def clone(self) -> 'IdentifierExpr':
         idf = IdentifierExpr(self.idf.clone()).as_type(self.annotated_type)
         idf.target = self.target
         return idf
@@ -605,14 +582,15 @@ class HybridArgumentIdf(Identifier):
         self.corresponding_priv_expression = corresponding_priv_expression
         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
 
-    def get_loc_expr(self) -> LocationExpr:
+    def get_loc_expr(self, parent=None) -> LocationExpr:
         if self.arg_type == HybridArgType.PRIV_CIRCUIT_VAL or self.arg_type == HybridArgType.TMP_CIRCUIT_VAL:
-            return IdentifierExpr(self.clone()).as_type(self.t)
+            ie = IdentifierExpr(self.clone()).as_type(self.t)
         else:
             assert self.arg_type == HybridArgType.PUB_CIRCUIT_ARG
-            return IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
+            ie = IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
+        return ie.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
 
-    def clone(self):
+    def clone(self) -> 'HybridArgumentIdf':
         ha = HybridArgumentIdf(self.name, self.t, self.arg_type, self.corresponding_priv_expression)
         ha.serialized_loc = self.serialized_loc
         return ha
@@ -671,15 +649,6 @@ class Statement(AST):
 
         self.has_side_effects = False
 
-    def replaced_with(self, replacement: 'Statement') -> 'Statement':
-        repl = super().replaced_with(replacement)
-        assert isinstance(repl, Statement)
-        repl.before_analysis = self.before_analysis
-        repl.after_analysis = self.after_analysis
-        repl.function = self.function
-        repl.pre_statements = self.pre_statements
-        return repl
-
 
 class CircuitComputationStatement(Statement):
     def __init__(self, var: HybridArgumentIdf):
@@ -689,7 +658,7 @@ class CircuitComputationStatement(Statement):
 
 class IfStatement(Statement):
 
-    def __init__(self, condition: Expression, then_branch: 'Block', else_branch: 'Block'):
+    def __init__(self, condition: Expression, then_branch: 'Block', else_branch: Optional['Block']):
         super().__init__()
         self.condition = condition
         self.then_branch = then_branch
@@ -1241,6 +1210,10 @@ class Proof(Array):
         return isinstance(other, Proof)
 
 
+class DummyAnnotation:
+    pass
+
+
 class TupleType(TypeName):
     """
     Does not appear in the syntax, but is necessary for type checking
@@ -1258,10 +1231,6 @@ class TupleType(TypeName):
     def __init__(self, types: List['AnnotatedTypeName']):
         super().__init__()
         self.types = types
-
-        # Tuple type can be used as annotated type as well as a normal typename
-        self.type_name = self
-        self.privacy_annotation = AllExpr()
 
     def __len__(self):
         return len(self.types)
@@ -1296,14 +1265,14 @@ class TupleType(TypeName):
     def combined_type(self, other_type: 'TupleType', literal_combine_fct):
         if not isinstance(other_type, TupleType) or len(self.types) != len(other_type.types):
             return None
-        return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, literal_combine_fct)) for e1, e2 in zip(self.types, other_type.types)])
+        return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, literal_combine_fct), DummyAnnotation()) for e1, e2 in zip(self.types, other_type.types)])
 
     def annotate(self, privacy_annotation):
         if isinstance(privacy_annotation, Expression):
-            return TupleType([t.type_name.annotate(privacy_annotation) for t in self.types])
+            return AnnotatedTypeName(TupleType([t.type_name.annotate(privacy_annotation) for t in self.types]))
         else:
             assert len(self.types) == len(privacy_annotation)
-            return TupleType([t.type_name.annotate(a) for t, a in zip(self.types, privacy_annotation)])
+            return AnnotatedTypeName(TupleType([t.type_name.annotate(a) for t, a in zip(self.types, privacy_annotation)]))
 
     def perfect_privacy_match(self, other):
         def privacy_match(self: AnnotatedTypeName, other: AnnotatedTypeName):
@@ -1359,7 +1328,7 @@ class AnnotatedTypeName(AST):
         self.privacy_annotation = f(self.privacy_annotation)
 
     def clone(self) -> 'AnnotatedTypeName':
-        assert not self.privacy_annotation is None
+        assert self.privacy_annotation is not None
         at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.declared_type)
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
@@ -1373,7 +1342,6 @@ class AnnotatedTypeName(AST):
     def combined_privacy(self, analysis: PartitionState, other: 'AnnotatedTypeName'):
         if isinstance(self.type_name, TupleType):
             assert isinstance(other.type_name, TupleType) and len(self.type_name.types) == len(other.type_name.types)
-            # tODO
             return [e1.combined_privacy(analysis, e2) for e1, e2 in zip(self.type_name.types, other.type_name.types)]
 
         p_expected = other.privacy_annotation.privacy_annotation_label()
@@ -1502,17 +1470,27 @@ class Parameter(AST):
 
 class ConstructorOrFunctionDefinition(AST):
 
-    def __init__(self, parameters: List[Parameter], modifiers: List[str], body: Block):
+    def __init__(self, idf: Optional[Identifier], parameters: List[Parameter], modifiers: List[str], return_parameters: Optional[List[Parameter]], body: Block):
+        assert idf is not None or not return_parameters
         super().__init__()
+        self.idf = idf
         self.parameters = parameters
         self.modifiers = modifiers
         self.body = body
+        self.return_parameters = [] if return_parameters is None else return_parameters
 
         # specify parent type
         self.parent: ContractDefinition = None
+        self.original_body: Optional[Block] = None
 
+        # Set function type
+        self.annotated_type = None
+        self._update_fct_type()
+
+        # Unique name (differs from idf if there are multiple overloads)
         self.unambiguous_name: Optional[str] = None
 
+        # Analysis properties
         self.called_functions: OrderedDict[ConstructorOrFunctionDefinition, None] = OrderedDict()
         self.is_recursive = False
         self.has_static_body = True
@@ -1524,56 +1502,40 @@ class ConstructorOrFunctionDefinition(AST):
         # True if this function is public and either requires verification or has private arguments
         self.requires_verification_when_external = False
 
-        self.has_side_effects = not ('pure' in self.modifiers or 'view' in self.modifiers)
-        self.can_be_external = not ('private' in self.modifiers or 'internal' in self.modifiers)
-        self.is_payable = 'payable' in self.modifiers
+    @property
+    def has_side_effects(self):
+        return not ('pure' in self.modifiers or 'view' in self.modifiers)
 
-    def process_children(self, f: Callable[['AST'], 'AST']):
-        self.parameters[:] = map(f, self.parameters)
-        self.body = f(self.body)
+    @property
+    def can_be_external(self):
+        return not ('private' in self.modifiers or 'internal' in self.modifiers)
 
-    def replaced_with(self, replacement: 'ConstructorOrFunctionDefinition') -> 'ConstructorOrFunctionDefinition':
-        replacement: ConstructorOrFunctionDefinition = super().replaced_with(replacement)
-        replacement.called_functions = self.called_functions
-        replacement.is_recursive = self.is_recursive
-        replacement.has_static_body = self.has_static_body
-        replacement.requires_verification = self.requires_verification
-        replacement.requires_verification_when_external = self.requires_verification_when_external
-        replacement.can_be_private = self.can_be_private
-        replacement.unambiguous_name = self.unambiguous_name
-        return replacement
-
-    def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier], ref_storage_loc: str = 'memory'):
-        t = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
-        idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
-        storage_loc = '' if t.type_name.is_primitive_type() else ref_storage_loc
-        self.parameters.append(Parameter([], t, idf, storage_loc))
-        self.parameters[-1].original_type = t
+    @property
+    def is_payable(self):
+        return 'payable' in self.modifiers
 
     @property
     def name(self):
-        if isinstance(self, ConstructorDefinition):
-            return 'constructor'
-        else:
-            assert isinstance(self, FunctionDefinition)
-            return self.idf.name
+        return 'constructor' if self.idf is None else self.idf.name
 
+    @property
+    def return_type(self):
+        return TupleType([p.annotated_type for p in self.return_parameters])
 
-class FunctionDefinition(ConstructorOrFunctionDefinition):
+    @property
+    def parameter_types(self):
+        return TupleType([p.annotated_type for p in self.parameters])
 
-    def __init__(
-            self,
-            idf: Identifier,
-            parameters: List[Parameter],
-            modifiers: List[str],
-            return_parameters: List[Parameter],
-            body: Block):
-        super().__init__(parameters, modifiers, body)
-        # set fields
-        self.idf = idf
-        self.return_parameters = return_parameters if return_parameters else []
-        self.annotated_type: AnnotatedTypeName = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
-        self.original_body = None
+    @property
+    def is_constructor(self):
+        return self.idf is None
+
+    @property
+    def is_function(self):
+        return not self.is_constructor
+
+    def _update_fct_type(self):
+        self.annotated_type = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
 
     def process_children(self, f: Callable[['AST'], 'AST']):
         self.idf = f(self.idf)
@@ -1581,21 +1543,13 @@ class FunctionDefinition(ConstructorOrFunctionDefinition):
         self.return_parameters[:] = map(f, self.return_parameters)
         self.body = f(self.body)
 
-    def get_return_type(self):
-        return TupleType([p.annotated_type for p in self.return_parameters])
-
-    def get_parameter_types(self):
-        types = [p.annotated_type for p in self.parameters]
-        return TupleType(types)
-
-
-class ConstructorDefinition(ConstructorOrFunctionDefinition):
-
-    def __init__(self, parameters: List[Parameter], modifiers: List[str], body: Block):
-        super().__init__(parameters, modifiers, body)
-
-    def as_function(self):
-        return self.replaced_with(FunctionDefinition(Identifier(self.name), self.parameters, self.modifiers, [], self.body))
+    def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier], ref_storage_loc: str = 'memory'):
+        t = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
+        idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
+        storage_loc = '' if t.type_name.is_primitive_type() else ref_storage_loc
+        self.parameters.append(Parameter([], t, idf, storage_loc))
+        self.parameters[-1].original_type = t
+        self._update_fct_type()
 
 
 class StateVariableDeclaration(AST):
@@ -1643,8 +1597,8 @@ class ContractDefinition(AST):
             self,
             idf: Identifier,
             state_variable_declarations: List[StateVariableDeclaration],
-            constructor_definitions: List[ConstructorDefinition],
-            function_definitions: List[FunctionDefinition],
+            constructor_definitions: List[ConstructorOrFunctionDefinition],
+            function_definitions: List[ConstructorOrFunctionDefinition],
             enum_definitions: List[EnumDefinition],
             struct_definitions: Optional[List[StructDefinition]] = None):
         super().__init__()
@@ -1667,7 +1621,7 @@ class ContractDefinition(AST):
         if key == 'constructor':
             if len(self.constructor_definitions) == 0:
                 # return empty constructor
-                c = ConstructorDefinition([], [], Block([]))
+                c = ConstructorOrFunctionDefinition(None, [], [], None, Block([]))
                 c.parent = self
                 return c
             elif len(self.constructor_definitions) == 1:
@@ -1700,7 +1654,8 @@ class SourceUnit(AST):
 
 
 PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
-TargetDefinition = Union[VariableDeclaration, Parameter, FunctionDefinition, StateVariableDeclaration, StructDefinition, ContractDefinition]
+DataTargetDefinition = Union[VariableDeclaration, Parameter, StateVariableDeclaration]
+TargetDefinition = Union[DataTargetDefinition, ConstructorOrFunctionDefinition, StructDefinition, ContractDefinition]
 
 
 class InstanceTarget(tuple):
@@ -1722,6 +1677,7 @@ class InstanceTarget(tuple):
                 target_key[0] = expr.arr.target
                 target_key[1] = expr.key
 
+        assert isinstance(target_key[0], (VariableDeclaration, Parameter, StateVariableDeclaration))
         return super(InstanceTarget, cls).__new__(cls, target_key)
 
     def __eq__(self, other):
@@ -1731,11 +1687,11 @@ class InstanceTarget(tuple):
         return hash(self[:])
 
     @property
-    def target(self):
+    def target(self) -> DataTargetDefinition:
         return self[0]
 
     @property
-    def key(self):
+    def key(self) -> Optional[Union[Identifier, Expression]]:
         return self[1]
 
     def in_scope_at(self, ast: AST) -> bool:
@@ -1759,7 +1715,7 @@ def indent(s: str):
 
 
 def get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[ContractDefinition] = None,
-                       fct: Optional[FunctionDefinition] = None, stmt: Optional[Statement] = None):
+                       fct: Optional[ConstructorOrFunctionDefinition] = None, stmt: Optional[Statement] = None):
     assert line <= len(code)
 
     # Print Location
@@ -2085,7 +2041,7 @@ class CodeVisitor(AstVisitor):
         s = ' '.join(description)
         return s
 
-    def visitFunctionDefinition(self, ast: FunctionDefinition):
+    def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         b = self.visit_single_or_list(ast.body)
         return self.function_definition_to_str(ast.idf, ast.parameters, ast.modifiers, ast.return_parameters, b)
 
@@ -2111,10 +2067,6 @@ class CodeVisitor(AstVisitor):
 
         f = f"{definition}({p}){m}{r} {body}"
         return f
-
-    def visitConstructorDefinition(self, ast: ConstructorDefinition):
-        b = self.visit_single_or_list(ast.body)
-        return self.function_definition_to_str(None, ast.parameters, ast.modifiers, [], b)
 
     def visitEnumDefinition(self, ast: EnumDefinition):
         values = self.visit_list(ast.values)

@@ -1,4 +1,4 @@
-from zkay.zkay_ast.ast import AST, Expression, Statement, FunctionDefinition, ConstructorDefinition, ConstructorOrFunctionDefinition
+from zkay.zkay_ast.ast import AST, Expression, Statement, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 

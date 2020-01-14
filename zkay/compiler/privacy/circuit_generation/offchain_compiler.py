@@ -3,14 +3,13 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
-from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.config import cfg
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
-    ConstructorDefinition, indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
+    indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
-    CircuitComputationStatement, VariableDeclarationStatement, FunctionDefinition, LocationExpr
+    CircuitComputationStatement, VariableDeclarationStatement, LocationExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -299,7 +298,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                                              'actual_params.append(proof)'])
 
         should_encrypt = ", ".join([str(p.annotated_type.declared_type is not None and p.annotated_type.declared_type.is_private()) for p in self.current_f.parameters])
-        if isinstance(ast, ConstructorDefinition):
+        if ast.is_constructor:
             invoke_transact_str = f'''
             # Deploy contract
             return {CONN_OBJ_NAME}.deploy({PROJECT_DIR_NAME}, {SELF_ADDR}, {CONTRACT_NAME}, actual_params, [{should_encrypt}]{", value=value" if ast.is_payable else ""})
@@ -335,7 +334,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         post_body_code = self.do_if_external(ast, [
             generate_proof_str,
             invoke_transact_str
-        ], [f'return {", ".join([f"{cfg.return_var_name}_{idx}" for idx in range(len(ast.return_parameters))])}' if isinstance(ast, FunctionDefinition) and ast.requires_verification else None])
+        ], [f'return {", ".join([f"{cfg.return_var_name}_{idx}" for idx in range(len(ast.return_parameters))])}' if ast.is_function and ast.requires_verification else None])
 
         code = '\n\n'.join(s.strip() for s in [
             f'assert not {IS_EXTERNAL_CALL}' if not ast.can_be_external else None,

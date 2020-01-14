@@ -3,7 +3,7 @@ from typing import List, Union
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, \
     AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
-    TupleExpr, InstanceTarget, VariableDeclaration, FunctionDefinition, Parameter
+    TupleExpr, InstanceTarget, VariableDeclaration, Parameter
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -59,7 +59,7 @@ class DirectModificationDetector(FunctionVisitor):
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         return self.visitAssignmentExpr(ast)
 
-    def collect_modified_values(self, target: Union[Expression, Statement], expr: Expression):
+    def collect_modified_values(self, target: Union[Expression, Statement], expr: Union[TupleExpr, LocationExpr]):
         if isinstance(expr, TupleExpr):
             for elem in expr.elements:
                 self.collect_modified_values(target, elem)
@@ -69,7 +69,7 @@ class DirectModificationDetector(FunctionVisitor):
                 raise TypeException(f'Undefined behavior due multiple different assignments to the same target in tuple assignment', expr)
             target.modified_values.add(mod_value)
 
-    def visitAssignmentExpr(self, ast: AssignmentExpr):
+    def visitAssignmentExpr(self, ast: Union[AssignmentExpr, AssignmentStatement]):
         self.visitAST(ast)
         self.collect_modified_values(ast, ast.lhs)
 

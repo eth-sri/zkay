@@ -9,9 +9,8 @@ from zkay.compiler.privacy.transformer.zkay_transformer import ZkayVarDeclTransf
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
-    Comment, FunctionDefinition, NumberLiteralExpr, CastExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, ConstructorDefinition, SliceExpr, LabeledBlock, \
-    TupleExpr
+    Comment, NumberLiteralExpr, CastExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, SliceExpr, LabeledBlock, TupleExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -117,7 +116,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
             if fct.requires_verification_when_external:
                 req_ext_fcts[fct] = fct.parameters[:]
-            elif isinstance(fct, ConstructorDefinition):
+            elif fct.is_constructor:
                 new_constr.append(fct)
             else:
                 new_fcts.append(fct)
@@ -158,27 +157,19 @@ class ZkayTransformer(AstTransformerVisitor):
             def param_copy(parameters, new_storage='memory'):
                 return [deep_copy(p, with_types=True).with_changed_storage('memory', new_storage) for p in parameters]
 
-            is_payable = f.is_payable
-
-            if isinstance(f, ConstructorDefinition):
-                circuit = self.circuit_generators.pop(f)
-                f = f.as_function()
-                circuit.fct = f
-                self.circuit_generators[f] = circuit
-
-                new_f = ConstructorDefinition(param_copy(orig_params), ['public'], Block([]))
+            new_modifiers = ['payable'] if f.is_payable else []
+            if f.is_constructor:
+                new_f = ConstructorOrFunctionDefinition(None, param_copy(orig_params), ['public'] + new_modifiers, None, Block([]))
                 new_constr.append(new_f)
             else:
-                new_f = FunctionDefinition(Identifier(f.name), param_copy(orig_params, 'calldata'), ['external'],
-                                           param_copy(f.return_parameters), Block([]))
+                new_f = ConstructorOrFunctionDefinition(Identifier(f.name), param_copy(orig_params, 'calldata'), ['external'] + new_modifiers,
+                                                        param_copy(f.return_parameters), Block([]))
                 new_fcts.append(new_f)
 
             # Make function internal
             f.idf = Identifier(cfg.get_internal_name(f))
             f.modifiers = ['internal' if mod == 'public' else mod for mod in f.modifiers if mod != 'payable']
-            f.can_be_external = False
             f.requires_verification_when_external = False
-            f.is_payable = False
             new_fcts.append(f)
 
             # Create new external wrapper function
@@ -186,9 +177,6 @@ class ZkayTransformer(AstTransformerVisitor):
             new_f.requires_verification = True
             new_f.requires_verification_when_external = True
             new_f.called_functions = f.called_functions
-            if is_payable:
-                new_f.modifiers.append('payable')
-                new_f.is_payable = True
             self.create_external_verification_wrapper(new_f, f, global_owners)
 
         c.constructor_definitions = new_constr
@@ -217,7 +205,7 @@ class ZkayTransformer(AstTransformerVisitor):
             stmts += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), BlankLine()]
 
         # Declare return variable if necessary
-        if isinstance(ast, FunctionDefinition) and ast.return_parameters:
+        if ast.return_parameters:
             stmts += Comment.comment_list("Declare return variables", [
                 Identifier(f'{cfg.return_var_name}_{idx}').decl_var(ast.return_parameters[idx].annotated_type) for idx in range(len(ast.return_parameters))
             ])
@@ -251,7 +239,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         ast.body.statements[:] = stmts
 
-    def create_external_verification_wrapper(self, ext_fct: ConstructorOrFunctionDefinition, int_fct: FunctionDefinition, global_owners):
+    def create_external_verification_wrapper(self, ext_fct: ConstructorOrFunctionDefinition, int_fct: ConstructorOrFunctionDefinition, global_owners):
         # Create new circuit for external function
         circuit = self.create_circuit_helper(ext_fct, global_owners, self.circuit_generators[int_fct])
         if not int_fct.requires_verification:
@@ -294,7 +282,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Call internal function
         args = [IdentifierExpr(param.idf.clone()) for param in ext_fct.parameters]
-        internal_call = FunctionCallExpr(IdentifierExpr(int_fct.idf.clone()).with_target(int_fct), args)
+        internal_call = FunctionCallExpr(IdentifierExpr(int_fct.idf.clone()).override(target=int_fct), args)
         internal_call.sec_start_offset = circuit.priv_in_size
         ext_fct.called_functions[int_fct] = None
         if int_fct.requires_verification:
@@ -314,7 +302,7 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(Comment())
 
         # Add out and proof parameter
-        storage_loc = 'calldata' if isinstance(ext_fct, FunctionDefinition) else 'memory'
+        storage_loc = 'calldata' if ext_fct.is_function else 'memory'
         ext_fct.add_param(Array(AnnotatedTypeName.uint_all()), Identifier(cfg.zk_out_name), storage_loc)
         ext_fct.add_param(AnnotatedTypeName.proof_type(), Identifier(cfg.proof_param_name), storage_loc)
 

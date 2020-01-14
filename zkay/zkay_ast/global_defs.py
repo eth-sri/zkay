@@ -1,6 +1,6 @@
 # BUILTIN SPECIAL TYPE DEFINITIONS
 from zkay.zkay_ast.ast import AnnotatedTypeName, FunctionTypeName, Parameter, Identifier, StructDefinition, \
-    VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName, StructTypeName, FunctionDefinition, Block
+    VariableDeclaration, TypeName, StateVariableDeclaration, UserDefinedTypeName, StructTypeName, Block, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 
 array_length_member = VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('length'))
@@ -26,10 +26,10 @@ class GlobalDefs:
     address_payable_struct: StructDefinition = StructDefinition(
         Identifier('<address_payable>'), [
             VariableDeclaration([], AnnotatedTypeName.uint_all(), Identifier('balance')),
-            FunctionDefinition(Identifier('send'), [Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))], ['public'],
-                               [Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))], Block([])),
-            FunctionDefinition(Identifier('transfer'), [Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))], ['public'],
-                               [], Block([])),
+            ConstructorOrFunctionDefinition(Identifier('send'), [Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))], ['public'],
+                                            [Parameter([], AnnotatedTypeName.bool_all(), Identifier(''))], Block([])),
+            ConstructorOrFunctionDefinition(Identifier('transfer'), [Parameter([], AnnotatedTypeName.uint_all(), Identifier(''))], ['public'],
+                                            [], Block([])),
         ]
     )
     address_payable_struct.members[1].can_be_private = False

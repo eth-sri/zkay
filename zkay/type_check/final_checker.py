@@ -2,7 +2,7 @@ from typing import Set, Dict, Optional
 
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import StateVariableDeclaration, \
-    AssignmentStatement, IdentifierExpr, ContractDefinition, Block, ConstructorDefinition, FunctionDefinition, IfStatement
+    AssignmentStatement, IdentifierExpr, ContractDefinition, Block, IfStatement, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -34,7 +34,8 @@ class FinalVisitor(AstVisitor):
 
         self.state_vars_assigned = None
 
-    def visitFunctionDefinition(self, ast: FunctionDefinition):
+    def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
+        assert ast.is_function
         return
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):

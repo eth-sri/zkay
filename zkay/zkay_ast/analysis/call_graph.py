@@ -1,5 +1,5 @@
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
-    FunctionDefinition, ForStatement, WhileStatement
+    ConstructorOrFunctionDefinition, ForStatement, WhileStatement
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -23,7 +23,7 @@ class DirectCalledFunctionDetector(FunctionVisitor):
         if not isinstance(ast.func, BuiltinFunction):
             assert isinstance(ast.func, LocationExpr)
             fdef = ast.func.target
-            assert isinstance(fdef, FunctionDefinition)
+            assert fdef.is_function
             ast.statement.function.called_functions[fdef] = None
         self.visitChildren(ast)
 

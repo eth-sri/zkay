@@ -1,13 +1,16 @@
 import inspect
+from typing import TypeVar
 
 from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
-from zkay.zkay_ast.ast import AST, Expression, Statement, Parameter, CastExpr
+from zkay.zkay_ast.ast import AST, Expression, Statement, CastExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
+T = TypeVar('T')
 
-def deep_copy(ast: AST, with_types=False, with_analysis=False):
+
+def deep_copy(ast: T, with_types=False, with_analysis=False) -> T:
     """
 
     :param ast:
@@ -16,6 +19,7 @@ def deep_copy(ast: AST, with_types=False, with_analysis=False):
 
     Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
     """
+    assert isinstance(ast, AST)
     v = DeepCopyVisitor(with_types, with_analysis)
     ast_copy = v.visit(ast)
     ast_copy.parent = ast.parent
@@ -23,6 +27,25 @@ def deep_copy(ast: AST, with_types=False, with_analysis=False):
     link_identifiers(ast_copy)
     detect_expressions_with_side_effects(ast_copy)
     return ast_copy
+
+
+def replace_expr(old_expr: Expression, new_expr: Expression, copy_type: bool = False):
+    """
+        Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
+    """
+    _replace_ast(old_expr, new_expr)
+    if copy_type:
+        new_expr.annotated_type = old_expr.annotated_type
+    return new_expr
+
+
+def _replace_ast(old_ast: AST, new_ast: AST):
+    new_ast.parent = old_ast.parent
+    DeepCopyVisitor.copy_ast_fields(old_ast, new_ast)
+    if old_ast.parent is not None:
+        set_parents(new_ast)
+        link_identifiers(new_ast)
+    detect_expressions_with_side_effects(new_ast)
 
 
 class DeepCopyVisitor(AstVisitor):
@@ -79,6 +102,13 @@ class DeepCopyVisitor(AstVisitor):
         self.with_types = with_types
         self.with_analysis = with_analysis
 
+    @staticmethod
+    def copy_ast_fields(ast, ast_copy):
+        ast_copy.line = ast.line
+        ast_copy.column = ast.column
+        ast_copy.modified_values = ast.modified_values
+        ast_copy.read_values = ast.read_values
+
     def visitChildren(self, ast):
         c = ast.__class__
         args_names = inspect.getfullargspec(c.__init__).args[1:]
@@ -91,11 +121,7 @@ class DeepCopyVisitor(AstVisitor):
             if k not in new_fields and k not in self.setting_later:
                 raise ValueError("Not copying", k)
         ast_copy = c(**new_fields)
-
-        ast_copy.line = ast.line
-        ast_copy.column = ast.column
-        ast_copy.modified_values = ast.modified_values
-        ast_copy.read_values = ast.read_values
+        self.copy_ast_fields(ast, ast_copy)
         return ast_copy
 
     def visitCastExpr(self, ast: CastExpr):

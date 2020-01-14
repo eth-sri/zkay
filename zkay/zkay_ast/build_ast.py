@@ -6,8 +6,8 @@ from zkay.solidity_parser.generated.SolidityParser import SolidityParser, Parser
 from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
 from zkay.solidity_parser.parse import MyParser
 from zkay.type_check.type_exceptions import RequireException, ReclassifyException
-from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, FunctionDefinition, NumberLiteralExpr, \
-    BooleanLiteralExpr, StringLiteralExpr, ConstructorDefinition, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
+from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, NumberLiteralExpr, \
+    BooleanLiteralExpr, StringLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
     ReclassifyExpr, BuiltinFunction, IndexExpr
 
 
@@ -127,10 +127,25 @@ class BuildASTVisitor(SolidityVisitor):
         identifier = self.visit(ctx.identifier())
         parts = [self.visit(c) for c in ctx.parts]
         state_vars = [p for p in parts if isinstance(p, StateVariableDeclaration)]
-        constructors = [p for p in parts if isinstance(p, ConstructorDefinition)]
-        functions = [p for p in parts if isinstance(p, FunctionDefinition)]
+        cfdefs = [p for p in parts if isinstance(p, ast.ConstructorOrFunctionDefinition)]
+        constructors = [p for p in cfdefs if p.is_constructor]
+        functions = [p for p in cfdefs if p.is_function]
         enums = [p for p in parts if isinstance(p, ast.EnumDefinition)]
         return ContractDefinition(identifier, state_vars, constructors, functions, enums)
+
+    def handle_fdef(self, ctx):
+        if isinstance(ctx, SolidityParser.ConstructorDefinitionContext):
+            idf, ret_params = None, None
+        else:
+            idf, ret_params = self.visit(ctx.idf), self.handle_field(ctx.return_parameters)
+        params, mods, body = self.handle_field(ctx.parameters), self.handle_field(ctx.modifiers), self.visit(ctx.body)
+        return ast.ConstructorOrFunctionDefinition(idf, params, mods, ret_params, body)
+
+    def visitFunctionDefinition(self, ctx:SolidityParser.FunctionDefinitionContext):
+        return self.handle_fdef(ctx)
+
+    def visitConstructorDefinition(self, ctx:SolidityParser.ConstructorDefinitionContext):
+        return self.handle_fdef(ctx)
 
     # Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
     def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):

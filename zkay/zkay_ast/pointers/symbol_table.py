@@ -1,6 +1,6 @@
-from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, FunctionDefinition, VariableDeclaration, \
+from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
-    StructDefinition, UserDefinedTypeName, StatementList, Array, Parameter
+    StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -64,11 +64,8 @@ class SymbolTableFiller(AstVisitor):
         structs = {s.idf.name: s.idf for s in ast.struct_definitions}
         ast.names = merge_dicts(state_vars, funcs, structs)
 
-    def visitFunctionDefinition(self, ast: FunctionDefinition):
+    def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         ast.names = {p.idf.name: p.idf for p in ast.parameters}
-
-    def visitConstructorDefinition(self, ast):
-        self.visitFunctionDefinition(ast)
 
     def visitStructDefinition(self, ast: StructDefinition):
         ast.names = {m.idf.name: m.idf for m in ast.members}
