@@ -11,6 +11,7 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
     CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
     StructDefinition, SliceExpr, Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration
+from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
 class CircuitHelper:
@@ -283,7 +284,7 @@ class CircuitHelper:
             with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
                 for param, arg in zip(fdef.parameters, ast.args):
                     self.create_temporary_circuit_variable(Identifier(param.idf.name), arg)
-                inlined_body = fdef.original_body.clone()
+                inlined_body = deep_copy(fdef.original_body, with_types=True, with_analysis=True)
                 self._circ_trafo.visit(inlined_body)
                 ast.statement.pre_statements += inlined_body.pre_statements
                 ret_idfs = [self._inline_var_remap[(True, f'{cfg.return_var_name}_{idx}')] for idx in range(len(fdef.return_parameters))]

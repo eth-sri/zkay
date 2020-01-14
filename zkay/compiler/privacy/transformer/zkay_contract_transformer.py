@@ -99,7 +99,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Backup untransformed function bodies
         for fct in all_fcts:
-            fct.original_body = fct.body.clone()
+            fct.original_body = deep_copy(fct.body, with_types=True, with_analysis=True)
 
         # Transform types of normal state variables
         c.state_variable_declarations = self.var_decl_trafo.visit_list(c.state_variable_declarations)

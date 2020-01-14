@@ -796,10 +796,6 @@ class Block(StatementList):
         super().__init__(statements)
         self.was_single_statement = was_single_statement
 
-    def clone(self) -> Block:
-        from zkay.zkay_ast.visitor.deep_copy import deep_copy
-        return deep_copy(self, with_types=True, with_analysis=True)
-
 
 class LabeledBlock(StatementList):
     def __init__(self, statements: List[Statement], label: str):
