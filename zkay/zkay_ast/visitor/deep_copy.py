@@ -58,6 +58,7 @@ class DeepCopyVisitor(AstVisitor):
 
         # Specialized fields
         'parent',
+        'namespace',
         'names',
         'had_privacy_annotation',
         'annotated_type',

@@ -11,7 +11,7 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, Statement
     Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
     Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, NumberLiteralExpr, \
     MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
-    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr
+    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 
 
@@ -239,6 +239,9 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             if ast.func.target.requires_verification:
                 self.gen.call_function(ast)
             return ast
+
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        return self.visit_children(ast)
 
     def visitExpression(self, ast: Expression):
         raise NotImplementedError()

@@ -123,8 +123,11 @@ parameterList
 parameter
   : (keywords+=FinalKeyword)? annotated_type=annotatedTypeName idf=identifier? ;
 
+enumValue
+  : idf=identifier ;
+
 enumDefinition
-  : 'enum' idf=identifier '{' values+=identifier? (',' values+=identifier)* '}' ;
+  : 'enum' idf=identifier '{' values+=enumValue? (',' values+=enumValue)* '}' ;
 
 variableDeclaration
   : (keywords+=FinalKeyword)? annotated_type=annotatedTypeName idf=identifier ;
@@ -139,7 +142,11 @@ variableDeclaration
 // - arrays: allows fixed size (T[k]) and dynamic size (T[])
 typeName
   : elementaryTypeName
+  | userDefinedTypeName
   | mapping ;
+
+userDefinedTypeName
+  : names+=identifier ( '.' names+=identifier )* ;
 
 // REMOVED:
 // - string
@@ -271,7 +278,7 @@ expression
   : MeKeyword # MeExpr
   | AllKeyword # AllExpr
   | arr=expression '[' index=expression ']' # IndexExpr
-  | elemType=elementaryTypeName '(' expr=expression ')' # PrimitiveCastExpr
+  | elem_type=elementaryTypeName '(' expr=expression ')' # PrimitiveCastExpr
   | func=expression '(' args=functionCallArguments ')' # FunctionCallExpr
   | expr=expression '.' member=identifier # MemberAccessExpr // NB: add member access again
   | '(' expr=expression ')' # ParenthesisExpr

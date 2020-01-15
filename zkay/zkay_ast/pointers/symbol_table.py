@@ -1,6 +1,7 @@
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
-    StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition
+    StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, EnumValue, \
+    NamespaceDefinition
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -62,13 +63,20 @@ class SymbolTableFiller(AstVisitor):
         state_vars = {d.idf.name: d.idf for d in ast.state_variable_declarations if not isinstance(d, Comment)}
         funcs = {f.idf.name: f.idf for f in ast.function_definitions}
         structs = {s.idf.name: s.idf for s in ast.struct_definitions}
-        ast.names = merge_dicts(state_vars, funcs, structs)
+        enums = {e.idf.name: e.idf for e in ast.enum_definitions}
+        ast.names = merge_dicts(state_vars, funcs, structs, enums)
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         ast.names = {p.idf.name: p.idf for p in ast.parameters}
 
     def visitStructDefinition(self, ast: StructDefinition):
         ast.names = {m.idf.name: m.idf for m in ast.members}
+
+    def visitEnumDefinition(self, ast: EnumDefinition):
+        ast.names = {v.idf.name: v.idf for v in ast.values}
+
+    def visitEnumValue(self, ast: EnumValue):
+        ast.names = {ast.idf.name: ast.idf}
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.names = {ast.idf.name: ast.idf}
@@ -113,18 +121,21 @@ class SymbolTableLinker(AstVisitor):
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert isinstance(ast.expr, LocationExpr), "Function call return value member access not yet supported"
-        t = ast.expr.target.annotated_type.type_name
-        if isinstance(t, Array):
-            assert ast.member.name == 'length'
-            ast.target = array_length_member
+        if isinstance(ast.expr.target, NamespaceDefinition):
+            ast.target = ast.expr.target.names[ast.member.name].parent
         else:
-            assert isinstance(t, UserDefinedTypeName)
-            if t.target is None:
-                t = t.clone()
-                t.parent = ast
-                self.visit(t)
-            if t.target is not None:
-                ast.target = t.target.names[ast.member.name].parent
+            t = ast.expr.target.annotated_type.type_name
+            if isinstance(t, Array):
+                assert ast.member.name == 'length'
+                ast.target = array_length_member
+            else:
+                assert isinstance(t, UserDefinedTypeName)
+                if t.target is None:
+                    t = t.clone()
+                    t.parent = ast
+                    self.visit(t)
+                if t.target is not None:
+                    ast.target = t.target.names[ast.member.name].parent
 
     def visitIndexExpr(self, ast: IndexExpr):
         assert isinstance(ast.arr, LocationExpr), "Function call return value indexing not yet supported"

@@ -30,6 +30,7 @@ class AST:
     def __init__(self):
         # set later by parent setter
         self.parent: AST = None
+        self.namespace: Optional[List[Identifier]] = None
 
         # Names accessible by AST nodes below this node.
         # Does not include names already listed by parents.
@@ -63,6 +64,15 @@ class AST:
         v = CodeVisitor()
         s = v.visit(self)
         return s
+
+    @property
+    def qualified_name(self) -> List[Identifier]:
+        if not hasattr(self, 'idf'):
+            return []
+        if self.namespace[-1] == self.idf:
+            return self.namespace
+        else:
+            return self.namespace + [self.idf]
 
     def __str__(self):
         return self.code()
@@ -393,6 +403,17 @@ class CastExpr(FunctionCallExpr):
     def process_children(self, f: Callable[[AST], AST]):
         self.t = f(self.t)
         self.args[0] = f(self.args[0])
+
+
+class PrimitiveCastExpr(Expression):
+    def __init__(self, elem_type: TypeName, expr: Expression):
+        super().__init__()
+        self.elem_type = elem_type
+        self.expr = expr
+
+    def process_children(self, f: Callable[[AST], AST]):
+        self.elem_type = f(self.elem_type)
+        self.expr = f(self.expr)
 
 
 class AssignmentExpr(Expression):
@@ -858,9 +879,7 @@ class TypeName(AST):
         raise NotImplementedError()
 
     def is_primitive_type(self):
-        return self == TypeName.bool_type() or isinstance(self, BooleanLiteralType) or \
-               isinstance(self, NumberTypeName) or isinstance(self, EnumTypeName) or \
-               self == TypeName.address_type() or self == TypeName.address_payable_type()
+        return isinstance(self, (ElementaryTypeName, AddressTypeName, AddressPayableTypeName))
 
     def can_be_private(self):
         return self.is_primitive_type()
@@ -1057,7 +1076,7 @@ class UserDefinedTypeName(TypeName):
         return UserDefinedTypeName(self.names.copy(), self.target)
 
     def __eq__(self, other):
-        return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.names, other.names))
+        return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.target.qualified_name, other.target.qualified_name))
 
 
 class EnumTypeName(UserDefinedTypeName):
@@ -1067,6 +1086,18 @@ class EnumTypeName(UserDefinedTypeName):
     @property
     def elem_bitwidth(self):
         return 256
+
+
+class EnumValueTypeName(UserDefinedTypeName):
+    @property
+    def elem_bitwidth(self):
+        return 256
+
+    def clone(self) -> EnumValueTypeName:
+        return EnumValueTypeName(self.names.copy(), self.target)
+
+    def implicitly_convertible_to(self, expected: TypeName) -> bool:
+        return super().implicitly_convertible_to(expected) or (isinstance(expected, EnumTypeName) and expected.names == self.names[:-1])
 
 
 class StructTypeName(UserDefinedTypeName):
@@ -1481,12 +1512,22 @@ class Parameter(AST):
         self.idf = f(self.idf)
 
 
-class ConstructorOrFunctionDefinition(AST):
+class NamespaceDefinition(AST):
+    def __init__(self, idf: Identifier):
+        super().__init__()
+        self.idf = idf
+
+    def process_children(self, f: Callable[[AST], AST]):
+        oldidf = self.idf
+        self.idf = f(self.idf)
+        assert oldidf == self.idf # must be readonly
+
+
+class ConstructorOrFunctionDefinition(NamespaceDefinition):
 
     def __init__(self, idf: Optional[Identifier], parameters: List[Parameter], modifiers: List[str], return_parameters: Optional[List[Parameter]], body: Block):
         assert idf is not None or not return_parameters
-        super().__init__()
-        self.idf = idf
+        super().__init__(idf)
         self.parameters = parameters
         self.modifiers = modifiers
         self.body = body
@@ -1551,7 +1592,7 @@ class ConstructorOrFunctionDefinition(AST):
         self.annotated_type = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
 
     def process_children(self, f: Callable[[AST], AST]):
-        self.idf = f(self.idf)
+        super().process_children(f)
         self.parameters[:] = map(f, self.parameters)
         self.return_parameters[:] = map(f, self.return_parameters)
         self.body = f(self.body)
@@ -1582,29 +1623,39 @@ class StateVariableDeclaration(AST):
         self.expr = f(self.expr)
 
 
-class EnumDefinition(AST):
-    def __init__(self, idf: Identifier, values: List[Identifier]):
+class EnumValue(AST):
+    def __init__(self, idf: Identifier):
         super().__init__()
         self.idf = idf
-        self.values = values
+        self.annotated_type: Optional[AnnotatedTypeName] = None
 
     def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
+
+
+class EnumDefinition(NamespaceDefinition):
+    def __init__(self, idf: Identifier, values: List[EnumValue]):
+        super().__init__(idf)
+        self.values = values
+
+        self.annotated_type: Optional[AnnotatedTypeName] = None
+
+    def process_children(self, f: Callable[[AST], AST]):
+        super().process_children(f)
         self.values[:] = map(f, self.values)
 
 
-class StructDefinition(AST):
+class StructDefinition(NamespaceDefinition):
     def __init__(self, idf: Identifier, members: List[VariableDeclaration]):
-        super().__init__()
-        self.idf = idf
+        super().__init__(idf)
         self.members = members
 
     def process_children(self, f: Callable[[AST], AST]):
-        self.idf = f(self.idf)
+        super().process_children(f)
         self.members[:] = map(f, self.members)
 
 
-class ContractDefinition(AST):
+class ContractDefinition(NamespaceDefinition):
 
     def __init__(
             self,
@@ -1614,8 +1665,7 @@ class ContractDefinition(AST):
             function_definitions: List[ConstructorOrFunctionDefinition],
             enum_definitions: List[EnumDefinition],
             struct_definitions: Optional[List[StructDefinition]] = None):
-        super().__init__()
-        self.idf = idf
+        super().__init__(idf)
         self.state_variable_declarations = state_variable_declarations
         self.constructor_definitions = constructor_definitions
         self.function_definitions = function_definitions
@@ -1623,12 +1673,12 @@ class ContractDefinition(AST):
         self.struct_definitions = [] if struct_definitions is None else struct_definitions
 
     def process_children(self, f: Callable[[AST], AST]):
-        self.idf = f(self.idf)
+        super().process_children(f)
+        self.enum_definitions[:] = map(f, self.enum_definitions)
+        self.struct_definitions[:] = map(f, self.struct_definitions)
         self.state_variable_declarations[:] = map(f, self.state_variable_declarations)
         self.constructor_definitions[:] = map(f, self.constructor_definitions)
         self.function_definitions[:] = map(f, self.function_definitions)
-        self.enum_definitions[:] = map(f, self.enum_definitions)
-        self.struct_definitions[:] = map(f, self.struct_definitions)
 
     def __getitem__(self, key: str):
         if key == 'constructor':
@@ -1861,6 +1911,9 @@ class CodeVisitor(AstVisitor):
             a = self.visit_list(ast.args, ', ')
             return f'{f}({a})'
 
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        return f'{self.visit(ast.elem_type)}({self.visit(ast.expr)})'
+
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         lhs = self.visit(ast.lhs)
         rhs = self.visit(ast.rhs)
@@ -2004,7 +2057,8 @@ class CodeVisitor(AstVisitor):
         if ast.declared_type is not None:
             assert not ast.had_privacy_annotation
             if ast.declared_type.type_name == ast.type_name:
-                t = f'{t}/*@{ast.declared_type.privacy_annotation.code()}*/'
+                if ast.declared_type.had_privacy_annotation:
+                    t = f'{t}/*@{ast.declared_type.privacy_annotation.code()}*/'
             else:
                 t = f'{t}/*{self.visit(ast.declared_type)}*/'
             return t
@@ -2093,8 +2147,11 @@ class CodeVisitor(AstVisitor):
         f = f"{definition}({p}){m}{r} {body}"
         return f
 
+    def visitEnumValue(self, ast: EnumValue):
+        return self.visit(ast.idf)
+
     def visitEnumDefinition(self, ast: EnumDefinition):
-        values = self.visit_list(ast.values)
+        values = self.visit_list(ast.values, sep=', ')
         return f'enum {self.visit(ast.idf)} {{\n{indent(values)}\n}}'
 
     def visitStructDefinition(self, ast: StructDefinition):

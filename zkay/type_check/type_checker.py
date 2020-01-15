@@ -7,7 +7,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
     LocationExpr, CastExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
-    NumberTypeName, BooleanLiteralType
+    NumberTypeName, BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, UserDefinedTypeName, StructTypeName, \
+    PrimitiveCastExpr
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -222,6 +223,9 @@ class TypeCheckVisitor(AstVisitor):
     def visitCastExpr(self, ast: CastExpr):
         ast.annotated_type = AnnotatedTypeName(ast.t, ast.args[0].annotated_type.privacy_annotation)
 
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        ast.annotated_type = AnnotatedTypeName(ast.elem_type, ast.expr.annotated_type.privacy_annotation)
+
     def visitNewExpr(self, ast: NewExpr):
         # already has correct type
         pass
@@ -330,6 +334,12 @@ class TypeCheckVisitor(AstVisitor):
                 continue
             else:
                 raise TypeException(f'Only me/all accepted as privacy type of function parameters', ast)
+
+    def visitEnumDefinition(self, ast: EnumDefinition):
+        ast.annotated_type = AnnotatedTypeName(EnumTypeName(ast.qualified_name).override(target=ast))
+
+    def visitEnumValue(self, ast: EnumValue):
+        ast.annotated_type = AnnotatedTypeName(EnumValueTypeName(ast.qualified_name).override(target=ast))
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
         if ast.expr:

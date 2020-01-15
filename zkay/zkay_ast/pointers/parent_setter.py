@@ -1,4 +1,5 @@
-from zkay.zkay_ast.ast import AST, Expression, Statement, ConstructorOrFunctionDefinition
+from zkay.zkay_ast.ast import AST, Expression, Statement, ConstructorOrFunctionDefinition, SourceUnit, ContractDefinition, EnumDefinition, \
+    NamespaceDefinition, Identifier, StructDefinition
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -7,11 +8,24 @@ class ParentSetterVisitor(AstVisitor):
     Links parents
     """
 
+    def __init__(self):
+        super().__init__(traversal='pre')
+
+    def visitSourceUnit(self, ast: SourceUnit):
+        ast.namespace = []
+
+    def visitNamespaceDefinition(self, ast: NamespaceDefinition):
+        ast.namespace = ([] if ast.parent is None else ast.parent.namespace) + [ast.idf]
+
+    def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
+        ast.namespace = ([] if ast.parent is None else ast.parent.namespace) + [Identifier(ast.name)]
+
     def visitChildren(self, ast: AST):
         for c in ast.children():
             if c is None:
                 print(c, ast, ast.children())
             c.parent = ast
+            c.namespace = ast.namespace
             self.visit(c)
 
 
