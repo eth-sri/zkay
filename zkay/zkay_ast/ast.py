@@ -317,9 +317,9 @@ class BuiltinFunction(Expression):
         :return: None if the type is generic
         """
         if self.is_arithmetic():
-            t = NumberTypeName.any()
+            t = TypeName.number_type()
         elif self.is_comp():
-            t = TypeName.uint_type()
+            t = TypeName.number_type()
         elif self.is_bop():
             t = TypeName.bool_type()
         else:
@@ -334,7 +334,7 @@ class BuiltinFunction(Expression):
         :return: None if the type is generic
         """
         if self.is_arithmetic():
-            return NumberTypeName.any()
+            return TypeName.number_type()
         elif self.is_comp():
             return TypeName.bool_type()
         elif self.is_bop():
@@ -819,6 +819,10 @@ class TypeName(AST):
     @staticmethod
     def uint_type():
         return UintTypeName()
+
+    @staticmethod
+    def number_type():
+        return NumberTypeName.any()
 
     @staticmethod
     def address_type():

@@ -1,4 +1,5 @@
 import inspect
+from contextlib import contextmanager
 from typing import Dict, Union, Callable, Any, Optional, List, Tuple
 
 from zkay.config import cfg
@@ -47,7 +48,7 @@ class ContractSimulator:
         return val
 
     def _call(self, sec_offset, fct, *args) -> Any:
-        with CallCtx(self, sec_offset):
+        with self.call_ctx(sec_offset):
             return fct(*args)
 
     @staticmethod
@@ -100,6 +101,14 @@ class ContractSimulator:
         else:
             return accounts
 
+    @contextmanager
+    def call_ctx(self, sec_offset):
+        old_priv_values, old_all_idx = self.current_priv_values, self.current_all_index
+        self.current_priv_values = {}
+        self.current_all_index += sec_offset
+        yield
+        self.current_priv_values, self.current_all_index = old_priv_values, old_all_idx
+
 
 class FunctionCtx:
     def __init__(self, v: ContractSimulator, trans_sec_size, *, value: int = 0):
@@ -135,22 +144,3 @@ class FunctionCtx:
                 with colored_print(TermColor.FAIL):
                     print(f'ERROR: {exec_value}')
                 return True
-
-
-class CallCtx:
-    def __init__(self, v: ContractSimulator, sec_offset):
-        self.v = v
-        self.sec_offset = sec_offset
-
-        self.old_priv_values = None
-        self.old_all_idx = None
-
-    def __enter__(self):
-        self.old_priv_values = self.v.current_priv_values
-        self.v.current_priv_values = {}
-        self.old_all_idx = self.v.current_all_index
-        self.v.current_all_index += self.sec_offset
-
-    def __exit__(self, t, value, traceback):
-        self.v.current_priv_values = self.old_priv_values
-        self.v.current_all_index = self.old_all_idx

@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper, Guarded
+from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
 from zkay.config import cfg
@@ -101,10 +101,10 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         if ast.condition.annotated_type.is_public():
             if contains_private_expr(ast.then_branch) or contains_private_expr(ast.else_branch):
                 guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
-                with Guarded(self.gen, guard_var, True):
+                with self.gen.guarded(guard_var, True):
                     ast.then_branch = self.visit(ast.then_branch)
                 if ast.else_branch is not None:
-                    with Guarded(self.gen, guard_var, False):
+                    with self.gen.guarded(guard_var, False):
                         ast.else_branch = self.visit(ast.else_branch)
             else:
                 ast.condition = self.expr_trafo.visit(ast.condition)
@@ -192,7 +192,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
     def visit_guarded_expression(self, guard_var: HybridArgumentIdf, if_true: bool, expr: Expression):
         prelen = len(expr.statement.pre_statements)
-        with Guarded(self.gen, guard_var, if_true):
+        with self.gen.guarded(guard_var, if_true):
             ret = self.visit(expr)
         new_pre_stmts = expr.statement.pre_statements[prelen:]
         if new_pre_stmts:

@@ -6,6 +6,8 @@ contract NestedPrivateIfCond {
     bool@owner val;
     uint@owner res;
 
+    mapping (address!x => uint@x) map;
+
     constructor() public {
         owner = msg.sender;
     }
@@ -33,6 +35,19 @@ contract NestedPrivateIfCond {
             v = v2;
         }
         return ret + reveal(v - v2, all);
+    }
+
+    function doit() internal returns(uint) {
+        //res = 12;
+        return 1;
+    }
+
+    function test_map(uint@me z) public {
+        uint@me v;
+        if (z > 2) {
+            v = 10 + doit();
+            //map[me] = 10;
+        }
     }
 
     function test_if_outer(uint@me x) public {

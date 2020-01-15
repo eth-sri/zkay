@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from datetime import datetime
 from textwrap import dedent
 from typing import Dict, List, Optional
@@ -180,7 +181,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                (f'{indent(fcts)}\n' if fcts else '')
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
-        with CircuitContext(self, ast):
+        with self.circuit_ctx(ast):
             return super().visitConstructorOrFunctionDefinition(ast)
 
     def visitParameter(self, ast: Parameter):
@@ -374,7 +375,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             s = f'{self.visit(out_idf.get_loc_expr())}, {self.get_priv_value(f"{out_idf.name}_R")}'
         else:
             s = f'{self.visit(out_idf.get_loc_expr())}'
-        with CircuitComputation(self, follow_private=True):
+        with self.circuit_computation(follow_private=True):
             s = f'{s} = {self.visit(out_val)}'
         out_initializations += f'{s}\n'
         return out_initializations
@@ -469,39 +470,24 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def visitRandomness(self, _):
         return 'RandomnessValue'
 
-
-class CircuitContext:
-    def __init__(self, v: PythonOffchainVisitor, ast: ConstructorOrFunctionDefinition):
-        self.v = v
-        self.f = ast
-
-    def __enter__(self):
-        self.v.current_f = self.f
-        self.v.current_circ = self.v.circuits.get(self.f, None)
-        if self.v.current_circ and self.v.current_f.can_be_external:
-            self.v.current_params = [p for p in self.f.parameters if p.idf.name != cfg.zk_out_name and p.idf.name != cfg.proof_param_name]
+    @contextmanager
+    def circuit_ctx(self, ast: ConstructorOrFunctionDefinition):
+        self.current_f = ast
+        self.current_circ = self.circuits.get(ast, None)
+        if self.current_circ and self.current_f.can_be_external:
+            self.current_params = [p for p in ast.parameters if p.idf.name != cfg.zk_out_name and p.idf.name != cfg.proof_param_name]
         else:
-            self.v.current_params = self.f.parameters.copy()
+            self.current_params = ast.parameters.copy()
+        yield
+        self.current_f, self.current_circ, self.current_params = None, None, None
 
-    def __exit__(self, t, value, traceback):
-        self.v.current_f = None
-        self.v.current_circ = None
-        self.v.current_params = None
-
-
-class CircuitComputation:
-    def __init__(self, v: PythonOffchainVisitor, follow_private: bool = False):
-        self.v = v
+    @contextmanager
+    def circuit_computation(self, follow_private: bool = False):
+        assert not self.inside_circuit
+        self.inside_circuit = True
+        old_fp = self.follow_private
         self.follow_private = follow_private
-        self.old_fp = None
-
-    def __enter__(self):
-        assert not self.v.inside_circuit
-        self.v.inside_circuit = True
-        self.old_fp = self.v.follow_private
-        self.v.follow_private = self.follow_private
-
-    def __exit__(self, t, value, traceback):
-        assert self.v.inside_circuit
-        self.v.inside_circuit = False
-        self.follow_private = self.old_fp
+        yield
+        assert self.inside_circuit
+        self.inside_circuit = False
+        self.follow_private = old_fp

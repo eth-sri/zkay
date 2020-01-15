@@ -141,7 +141,7 @@ class TypeCheckVisitor(AstVisitor):
             if func.output_type() == TypeName.bool_type():
                 return BooleanLiteralType(res != 0)
             else:
-                assert func.output_type() == NumberTypeName.any()
+                assert func.output_type() == TypeName.number_type()
                 return NumberLiteralType(res)
 
         if func.output_type() == TypeName.bool_type():
@@ -316,7 +316,7 @@ class TypeCheckVisitor(AstVisitor):
         elif isinstance(map_t.type_name, Array):
             if ast.key.annotated_type.is_private():
                 raise TypeException('No private array index', ast)
-            if not ast.key.instanceof_data_type(TypeName.uint_type()):
+            if not ast.key.instanceof_data_type(TypeName.number_type()):
                 raise TypeException('Array index must be numeric', ast)
             ast.annotated_type = map_t.type_name.value_type
         else:

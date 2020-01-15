@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 from typing import List, Dict, Optional, Tuple, Callable, Set, Union
 
+from zkay.compiler.name_remapper import CircVarRemapper
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
     CircEqConstraint, CircComment, CircIndentBlock, CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
@@ -15,6 +17,7 @@ from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
 class CircuitHelper:
+
     def __init__(self, fct: ConstructorOrFunctionDefinition,
                  static_owner_labels: List[PrivacyLabelExpr],
                  expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor],
@@ -71,10 +74,14 @@ class CircuitHelper:
 
         # Current inlining remapping dictionary (is_local, name)
         # (if is_local = true, it does not persist after current inline function returns)
-        self._inline_var_remap: Dict[Tuple[bool, str], HybridArgumentIdf] = {}
+        self._remapper = CircVarRemapper()
 
     def get_circuit_name(self) -> str:
         return '' if self.verifier_contract_type is None else self.verifier_contract_type.code()
+
+    @property
+    def var_remapper(self) -> CircVarRemapper:
+        return self._remapper
 
     @property
     def zk_data_struct_name(self):
@@ -129,6 +136,18 @@ class CircuitHelper:
         """ Returns names and lengths of all public parameter uint256 arrays which go into the verifier"""
         return [(self._in_name_factory.base_name, self.in_size_trans), (self._out_name_factory.base_name, self.out_size_trans)]
 
+    @contextmanager
+    def circ_indent_block(self, name: str):
+        old_phi = self.phi[:]
+        yield
+        self.phi[:] = old_phi + [CircIndentBlock(name, self.phi[len(old_phi):])]
+
+    @contextmanager
+    def guarded(self, guard_idf: HybridArgumentIdf, is_true: bool):
+        self.phi.append(CircGuardModification.add_guard(guard_idf, is_true))
+        yield
+        self.phi.append(CircGuardModification.pop_guard())
+
     @staticmethod
     def _get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
         if isinstance(plabel, Identifier):
@@ -160,13 +179,19 @@ class CircuitHelper:
         return SliceExpr(IdentifierExpr(cfg.zk_in_name), None, offset, cipher_idf.t.size_in_uints).assign(SliceExpr(IdentifierExpr(param.idf.clone()), None, 0, cipher_idf.t.size_in_uints))
 
     def evaluate_expr_in_circuit(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
-        assert not self._inline_var_remap
-        with InlineRemap(self, persist_globals=False):
+        """
+            Corresponds to out() from paper
+            :param expr: The expression which should be evaluated privately
+            :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
+            :return: Location expression which references the encrypted circuit result
+        """
+        assert not self.var_remapper
+        with self.var_remapper.remap_scope(persist_globals=False):
             return self._get_circuit_output_for_private_expression(expr, new_privacy)
 
     def evaluate_stmt_in_circuit(self, ast: Statement):
-        assert not self._inline_var_remap
-        with InlineRemap(self, persist_globals=False):
+        assert not self.var_remapper
+        with self.var_remapper.remap_scope(persist_globals=False):
             astmt = AssignmentStatement(None, None)
             astmt.before_analysis = ast.before_analysis
 
@@ -262,30 +287,30 @@ class CircuitHelper:
 
     def inline_circuit_function(self, ast: FunctionCallExpr, fdef: ConstructorOrFunctionDefinition) -> TupleExpr:
         assert not fdef.is_constructor
-        with InlineRemap(self, persist_globals=True):
-            with CircIndentBlockBuilder(f'INLINED {ast.code()}', self._phi):
+        with self.var_remapper.remap_scope(persist_globals=True):
+            with self.circ_indent_block(f'INLINED {ast.code()}'):
                 for param, arg in zip(fdef.parameters, ast.args):
                     self.create_temporary_circuit_variable(Identifier(param.idf.name), arg)
                 inlined_body = deep_copy(fdef.original_body, with_types=True, with_analysis=True)
                 self._circ_trafo.visit(inlined_body)
                 ast.statement.pre_statements += inlined_body.pre_statements
-                ret_idfs = [self._inline_var_remap[(True, f'{cfg.return_var_name}_{idx}')] for idx in range(len(fdef.return_parameters))]
+                ret_idfs = [self.var_remapper.get_current(f'{cfg.return_var_name}_{idx}') for idx in range(len(fdef.return_parameters))]
                 ret = TupleExpr([IdentifierExpr(idf.clone()).as_type(idf.t) for idf in ret_idfs])
         if len(ret.elements) == 1:
             ret = ret.elements[0]
         return ret
 
-    def get_remapped_idf(self, idf: Identifier, is_local: bool) -> Union[HybridArgumentIdf, Identifier]:
-        return self._inline_var_remap.get((is_local, idf.name), idf)
-
     def get_remapped_idf_expr(self, idf: IdentifierExpr) -> LocationExpr:
         is_local = not isinstance(idf.target, StateVariableDeclaration)
-        remapped_idf = self.get_remapped_idf(idf.idf, is_local)
+        remapped_idf = self.var_remapper.get_current(idf.idf.name, is_local, idf.idf)
         return idf if remapped_idf == idf.idf else remapped_idf.get_loc_expr(idf.parent).as_type(idf.annotated_type)
 
     def create_temporary_circuit_variable(self, orig_idf: Identifier, expr: Expression, is_local: bool = True):
-        tmp_var, _ = self._evaluate_private_expression(expr, tmp_suffix=f'_{orig_idf.name}')
-        self._inline_var_remap[(is_local, orig_idf.name)] = tmp_var
+        tmp_var = self._create_temp_var(orig_idf.name, expr)
+        self.var_remapper.remap(orig_idf.name, is_local, tmp_var)
+
+    def _create_temp_var(self, orig_idf_name: str, expr: Expression) -> HybridArgumentIdf:
+        return self._evaluate_private_expression(expr, tmp_suffix=f'_{orig_idf_name}')[0]
 
     def _add_assign(self, lhs: Expression, rhs: Expression):
         if isinstance(lhs, IdentifierExpr): # for now no ref types
@@ -304,47 +329,30 @@ class CircuitHelper:
         self._add_assign(ast.lhs, ast.rhs)
 
     def add_if_statement_to_circuit(self, ast: IfStatement):
-        with CircIndentBlockBuilder(f'if {ast.condition.code()}', self.phi):
+        with self.circ_indent_block(f'if {ast.condition.code()}'):
             cond, _ = self._evaluate_private_expression(ast.condition)
-            self._phi.append(CircComment(f'if ({cond.name})'))
 
-            # handle if branch
-            prev_remap = self._inline_var_remap.copy()
-            with Guarded(self, cond, True):
-                self._circ_trafo.visit(ast.then_branch)
-            then_remap = self._inline_var_remap.copy()
+            # Handle if branch
+            with self.var_remapper.remap_scope(persist_globals=False):
+                self._phi.append(CircComment(f'if ({cond.name})'))
+                with self.guarded(cond, True):
+                    self._circ_trafo.visit(ast.then_branch)
+                then_remap = self.var_remapper.get_state()
 
-            # handle else branch
-            self._inline_var_remap = prev_remap
+            # Handle else branch
             if ast.else_branch is not None:
                 self._phi.append(CircComment(f'else ({cond.name})'))
-                with Guarded(self, cond, False):
+                with self.guarded(cond, False):
                     self._circ_trafo.visit(ast.else_branch)
-            else_remap = self._inline_var_remap.copy()
 
             # SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
-            self._inline_var_remap = {}
             self._phi.append(CircComment(f'join ({cond.name})'))
-            for key, val in then_remap.items():
-                if key not in else_remap or else_remap[key].name == val.name:
-                    self._inline_var_remap[key] = val
-                else:
-                    # Add conditional assignment and remap to its result
-                    then_idf = then_remap[key]
-                    else_idf = else_remap[key]
-                    rhs = IdentifierExpr(cond.clone(), AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr())).ite(IdentifierExpr(then_idf).as_type(then_idf.t), IdentifierExpr(else_idf).as_type(else_idf.t))
-                    rhs = rhs.as_type(then_idf.t)
-                    self.create_temporary_circuit_variable(Identifier(key[1]), rhs, is_local=key[0])
+            true_cond = IdentifierExpr(cond.clone(), AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr()))
+            self.var_remapper.join_branch(true_cond, then_remap, self._create_temp_var)
 
     def _get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
-        """
-        Corresponds to out() from paper
-        :param expr: The expression which should be evaluated privately
-        :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
-        :return: Location expression which references the encrypted circuit result
-        """
         ecode = expr.code()
-        with CircIndentBlockBuilder(f'{ecode}', self._phi):
+        with self.circ_indent_block(f'{ecode}'):
             is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
             if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
                 plain_result_idf, private_expr = self._evaluate_private_expression(expr)
@@ -409,45 +417,3 @@ class CircuitHelper:
         pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
         privacy_label_expr = self._get_privacy_expr_from_label(plabel)
         return idf, idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy_label_expr)]))
-
-
-class CircIndentBlockBuilder:
-    def __init__(self, name: str, phi: List[CircuitStatement]):
-        self.name = name
-        self.phi = phi
-        self.old_phi = None
-
-    def __enter__(self):
-        self.old_phi = self.phi[:]
-
-    def __exit__(self, t, value, traceback):
-        self.phi[:] = self.old_phi + [CircIndentBlock(self.name, self.phi[len(self.old_phi):])]
-
-
-class InlineRemap:
-    def __init__(self, c: CircuitHelper, *, persist_globals):
-        self.c = c
-        self.persist_globals = persist_globals
-        self.prev: Optional[Dict] = None
-
-    def __enter__(self):
-        self.prev = self.c._inline_var_remap.copy()
-
-    def __exit__(self, t, value, traceback):
-        if self.persist_globals:
-            self.prev.update({(is_loc, key): val for (is_loc, key), val in self.c._inline_var_remap.items() if not is_loc})
-        self.c._inline_var_remap = self.prev
-
-
-class Guarded:
-    def __init__(self, c: CircuitHelper, guard_idf: HybridArgumentIdf, is_true: bool) -> None:
-        super().__init__()
-        self.c = c
-        self.guard_idf = guard_idf
-        self.is_true = is_true
-
-    def __enter__(self):
-        self.c.phi.append(CircGuardModification.add_guard(self.guard_idf, self.is_true))
-
-    def __exit__(self, t, value, traceback):
-        self.c.phi.append(CircGuardModification.pop_guard())
