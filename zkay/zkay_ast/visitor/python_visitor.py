@@ -9,9 +9,9 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition, NumberTypeName
+    EnumDefinition, NumberTypeName, EnumTypeName
 
-kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self']}
+kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast']}
 
 
 def sanitized(name):
@@ -196,6 +196,9 @@ class PythonCodeVisitor(CodeVisitor):
 
     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
         return 'Any'
+
+    def visitEnumTypeName(self, ast: EnumTypeName):
+        return f'{self.visit_list(ast.target.qualified_name, sep=".")}'
 
     def visitMapping(self, ast: Mapping):
         return f'Dict[{self.visit(ast.key_type)}, {self.visit(ast.value_type)}]'

@@ -1,6 +1,7 @@
 import inspect
 from contextlib import contextmanager
-from typing import Dict, Union, Callable, Any, Optional, List, Tuple
+from enum import Enum
+from typing import Dict, Union, Callable, Any, Optional, List, Tuple, Type
 
 from zkay.config import cfg
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
@@ -46,6 +47,21 @@ class ContractSimulator:
     def comp_overflow_checked(val: int):
         assert val < _bn128_comp_scalar_field, f'Value {val} is too large for comparison'
         return val
+
+    @staticmethod
+    def cast(val: Union[int, Enum], nbits: int, *, signed: bool = False, enum: Optional[Type[Enum]] = None):
+        # python ints are always signed, is expected to be within range of its type
+        if isinstance(val, Enum):
+            val = val.value
+
+        trunc_val = val & ((1 << nbits) - 1)
+        if signed and trunc_val & (1 << (nbits - 1)):
+            trunc_val -= (1 << nbits)
+
+        if enum is not None:
+            return enum(trunc_val)
+        else:
+            return trunc_val
 
     def _call(self, sec_offset, fct, *args) -> Any:
         with self.call_ctx(sec_offset):

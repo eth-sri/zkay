@@ -10,7 +10,8 @@ contract Cast {
 	function f(uint a) public {
 		test x = test.v3;
 		uint y = uint(x);
-		uint32 k = uint32(y + a);
+		test v = test(y);
+		uint32 k = uint32(y) + uint16(a);
 		int p = int64(x);
 	}
 }

@@ -9,8 +9,8 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
-    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
-    CircuitComputationStatement, VariableDeclarationStatement, LocationExpr
+    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, NumberTypeName, \
+    CircuitComputationStatement, VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, IntTypeName, EnumDefinition, EnumTypeName
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -172,10 +172,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return self.get_loc_value(idf.idf, indices)
 
     def visitContractDefinition(self, ast: ContractDefinition):
+        enums = self.visit_list(ast.enum_definitions, '\n\n')
         constr = self.visit_list(ast.constructor_definitions, '\n\n')
         fcts = self.visit_list(ast.function_definitions, '\n\n')
-
-        return f'class {self.visit(ast.idf)}(ContractSimulator):\n' \
+        return f'class {self.visit(ast.idf)}(ContractSimulator):\n' + \
+               (f'{indent(enums)}\n\n' if enums else '') + \
                f'{self.generate_constructors(ast)}' + \
                (f'{indent(constr)}\n' if constr else '') + \
                (f'{indent(fcts)}\n' if fcts else '')
@@ -390,7 +391,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
-            elem_bitwidth = ast.annotated_type.type_name.elem_bitwidth if ast.annotated_type is not None else 256
+            if ast.annotated_type is not None:
+                elem_bitwidth = ast.annotated_type.type_name.elem_bitwidth
+                if isinstance(ast.annotated_type.type_name, NumberTypeName) and ast.annotated_type.type_name.signed:
+                    raise NotImplementedError('TODO signed addition simulation')  # TODO
+            else:
+                elem_bitwidth = 256
             if self.inside_circuit and elem_bitwidth == 256:
                 modulo = SCALAR_FIELD_NAME
             else:
@@ -399,6 +405,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
             return ast.func.format_string().format(*args)
+        elif ast.is_cast:
+            return self.handle_cast(ast.args[0], ast.func.target.annotated_type.type_name)
         elif isinstance(ast.func, LocationExpr) and ast.func.target is not None and ast.func.target.requires_verification:
             f = self.visit(ast.func)
             a = self.visit_list(ast.args, ', ')
@@ -406,8 +414,22 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         return super().visitFunctionCallExpr(ast)
 
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        return self.handle_cast(ast.expr, ast.elem_type)
+
+    def handle_cast(self, expr: Expression, t: TypeName):
+        if not t.is_primitive_type():
+            raise NotImplementedError()
+        signed = isinstance(t, IntTypeName)
+        enum = self.visit_list(t.target.qualified_name, sep='.') if isinstance(t, EnumTypeName) else None
+        num_bits = t.elem_bitwidth
+        return f'self.cast({self.visit(expr)}, {num_bits}{f", signed={bool(signed)}" if signed else ""}{f", enum={enum}" if enum is not None else ""})'
+
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert not isinstance(ast.target, StateVariableDeclaration), "State member accesses not handled"
+
+        if isinstance(ast.expr.target, EnumDefinition):
+            return f'{self.visit_list(ast.expr.target.qualified_name, sep=".")}.{self.visit(ast.member)}'
 
         if ast.member.name == 'length' and isinstance(ast.expr.target.annotated_type.type_name, Array):
             return f'len({self.visit(ast.expr)})'
