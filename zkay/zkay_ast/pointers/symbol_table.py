@@ -112,10 +112,10 @@ class SymbolTableLinker(AstVisitor):
 
     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
         try:
-            idf = self.find_identifier_declaration(ast, ast.names[0].name).parent
-            for name in ast.names[1:]:
-                idf = idf.names[name].parent
-            ast.target = idf
+            type_def = self.find_identifier_declaration(ast, ast.names[0].name).parent
+            for idf in ast.names[1:]:
+                type_def = type_def.names[idf.name].parent
+            ast.target = type_def
         except UnknownIdentifierException as e:
             pass
 
