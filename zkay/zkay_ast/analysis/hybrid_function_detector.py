@@ -57,7 +57,7 @@ class IndirectHybridFunctionDetectionVisitor(FunctionVisitor):
 
 class NonInlineableCallDetector(FunctionVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, LocationExpr):
+        if not ast.is_cast and isinstance(ast.func, LocationExpr):
             if ast.func.target.requires_verification and ast.func.target.is_recursive:
                 raise TypeException("Non-inlineable call to recursive private function", ast.func)
         self.visitChildren(ast)

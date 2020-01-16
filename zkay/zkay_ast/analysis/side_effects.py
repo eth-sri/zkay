@@ -3,7 +3,7 @@ from typing import List, Union
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, \
     AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
-    TupleExpr, InstanceTarget, VariableDeclaration, Parameter
+    TupleExpr, InstanceTarget, VariableDeclaration, Parameter, EnumDefinition, ContractDefinition
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -33,7 +33,7 @@ class SideEffectsDetector(AstVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         ast.has_side_effects = self.visitExpression(ast)
-        if isinstance(ast.func, LocationExpr):
+        if isinstance(ast.func, LocationExpr) and not ast.is_cast:
             assert ast.func.target is not None
             assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
             ast.has_side_effects |= ast.func.target.has_side_effects

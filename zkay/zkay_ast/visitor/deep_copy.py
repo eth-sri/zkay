@@ -2,7 +2,7 @@ import inspect
 from typing import TypeVar
 
 from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
-from zkay.zkay_ast.ast import AST, Expression, Statement, CastExpr
+from zkay.zkay_ast.ast import AST, Expression, Statement
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -124,9 +124,6 @@ class DeepCopyVisitor(AstVisitor):
         ast_copy = c(**new_fields)
         self.copy_ast_fields(ast, ast_copy)
         return ast_copy
-
-    def visitCastExpr(self, ast: CastExpr):
-        return CastExpr(self.visit(ast.t), self.visit(ast.args[0]))
 
     def visitAnnotatedTypeName(self, ast):
         ast_copy = self.visitChildren(ast)

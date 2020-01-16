@@ -6,9 +6,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
-    LocationExpr, CastExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
-    NumberTypeName, BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, UserDefinedTypeName, StructTypeName, \
-    PrimitiveCastExpr
+    LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
+    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -201,6 +200,11 @@ class TypeCheckVisitor(AstVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             self.handle_builtin_function_call(ast, ast.func)
+        elif ast.is_cast:
+            if not isinstance(ast.func.target, EnumDefinition):
+                raise NotImplementedError('User type casts only implemented for enums')
+            ast.annotated_type = AnnotatedTypeName(ast.func.target.annotated_type.type_name.clone(),
+                                                   ast.args[0].annotated_type.privacy_annotation.clone())
         elif isinstance(ast.func, LocationExpr):
             ft = ast.func.annotated_type.type_name
 
@@ -219,9 +223,6 @@ class TypeCheckVisitor(AstVisitor):
                 ast.annotated_type = AnnotatedTypeName(TupleType([t.annotated_type for t in ft.return_parameters]), None)
         else:
             raise TypeException('Invalid function call', ast)
-
-    def visitCastExpr(self, ast: CastExpr):
-        ast.annotated_type = AnnotatedTypeName(ast.t, ast.args[0].annotated_type.privacy_annotation)
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
         ast.annotated_type = AnnotatedTypeName(ast.elem_type, ast.expr.annotated_type.privacy_annotation)
@@ -365,6 +366,9 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeException(f'require needs public argument', ast)
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
+        if type(ast.type_name) == UserDefinedTypeName:
+            ast.type_name = ast.type_name.target.annotated_type.type_name.clone()
+
         if ast.privacy_annotation != Expression.all_expr():
             if not ast.type_name.can_be_private():
                 raise TypeException(f'Currently, we do not support private {str(ast.type_name)}', ast)

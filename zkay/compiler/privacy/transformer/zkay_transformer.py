@@ -11,7 +11,7 @@ from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, Statement
     Identifier, VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
     Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, NumberLiteralExpr, \
     MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
-    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr
+    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr, EnumDefinition
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 
 
@@ -228,6 +228,11 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
                     return ast
 
                 return self.visit_children(ast)
+        elif ast.is_cast:
+            assert isinstance(ast.func.target, EnumDefinition)
+            if ast.args[0].annotated_type.is_private():
+                raise NotImplementedError()
+            return self.visit_children(ast)
         else:
             assert isinstance(ast.func, LocationExpr)
             ast = self.visit_children(ast)

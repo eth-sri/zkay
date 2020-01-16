@@ -9,8 +9,8 @@ from zkay.compiler.privacy.transformer.zkay_transformer import ZkayVarDeclTransf
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
-    Comment, NumberLiteralExpr, CastExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, SliceExpr, LabeledBlock, TupleExpr
+    Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, SliceExpr, LabeledBlock, TupleExpr, PrimitiveCastExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -57,8 +57,9 @@ class ZkayTransformer(AstTransformerVisitor):
             gen.verifier_contract_type = c_type
             gen.verifier_contract_filename = import_filename
 
+        cast_0_to_c = PrimitiveCastExpr(c_type, NumberLiteralExpr(0))
         out_filenames.append(import_filename)
-        out_ext_vars_decls.append(StateVariableDeclaration(AnnotatedTypeName(c_type), ['public', 'constant'], inst_idf.clone(), CastExpr(c_type, NumberLiteralExpr(0))))
+        out_ext_vars_decls.append(StateVariableDeclaration(AnnotatedTypeName(c_type), ['public', 'constant'], inst_idf.clone(), cast_0_to_c))
 
     def include_verification_contracts(self, c: ContractDefinition, ext_var_decls: List[StateVariableDeclaration]):
         import_filenames = []

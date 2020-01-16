@@ -379,6 +379,10 @@ class FunctionCallExpr(Expression):
         self.args = args
         self.sec_start_offset = sec_start_offset
 
+    @property
+    def is_cast(self):
+        return isinstance(self.func, LocationExpr) and isinstance(self.func.target, (ContractDefinition, EnumDefinition))
+
     def process_children(self, f: Callable[[AST], AST]):
         self.func = f(self.func)
         self.args[:] = map(f, self.args)
@@ -393,16 +397,6 @@ class NewExpr(FunctionCallExpr):
     def process_children(self, f: Callable[[AST], AST]):
         self.annotated_type = f(self.annotated_type)
         self.args[:] = map(f, self.args)
-
-
-class CastExpr(FunctionCallExpr):
-    def __init__(self, t: TypeName, expr: Expression):
-        self.t = t
-        super().__init__(Identifier(t.code()), [expr])
-
-    def process_children(self, f: Callable[[AST], AST]):
-        self.t = f(self.t)
-        self.args[0] = f(self.args[0])
 
 
 class PrimitiveCastExpr(Expression):
@@ -473,9 +467,12 @@ class LocationExpr(Expression):
         # set later by symbol table
         self.target: Optional[TargetDefinition] = None
 
-    def call(self, member: Union[str, Identifier], args: List[Expression]) -> FunctionCallExpr:
-        member = Identifier(member) if isinstance(member, str) else member.clone()
-        return FunctionCallExpr(MemberAccessExpr(self, member), args)
+    def call(self, member: Union[None, str, Identifier], args: List[Expression]) -> FunctionCallExpr:
+        if member is None:
+            return FunctionCallExpr(self, args)
+        else:
+            member = Identifier(member) if isinstance(member, str) else member.clone()
+            return FunctionCallExpr(MemberAccessExpr(self, member), args)
 
     def dot(self, member: Union[str, Identifier]) -> MemberAccessExpr:
         member = Identifier(member) if isinstance(member, str) else member.clone()
@@ -879,7 +876,7 @@ class TypeName(AST):
         raise NotImplementedError()
 
     def is_primitive_type(self):
-        return isinstance(self, (ElementaryTypeName, AddressTypeName, AddressPayableTypeName))
+        return isinstance(self, (ElementaryTypeName, EnumTypeName, AddressTypeName, AddressPayableTypeName))
 
     def can_be_private(self):
         return self.is_primitive_type()

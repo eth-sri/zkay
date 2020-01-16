@@ -20,7 +20,7 @@ def call_graph_analysis(ast):
 
 class DirectCalledFunctionDetector(FunctionVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if not isinstance(ast.func, BuiltinFunction):
+        if not isinstance(ast.func, BuiltinFunction) and not ast.is_cast:
             assert isinstance(ast.func, LocationExpr)
             fdef = ast.func.target
             assert fdef.is_function
