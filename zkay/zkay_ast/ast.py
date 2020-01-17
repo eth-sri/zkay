@@ -145,7 +145,7 @@ class Expression(AST):
         elif isinstance(expected, NumberTypeName) and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
-            assert self.annotated_type.type_name == expected, f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
+            assert self.annotated_type.type_name.implicitly_convertible_to(expected), f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
             return self
         ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation.clone())
         return ret
@@ -360,7 +360,7 @@ class BuiltinFunction(Expression):
         :return: true if operation itself can be run inside a circuit
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
-        return self.op not in ['**', '%']
+        return self.op not in ['**', '%', '/']
 
     def with_privacy(self, is_private: bool) -> BuiltinFunction:
         if is_private:
@@ -400,10 +400,11 @@ class NewExpr(FunctionCallExpr):
 
 
 class PrimitiveCastExpr(Expression):
-    def __init__(self, elem_type: TypeName, expr: Expression):
+    def __init__(self, elem_type: TypeName, expr: Expression, is_implicit=False):
         super().__init__()
         self.elem_type = elem_type
         self.expr = expr
+        self.is_implicit = is_implicit
 
     def process_children(self, f: Callable[[AST], AST]):
         self.elem_type = f(self.elem_type)
@@ -875,6 +876,10 @@ class TypeName(AST):
         # Bitwidth, only defined for primitive types
         raise NotImplementedError()
 
+    @property
+    def is_literal(self):
+        return isinstance(self, (NumberLiteralType, BooleanLiteralType))
+
     def is_primitive_type(self):
         return isinstance(self, (ElementaryTypeName, EnumTypeName, AddressTypeName, AddressPayableTypeName))
 
@@ -998,7 +1003,8 @@ class NumberTypeName(ElementaryTypeName):
 
 
 class NumberLiteralType(NumberTypeName):
-    def __init__(self, name: int):
+    def __init__(self, name: Union[str, int]):
+        name = int(name) if isinstance(name, str) else name
         bitwidth = name.bit_length()
         if name < 0:
             bitwidth += 1
@@ -1909,7 +1915,10 @@ class CodeVisitor(AstVisitor):
             return f'{f}({a})'
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        return f'{self.visit(ast.elem_type)}({self.visit(ast.expr)})'
+        if ast.is_implicit:
+            return self.visit(ast.expr)
+        else:
+            return f'{self.visit(ast.elem_type)}({self.visit(ast.expr)})'
 
     def visitAssignmentExpr(self, ast: AssignmentExpr):
         lhs = self.visit(ast.lhs)

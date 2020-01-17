@@ -33,6 +33,9 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
 
 _class_template_str = '''\
 import zkay.ZkayCircuitBase;
+import static zkay.ZkayType.ZkUint;
+import static zkay.ZkayType.ZkInt;
+import static zkay.ZkayType.ZkBool;
 
 public class {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{

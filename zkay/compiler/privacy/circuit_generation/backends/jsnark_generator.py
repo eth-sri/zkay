@@ -1,6 +1,6 @@
 import os
 from hashlib import sha512
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from zkay.config import cfg
 import zkay.jsnark_interface.jsnark_interface as jsnark
@@ -13,8 +13,20 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
-    IndexExpr, NumberLiteralExpr, MemberAccessExpr, AST, TypeName, indent
+    IndexExpr, NumberLiteralExpr, MemberAccessExpr, AST, TypeName, indent, PrimitiveCastExpr, EnumDefinition, Expression, NumberTypeName
 from zkay.zkay_ast.visitor.visitor import AstVisitor
+
+
+def _get_t(t: Union[TypeName, Expression]):
+    if isinstance(t, Expression):
+        t = t.annotated_type.type_name
+    bits = t.elem_bitwidth
+    if t.elem_bitwidth == 1:
+        return 'ZkBool'
+    if isinstance(t, NumberTypeName) and t.signed:
+        return f'ZkInt({bits})'
+    else:
+        return f'ZkUint({bits})'
 
 
 class JsnarkVisitor(AstVisitor):
@@ -37,7 +49,7 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircVarDecl(self, stmt: CircVarDecl):
         assert stmt.lhs.t.size_in_uints == 1
-        return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
+        return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)}, {_get_t(stmt.lhs.t)});'
 
     def visitCircEqConstraint(self, stmt: CircEqConstraint):
         assert stmt.tgt.t.size_in_uints == stmt.val.t.size_in_uints
@@ -62,10 +74,11 @@ class JsnarkVisitor(AstVisitor):
         return f'val({str(ast.value).lower()})'
 
     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
+        t = _get_t(ast)
         if ast.value < (1 << 31):
-            return f'val({ast.value})'
+            return f'val({ast.value}, {t})'
         else:
-            return f'val("{ast.value}")'
+            return f'val("{ast.value}", {t})'
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         return f'get("{ast.idf.name}")'
@@ -83,63 +96,73 @@ class JsnarkVisitor(AstVisitor):
             args = list(map(self.visit, ast.args))
 
             if op == 'ite':
-                fstr = 'ite({}, {}, {})[0]'
+                fstr = f'ite({{}}, {{}}, {{}}, {_get_t(ast)})'
             elif op == 'parenthesis':
                 fstr = '({})'
 
             elif op == 'sign+':
-                fstr = '{}'
+                raise NotImplementedError()
+                #fstr = '{}'
             elif op == 'sign-':
-                fstr = f'mul({{}}, val(-1), {ast.annotated_type.type_name.elem_bitwidth})'
-
+                fstr = f'mul({{}}, val(-1), {_get_t(ast)})'
             elif op == '+':
-                fstr = f'add({{}}, {{}}, {ast.annotated_type.type_name.elem_bitwidth})'
+                fstr = f'add({{}}, {{}}, {_get_t(ast)})'
             elif op == '-':
-                fstr = f'sub({{}}, {{}}, {ast.annotated_type.type_name.elem_bitwidth})'
+                fstr = f'sub({{}}, {{}}, {_get_t(ast)})'
             elif op == '*':
-                fstr = f'mul({{}}, {{}}, {ast.annotated_type.type_name.elem_bitwidth})'
-            elif op == '/':
-                fstr = f'div({{}}, {{}})'
+                fstr = f'mul({{}}, {{}}, {_get_t(ast)})'
 
+            # TODO proper common types
             elif op == '==':
-                fstr = '{}.isEqualTo({})'
+                fstr = 'eq({}, {}, ZkUint(256))'
             elif op == '!=':
-                fstr = '{}.sub({}).checkNonZero()'
+                fstr = 'neq({}, {}, ZkUint(256))'
 
             elif op == '<':
-                fstr = '{}.isLessThan({}, 253)'
+                fstr = 'lt({}, {}, ZkUint(256))'
             elif op == '<=':
-                fstr = '{}.isLessThanOrEqual({}, 253)'
+                fstr = 'le({}, {}, ZkUint(256))'
             elif op == '>':
-                fstr = '{}.isGreaterThan({}, 253)'
+                fstr = 'gt({}, {}, ZkUint(256))'
             elif op == '>=':
-                fstr = '{}.isGreaterThanOrEqual({}, 253)'
+                fstr = 'ge({}, {}, ZkUint(256))'
 
             elif op == '&&':
-                fstr = '{}.and({})'
+                fstr = 'and({}, {})'
             elif op == '||':
-                fstr = '{}.or({})'
+                fstr = 'or({}, {})'
             elif op == '!':
-                fstr = '{}.invAsBit()'
+                fstr = 'not({})'
             else:
                 raise ValueError(f'Unsupported builtin function {ast.func.op}')
 
             return fstr.format(*args)
+        elif ast.is_cast and isinstance(ast.func.target, EnumDefinition):
+            assert ast.annotated_type.type_name.elem_bitwidth == 256
+            return self.handle_cast(self.visit(ast.args[0]), 256)
 
         raise ValueError(f'Unsupported function {ast.func.code()} inside circuit')
+
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        return self.handle_cast(self.visit(ast.expr), ast.elem_type.elem_bitwidth)
+
+    def handle_cast(self, wire, num_bits: int):
+        return f'cast({wire}, {num_bits})'
 
 
 def add_function_circuit_arguments(circuit: CircuitHelper):
     input_init_stmts = []
     for sec_input in circuit.sec_idfs:
-        input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {sec_input.t.elem_bitwidth});')
+        input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {_get_t(sec_input.t)});')
 
     for pub_input in circuit.input_idfs:
-        addf = 'addK' if pub_input.t == TypeName.key_type() else 'addIn'
-        input_init_stmts.append(f'{addf}("{pub_input.name}", {pub_input.t.size_in_uints});')
+        if pub_input.t == TypeName.key_type():
+            input_init_stmts.append(f'addK("{pub_input.name}", {pub_input.t.size_in_uints});')
+        else:
+            input_init_stmts.append(f'addIn("{pub_input.name}", {pub_input.t.size_in_uints}, {_get_t(pub_input.t)});')
 
     for pub_output in circuit.output_idfs:
-        input_init_stmts.append(f'addOut("{pub_output.name}", {pub_output.t.size_in_uints});')
+        input_init_stmts.append(f'addOut("{pub_output.name}", {pub_output.t.size_in_uints}, {_get_t(pub_output.t)});')
 
     return input_init_stmts
 

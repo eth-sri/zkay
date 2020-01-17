@@ -7,8 +7,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
-    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName
-from zkay.zkay_ast.visitor.deep_copy import replace_expr
+    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName, NumberTypeName
+from zkay.zkay_ast.visitor.deep_copy import replace_expr, deep_copy
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -30,10 +30,14 @@ class TypeCheckVisitor(AstVisitor):
         instance = rhs.instanceof(expected_type)
         if not instance:
             raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
-        elif instance == 'make-private':
-            return self.make_private(rhs, expected_type.privacy_annotation)
         else:
-            return rhs
+            if rhs.annotated_type.type_name != expected_type.type_name:
+                rhs = self.implicitly_converted_to(rhs, expected_type.type_name)
+
+            if instance == 'make-private':
+                return self.make_private(rhs, expected_type.privacy_annotation)
+            else:
+                return rhs
 
     @staticmethod
     def check_for_invalid_private_type(ast):
@@ -129,6 +133,8 @@ class TypeCheckVisitor(AstVisitor):
             ast.annotated_type = ast.args[0].annotated_type
             return
 
+        # TODO insert implicit casts (use get_rhs) for other builtin functions
+
         # Check that argument types conform to op signature
         parameter_types = func.input_types()
         if not func.is_eq():
@@ -196,6 +202,16 @@ class TypeCheckVisitor(AstVisitor):
         r.column = expr.column
 
         return r
+
+    @staticmethod
+    def implicitly_converted_to(expr: Expression, t: TypeName) -> Expression:
+        assert expr.annotated_type.type_name.is_primitive_type()
+        cast = PrimitiveCastExpr(t.clone(), expr, is_implicit=True).override(
+            parent=expr.parent, statement=expr.statement, has_side_effects=expr.has_side_effects, line=expr.line, column=expr.column)
+        cast.elem_type.parent = cast
+        expr.parent = cast
+        cast.annotated_type = AnnotatedTypeName(t.clone(), expr.annotated_type.privacy_annotation.clone()).override(parent=cast)
+        return cast
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
