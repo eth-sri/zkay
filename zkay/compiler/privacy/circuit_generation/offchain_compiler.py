@@ -10,7 +10,8 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, NumberTypeName, \
-    CircuitComputationStatement, VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, IntTypeName, EnumDefinition, EnumTypeName
+    CircuitComputationStatement, VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, IntTypeName, EnumDefinition, EnumTypeName, \
+    UintTypeName
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -391,22 +392,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
-            if ast.annotated_type is not None:
-                elem_bitwidth = ast.annotated_type.type_name.elem_bitwidth
-                if isinstance(ast.annotated_type.type_name, NumberTypeName) and ast.annotated_type.type_name.signed:
-                    raise NotImplementedError('TODO signed addition simulation')  # TODO
-            else:
-                elem_bitwidth = 256
-            if self.inside_circuit and elem_bitwidth == 256:
-                modulo = SCALAR_FIELD_NAME
-            else:
-                modulo = f'(1 << {elem_bitwidth})'
-            return f'({super().visitFunctionCallExpr(ast)}) % {modulo}'
+            t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
+            return self.handle_cast(super().visitFunctionCallExpr(ast), t)
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
             return ast.func.format_string().format(*args)
         elif ast.is_cast:
-            return self.handle_cast(ast.args[0], ast.func.target.annotated_type.type_name)
+            return self.handle_cast(self.visit(ast.args[0]), ast.func.target.annotated_type.type_name)
         elif isinstance(ast.func, LocationExpr) and ast.func.target is not None and ast.func.target.requires_verification:
             f = self.visit(ast.func)
             a = self.visit_list(ast.args, ', ')
@@ -415,15 +407,20 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return super().visitFunctionCallExpr(ast)
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        return self.handle_cast(ast.expr, ast.elem_type)
+        if ast.is_implicit:
+            return self.visit(ast.expr)
+        else:
+            return self.handle_cast(self.visit(ast.expr), ast.elem_type)
 
-    def handle_cast(self, expr: Expression, t: TypeName):
+    def handle_cast(self, expr: str, t: TypeName):
         if not t.is_primitive_type():
             raise NotImplementedError()
-        signed = isinstance(t, IntTypeName)
+        signed = isinstance(t, IntTypeName) and not self.inside_circuit
         enum = self.visit_list(t.target.qualified_name, sep='.') if isinstance(t, EnumTypeName) else None
         num_bits = t.elem_bitwidth
-        return f'self.cast({self.visit(expr)}, {num_bits}{f", signed={bool(signed)}" if signed else ""}{f", enum={enum}" if enum is not None else ""})'
+        if self.inside_circuit and num_bits == 256:
+            num_bits = None
+        return f'self.cast({expr}, {num_bits}{f", signed={bool(signed)}" if signed else ""}{f", enum={enum}" if enum is not None else ""})'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert not isinstance(ast.target, StateVariableDeclaration), "State member accesses not handled"
