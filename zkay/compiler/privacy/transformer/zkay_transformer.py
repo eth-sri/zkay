@@ -5,6 +5,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgume
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
 from zkay.config import cfg
+from zkay.type_check.type_checker import TypeCheckVisitor
 from zkay.zkay_ast.analysis.contains_private_checker import contains_private_expr
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
@@ -328,7 +329,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         if ast.expr is None:
             t = ast.variable_declaration.annotated_type.type_name
             assert t.can_be_private()
-            ast.expr = NumberLiteralExpr(0)
+            ast.expr = TypeCheckVisitor.implicitly_converted_to(NumberLiteralExpr(0).override(parent=ast, statement=ast), t.clone())
         self.gen.create_temporary_circuit_variable(ast.variable_declaration.idf, ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):

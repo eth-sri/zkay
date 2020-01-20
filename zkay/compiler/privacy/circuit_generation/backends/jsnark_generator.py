@@ -49,7 +49,7 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircVarDecl(self, stmt: CircVarDecl):
         assert stmt.lhs.t.size_in_uints == 1
-        return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)}, {_get_t(stmt.lhs.t)});'
+        return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
 
     def visitCircEqConstraint(self, stmt: CircEqConstraint):
         assert stmt.tgt.t.size_in_uints == stmt.val.t.size_in_uints
@@ -96,7 +96,7 @@ class JsnarkVisitor(AstVisitor):
             args = list(map(self.visit, ast.args))
 
             if op == 'ite':
-                fstr = f'ite({{}}, {{}}, {{}}, {_get_t(ast)})'
+                fstr = f'ite({{}}, {{}}, {{}})'
             elif op == 'parenthesis':
                 fstr = '({})'
 
@@ -104,28 +104,28 @@ class JsnarkVisitor(AstVisitor):
                 raise NotImplementedError()
                 #fstr = '{}'
             elif op == 'sign-':
-                fstr = f'mul({{}}, val(-1), {_get_t(ast)})'
+                fstr = f'mul({{}}, val(-1))'
             elif op == '+':
-                fstr = f'add({{}}, {{}}, {_get_t(ast)})'
+                fstr = f'add({{}}, {{}})'
             elif op == '-':
-                fstr = f'sub({{}}, {{}}, {_get_t(ast)})'
+                fstr = f'sub({{}}, {{}})'
             elif op == '*':
-                fstr = f'mul({{}}, {{}}, {_get_t(ast)})'
+                fstr = f'mul({{}}, {{}})'
 
             # TODO proper common types
             elif op == '==':
-                fstr = 'eq({}, {}, ZkUint(256))'
+                fstr = 'eq({}, {})'
             elif op == '!=':
-                fstr = 'neq({}, {}, ZkUint(256))'
+                fstr = 'neq({}, {})'
 
             elif op == '<':
-                fstr = 'lt({}, {}, ZkUint(256))'
+                fstr = 'lt({}, {})'
             elif op == '<=':
-                fstr = 'le({}, {}, ZkUint(256))'
+                fstr = 'le({}, {})'
             elif op == '>':
-                fstr = 'gt({}, {}, ZkUint(256))'
+                fstr = 'gt({}, {})'
             elif op == '>=':
-                fstr = 'ge({}, {}, ZkUint(256))'
+                fstr = 'ge({}, {})'
 
             elif op == '&&':
                 fstr = 'and({}, {})'
@@ -139,15 +139,15 @@ class JsnarkVisitor(AstVisitor):
             return fstr.format(*args)
         elif ast.is_cast and isinstance(ast.func.target, EnumDefinition):
             assert ast.annotated_type.type_name.elem_bitwidth == 256
-            return self.handle_cast(self.visit(ast.args[0]), 256)
+            return self.handle_cast(self.visit(ast.args[0]), TypeName.uint_type())
 
         raise ValueError(f'Unsupported function {ast.func.code()} inside circuit')
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        return self.handle_cast(self.visit(ast.expr), ast.elem_type.elem_bitwidth)
+        return self.handle_cast(self.visit(ast.expr), ast.elem_type)
 
-    def handle_cast(self, wire, num_bits: int):
-        return f'cast({wire}, {num_bits})'
+    def handle_cast(self, wire, t: TypeName):
+        return f'cast({wire}, {_get_t(t)})'
 
 
 def add_function_circuit_arguments(circuit: CircuitHelper):

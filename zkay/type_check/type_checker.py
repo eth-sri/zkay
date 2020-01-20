@@ -7,8 +7,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
-    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName, NumberTypeName
-from zkay.zkay_ast.visitor.deep_copy import replace_expr, deep_copy
+    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName
+from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -112,18 +112,15 @@ class TypeCheckVisitor(AstVisitor):
             if not cond_t.type_name.implicitly_convertible_to(TypeName.bool_type()):
                 raise TypeMismatchException(TypeName.bool_type(), cond_t.type_name, ast.args[0])
 
-            def combine(t1, t2):
-                return t1.to_abstract_type().combined_type(t2.to_abstract_type(), combine)
-            t = ast.args[1].annotated_type.type_name.combined_type(ast.args[2].annotated_type.type_name, combine)
-            del combine
+            res_t = ast.args[1].annotated_type.type_name.combined_type(ast.args[2].annotated_type.type_name, True)
 
             if cond_t.is_private():
                 # Everything is turned private
                 func.is_private = True
-                a = t.annotate(Expression.me_expr())
+                a = res_t.annotate(Expression.me_expr())
             else:
                 p = ast.args[1].annotated_type.combined_privacy(ast.analysis, ast.args[2].annotated_type)
-                a = t.annotate(p)
+                a = res_t.annotate(p)
             ast.args[1] = self.get_rhs(ast.args[1], a)
             ast.args[2] = self.get_rhs(ast.args[2], a)
 
@@ -133,8 +130,6 @@ class TypeCheckVisitor(AstVisitor):
             ast.annotated_type = ast.args[0].annotated_type
             return
 
-        # TODO insert implicit casts (use get_rhs) for other builtin functions
-
         # Check that argument types conform to op signature
         parameter_types = func.input_types()
         if not func.is_eq():
@@ -142,30 +137,51 @@ class TypeCheckVisitor(AstVisitor):
                 if not arg.instanceof_data_type(t):
                     raise TypeMismatchException(t, arg.annotated_type.type_name, arg)
 
-        def combine(*types):
-            res = func.op_func(*[t.value for t in types])
-            if func.output_type() == TypeName.bool_type():
-                return BooleanLiteralType(res != 0)
+        t1 = ast.args[0].annotated_type.type_name
+        t2 = t1 if len(ast.args) == 1 else ast.args[1].annotated_type.type_name
+
+        if len(ast.args) == 1:
+            arg_t = t1
+        else:
+            assert len(ast.args) == 2
+            is_eq_with_tuples = func.is_eq() and isinstance(t1, TupleType)
+            arg_t = t1.combined_type(t2, convert_literals=is_eq_with_tuples)
+
+        # Infer argument and output types
+        if arg_t == 'lit':
+            res = func.op_func(*[arg.annotated_type.type_name.value for arg in ast.args])
+            if isinstance(res, bool):
+                assert func.output_type() == TypeName.bool_type()
+                out_t = BooleanLiteralType(res)
             else:
                 assert func.output_type() == TypeName.number_type()
-                return NumberLiteralType(res)
-
-        if func.output_type() == TypeName.bool_type():
-            out_type = TypeName.bool_type()
+                out_t = NumberLiteralType(res)
+            if func.is_eq():
+                arg_t = t1.to_abstract_type().combined_type(t2.to_abstract_type(), True)
+        elif func.output_type() == TypeName.bool_type():
+            out_t = TypeName.bool_type()
         else:
-            out_type = ast.args[0].annotated_type.type_name.combined_type(ast.args[0 if len(ast.args) == 1 else 1].annotated_type.type_name, combine)
+            out_t = arg_t
 
-        # Check privacy type and convert if necessary
+        assert arg_t is not None and (arg_t != 'lit' or not func.is_eq())
+
         private_args = any(map(self.has_private_type, ast.args))
         if private_args:
+            assert arg_t != 'lit'
             if func.can_be_private():
                 func.is_private = True
-                ast.args[:] = map(self.make_private_if_not_already, ast.args)
-                ast.annotated_type = AnnotatedTypeName(out_type, Expression.me_expr())
+                p = Expression.me_expr()
             else:
                 raise TypeException(f'Operation \'{func.op}\' does not support private operands', ast)
         else:
-            ast.annotated_type = AnnotatedTypeName(out_type)
+            p = None
+
+        if arg_t != 'lit':
+            # Add implicit casts for arguments
+            arg_pt = arg_t.annotate(p)
+            ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt), ast.args)
+
+        ast.annotated_type = out_t.annotate(p)
 
     @staticmethod
     def is_accessible_by_invoker(ast: Expression):

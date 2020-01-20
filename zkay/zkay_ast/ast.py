@@ -894,7 +894,7 @@ class TypeName(AST):
         assert isinstance(other_type, TypeName)
         return self.implicitly_convertible_to(other_type) or other_type.implicitly_convertible_to(self)
 
-    def combined_type(self, other_type: TypeName, literal_combine_fct):
+    def combined_type(self, other_type: TypeName, convert_literals: bool):
         if other_type.implicitly_convertible_to(self):
             return self
         elif self.implicitly_convertible_to(other_type):
@@ -946,11 +946,11 @@ class BooleanLiteralType(ElementaryTypeName):
     def implicitly_convertible_to(self, expected: TypeName) -> bool:
         return super().implicitly_convertible_to(expected) or isinstance(expected, BoolTypeName)
 
-    def combined_type(self, other_type: TypeName, literal_combine_fct):
+    def combined_type(self, other_type: TypeName, convert_literals: bool):
         if isinstance(other_type, BooleanLiteralType):
-            return literal_combine_fct(self, other_type)
+            return TypeName.bool_type() if convert_literals else 'lit'
         else:
-            return super().combined_type(other_type, literal_combine_fct)
+            return super().combined_type(other_type, convert_literals)
 
     @property
     def value(self):
@@ -1015,16 +1015,16 @@ class NumberLiteralType(NumberTypeName):
         super().__init__(name, name, False, bitwidth)
 
     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-        if isinstance(expected, NumberTypeName):
+        if isinstance(expected, NumberTypeName) and not isinstance(expected, NumberLiteralType):
             # Allow implicit conversion only if it fits
             return expected.can_represent(self.value)
         return super().implicitly_convertible_to(expected)
 
-    def combined_type(self, other_type: TypeName, literal_combine_fct):
+    def combined_type(self, other_type: TypeName, convert_literals: bool):
         if isinstance(other_type, NumberLiteralType):
-            return literal_combine_fct(self, other_type)
+            return self.to_abstract_type().combined_type(other_type.to_abstract_type(), convert_literals) if convert_literals else 'lit'
         else:
-            return super().combined_type(other_type, literal_combine_fct)
+            return super().combined_type(other_type, convert_literals)
 
     def to_abstract_type(self):
         if self.value < 0:
@@ -1302,10 +1302,10 @@ class TupleType(TypeName):
     def compatible_with(self, other_type: TypeName) -> bool:
         return self.check_component_wise(other_type, lambda x, y: x.type_name.compatible_with(y.type_name))
 
-    def combined_type(self, other_type: TupleType, literal_combine_fct):
+    def combined_type(self, other_type: TupleType, convert_literals: bool):
         if not isinstance(other_type, TupleType) or len(self.types) != len(other_type.types):
             return None
-        return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, literal_combine_fct), DummyAnnotation()) for e1, e2 in zip(self.types, other_type.types)])
+        return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, convert_literals), DummyAnnotation()) for e1, e2 in zip(self.types, other_type.types)])
 
     def annotate(self, privacy_annotation):
         if isinstance(privacy_annotation, Expression):
