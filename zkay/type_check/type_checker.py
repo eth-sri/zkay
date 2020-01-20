@@ -1,3 +1,5 @@
+from typing import Union
+
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
@@ -235,8 +237,7 @@ class TypeCheckVisitor(AstVisitor):
         elif ast.is_cast:
             if not isinstance(ast.func.target, EnumDefinition):
                 raise NotImplementedError('User type casts only implemented for enums')
-            ast.annotated_type = AnnotatedTypeName(ast.func.target.annotated_type.type_name.clone(),
-                                                   ast.args[0].annotated_type.privacy_annotation.clone())
+            ast.annotated_type = self.handle_cast(ast.args[0], ast.func.target.annotated_type.type_name)
         elif isinstance(ast.func, LocationExpr):
             ft = ast.func.annotated_type.type_name
 
@@ -257,7 +258,17 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeException('Invalid function call', ast)
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        ast.annotated_type = AnnotatedTypeName(ast.elem_type, ast.expr.annotated_type.privacy_annotation)
+        ast.annotated_type = self.handle_cast(ast.expr, ast.elem_type)
+
+    def handle_cast(self, expr: Expression, t: TypeName) -> AnnotatedTypeName:
+        # because of the fake solidity check we already know that the cast is possible -> don't have to check if cast possible
+        if expr.annotated_type.is_private():
+            expected = AnnotatedTypeName(expr.annotated_type.type_name, Expression.me_expr())
+            if not expr.instanceof(expected):
+                raise TypeMismatchException(expected, expr.annotated_type, expr)
+            return AnnotatedTypeName(t.clone(), Expression.me_expr())
+        else:
+            return AnnotatedTypeName(t.clone())
 
     def visitNewExpr(self, ast: NewExpr):
         # already has correct type

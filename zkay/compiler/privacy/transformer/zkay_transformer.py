@@ -231,9 +231,10 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
                 return self.visit_children(ast)
         elif ast.is_cast:
             assert isinstance(ast.func.target, EnumDefinition)
-            if ast.args[0].annotated_type.is_private():
-                raise NotImplementedError()
-            return self.visit_children(ast)
+            if ast.args[0].evaluate_privately:
+                return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr())
+            else:
+                return self.visit_children(ast)
         else:
             assert isinstance(ast.func, LocationExpr)
             ast = self.visit_children(ast)
@@ -247,7 +248,10 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             return ast
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        return self.visit_children(ast)
+        if ast.evaluate_privately:
+            return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr())
+        else:
+            return self.visit_children(ast)
 
     def visitExpression(self, ast: Expression):
         raise NotImplementedError()

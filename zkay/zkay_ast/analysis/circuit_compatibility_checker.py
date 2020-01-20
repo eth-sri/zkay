@@ -3,7 +3,7 @@ from typing import Union
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
     Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, NumberLiteralExpr, \
-    BooleanLiteralExpr, IfStatement, NumberLiteralType, BooleanLiteralType
+    BooleanLiteralExpr, IfStatement, NumberLiteralType, BooleanLiteralType, PrimitiveCastExpr
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -98,6 +98,10 @@ class CircuitComplianceChecker(FunctionVisitor):
             # Expressions for which the value is known at compile time -> embed constant expression value into the circuit
             return True
 
+        if isinstance(expr, PrimitiveCastExpr) and isinstance(expr.expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
+            # Constant casts should also be evaluated inside the circuit
+            return True
+
         # Could evaluate in circuit, use analysis to determine whether this would be better performance wise
         # (If this avoids unnecessary encryption operations it may be cheaper)
         return False
@@ -115,6 +119,15 @@ class CircuitComplianceChecker(FunctionVisitor):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:
             for arg in ast.args:
                 check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(arg)
+            self.priv_setter.set_evaluation(ast, evaluate_privately=True)
+        elif ast.is_cast and ast.annotated_type.is_private():
+            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.args[0])
+            self.priv_setter.set_evaluation(ast, evaluate_privately=True)
+        self.visitChildren(ast)
+
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        if ast.expr.annotated_type.is_private():
+            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visitChildren(ast)
 
