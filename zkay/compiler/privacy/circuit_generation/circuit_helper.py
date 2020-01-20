@@ -362,7 +362,7 @@ class CircuitHelper:
             if isinstance(new_privacy, AllExpr):
                 new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
                 self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
-                out_var = new_out_param.get_loc_expr().implicitly_converted(expr.annotated_type.type_name)
+                out_var = new_out_param.get_loc_expr().explicitly_converted(expr.annotated_type.type_name)
             else:
                 new_privacy = self.lookup_privacy_label(expr.analysis, new_privacy)
                 privacy_label_expr = self._get_privacy_expr_from_label(new_privacy)

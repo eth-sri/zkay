@@ -176,15 +176,16 @@ class NonstaticOrIncompatibilityDetector(FunctionVisitor):
         self.can_be_private = True
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, LocationExpr):
-            assert ast.func.target is not None
-            assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
-            self.has_nonstatic_fcall |= not ast.func.target.has_static_body
-            self.can_be_private &= ast.func.target.can_be_private
-        elif isinstance(ast.func, BuiltinFunction):
-            self.can_be_private &= ast.func.can_be_private()
-            if ast.func.is_eq() or ast.func.is_ite():
-                self.can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
+        if not ast.is_cast:
+            if isinstance(ast.func, LocationExpr):
+                assert ast.func.target is not None
+                assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
+                self.has_nonstatic_fcall |= not ast.func.target.has_static_body
+                self.can_be_private &= ast.func.target.can_be_private
+            elif isinstance(ast.func, BuiltinFunction):
+                self.can_be_private &= ast.func.can_be_private()
+                if ast.func.is_eq() or ast.func.is_ite():
+                    self.can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
         self.visitChildren(ast)
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):

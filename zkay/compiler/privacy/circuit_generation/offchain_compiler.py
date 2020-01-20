@@ -364,7 +364,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")}' \
                           f' = {CRYPTO_OBJ_NAME}.dec({self.visit(in_idf.get_loc_expr())}, {GET_SK})'
             plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
-            conv = self.visit(plain_idf.implicitly_converted(in_idf.corresponding_priv_expression.idf.t))
+            conv = self.visit(plain_idf.explicitly_converted(in_idf.corresponding_priv_expression.idf.t))
             if conv != plain_idf_name:
                 in_decrypt += f'\n{plain_idf_name} = {conv}'
         return self.visitAssignmentStatement(ast) + in_decrypt

@@ -6,6 +6,7 @@ import operator
 import textwrap
 from collections import OrderedDict
 from enum import IntEnum
+from functools import cmp_to_key
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 
@@ -139,14 +140,31 @@ class Expression(AST):
         me.statement = stmt
         return me
 
-    def implicitly_converted(self: T, expected: TypeName) -> Union[T, FunctionCallExpr]:
+    def explicitly_converted(self: T, expected: TypeName) -> Union[T, FunctionCallExpr]:
         if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
         elif isinstance(expected, NumberTypeName) and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
-            assert self.annotated_type.type_name.implicitly_convertible_to(expected), f"Expected {expected.code()}, was {self.annotated_type.type_name.code()}"
-            return self
+            t = self.annotated_type.type_name
+
+            if t == expected:
+                return self
+
+            # Explicit casts
+            cast = False
+            if isinstance(t, NumberTypeName) and isinstance(expected, (NumberTypeName, AddressTypeName, AddressPayableTypeName, EnumTypeName)):
+                cast = True
+            elif isinstance(t, AddressTypeName) and isinstance(expected, NumberTypeName):
+                cast = True
+            elif isinstance(t, AddressPayableTypeName) and isinstance(expected, (NumberTypeName, AddressTypeName)):
+                cast = True
+            elif isinstance(t, EnumTypeName) and isinstance(expected, NumberTypeName):
+                cast = True
+
+            assert cast
+            return PrimitiveCastExpr(expected, self).as_type(expected)
+
         ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation.clone())
         return ret
 
@@ -630,9 +648,9 @@ class HybridArgumentIdf(Identifier):
         if isinstance(self.t, Array):
             return SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints).assign(self.serialized_loc)
         elif base is not None:
-            return self.get_loc_expr().assign(src.index(base.binop('+', NumberLiteralExpr(start_offset))).implicitly_converted(self.t))
+            return self.get_loc_expr().assign(src.index(base.binop('+', NumberLiteralExpr(start_offset))).explicitly_converted(self.t))
         else:
-            return self.get_loc_expr().assign(src.index(start_offset).implicitly_converted(self.t))
+            return self.get_loc_expr().assign(src.index(start_offset).explicitly_converted(self.t))
 
     def serialize(self, target_idf: str, base: Optional[Expression], start_offset: int) -> AssignmentStatement:
         self._set_serialized_loc(target_idf, base, start_offset)
@@ -640,11 +658,17 @@ class HybridArgumentIdf(Identifier):
         tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName.uint_all()))
         if isinstance(self.t, Array):
             return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints))
-        elif base is not None:
-            return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(
-                self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
         else:
-            return tgt.clone().index(start_offset).assign(self.get_loc_expr().implicitly_converted(TypeName.uint_type()))
+            expr = self.get_loc_expr()
+            if isinstance(self.t, NumberTypeName) and self.t.signed:
+                # First cast to same size uint to prevent sign extension
+                expr = expr.explicitly_converted(UintTypeName(f'uint{self.t.elem_bitwidth}'))
+
+            if base is not None:
+                return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(
+                    expr.explicitly_converted(TypeName.uint_type()))
+            else:
+                return tgt.clone().index(start_offset).assign(expr.explicitly_converted(TypeName.uint_type()))
 
 
 class EncryptionExpression(ReclassifyExpr):
@@ -2160,9 +2184,18 @@ class CodeVisitor(AstVisitor):
         values = self.visit_list(ast.values, sep=', ')
         return f'enum {self.visit(ast.idf)} {{\n{indent(values)}\n}}'
 
+    @staticmethod
+    def __cmp_type_size(v1: VariableDeclaration, v2: VariableDeclaration):
+        t1, t2 = v1.annotated_type.type_name, v2.annotated_type.type_name
+        cmp = (t1.size_in_uints > t2.size_in_uints) - (t1.size_in_uints < t2.size_in_uints)
+        if cmp == 0:
+            cmp = (t1.elem_bitwidth > t2.elem_bitwidth) - (t1.elem_bitwidth < t2.elem_bitwidth)
+        return cmp
+
     def visitStructDefinition(self, ast: StructDefinition):
         # Define struct with members in order of descending size (to get maximum space savings through packing)
-        members_by_descending_size = sorted(ast.members, key=lambda x: x.annotated_type.type_name.size_in_uints, reverse=True)
+        members_by_descending_size = sorted(ast.members, key=cmp_to_key(self.__cmp_type_size), reverse=True)
+
         body = '\n'.join([f'{self.visit(member)};' for member in members_by_descending_size])
         return f'struct {self.visit(ast.idf)} {{\n{indent(body)}\n}}'
 
