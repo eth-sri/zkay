@@ -1432,7 +1432,7 @@ class AnnotatedTypeName(AST):
         return not self.is_public()
 
     def is_address(self) -> bool:
-        return self.type_name == TypeName.address_type() or self.type_name == TypeName.address_payable_type()
+        return isinstance(self.type_name, (AddressTypeName, AddressPayableTypeName))
 
     @staticmethod
     def uint_all():

@@ -88,7 +88,11 @@ class RandomnessValue(Value):
 class AddressValue(Value):
     get_balance: Optional[Callable[['AddressValue'], int]] = None
 
-    def __new__(cls, val: str):
+    def __new__(cls, val: Union[str, int, bytes]):
+        if not isinstance(val, bytes):
+            if isinstance(val, str):
+                val = int(val, 16)
+            val = val.to_bytes(20, byteorder='big')
         return super(AddressValue, cls).__new__(cls, [val])
 
     @property
@@ -100,6 +104,9 @@ class AddressValue(Value):
 
     def send(self, amount) -> bool:
         return True
+
+    def __str__(self):
+        return self.val.hex()
 
     @property
     def balance(self) -> int:

@@ -38,7 +38,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
             'deployed_bin': jout['evm']['deployedBytecode']['object']
         }
 
-    def deploy_contract(self, sender: str, contract_interface, *args, value: Optional[int] = None):
+    def deploy_contract(self, sender: Union[bytes, str], contract_interface, *args, value: Optional[int] = None):
         if args is None:
             args = []
 
@@ -63,7 +63,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _create_w3_instance(self) -> Web3:
         pass
 
-    def _pki_verifier_addresses(self, sender: str, manifest) -> Dict[str, AddressValue]:
+    def _pki_verifier_addresses(self, sender: Union[bytes, str], manifest) -> Dict[str, AddressValue]:
         uuid = manifest[Manifest.uuid]
         if uuid not in self.verifiers_for_uuid:
             # Deploy verification contracts if not already done
@@ -80,19 +80,19 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _my_address(self) -> AddressValue:
         return AddressValue(self.w3.eth.defaultAccount)
 
-    def _get_balance(self, address: str) -> int:
+    def _get_balance(self, address: Union[bytes, str]) -> int:
         return self.w3.eth.getBalance(address)
 
-    def _req_public_key(self, address: str) -> PublicKeyValue:
+    def _req_public_key(self, address: Union[bytes, str]) -> PublicKeyValue:
         return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address, sender=self.my_address.val))
 
-    def _announce_public_key(self, address: str, pk: Tuple[int, ...]):
+    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]):
         return self._transact(self.pki_contract, address, 'announcePk', pk)
 
-    def _req_state_var(self, contract_handle, name: str, *indices, sender: str) -> Any:
+    def _req_state_var(self, contract_handle, name: str, *indices, sender: Union[bytes, str]) -> Any:
         return contract_handle.functions[name](*indices).call({'from': sender})
 
-    def _transact(self, contract_handle, sender: str, function: str, *actual_params, value: Optional[int] = None) -> Any:
+    def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, value: Optional[int] = None) -> Any:
         fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
         tx = {'from': sender, 'gas': max_gas_limit}
         if value:
@@ -104,13 +104,13 @@ class Web3Blockchain(ZkayBlockchainInterface):
         debug_print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
-    def _deploy(self, manifest, sender: str, contract: str, *actual_args, value: Optional[int] = None):
+    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, value: Optional[int] = None):
         filename = self.__hardcode_external_contracts(os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename]),
                                                       self._pki_verifier_addresses(sender, manifest))
         cout = self.compile_contract(filename, contract)
         return self.deploy_contract(sender, cout, *actual_args, value=value)
 
-    def _deploy_libraries(self, sender: str):
+    def _deploy_libraries(self, sender: Union[bytes, str]):
         # Compile and deploy global libraries
         with tempfile.TemporaryDirectory() as tmpdir:
             pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
@@ -126,7 +126,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
                 f'BN256G2': self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2')).address,
             }
 
-    def _connect(self, manifest, contract: str, address: str) -> Any:
+    def _connect(self, manifest, contract: str, address: Union[bytes, str]) -> Any:
         filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
         cout = self.compile_contract(filename, contract)
         return self.w3.eth.contract(
@@ -173,12 +173,11 @@ class Web3Blockchain(ZkayBlockchainInterface):
         sol_file = self.__hardcode_external_contracts(sol_file, pki_verifier_addresses)
         self._verify_contract_integrity(address, sol_file)
 
-    @staticmethod
-    def __hardcode_external_contracts(input_filename, pki_verifier_addresses):
+    def __hardcode_external_contracts(self, input_filename, pki_verifier_addresses):
         with open(input_filename) as f:
             c = f.read()
         for key, val in pki_verifier_addresses.items():
-            c = c.replace(f'{key}(0)', f'{key}({val.val})')
+            c = c.replace(f'{key}(0)', f'{key}({self.w3.toChecksumAddress(val.val)})')
 
         output_filename = f'{without_extension(input_filename)}.inst.sol'
         with open(output_filename, 'w') as f:

@@ -41,7 +41,7 @@ class PythonCodeVisitor(CodeVisitor):
 
     def visitEnumDefinition(self, ast: EnumDefinition):
         body = '\n'.join([f'{self.visit(val)} = {idx}' for idx, val in enumerate(ast.values)])
-        return f'class {self.visit(ast.idf)}(Enum):\n{indent(body)}'
+        return f'class {self.visit(ast.idf)}(IntEnum):\n{indent(body)}'
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         params = self.handle_function_params(ast, ast.parameters)
@@ -129,6 +129,10 @@ class PythonCodeVisitor(CodeVisitor):
                 return f'[{self.get_default_value(t.value_type)} for _ in range({self.visit(expr)})]'
         elif isinstance(t, Mapping):
             return '{}'
+        elif isinstance(t, EnumTypeName):
+            return f'{self.visit_list(t.target.qualified_name, sep=".")}(0)'
+        elif isinstance(t, (AddressTypeName, AddressPayableTypeName)):
+            return f'AddressValue(0)'
         elif isinstance(t, UserDefinedTypeName):
             return '{}'
         else:

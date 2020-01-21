@@ -94,7 +94,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         # Compile zkay file, generate circuits and verification contracts (but don't generate new prover/verification keys and manifest)
         compile_zkay_file(os.path.join(project_dir, manifest[Manifest.zkay_contract_filename]), project_dir, import_keys=True)
 
-        debug_print(f'Connecting to contract {contract}@{contract_address.val}')
+        debug_print(f'Connecting to contract {contract}@{contract_address}')
         contract_on_chain = self._connect(manifest, contract, contract_address.val)
 
         pki_verifier_addresses = {}
@@ -148,7 +148,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _get_balance(self, address: str) -> int:
+    def _get_balance(self, address: Union[bytes, str]) -> int:
         pass
 
     @abstractmethod
@@ -156,31 +156,31 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _req_public_key(self, address: str) -> PublicKeyValue:
+    def _req_public_key(self, address: Union[bytes, str]) -> PublicKeyValue:
         pass
 
     @abstractmethod
-    def _announce_public_key(self, address: str, pk: Tuple[int, ...]) -> PublicKeyValue:
+    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]) -> PublicKeyValue:
         pass
 
     @abstractmethod
-    def _req_state_var(self, contract_handle, name: str, *indices, sender: str) -> Union[bool, int, str]:
+    def _req_state_var(self, contract_handle, name: str, *indices, sender: Union[bytes, str]) -> Union[bool, int, str]:
         pass
 
     @abstractmethod
-    def _transact(self, contract_handle, sender: str, function: str, *actual_args, value: Optional[int] = None) -> Any:
+    def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_args, value: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod
-    def _deploy(self, manifest, sender: str, contract: str, *actual_args, value: Optional[int] = None) -> Any:
+    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, value: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod
-    def _deploy_libraries(self, sender: str):
+    def _deploy_libraries(self, sender: Union[bytes, str]):
         pass
 
     @abstractmethod
-    def _connect(self, manifest, contract: str, address: str) -> Any:
+    def _connect(self, manifest, contract: str, address: Union[bytes, str]) -> Any:
         pass
 
     @staticmethod
@@ -193,15 +193,17 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
 class ZkayCryptoInterface(metaclass=ABCMeta):
     def generate_or_load_key_pair(self, address: AddressValue) -> KeyPair:
-        return self._generate_or_load_key_pair(address.val)
+        return self._generate_or_load_key_pair(address.val.hex())
 
-    def enc(self, plain: int, pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
+    def enc(self, plain: Union[int, AddressValue], pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
         """
         Encrypts plain with the provided public key
         :param plain: plain text to encrypt
         :param pk: public key
         :return: Tuple(cipher text, randomness which was used to encrypt plain)
         """
+        if isinstance(plain, AddressValue):
+            plain = int.from_bytes(plain.val, byteorder='big')
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
         debug_print(f'Encrypting value {plain} with public key "{pk}"')
@@ -223,11 +225,21 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
         debug_print(f'Decrypting value {cipher} with secret key "{sk}"')
+        if len(cipher) == 1 and isinstance(cipher[0], AddressValue):
+            cipher = CipherValue(cipher[0].val)
+            was_address = True
+        else:
+            was_address = False
+
         if cipher == CipherValue():
-            return 0, RandomnessValue()
+            ret = 0, RandomnessValue()
         else:
             plain, rnd = self._dec(cipher[:], sk.val)
-            return plain, RandomnessValue(rnd)
+            ret = plain, RandomnessValue(rnd)
+
+        if was_address:
+            ret = AddressValue(ret[0]), ret[1]
+        return ret
 
     @staticmethod
     def serialize_bigint(key: int, total_bytes: int) -> List[int]:
@@ -301,8 +313,12 @@ class ZkayProverInterface(metaclass=ABCMeta):
         self.proving_scheme = proving_scheme
 
     def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List, in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
-        for arg in priv_values:
-            assert not isinstance(arg, Value) or isinstance(arg, RandomnessValue)
+        for i in range(len(priv_values)):
+            arg = priv_values[i]
+            assert not isinstance(arg, Value) or isinstance(arg, (RandomnessValue, AddressValue))
+            if isinstance(arg, AddressValue):
+                priv_values[i] = int.from_bytes(arg.val, byteorder='big')
+
         debug_print(f'Generating proof for {contract}.{function} [priv: {Value.collection_to_string(priv_values)}] '
                     f'[in: {Value.collection_to_string(in_vals)}] [out: {Value.collection_to_string(out_vals)}]')
 

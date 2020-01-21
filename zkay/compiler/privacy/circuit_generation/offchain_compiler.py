@@ -65,7 +65,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         import os
         import code
         import inspect
-        from enum import Enum
+        from enum import IntEnum
         from typing import Dict, List, Tuple, Optional, Union, Any, Callable
 
         from zkay import my_logging
@@ -74,11 +74,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
 
         ''') + contracts + (dedent(f'''
-        def deploy(*args, user: str = ContractSimulator.my_address().val{val_param}):
+        def deploy(*args, user: Union[bytes, str] = ContractSimulator.my_address().val{val_param}):
             return {self.visit(ast.contracts[0].idf)}.deploy(os.path.dirname(os.path.realpath(__file__)), *args, user=user{val_arg})
 
 
-        def connect(address: str, *, user: str = ContractSimulator.my_address().val):
+        def connect(address: Union[bytes, str], *, user: Union[bytes, str] = ContractSimulator.my_address().val):
             return {self.visit(ast.contracts[0].idf)}.connect(os.path.dirname(os.path.realpath(__file__)), address, user=user)
 
 
@@ -119,13 +119,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 {CONTRACT_NAME} = '{ast.idf.name}'
 
             @staticmethod
-            def connect(project_dir: str, address: str, *, user: str) -> '{name}':
+            def connect(project_dir: str, address: Union[bytes, str], *, user: Union[str, bytes]) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
                 c.contract_handle = c.conn.connect(project_dir, '{ast.idf.name}', AddressValue(address))
                 return c
 
             @staticmethod
-            def deploy(project_dir: str, *constructor_args, user: str{val_param}) -> '{name}':
+            def deploy(project_dir: str, *constructor_args, user: Union[str, bytes]{val_param}) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
                 c.contract_handle = {deploy_cmd}
                 return c
@@ -269,11 +269,18 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         sec_var_serialize_str = ''
         if circuit is not None:
             for out_idf in circuit.output_idfs:
-                out_var_serialize_str += f'\n{self.visit(out_idf.serialized_loc)} = '
+                sloc = out_idf.serialized_loc
                 if isinstance(out_idf.t, Array):
-                    out_var_serialize_str += f'{self.visit(out_idf.get_loc_expr())}[:]'
+                    out_var_serialize_str += f'\n{self.visit(sloc)} = {self.visit(out_idf.get_loc_expr())}[:]'
                 else:
-                    out_var_serialize_str += f'[int({self.visit(out_idf.get_loc_expr())})]'
+                    assert sloc.size == 1
+                    out_var_serialize_str += f'\n{self.visit(sloc.arr)}[{sloc.base} + {sloc.start_offset}] = '
+                    if isinstance(out_idf.t, (AddressTypeName, AddressPayableTypeName)):
+                        out_var_serialize_str += f'int.from_bytes({self.visit(out_idf.get_loc_expr())}.val, byteorder=\'big\')'
+                    elif isinstance(out_idf.t, EnumTypeName):
+                        out_var_serialize_str += f'{self.visit(out_idf.get_loc_expr())}.value'
+                    else:
+                        out_var_serialize_str += f'int({self.visit(out_idf.get_loc_expr())})'
             if out_var_serialize_str:
                 out_var_serialize_str = f'\n# Serialize output values{out_var_serialize_str}'
             if circuit.sec_idfs:
@@ -416,11 +423,18 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if not t.is_primitive_type():
             raise NotImplementedError()
         signed = isinstance(t, IntTypeName) and not self.inside_circuit
-        enum = self.visit_list(t.target.qualified_name, sep='.') if isinstance(t, EnumTypeName) else None
+
+        if isinstance(t, EnumTypeName):
+            constr = self.visit_list(t.target.qualified_name, sep='.')
+        elif isinstance(t, (AddressPayableTypeName, AddressTypeName)):
+            constr = 'AddressValue'
+        else:
+            constr = None
+
         num_bits = t.elem_bitwidth
         if self.inside_circuit and num_bits == 256:
             num_bits = None
-        return f'self.cast({expr}, {num_bits}{f", signed={bool(signed)}" if signed else ""}{f", enum={enum}" if enum is not None else ""})'
+        return f'self.cast({expr}, {num_bits}{f", signed={bool(signed)}" if signed else ""}{f", constr={constr}" if constr is not None else ""})'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert not isinstance(ast.target, StateVariableDeclaration), "State member accesses not handled"
