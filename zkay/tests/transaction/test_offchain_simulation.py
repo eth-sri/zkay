@@ -105,7 +105,7 @@ class TestOffchainBase(TestScenarios):
             shutil.rmtree(d)
 
 
-#@parameterized_class(('name', 'scenario'), get_scenario(''))
+#@parameterized_class(('name', 'scenario'), get_scenario('.py'))
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainDummyEnc(TestOffchainBase):
     @unittest.skipIf(False, "No reason")
