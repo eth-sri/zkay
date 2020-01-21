@@ -11,14 +11,15 @@ class PartitionState:
 
     def __init__(self):
         self._partitions: Dict[int, Set[object]] = {}
+        self._next_unused = 0
 
     def insert(self, x):
         p = {x}
         self._insert_partition(p)
 
     def _insert_partition(self, p):
-        next_partition = len(self._partitions.keys())
-        self._partitions[next_partition] = p
+        self._partitions[self._next_unused] = p
+        self._next_unused += 1
 
     def get_index(self, x):
         """
@@ -135,6 +136,7 @@ class PartitionState:
         :return:
         """
         c = PartitionState()
+        c._next_unused = self._next_unused
         for k, p in self._partitions.items():
             # shallow copy
             kept = {x for x in p if project is None or x in project}
