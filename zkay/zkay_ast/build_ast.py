@@ -270,7 +270,7 @@ class BuildASTVisitor(SolidityVisitor):
         if isinstance(func, IdentifierExpr):
             if func.idf.name == 'reveal':
                 if len(args) != 2:
-                    ReclassifyException(f'Invalid number of arguments for reveal: {args}')
+                    raise ReclassifyException(f'Invalid number of arguments for reveal: {args}')
                 return ReclassifyExpr(args[0], args[1])
 
         return FunctionCallExpr(func, args)

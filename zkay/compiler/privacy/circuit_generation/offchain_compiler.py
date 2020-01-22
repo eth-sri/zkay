@@ -11,7 +11,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, NumberTypeName, \
     CircuitComputationStatement, VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, IntTypeName, EnumDefinition, EnumTypeName, \
-    UintTypeName
+    UintTypeName, NumberLiteralExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -239,6 +239,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             for arg in self.current_params:
                 if arg.original_type is not None and arg.original_type.is_private():
                     sname = self.visit(arg.idf)
+                    if arg.original_type.type_name.is_signed_numeric:
+                        sname = self.handle_cast(sname, UintTypeName(f'uint{arg.original_type.type_name.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {sname}\n'
                     enc_param_str += f'{sname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {CRYPTO_OBJ_NAME}.enc({sname}, {GET_PK})\n'
             enc_param_comment_str = '\n# Encrypt parameters' if enc_param_str else ''
@@ -280,7 +282,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     elif isinstance(out_idf.t, EnumTypeName):
                         out_var_serialize_str += f'{self.visit(out_idf.get_loc_expr())}.value'
                     else:
-                        out_var_serialize_str += f'int({self.visit(out_idf.get_loc_expr())})'
+                        out_var_serialize_str += f'{self.handle_cast(self.visit(out_idf.get_loc_expr()), UintTypeName(f"uint{out_idf.t.elem_bitwidth}"))}'
             if out_var_serialize_str:
                 out_var_serialize_str = f'\n# Serialize output values{out_var_serialize_str}'
             if circuit.sec_idfs:
@@ -371,7 +373,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")}' \
                           f' = {CRYPTO_OBJ_NAME}.dec({self.visit(in_idf.get_loc_expr())}, {GET_SK})'
             plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
-            conv = self.visit(plain_idf.explicitly_converted(in_idf.corresponding_priv_expression.idf.t))
+            with self.circuit_computation(follow_private=False):
+                conv = self.visit(plain_idf.explicitly_converted(in_idf.corresponding_priv_expression.idf.t))
             if conv != plain_idf_name:
                 in_decrypt += f'\n{plain_idf_name} = {conv}'
         return self.visitAssignmentStatement(ast) + in_decrypt
@@ -384,8 +387,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             s = f'{self.visit(out_idf.get_loc_expr())}, {self.get_priv_value(f"{out_idf.name}_R")}'
         else:
             s = f'{self.visit(out_idf.get_loc_expr())}'
+
         with self.circuit_computation(follow_private=True):
-            s = f'{s} = {self.visit(out_val)}'
+            rhs = self.visit(out_val)
+        if not isinstance(out_idf.t, CipherText):
+            rhs = self.handle_cast(rhs, out_idf.t)
+        s = f'{s} = {rhs}'
         out_initializations += f'{s}\n'
         return out_initializations
 
@@ -395,12 +402,18 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def visitEncryptionExpression(self, ast: EncryptionExpression):
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())
         plain = self.visit(ast.expr)
+        if ast.expr.annotated_type.type_name.is_signed_numeric:
+            plain = self.handle_cast(plain, UintTypeName(f'uint{ast.expr.annotated_type.type_name.elem_bitwidth}'))
         return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
-            return self.handle_cast(super().visitFunctionCallExpr(ast), t)
+            res = super().visitFunctionCallExpr(ast)
+            if not t.is_literal:
+                res = self.handle_cast(res, t)
+            return res
+
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
             return ast.func.format_string().format(*args)
@@ -414,7 +427,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return super().visitFunctionCallExpr(ast)
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        if ast.is_implicit:
+        if not self.inside_circuit and ast.is_implicit:
             return self.visit(ast.expr)
         else:
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
@@ -422,7 +435,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def handle_cast(self, expr: str, t: TypeName):
         if not t.is_primitive_type():
             raise NotImplementedError()
-        signed = isinstance(t, IntTypeName) and not self.inside_circuit
+        signed = t.is_signed_numeric and not self.inside_circuit
 
         if isinstance(t, EnumTypeName):
             constr = self.visit_list(t.target.qualified_name, sep='.')

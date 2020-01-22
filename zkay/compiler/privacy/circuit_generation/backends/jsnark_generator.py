@@ -23,7 +23,7 @@ def _get_t(t: Union[TypeName, Expression]):
     bits = t.elem_bitwidth
     if t.elem_bitwidth == 1:
         return 'ZkBool'
-    if isinstance(t, NumberTypeName) and t.signed:
+    if t.is_signed_numeric:
         return f'ZkInt({bits})'
     else:
         return f'ZkUint({bits})'
@@ -102,9 +102,8 @@ class JsnarkVisitor(AstVisitor):
 
             elif op == 'sign+':
                 raise NotImplementedError()
-                #fstr = '{}'
             elif op == 'sign-':
-                fstr = f'mul({{}}, val(-1))'
+                fstr = f'negate({{}})'
             elif op == '+':
                 fstr = f'add({{}}, {{}})'
             elif op == '-':

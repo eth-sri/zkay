@@ -59,9 +59,9 @@ class ContractSimulator:
         if nbits is None: # modulo field prime
             trunc_val = val % bn128_scalar_field
         else:
-            trunc_val = val & ((1 << nbits) - 1)
+            trunc_val = val & ((1 << nbits) - 1) # unsigned representation
             if signed and trunc_val & (1 << (nbits - 1)):
-                trunc_val -= (1 << nbits)
+                trunc_val -= (1 << nbits) # signed representation
 
         if constr is not None:
             return constr(trunc_val)

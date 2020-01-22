@@ -143,7 +143,7 @@ class Expression(AST):
     def explicitly_converted(self: T, expected: TypeName) -> Union[T, FunctionCallExpr]:
         if expected == TypeName.bool_type() and not self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
-        elif isinstance(expected, NumberTypeName) and self.instanceof_data_type(TypeName.bool_type()):
+        elif expected.is_numeric and self.instanceof_data_type(TypeName.bool_type()):
             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
         else:
             t = self.annotated_type.type_name
@@ -660,7 +660,7 @@ class HybridArgumentIdf(Identifier):
             return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints))
         else:
             expr = self.get_loc_expr()
-            if isinstance(self.t, NumberTypeName) and self.t.signed:
+            if self.t.is_signed_numeric:
                 # First cast to same size uint to prevent sign extension
                 expr = expr.explicitly_converted(UintTypeName(f'uint{self.t.elem_bitwidth}'))
 
@@ -896,19 +896,27 @@ class TypeName(AST):
         return 1
 
     @property
-    def elem_bitwidth(self):
+    def elem_bitwidth(self) -> int:
         # Bitwidth, only defined for primitive types
         raise NotImplementedError()
 
     @property
-    def is_literal(self):
+    def is_literal(self) -> bool:
         return isinstance(self, (NumberLiteralType, BooleanLiteralType))
 
-    def is_primitive_type(self):
+    def is_primitive_type(self) -> bool:
         return isinstance(self, (ElementaryTypeName, EnumTypeName, AddressTypeName, AddressPayableTypeName))
 
-    def can_be_private(self):
-        return self.is_primitive_type()
+    @property
+    def is_numeric(self) -> bool:
+        return isinstance(self, NumberTypeName)
+
+    @property
+    def is_signed_numeric(self) -> bool:
+        return self.is_numeric and self.signed
+
+    def can_be_private(self) -> bool:
+        return self.is_primitive_type() and not (self.is_signed_numeric and self.elem_bitwidth == 256)
 
     def implicitly_convertible_to(self, expected: TypeName) -> bool:
         assert isinstance(expected, TypeName)
@@ -1031,15 +1039,18 @@ class NumberLiteralType(NumberTypeName):
         name = int(name) if isinstance(name, str) else name
         bitwidth = name.bit_length()
         if name < 0:
+            signed = True
             bitwidth += 1
+        else:
+            signed = False
         bitwidth = max(int(math.ceil(bitwidth / 8.0)) * 8, 8)
         assert 8 <= bitwidth <= 256 and bitwidth % 8 == 0
 
         name = str(name)
-        super().__init__(name, name, False, bitwidth)
+        super().__init__(name, name, signed, bitwidth)
 
     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-        if isinstance(expected, NumberTypeName) and not isinstance(expected, NumberLiteralType):
+        if expected.is_numeric and not expected.is_literal:
             # Allow implicit conversion only if it fits
             return expected.can_represent(self.value)
         return super().implicitly_convertible_to(expected)

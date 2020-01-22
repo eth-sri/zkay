@@ -143,7 +143,7 @@ class TypeCheckVisitor(AstVisitor):
         t2 = t1 if len(ast.args) == 1 else ast.args[1].annotated_type.type_name
 
         if len(ast.args) == 1:
-            arg_t = t1
+            arg_t = 'lit' if ast.args[0].annotated_type.type_name.is_literal else t1
         else:
             assert len(ast.args) == 2
             is_eq_with_tuples = func.is_eq() and isinstance(t1, TupleType)

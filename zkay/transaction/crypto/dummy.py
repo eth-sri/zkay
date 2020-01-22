@@ -12,9 +12,9 @@ class DummyCrypto(ZkayCryptoInterface):
         return KeyPair(PublicKeyValue(self.serialize_bigint(aint, cfg.key_bytes)), PrivateKeyValue(aint))
 
     def _enc(self, plain: int, pk: int) -> Tuple[List[int], List[int]]:
-        cipher = (plain + pk) % bn128_scalar_field
+        cipher = (plain + pk) % (1 << 248)
         return self.pack_byte_array(cipher.to_bytes(cfg.key_bytes, byteorder='big')), list(RandomnessValue()[:])
 
     def _dec(self, cipher: Tuple[int, ...], sk: int) -> Tuple[int, List[int]]:
-        plain = (int.from_bytes(self.unpack_to_byte_array(cipher, cfg.key_bytes), byteorder='big') - sk) % bn128_scalar_field
+        plain = (int.from_bytes(self.unpack_to_byte_array(cipher, cfg.key_bytes), byteorder='big') - sk) % (1 << 248)
         return plain, list(RandomnessValue()[:])

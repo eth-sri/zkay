@@ -187,7 +187,7 @@ class PythonCodeVisitor(CodeVisitor):
         return '' if not ast.text else '# ' + ast.text.replace("\n", "\n# ")
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
-        if isinstance(ast, NumberTypeName):
+        if ast.is_numeric:
             return 'int'
         else:
             return ast.code()
