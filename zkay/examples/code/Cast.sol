@@ -13,6 +13,12 @@ contract Cast {
 	test@owner sealed_enum;
 	address@owner priv_addr;
 
+	int248@owner negval;
+	int248@owner nv2;
+	int8 pv2;
+	uint248 pv3;
+	uint248 pv4;
+
 	constructor() public {
 		owner = me;
 	}
@@ -49,8 +55,27 @@ contract Cast {
 	}
 
 	function test_signed_casts() public {
-		/*int@me = -1;
-		require(uint32(int32(-1)) )*/
+		require(owner == me);
+		negval = -1;
+		require(reveal(negval, all) == -1);
+		require(reveal(negval == -1, all));
+		nv2 = -negval;
+		require(reveal(nv2, all) == 1 && reveal(-nv2 == negval, all));
+		require(reveal(uint248(negval) == (2**248 - 1), all));
+		pv2 = int8(reveal(negval, all));
+		pv3 = reveal(uint248(negval), all);
+		pv4 = uint248(reveal(negval, all));
+
+		uint248@me intmin = 2 ** 247;
+		require(reveal(int248(intmin) == -int248(intmin), all));
+		require(-reveal(intmin, all) == 2 ** 247);
+
+		uint8@me val = 10;
+		int8 m5 = -5;
+		require(reveal(int8(val) - 15, all) == m5);
+		require(reveal(int8(val - 15), all) == m5);
+
+		int8@me m1 = -1;
+		require(reveal(m1 == -1, all));
 	}
 }
-

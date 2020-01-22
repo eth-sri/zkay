@@ -1,9 +1,11 @@
 import os
-from typing import Any, Optional, List, Union, Dict
+from typing import Any, Optional, List, Union, Dict, Type
 from unittest import TestCase
 
 from zkay.config import cfg
+from zkay.transaction.offchain import ContractSimulator
 from zkay.transaction.types import AddressValue
+from zkay.zkay_ast.ast import TypeName
 
 
 class TransactionAssertion:
@@ -23,12 +25,13 @@ class ContractBalanceAssertion(TransactionAssertion):
 
 
 class StateValueAssertion(TransactionAssertion):
-    def __init__(self, name: str, *indices, user: str = None, should_decrypt: bool = False, expected_value) -> None:
+    def __init__(self, name: str, *indices, user: str, should_decrypt: bool, plain_type: Optional[TypeName], expected_value) -> None:
         super().__init__()
         self.user = user
         self.name = name
         self.indices = indices
         self.should_decrypt = should_decrypt
+        self.plain_type = plain_type
 
         self.expected = expected_value
 
@@ -38,6 +41,8 @@ class StateValueAssertion(TransactionAssertion):
 
         user = next(iter(user_terminals.values())) if self.user is None else user_terminals[self.user]
         actual_val = user.get_state(self.name, *indices, is_encrypted=self.should_decrypt)
+        if self.should_decrypt and self.plain_type is not None and self.plain_type.is_signed_numeric:
+            actual_val = ContractSimulator.cast(actual_val, self.plain_type.elem_bitwidth, signed=True)
         test.assertEqual(self.expected, actual_val)
 
 
@@ -104,8 +109,8 @@ class ScenarioBuilder:
         self.scenario._transactions_or_assertions.append(t)
         return t
 
-    def add_state_assertion(self, name: str, *indices, user: str = None, should_decrypt: bool = False, expected_value):
-        a = StateValueAssertion(name, *indices,user=user, should_decrypt=should_decrypt, expected_value=expected_value)
+    def add_state_assertion(self, name: str, *indices, user: str = None, should_decrypt: bool = False, plain_type: Optional[TypeName] = None, expected_value):
+        a = StateValueAssertion(name, *indices,user=user, should_decrypt=should_decrypt, plain_type=plain_type, expected_value=expected_value)
         self.scenario._transactions_or_assertions.append(a)
         return self
 

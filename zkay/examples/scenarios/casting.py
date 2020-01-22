@@ -1,8 +1,17 @@
 from zkay.examples.scenario import ScenarioBuilder
+from zkay.zkay_ast.ast import IntTypeName
+
 a = 'a'
 sb = ScenarioBuilder('Casting', 'code/Cast.sol').set_users(a)
 sb.set_deployment_transaction(owner=a)
 sb.add_balance_assertion(0)
+
+sb.add_transaction('test_signed_casts', user=a)
+sb.add_state_assertion('negval', should_decrypt=True, expected_value=-1, plain_type=IntTypeName('int248'))
+sb.add_state_assertion('nv2', should_decrypt=True, expected_value=1)
+sb.add_state_assertion('pv2', expected_value=-1)
+sb.add_state_assertion('pv3', expected_value=(1 << 248)-1)
+sb.add_state_assertion('pv4', expected_value=(1 << 248)-1)
 
 sb.add_transaction('f', [378], user=a) # b = false, p = 382, secint = 384, priv_addr = 426,sealed_enum = 1, res = 126
 sb.add_state_assertion('p', should_decrypt=True, expected_value=382)
