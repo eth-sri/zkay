@@ -1,5 +1,6 @@
 from typing import Dict, Optional, List, Tuple
 
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.transformer.internal_call_transformer import transform_internal_calls
@@ -124,6 +125,9 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Import verification contracts
         su.used_contracts += self.include_verification_contracts(c, ext_var_decls)
+        c.state_variable_declarations = [StateVariableDeclaration(AnnotatedTypeName.uint_all(), ['public', 'constant'],
+                                                                  Identifier(cfg.field_prime_var_name),
+                                                                  NumberLiteralExpr(bn128_scalar_field)), Comment()] + c.state_variable_declarations
 
         # Transform signatures
         for f in all_fcts:

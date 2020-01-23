@@ -49,6 +49,7 @@ class Config:
         self.return_var_name = 'return_value__'
         self.proof_param_name = 'proof__'
         self.verification_function_name = 'check_verify'
+        self.field_prime_var_name = 'zk_field_prime'
 
         self.pack_chunk_size = 31
 

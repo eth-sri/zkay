@@ -219,6 +219,25 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         else:
             return intern_s
 
+    def __serialize_val(self, expr:str, t: TypeName, base_array: str, start_idx: str, to_idx: str):
+        if isinstance(t, Array):
+            loc = f'\n{base_array}[{start_idx}:{to_idx}]'
+            return f'{loc} = {expr}[:]'
+        else:
+            loc = f'\n{base_array}[{start_idx}]'
+            if isinstance(t, (AddressTypeName, AddressPayableTypeName)):
+                return f'{loc} = int.from_bytes({expr}.val, byteorder=\'big\')'
+            elif isinstance(t, EnumTypeName):
+                return f'{loc} = {expr}.value'
+            else:
+                if t.is_signed_numeric:
+                    expr = self.handle_cast(expr, UintTypeName(f"uint{t.elem_bitwidth}"))
+                elif t.elem_bitwidth == 256:
+                    expr = f'{expr} % {SCALAR_FIELD_NAME}'
+                elif t.is_boolean:
+                    expr = f'int({expr})'
+                return f'{loc} = {expr}'
+
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
         preamble_str = 'msg = self.current_msg\n' \
                        'block = self.current_block\n' \
@@ -272,27 +291,23 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if circuit is not None:
             for out_idf in circuit.output_idfs:
                 sloc = out_idf.serialized_loc
-                if isinstance(out_idf.t, Array):
-                    out_var_serialize_str += f'\n{self.visit(sloc)} = {self.visit(out_idf.get_loc_expr())}[:]'
-                else:
-                    assert sloc.size == 1
-                    out_var_serialize_str += f'\n{self.visit(sloc.arr)}[{sloc.base} + {sloc.start_offset}] = '
-                    if isinstance(out_idf.t, (AddressTypeName, AddressPayableTypeName)):
-                        out_var_serialize_str += f'int.from_bytes({self.visit(out_idf.get_loc_expr())}.val, byteorder=\'big\')'
-                    elif isinstance(out_idf.t, EnumTypeName):
-                        out_var_serialize_str += f'{self.visit(out_idf.get_loc_expr())}.value'
-                    else:
-                        out_var_serialize_str += f'{self.handle_cast(self.visit(out_idf.get_loc_expr()), UintTypeName(f"uint{out_idf.t.elem_bitwidth}"))}'
+                expr = self.visit(out_idf.get_loc_expr())
+                start_idx = f'{self.visit(sloc.base)} + {sloc.start_offset}'
+                end_idx = f'{self.visit(sloc.base)} + {sloc.start_offset + sloc.size}'
+                out_var_serialize_str += self.__serialize_val(expr, out_idf.t, self.visit(sloc.arr), start_idx, end_idx)
             if out_var_serialize_str:
                 out_var_serialize_str = f'\n# Serialize output values{out_var_serialize_str}'
+
             if circuit.sec_idfs:
                 offset = 0
                 for sec_idf in circuit.sec_idfs:
-                    if isinstance(sec_idf.t, Array):
-                        sec_var_serialize_str += f'\n{ALL_PRIV_VALUES_NAME}[self.current_all_index + {offset}:self.current_all_index + {offset + sec_idf.t.size_in_uints}] = {PRIV_VALUES_NAME}.get("{sec_idf.name}", {self.get_default_value(sec_idf.t)})[:]'
-                    else:
-                        sec_var_serialize_str += f'\n{ALL_PRIV_VALUES_NAME}[self.current_all_index + {offset}] = {PRIV_VALUES_NAME}.get("{sec_idf.name}", {self.get_default_value(sec_idf.t)})'
+                    expr = f'{PRIV_VALUES_NAME}.get("{sec_idf.name}", {self.get_default_value(sec_idf.t)})'
+                    start_idx = f'self.current_all_index + {offset}'
+                    end_idx = f'self.current_all_index + {offset + sec_idf.t.size_in_uints}'
+                    sec_var_serialize_str += self.__serialize_val(expr, sec_idf.t, ALL_PRIV_VALUES_NAME, start_idx, end_idx)
                     offset += sec_idf.t.size_in_uints
+            if sec_var_serialize_str:
+                sec_var_serialize_str = f'\n# Serialize secret circuit input values{sec_var_serialize_str}'
 
         body_code = '\n'.join(dedent(s) for s in [
             f'\n## BEGIN Simulate body',
@@ -411,6 +426,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
             res = super().visitFunctionCallExpr(ast)
             if not t.is_literal:
+                # Use cast for correct overflow behavior according to type
                 res = self.handle_cast(res, t)
             return res
 
@@ -427,7 +443,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return super().visitFunctionCallExpr(ast)
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-        if not self.inside_circuit and ast.is_implicit:
+        if ast.is_implicit and not self.inside_circuit:
             return self.visit(ast.expr)
         else:
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
@@ -435,7 +451,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def handle_cast(self, expr: str, t: TypeName):
         if not t.is_primitive_type():
             raise NotImplementedError()
-        signed = t.is_signed_numeric and not self.inside_circuit
+        signed = t.is_signed_numeric
 
         if isinstance(t, EnumTypeName):
             constr = self.visit_list(t.target.qualified_name, sep='.')
@@ -474,6 +490,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         if ast.idf.name == f'{cfg.pki_contract_name}_inst' and not ast.is_lvalue():
             return f'{KEYSTORE_OBJ_NAME}'
+        elif ast.idf.name == cfg.field_prime_var_name:
+            assert ast.is_rvalue()
+            return f'{SCALAR_FIELD_NAME}'
 
         if self.current_index:
             indices, t = list(reversed(self.current_index)), self.current_index_t

@@ -661,14 +661,17 @@ class HybridArgumentIdf(Identifier):
         else:
             expr = self.get_loc_expr()
             if self.t.is_signed_numeric:
-                # First cast to same size uint to prevent sign extension
+                # Cast to same size uint to prevent sign extension
                 expr = expr.explicitly_converted(UintTypeName(f'uint{self.t.elem_bitwidth}'))
+            elif self.t.is_numeric and self.t.elem_bitwidth == 256:
+                expr = expr.binop('%', IdentifierExpr(cfg.field_prime_var_name)).as_type(self.t)
+            else:
+                expr = expr.explicitly_converted(TypeName.uint_type())
 
             if base is not None:
-                return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(
-                    expr.explicitly_converted(TypeName.uint_type()))
+                return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(expr)
             else:
-                return tgt.clone().index(start_offset).assign(expr.explicitly_converted(TypeName.uint_type()))
+                return tgt.clone().index(start_offset).assign(expr)
 
 
 class EncryptionExpression(ReclassifyExpr):
@@ -910,6 +913,10 @@ class TypeName(AST):
     @property
     def is_numeric(self) -> bool:
         return isinstance(self, NumberTypeName)
+
+    @property
+    def is_boolean(self) -> bool:
+        return isinstance(self, (BooleanLiteralType, BoolTypeName))
 
     @property
     def is_signed_numeric(self) -> bool:
