@@ -77,5 +77,20 @@ contract Cast {
 
 		int8@me m1 = -1;
 		require(reveal(m1 == -1, all));
+
+		int248@me m148 = -1;
+		require(reveal(m148 * m148, all) == 1);
+
+		if (m148 >= int248(0)) {
+			m148 = 42;
+		}
+		require(reveal(m148 != int248(42), all));
+		require(reveal(m148, all) != int248(42));
+
+		if (m148 < int248(0)) {
+			m148 = 42;
+		}
+		require(reveal(m148 == int248(42), all));
+		require(reveal(m148, all) == int248(42));
 	}
 }
