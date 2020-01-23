@@ -13,6 +13,11 @@ particular, it uses "dummy" encryption `Enc(v,R,k)=v+k` by default, which is **i
 
 First make sure to install the Java Development Kit: `openjdk-{>=8}-jdk (on debian derivatives)` and `python >= 3.7`.
 
+Then set up other prerequisites using:
+```bash
+./build_deps.sh
+```
+
 ### Using PIP
 
 To build the python package:
