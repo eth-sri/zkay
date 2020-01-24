@@ -108,9 +108,13 @@ class PythonCodeVisitor(CodeVisitor):
                 raise RequireException("{ast.unmodified_code[:-1]} failed")''')
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        lhs = self.visit(ast.lhs)
-        rhs = self.visit(ast.rhs)
-        return f'{lhs} = {rhs}'
+        lhs = ast.lhs
+        rhs = ast.rhs.args[1] if ast.has_op else ast.rhs
+        op = ast.rhs.func.op if ast.has_op else ''
+
+        lhs = self.visit(lhs)
+        rhs = self.visit(rhs)
+        return f'{lhs} {op}= {rhs}'
 
     def visitSliceExpr(self, ast: SliceExpr):
         if ast.base is not None:

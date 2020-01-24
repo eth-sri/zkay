@@ -1,6 +1,7 @@
 from antlr4.Token import CommonToken
 
 import zkay.zkay_ast.ast as ast
+from zkay.solidity_parser.parse import SyntaxException
 from zkay.solidity_parser.emit import Emitter
 from zkay.solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
 from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
@@ -149,8 +150,7 @@ class BuildASTVisitor(SolidityVisitor):
 
     # Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
     def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):
-        # FIXME, breaks for floating point literals (e.g. 0.1)
-        v = int(ctx.getText())
+        v = int(ctx.getText().replace('_', ''), 0)
         return NumberLiteralExpr(v)
 
     # Visit a parse tree produced by SolidityParser#BooleanLiteralExpr.
@@ -185,7 +185,6 @@ class BuildASTVisitor(SolidityVisitor):
             pa = self.visit(ctx.privacy_annotation)
 
             if not (isinstance(pa, ast.AllExpr) or isinstance(pa, ast.MeExpr) or isinstance(pa, IdentifierExpr)):
-                from zkay.solidity_parser.parse import SyntaxException
                 report = f'{ast.get_code_error_msg(pa.line, pa.column + 1, str(self.code).splitlines())}\n' \
                          f'Privacy annotation can only be me | all | Identifier'
                 raise SyntaxException(report)
@@ -226,6 +225,11 @@ class BuildASTVisitor(SolidityVisitor):
         expr = self.visit(ctx.expr)
         return FunctionCallExpr(f, [expr])
 
+    def visitBitwiseNotExpr(self, ctx: SolidityParser.BitwiseNotExprContext):
+        f = BuiltinFunction('~')
+        expr = self.visit(ctx.expr)
+        return FunctionCallExpr(f, [expr])
+
     def _visitBinaryExpr(self, ctx):
         lhs = self.visit(ctx.lhs)
         rhs = self.visit(ctx.rhs)
@@ -256,6 +260,18 @@ class BuildASTVisitor(SolidityVisitor):
     def visitOrExpr(self, ctx: SolidityParser.OrExprContext):
         return self._visitBoolExpr(ctx)
 
+    def visitBitwiseOrExpr(self, ctx: SolidityParser.BitwiseOrExprContext):
+        return self._visitBinaryExpr(ctx)
+
+    def visitBitShiftExpr(self, ctx: SolidityParser.BitShiftExprContext):
+        return self._visitBinaryExpr(ctx)
+
+    def visitBitwiseAndExpr(self, ctx: SolidityParser.BitwiseAndExprContext):
+        return self._visitBinaryExpr(ctx)
+
+    def visitBitwiseXorExpr(self, ctx: SolidityParser.BitwiseXorExprContext):
+        return self._visitBinaryExpr(ctx)
+
     def visitIteExpr(self, ctx: SolidityParser.IteExprContext):
         f = BuiltinFunction('ite')
         cond = self.visit(ctx.cond)
@@ -275,7 +291,7 @@ class BuildASTVisitor(SolidityVisitor):
 
         return FunctionCallExpr(func, args)
 
-    def visitIfStatement(self, ctx:SolidityParser.IfStatementContext):
+    def visitIfStatement(self, ctx: SolidityParser.IfStatementContext):
         cond = self.visit(ctx.condition)
         then_branch = self.visit(ctx.then_branch)
         if not isinstance(then_branch, ast.Block):
@@ -290,32 +306,64 @@ class BuildASTVisitor(SolidityVisitor):
 
         return ast.IfStatement(cond, then_branch, else_branch)
 
-    def visitWhileStatement(self, ctx:SolidityParser.WhileStatementContext):
+    def visitWhileStatement(self, ctx: SolidityParser.WhileStatementContext):
         cond = self.visit(ctx.condition)
         body = self.visit(ctx.body)
         if not isinstance(body, ast.Block):
             body = ast.Block([body], was_single_statement=True)
         return ast.WhileStatement(cond, body)
 
-    def visitDoWhileStatement(self, ctx:SolidityParser.DoWhileStatementContext):
+    def visitDoWhileStatement(self, ctx: SolidityParser.DoWhileStatementContext):
         body = self.visit(ctx.body)
         cond = self.visit(ctx.condition)
         if not isinstance(body, ast.Block):
             body = ast.Block([body], was_single_statement=True)
         return ast.DoWhileStatement(body, cond)
 
-    def visitForStatement(self, ctx:SolidityParser.ForStatementContext):
+    def visitForStatement(self, ctx: SolidityParser.ForStatementContext):
         init = None if ctx.init is None else self.visit(ctx.init)
         cond = self.visit(ctx.condition)
         update = None if ctx.update is None else self.visit(ctx.update)
+        if isinstance(update, ast.Expression):
+            update = ast.ExpressionStatement(update)
         body = self.visit(ctx.body)
         if not isinstance(body, ast.Block):
             body = ast.Block([body], was_single_statement=True)
         return ast.ForStatement(init, cond, update, body)
 
-    def visitExpressionStatement(self, ctx:SolidityParser.ExpressionStatementContext):
-        e = self.visit(ctx.expr)
-        if isinstance(e, ast.AssignmentExpr):
-            return ast.AssignmentStatement(e.lhs, e.rhs)
+    def is_expr_stmt(self, ctx: SolidityParser.ExpressionContext) -> bool:
+        if isinstance(ctx.parentCtx, SolidityParser.ExpressionStatementContext):
+            return True
+        elif isinstance(ctx.parentCtx, SolidityParser.ForStatementContext) and ctx == ctx.parentCtx.update:
+            return True
         else:
+            return False
+
+    def visitAssignmentExpr(self, ctx: SolidityParser.AssignmentExprContext):
+        if not self.is_expr_stmt(ctx):
+            raise SyntaxException('Assignments are only allowed as statements')
+        lhs = self.visit(ctx.lhs)
+        rhs = self.visit(ctx.rhs)
+        has_op = ctx.op.text != '='
+        if has_op:
+            # If the assignment contains an additional operator -> replace lhs = rhs with lhs = lhs 'op' rhs
+            rhs = FunctionCallExpr(ast.BuiltinFunction(ctx.op.text), [self.visit(ctx.lhs), rhs])
+        return ast.AssignmentStatement(lhs, rhs, has_op)
+
+    def visitPreCrementExpr(self, ctx: SolidityParser.PreCrementExprContext):
+        if not self.is_expr_stmt(ctx):
+            raise SyntaxException('PreCrement expressions are only allowed as statements')
+        return ast.PreCrementStatement(self.visit(ctx.expr), ctx.op.text == '++')
+
+    def visitPostCrementExpr(self, ctx: SolidityParser.PostCrementExprContext):
+        if not self.is_expr_stmt(ctx):
+            raise SyntaxException('PostCrement expressions are only allowed as statements')
+        return ast.PostCrementStatement(self.visit(ctx.expr), ctx.op.text == '++')
+
+    def visitExpressionStatement(self, ctx: SolidityParser.ExpressionStatementContext):
+        e = self.visit(ctx.expr)
+        if isinstance(e, ast.Statement):
+            return e
+        else:
+            assert isinstance(e, ast.Expression)
             return ExpressionStatement(e)

@@ -1,10 +1,8 @@
-from typing import Union
-
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
 from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
-    AssignmentExpr, AnnotatedTypeName, Expression, TypeName, \
+    AnnotatedTypeName, Expression, TypeName, \
     StateVariableDeclaration, Mapping, \
     AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
@@ -48,8 +46,6 @@ class TypeCheckVisitor(AstVisitor):
         if at.is_private() and not at.type_name.can_be_private():
             raise TypeException(f"Type {at.type_name} cannot be private", ast.annotated_type)
 
-    def visitAssignmentExpr(self, ast: AssignmentExpr):
-        raise TypeException("Subexpressions with side-effects are currently not supported", ast)
 
     def check_final(self, fct: ConstructorOrFunctionDefinition, ast: Expression):
         if isinstance(ast, IdentifierExpr):
@@ -80,7 +76,7 @@ class TypeCheckVisitor(AstVisitor):
         ast.rhs = self.get_rhs(ast.rhs, expected_type)
 
         # prevent modifying final
-        f = ast.statement.function if isinstance(ast, AssignmentExpr) else ast.function
+        f = ast.function
         if isinstance(ast.lhs, (IdentifierExpr, TupleExpr)):
             self.check_final(f, ast.lhs)
 

@@ -16,7 +16,6 @@
 //      -> https://solidity.readthedocs.io/en/v0.4.24/common-patterns.html#restricting-access
 //   - events (eventDefinition,eventParameterList,eventParameter)
 //      -> https://solidity.readthedocs.io/en/v0.4.21/contracts.html#events
-//   - enum (enumValue, enumDefinition)
 //   - struct (structDefinition)
 // - moved stateVariableAccessModifiers to separate rule
 // - user defined type names (userDefinedTypeName)
@@ -54,7 +53,7 @@ contractDefinition
   : ( 'contract' ) identifier
     '{' parts+=contractPart* '}' ;
 
-// REMOVED: structDefinition, usingForDeclaration, modifierDefinition, eventDefinition, enumDefinition
+// REMOVED: structDefinition, usingForDeclaration, modifierDefinition, eventDefinition
 contractPart
   : stateVariableDeclaration
   | constructorDefinition
@@ -98,9 +97,6 @@ returnParameters
 // REMOVED:
 // - modifierInvocation
 // - ExternalKeyword
-// - PublicKeyword
-// - InternalKeyword
-// - PrivateKeyword
 //
 // function modifiers
 // - state mutability: see below
@@ -133,9 +129,7 @@ variableDeclaration
   : (keywords+=FinalKeyword)? annotated_type=annotatedTypeName idf=identifier ;
 
 // REMOVED:
-// - 'address' 'payable'
 // - typeName '[' expression? ']' (arrays)
-// - userDefinedTypeName
 //
 // special types:
 // - address payable: Same as address, but with the additional members transfer and send
@@ -148,26 +142,6 @@ typeName
 userDefinedTypeName
   : names+=identifier ( '.' names+=identifier )* ;
 
-// REMOVED:
-// - string
-// - var: type deduction
-// - Int
-// - byte
-// - Byte
-// - Fixed
-// - Ufixed
-elementaryTypeName
-  : name=('address' | 'address payable' | 'bool' | Int | Uint | Byte )  ;
-
-Uint
-  : 'uint' | 'uint8' | 'uint16' | 'uint24' | 'uint32' | 'uint40' | 'uint48' | 'uint56' | 'uint64' | 'uint72' | 'uint80' | 'uint88' | 'uint96' | 'uint104' | 'uint112' | 'uint120' | 'uint128' | 'uint136' | 'uint144' | 'uint152' | 'uint160' | 'uint168' | 'uint176' | 'uint184' | 'uint192' | 'uint200' | 'uint208' | 'uint216' | 'uint224' | 'uint232' | 'uint240' | 'uint248' | 'uint256' ;
-
-Int
-  : 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' | 'int72' | 'int80' | 'int88' | 'int96' | 'int104' | 'int112' | 'int120' | 'int128' | 'int136' | 'int144' | 'int152' | 'int160' | 'int168' | 'int176' | 'int184' | 'int192' | 'int200' | 'int208' | 'int216' | 'int224' | 'int232' | 'int240' | 'int248' | 'int256' ;
-
-Byte
-   : 'bytes1' | 'bytes2' | 'bytes3' | 'bytes4' | 'bytes5' | 'bytes6' | 'bytes7' | 'bytes8' | 'bytes9' | 'bytes10' | 'bytes11' | 'bytes12' | 'bytes13' | 'bytes14' | 'bytes15' | 'bytes16' | 'bytes17' | 'bytes18' | 'bytes19' | 'bytes20' | 'bytes21' | 'bytes22' | 'bytes23' | 'bytes24' | 'bytes25' | 'bytes26' | 'bytes27' | 'bytes28' | 'bytes29' | 'bytes30' | 'bytes31' | 'bytes32' ;
-
 mapping
   : 'mapping' '(' key_type=elementaryTypeName ( '!' key_label=identifier )? '=>' value_type=annotatedTypeName ')' ;
 
@@ -178,9 +152,6 @@ mapping
 // - calldata: non-modifiable, non-persistent area for function arguments (forced for function parameters of external
 //   functions)
 
-// REMOVED
-// - PureKeyword
-// - ViewKeyword
 //
 // state mutability
 // pure: function does not read or modify state
@@ -197,10 +168,6 @@ block
 
 // REMOVED:
 // - inlineAssemblyStatement
-// - doWhile
-// - forLoop
-// - continueStatement
-// - breakStatement
 // - throwStatement
 // - emitStatement
 statement
@@ -250,49 +217,61 @@ variableDeclarationStatement
 
 // REMOVED: identifierList
 
-// REMOVED: Int
+// REMOVED:
+// - string
+// - var: type deduction
+// - byte
+// - Byte
+// - Fixed
+// - Ufixed
+elementaryTypeName
+  : name=('address' | 'address payable' | 'bool' | Int | Uint | Byte )  ;
 
-// REMOVED: many variants
+Uint
+  : 'uint' | 'uint8' | 'uint16' | 'uint24' | 'uint32' | 'uint40' | 'uint48' | 'uint56' | 'uint64' | 'uint72' | 'uint80' | 'uint88' | 'uint96' | 'uint104' | 'uint112' | 'uint120' | 'uint128' | 'uint136' | 'uint144' | 'uint152' | 'uint160' | 'uint168' | 'uint176' | 'uint184' | 'uint192' | 'uint200' | 'uint208' | 'uint216' | 'uint224' | 'uint232' | 'uint240' | 'uint248' | 'uint256' ;
 
+Int
+  : 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' | 'int72' | 'int80' | 'int88' | 'int96' | 'int104' | 'int112' | 'int120' | 'int128' | 'int136' | 'int144' | 'int152' | 'int160' | 'int168' | 'int176' | 'int184' | 'int192' | 'int200' | 'int208' | 'int216' | 'int224' | 'int232' | 'int240' | 'int248' | 'int256' ;
+
+Byte
+   : 'bytes1' | 'bytes2' | 'bytes3' | 'bytes4' | 'bytes5' | 'bytes6' | 'bytes7' | 'bytes8' | 'bytes9' | 'bytes10' | 'bytes11' | 'bytes12' | 'bytes13' | 'bytes14' | 'bytes15' | 'bytes16' | 'bytes17' | 'bytes18' | 'bytes19' | 'bytes20' | 'bytes21' | 'bytes22' | 'bytes23' | 'bytes24' | 'bytes25' | 'bytes26' | 'bytes27' | 'bytes28' | 'bytes29' | 'bytes30' | 'bytes31' | 'bytes32' ;
 
 // CHANGED: INLINED: primaryExpression
 // REMOVED from primaryExpression:
-// - StringLiteral
 // - HexLiteral
-// - tupleExpression
 // - elementaryTypeNameExpression ('[' ']')? (for type casts)
 // CHANGED from primaryExpression:
 // - identifier ('[' ']')? -> identifier
 // - added me and all
 // REMOVED:
-// - expression ('++' | '--')
 // - 'new' typeName
-// - expression '.' identifier
 // - ('after' | 'delete') expression
-// - ~ (bitwise not)
-// - <<, >> (bit shift)
-// - &, ^, | (bitwise operations)
-// - ('++' | '--') expression
-// - '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%='
 expression
   : MeKeyword # MeExpr
   | AllKeyword # AllExpr
+  | expr=expression op=('++' | '--') # PostCrementExpr
   | arr=expression '[' index=expression ']' # IndexExpr
   | elem_type=elementaryTypeName '(' expr=expression ')' # PrimitiveCastExpr
   | func=expression '(' args=functionCallArguments ')' # FunctionCallExpr
-  | expr=expression '.' member=identifier # MemberAccessExpr // NB: add member access again
+  | expr=expression '.' member=identifier # MemberAccessExpr
   | '(' expr=expression ')' # ParenthesisExpr
+  | op=('++' | '--') expr=expression # PreCrementExpr
   | op=('+' | '-') expr=expression # SignExpr
   | '!' expr=expression # NotExpr
+  | '~' expr=expression # BitwiseNotExpr
   | lhs=expression op='**' rhs=expression # PowExpr
   | lhs=expression op=('*' | '/' | '%') rhs=expression # MultDivModExpr
   | lhs=expression op=('+' | '-') rhs=expression # PlusMinusExpr
+  | lhs=expression op=('<<' | '>>') rhs=expression # BitShiftExpr
+  | lhs=expression op='&' rhs=expression # BitwiseAndExpr
+  | lhs=expression op='^' rhs=expression # BitwiseXorExpr
+  | lhs=expression op='|' rhs=expression # BitwiseOrExpr
   | lhs=expression op=('<' | '>' | '<=' | '>=') rhs=expression # CompExpr
   | lhs=expression op=('==' | '!=') rhs=expression # EqExpr
   | lhs=expression op='&&' rhs=expression # AndExpr
   | lhs=expression op='||' rhs=expression # OrExpr
   | cond=expression '?' then_expr=expression ':' else_expr=expression # IteExpr
-  | lhs=expression ('=' ) rhs=expression # AssignmentExpr
+  | lhs=expression op=('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') rhs=expression # AssignmentExpr
   | BooleanLiteral # BooleanLiteralExpr
   | numberLiteral # NumberLiteralExpr
   | StringLiteral # StringLiteralExpr
@@ -319,7 +298,7 @@ elementaryTypeNameExpression
 // - NumberUnit
 // - HexNumber
 numberLiteral
-  : DecimalNumber ;
+  : DecimalNumber | HexNumber ;
 
 // CHANGED: ADDED RULES FOR PRIVACY ANNOTATIONS
 
@@ -342,7 +321,23 @@ BooleanLiteral
   : 'true' | 'false' ;
 
 DecimalNumber
-  : ([0-9]+ | ([0-9]* '.' [0-9]+) ) ( [eE] [0-9]+ )? ;
+  : ( DecimalDigits ) ( [eE] DecimalDigits )? ; // NB: removed fractional literals since they are useless without fixed point type
+  //: ([0-9]+ | ([0-9]* '.' [0-9]+) ) ( [eE] [0-9]+ )? ;
+
+fragment
+DecimalDigits
+  : [0-9] ( '_'? [0-9] )* ;
+
+HexNumber
+  : '0' [xX] HexDigits ;
+
+fragment
+HexDigits
+  : HexCharacter ( '_'? HexCharacter )* ;
+
+fragment
+HexCharacter
+  : [0-9A-Fa-f] ;
 
 // REMOVED:
 // - final

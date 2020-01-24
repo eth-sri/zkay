@@ -262,9 +262,11 @@ builtin_op_fct = {
     '+': operator.add, '-': operator.sub,
     '**': operator.pow, '*': operator.mul, '/': operator.floordiv, '%': operator.mod,
     'sign+': lambda a: a, 'sign-': operator.neg,
+    '<<': operator.lshift, '>>': operator.rshift,
+    '|': operator.or_, '&': operator.and_, '^': operator.xor, '~': operator.inv,
     '<': operator.lt, '>': operator.gt, '<=': operator.le, '>=': operator.ge,
     '==': operator.eq, '!=': operator.ne,
-    '&&': lambda a, b: a and b, '||': lambda a, b: a or b, '!': lambda a: not a,
+    '&&': lambda a, b: a and b, '||': lambda a, b: a or b, '!': operator.not_,
     'ite': lambda a, b, c: b if a else c,
     'parenthesis': lambda a: a
 }
@@ -284,11 +286,15 @@ eq = {op: f'{{}} {op} {{}}' for op in ['==', '!=']}
 # boolean operations
 bop = {op: f'{{}} {op} {{}}' for op in ['&&', '||']}
 bop['!'] = '!{}'
+# bitwise operations
+bitop = {op: f'{{}} {op} {{}}' for op in ['|', '&', '^', '<<', '>>']}
+bitop['~'] = '~{}'
 
 builtin_functions.update(arithmetic)
 builtin_functions.update(comp)
 builtin_functions.update(eq)
 builtin_functions.update(bop)
+builtin_functions.update(bitop)
 
 assert builtin_op_fct.keys() == builtin_functions.keys()
 
@@ -327,6 +333,9 @@ class BuiltinFunction(Expression):
     def is_bop(self):
         return self.op in bop
 
+    def is_bitop(self):
+        return self.op in bitop
+
     def is_parenthesis(self):
         return self.op == 'parenthesis'
 
@@ -350,6 +359,8 @@ class BuiltinFunction(Expression):
             t = TypeName.number_type()
         elif self.is_bop():
             t = TypeName.bool_type()
+        elif self.is_bitop():
+            t = TypeName.number_type()
         else:
             # eq, parenthesis, ite
             return None
@@ -369,6 +380,8 @@ class BuiltinFunction(Expression):
             return TypeName.bool_type()
         elif self.is_eq():
             return TypeName.bool_type()
+        elif self.is_bitop():
+            return TypeName.number_type()
         else:
             # parenthesis, ite
             return None
@@ -378,7 +391,8 @@ class BuiltinFunction(Expression):
         :return: true if operation itself can be run inside a circuit
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
-        return self.op not in ['**', '%', '/']
+        # TODO support private bitwise ops
+        return self.op not in ['**', '%', '/'] and self.op not in bitop
 
     def with_privacy(self, is_private: bool) -> BuiltinFunction:
         if is_private:
@@ -427,18 +441,6 @@ class PrimitiveCastExpr(Expression):
     def process_children(self, f: Callable[[AST], AST]):
         self.elem_type = f(self.elem_type)
         self.expr = f(self.expr)
-
-
-class AssignmentExpr(Expression):
-
-    def __init__(self, lhs: LocationExpr, rhs: Expression):
-        super().__init__()
-        self.lhs = lhs
-        self.rhs = rhs
-
-    def process_children(self, f: Callable[[AST], AST]):
-        self.lhs = f(self.lhs)
-        self.rhs = f(self.rhs)
 
 
 class LiteralExpr(Expression):
@@ -741,7 +743,7 @@ class DoWhileStatement(Statement):
 
 
 class ForStatement(Statement):
-    def __init__(self, init: Optional[SimpleStatement], condition: Expression, update: Optional[Expression], body: Block):
+    def __init__(self, init: Optional[SimpleStatement], condition: Expression, update: Optional[SimpleStatement], body: Block):
         super().__init__()
         self.init = init
         self.condition = condition
@@ -800,14 +802,37 @@ class RequireStatement(SimpleStatement):
 
 class AssignmentStatement(SimpleStatement):
 
-    def __init__(self, lhs: Union[TupleExpr, LocationExpr], rhs: Expression):
+    def __init__(self, lhs: Union[TupleExpr, LocationExpr], rhs: Expression, has_op: bool = False):
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
+        self.has_op = has_op
 
     def process_children(self, f: Callable[[AST], AST]):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
+
+
+class PreCrementStatement(SimpleStatement):
+
+    def __init__(self, expr: Expression, inc: bool):
+        super().__init__()
+        self.expr = expr
+        self.inc = inc
+
+    def process_children(self, f: Callable[[AST], AST]):
+        self.expr = f(self.expr)
+
+
+class PostCrementStatement(SimpleStatement):
+
+    def __init__(self, expr: Expression, inc: bool):
+        super().__init__()
+        self.expr = expr
+        self.inc = inc
+
+    def process_children(self, f: Callable[[AST], AST]):
+        self.expr = f(self.expr)
 
 
 class CircuitInputStatement(AssignmentStatement):
@@ -1962,11 +1987,6 @@ class CodeVisitor(AstVisitor):
         else:
             return f'{self.visit(ast.elem_type)}({self.visit(ast.expr)})'
 
-    def visitAssignmentExpr(self, ast: AssignmentExpr):
-        lhs = self.visit(ast.lhs)
-        rhs = self.visit(ast.rhs)
-        return f'{lhs} = {rhs}'
-
     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
         return str(ast.value).lower()
 
@@ -2023,7 +2043,7 @@ class CodeVisitor(AstVisitor):
     def visitForStatement(self, ast: ForStatement):
         i = ';' if ast.init is None else f'{self.visit(ast.init)}'
         c = self.visit(ast.condition)
-        u = '' if ast.update is None else f' {self.visit(ast.update)}'
+        u = '' if ast.update is None else f' {self.visit(ast.update)[:-1]}'
         b = self.visit_single_or_list(ast.body)
         ret = f'for ({i} {c};{u}) {b}'
         return ret
@@ -2049,19 +2069,23 @@ class CodeVisitor(AstVisitor):
         return f'require({c});'
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        if isinstance(ast.lhs, SliceExpr) and isinstance(ast.rhs, SliceExpr):
-            assert ast.lhs.size == ast.rhs.size, "Slice ranges don't have same size"
+        lhs = ast.lhs
+        rhs = ast.rhs.args[1] if ast.has_op else ast.rhs
+        op = ast.rhs.func.op if ast.has_op else ''
+
+        if isinstance(lhs, SliceExpr) and isinstance(rhs, SliceExpr):
+            assert lhs.size == rhs.size, "Slice ranges don't have same size"
             s = ''
-            lexpr, rexpr = self.visit(ast.lhs.arr), self.visit(ast.rhs.arr)
-            lbase = '' if ast.lhs.base is None else f'{self.visit(ast.lhs.base)} + '
-            rbase = '' if ast.rhs.base is None else f'{self.visit(ast.rhs.base)} + '
-            for i in range(ast.lhs.size):
-                s += f'{lexpr}[{lbase}{ast.lhs.start_offset + i}] = {rexpr}[{rbase}{ast.rhs.start_offset + i}];\n'
+            lexpr, rexpr = self.visit(lhs.arr), self.visit(rhs.arr)
+            lbase = '' if lhs.base is None else f'{self.visit(lhs.base)} + '
+            rbase = '' if rhs.base is None else f'{self.visit(rhs.base)} + '
+            for i in range(lhs.size):
+                s += f'{lexpr}[{lbase}{lhs.start_offset + i}] {op}= {rexpr}[{rbase}{rhs.start_offset + i}];\n'
             return s[:-1]
         else:
-            lhs = self.visit(ast.lhs)
-            rhs = self.visit(ast.rhs)
-            return f'{lhs} = {rhs};'
+            lhs = self.visit(lhs)
+            rhs = self.visit(rhs)
+            return f'{lhs} {op}= {rhs};'
 
     def visitCircuitComputationStatement(self, ast: CircuitComputationStatement):
         return None

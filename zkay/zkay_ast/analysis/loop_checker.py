@@ -33,5 +33,5 @@ class LoopChecker(FunctionVisitor):
         if contains_private_expr(ast.body):
             raise TypeException('Loop body cannot contain private expressions', ast.body)
         if ast.update is not None and contains_private_expr(ast.update):
-            raise TypeException('Loop update expression cannot contain private expressions', ast.update)
+            raise TypeException('Loop update statement cannot contain private expressions', ast.update)
         self.visitChildren(ast)

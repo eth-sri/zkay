@@ -2,7 +2,7 @@ from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.ast import VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
-    ContinueStatement, BreakStatement, DoWhileStatement
+    ContinueStatement, BreakStatement, DoWhileStatement, PreCrementStatement, PostCrementStatement
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -102,7 +102,7 @@ class AliasAnalysisVisitor(AstVisitor):
         if ast.init is not None:
             ast.init.before_analysis = ast.before_analysis.copy()
             self.visit(ast.init)
-            ast.before_analysis = ast.init.after_analysis.copy()
+            ast.before_analysis = ast.init.after_analysis.copy() # init should be taken into account when looking up things in the condition
 
         if ast.condition.has_side_effects or ast.body.has_side_effects or (ast.update is not None and ast.update.has_side_effects):
             ast.before_analysis = ast.before_analysis.separate_all()
@@ -111,6 +111,8 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.body.before_analysis = ast.before_analysis.copy()
         self.visit(ast.body)
         if ast.update is not None:
+            # Update is always executed after the body (if it is executed)
+            ast.update.before_analysis = ast.body.after_analysis.copy()
             self.visit(ast.update)
 
         # Imprecise join (don't know if there was a loop iteration)
@@ -194,6 +196,12 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.after_analysis = ast.before_analysis
 
     def visitBreakStatement(self, ast: BreakStatement):
+        ast.after_analysis = ast.before_analysis
+
+    def visitPreCrementStatement(self, ast: PreCrementStatement):
+        ast.after_analysis = ast.before_analysis
+
+    def visitPostCrementStatement(self, ast: PostCrementStatement):
         ast.after_analysis = ast.before_analysis
 
     def visitStatement(self, _):

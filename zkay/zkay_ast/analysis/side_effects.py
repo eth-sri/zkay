@@ -1,9 +1,9 @@
 from typing import List, Union
 
 from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentExpr, AssignmentStatement, \
+from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentStatement, \
     AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
-    TupleExpr, InstanceTarget, VariableDeclaration, Parameter, EnumDefinition, ContractDefinition
+    TupleExpr, InstanceTarget, VariableDeclaration, Parameter
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -27,9 +27,6 @@ def check_for_undefined_behavior_due_to_eval_order(ast: AST):
 
 
 class SideEffectsDetector(AstVisitor):
-    def visitAssignmentExpr(self, ast: AssignmentExpr):
-        ast.has_side_effects = True
-        return ast.has_side_effects
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         ast.has_side_effects = self.visitExpression(ast)
@@ -57,7 +54,8 @@ class SideEffectsDetector(AstVisitor):
 
 class DirectModificationDetector(FunctionVisitor):
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        return self.visitAssignmentExpr(ast)
+        self.visitAST(ast)
+        self.collect_modified_values(ast, ast.lhs)
 
     def collect_modified_values(self, target: Union[Expression, Statement], expr: Union[TupleExpr, LocationExpr]):
         if isinstance(expr, TupleExpr):
@@ -68,10 +66,6 @@ class DirectModificationDetector(FunctionVisitor):
             if mod_value in target.modified_values:
                 raise TypeException(f'Undefined behavior due multiple different assignments to the same target in tuple assignment', expr)
             target.modified_values.add(mod_value)
-
-    def visitAssignmentExpr(self, ast: Union[AssignmentExpr, AssignmentStatement]):
-        self.visitAST(ast)
-        self.collect_modified_values(ast, ast.lhs)
 
     def visitLocationExpr(self, ast: LocationExpr):
         self.visitAST(ast)
