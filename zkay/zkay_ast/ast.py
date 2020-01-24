@@ -214,7 +214,7 @@ class Expression(AST):
         return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
 
     def ite(self, e_true: Expression, e_false: Expression) -> FunctionCallExpr:
-        return FunctionCallExpr(BuiltinFunction('ite').with_privacy(self.annotated_type.is_private()), [self, e_true, e_false])
+        return FunctionCallExpr(BuiltinFunction('ite').override(is_private=self.annotated_type.is_private), [self, e_true, e_false])
 
     def is_parent_of(self, child):
         e = child
@@ -287,14 +287,17 @@ eq = {op: f'{{}} {op} {{}}' for op in ['==', '!=']}
 bop = {op: f'{{}} {op} {{}}' for op in ['&&', '||']}
 bop['!'] = '!{}'
 # bitwise operations
-bitop = {op: f'{{}} {op} {{}}' for op in ['|', '&', '^', '<<', '>>']}
+bitop = {op: f'{{}} {op} {{}}' for op in ['|', '&', '^']}
 bitop['~'] = '~{}'
+# shift operations
+shiftop = {op: f'{{}} {op} {{}}' for op in ['<<', '>>']}
 
 builtin_functions.update(arithmetic)
 builtin_functions.update(comp)
 builtin_functions.update(eq)
 builtin_functions.update(bop)
 builtin_functions.update(bitop)
+builtin_functions.update(shiftop)
 
 assert builtin_op_fct.keys() == builtin_functions.keys()
 
@@ -336,6 +339,9 @@ class BuiltinFunction(Expression):
     def is_bitop(self):
         return self.op in bitop
 
+    def is_shiftop(self):
+        return self.op in shiftop
+
     def is_parenthesis(self):
         return self.op == 'parenthesis'
 
@@ -361,6 +367,8 @@ class BuiltinFunction(Expression):
             t = TypeName.bool_type()
         elif self.is_bitop():
             t = TypeName.number_type()
+        elif self.is_shiftop():
+            t = TypeName.number_type()
         else:
             # eq, parenthesis, ite
             return None
@@ -382,6 +390,8 @@ class BuiltinFunction(Expression):
             return TypeName.bool_type()
         elif self.is_bitop():
             return TypeName.number_type()
+        elif self.is_shiftop():
+            return TypeName.number_type()
         else:
             # parenthesis, ite
             return None
@@ -391,16 +401,7 @@ class BuiltinFunction(Expression):
         :return: true if operation itself can be run inside a circuit
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
-        # TODO support private bitwise ops
-        return self.op not in ['**', '%', '/'] and self.op not in bitop
-
-    def with_privacy(self, is_private: bool) -> BuiltinFunction:
-        if is_private:
-            assert self.can_be_private()
-            self.is_private = True
-        else:
-            self.is_private = False
-        return self
+        return self.op not in ['**', '%', '/']
 
 
 class FunctionCallExpr(Expression):
@@ -457,10 +458,11 @@ class BooleanLiteralExpr(LiteralExpr):
 
 class NumberLiteralExpr(LiteralExpr):
 
-    def __init__(self, value: int):
+    def __init__(self, value: int, was_hex: bool = False):
         super().__init__()
         self.value = value
         self.annotated_type = AnnotatedTypeName(NumberLiteralType(self.value))
+        self.was_hex = was_hex
 
 
 class StringLiteralExpr(LiteralExpr):
@@ -802,37 +804,15 @@ class RequireStatement(SimpleStatement):
 
 class AssignmentStatement(SimpleStatement):
 
-    def __init__(self, lhs: Union[TupleExpr, LocationExpr], rhs: Expression, has_op: bool = False):
+    def __init__(self, lhs: Union[TupleExpr, LocationExpr], rhs: Expression, op: Optional[str] = None):
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
-        self.has_op = has_op
+        self.op = '' if op is None else op
 
     def process_children(self, f: Callable[[AST], AST]):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
-
-
-class PreCrementStatement(SimpleStatement):
-
-    def __init__(self, expr: Expression, inc: bool):
-        super().__init__()
-        self.expr = expr
-        self.inc = inc
-
-    def process_children(self, f: Callable[[AST], AST]):
-        self.expr = f(self.expr)
-
-
-class PostCrementStatement(SimpleStatement):
-
-    def __init__(self, expr: Expression, inc: bool):
-        super().__init__()
-        self.expr = expr
-        self.inc = inc
-
-    def process_children(self, f: Callable[[AST], AST]):
-        self.expr = f(self.expr)
 
 
 class CircuitInputStatement(AssignmentStatement):
@@ -1991,7 +1971,7 @@ class CodeVisitor(AstVisitor):
         return str(ast.value).lower()
 
     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
-        return str(ast.value)
+        return hex(ast.value) if ast.was_hex else str(ast.value)
 
     def visitStringLiteralExpr(self, ast: StringLiteralExpr):
         return f'\'{ast.value}\''
@@ -2070,8 +2050,19 @@ class CodeVisitor(AstVisitor):
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         lhs = ast.lhs
-        rhs = ast.rhs.args[1] if ast.has_op else ast.rhs
-        op = ast.rhs.func.op if ast.has_op else ''
+        op = ast.op
+        if ast.lhs.annotated_type is not None and ast.lhs.annotated_type.is_private():
+            op = ''
+        rhs = ast.rhs.args[1] if op else ast.rhs
+
+        if op.startswith('pre'):
+            op = op[3:]
+            fstr = '{1}{0};'
+        elif op.startswith('post'):
+            op = op[4:]
+            fstr = '{0}{1};'
+        else:
+            fstr = '{} {}= {};'
 
         if isinstance(lhs, SliceExpr) and isinstance(rhs, SliceExpr):
             assert lhs.size == rhs.size, "Slice ranges don't have same size"
@@ -2080,12 +2071,12 @@ class CodeVisitor(AstVisitor):
             lbase = '' if lhs.base is None else f'{self.visit(lhs.base)} + '
             rbase = '' if rhs.base is None else f'{self.visit(rhs.base)} + '
             for i in range(lhs.size):
-                s += f'{lexpr}[{lbase}{lhs.start_offset + i}] {op}= {rexpr}[{rbase}{rhs.start_offset + i}];\n'
+                s += fstr.format(f'{lexpr}[{lbase}{lhs.start_offset + i}]', op, f'{rexpr}[{rbase}{rhs.start_offset + i}]') + '\n'
             return s[:-1]
         else:
             lhs = self.visit(lhs)
             rhs = self.visit(rhs)
-            return f'{lhs} {op}= {rhs};'
+            return fstr.format(lhs, op, rhs)
 
     def visitCircuitComputationStatement(self, ast: CircuitComputationStatement):
         return None

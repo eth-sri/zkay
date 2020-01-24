@@ -46,7 +46,6 @@ class TypeCheckVisitor(AstVisitor):
         if at.is_private() and not at.type_name.can_be_private():
             raise TypeException(f"Type {at.type_name} cannot be private", ast.annotated_type)
 
-
     def check_final(self, fct: ConstructorOrFunctionDefinition, ast: Expression):
         if isinstance(ast, IdentifierExpr):
             target = ast.target
@@ -167,6 +166,16 @@ class TypeCheckVisitor(AstVisitor):
         if private_args:
             assert arg_t != 'lit'
             if func.can_be_private():
+                if func.is_shiftop():
+                    if not ast.args[1].annotated_type.type_name.is_literal:
+                        raise TypeException('Private shift expressions must use a constant (literal) shift amount', ast.args[1])
+                    if ast.args[1].annotated_type.type_name.value < 0:
+                        raise TypeException('Cannot shift by negative amount', ast.args[1])
+                if func.is_bitop() or func.is_shiftop():
+                    for arg in ast.args:
+                        if arg.annotated_type.type_name.elem_bitwidth == 256:
+                            raise TypeException('Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type', arg)
+
                 func.is_private = True
                 p = Expression.me_expr()
             else:
@@ -177,7 +186,10 @@ class TypeCheckVisitor(AstVisitor):
         if arg_t != 'lit':
             # Add implicit casts for arguments
             arg_pt = arg_t.annotate(p)
-            ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt), ast.args)
+            if func.is_shiftop() and p is not None:
+                ast.args[0] = self.get_rhs(ast.args[0], arg_pt)
+            else:
+                ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt), ast.args)
 
         ast.annotated_type = out_t.annotate(p)
 

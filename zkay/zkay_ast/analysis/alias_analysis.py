@@ -2,7 +2,7 @@ from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.ast import VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
-    ContinueStatement, BreakStatement, DoWhileStatement, PreCrementStatement, PostCrementStatement
+    ContinueStatement, BreakStatement, DoWhileStatement
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -196,12 +196,6 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.after_analysis = ast.before_analysis
 
     def visitBreakStatement(self, ast: BreakStatement):
-        ast.after_analysis = ast.before_analysis
-
-    def visitPreCrementStatement(self, ast: PreCrementStatement):
-        ast.after_analysis = ast.before_analysis
-
-    def visitPostCrementStatement(self, ast: PostCrementStatement):
         ast.after_analysis = ast.before_analysis
 
     def visitStatement(self, _):

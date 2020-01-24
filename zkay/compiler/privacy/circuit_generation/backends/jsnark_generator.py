@@ -94,6 +94,9 @@ class JsnarkVisitor(AstVisitor):
         if isinstance(ast.func, BuiltinFunction):
             op = ast.func.op
             args = list(map(self.visit, ast.args))
+            if ast.func.is_shiftop():
+                assert ast.args[1].annotated_type.type_name.is_literal
+                args[1] = ast.args[1].annotated_type.type_name.value
 
             if op == 'ite':
                 fstr = f'ite({{}}, {{}}, {{}})'
@@ -103,15 +106,28 @@ class JsnarkVisitor(AstVisitor):
             elif op == 'sign+':
                 raise NotImplementedError()
             elif op == 'sign-':
-                fstr = f'negate({{}})'
+                fstr = 'negate({})'
             elif op == '+':
-                fstr = f'add({{}}, {{}})'
+                fstr = 'add({}, {})'
             elif op == '-':
-                fstr = f'sub({{}}, {{}})'
+                fstr = 'sub({}, {})'
             elif op == '*':
-                fstr = f'mul({{}}, {{}})'
+                fstr = 'mul({}, {})'
 
-            # TODO proper common types
+            elif op == '|':
+                fstr = 'bitOr({}, {})'
+            elif op == '&':
+                fstr = 'bitAnd({}, {})'
+            elif op == '^':
+                fstr = 'bitXor({}, {})'
+            elif op == '~':
+                fstr = 'bitInv({})'
+
+            elif op == '<<':
+                fstr = 'shiftLeft({}, {})'
+            elif op == '>>':
+                fstr = 'shiftRight({}, {})'
+
             elif op == '==':
                 fstr = 'eq({}, {})'
             elif op == '!=':

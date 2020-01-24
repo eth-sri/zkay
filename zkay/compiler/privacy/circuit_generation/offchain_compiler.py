@@ -422,7 +422,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return f'{CRYPTO_OBJ_NAME}.enc({plain}, {KEYSTORE_OBJ_NAME}.getPk({priv_str}))'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, BuiltinFunction) and ast.func.is_arithmetic():
+        if isinstance(ast.func, BuiltinFunction) and (ast.func.is_arithmetic() or ast.func.op == '~'):
             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
             res = super().visitFunctionCallExpr(ast)
             if not t.is_literal:

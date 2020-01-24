@@ -151,7 +151,7 @@ class BuildASTVisitor(SolidityVisitor):
     # Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
     def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):
         v = int(ctx.getText().replace('_', ''), 0)
-        return NumberLiteralExpr(v)
+        return NumberLiteralExpr(v, ctx.getText().startswith(('0x', '0X')))
 
     # Visit a parse tree produced by SolidityParser#BooleanLiteralExpr.
     def visitBooleanLiteralExpr(self, ctx: SolidityParser.BooleanLiteralExprContext):
@@ -344,21 +344,35 @@ class BuildASTVisitor(SolidityVisitor):
             raise SyntaxException('Assignments are only allowed as statements')
         lhs = self.visit(ctx.lhs)
         rhs = self.visit(ctx.rhs)
-        has_op = ctx.op.text != '='
-        if has_op:
+        assert ctx.op.text[-1] == '='
+        op = ctx.op.text[:-1] if ctx.op.text != '=' else ''
+        if op:
             # If the assignment contains an additional operator -> replace lhs = rhs with lhs = lhs 'op' rhs
-            rhs = FunctionCallExpr(ast.BuiltinFunction(ctx.op.text), [self.visit(ctx.lhs), rhs])
-        return ast.AssignmentStatement(lhs, rhs, has_op)
+            rhs = FunctionCallExpr(ast.BuiltinFunction(op), [self.visit(ctx.lhs), rhs])
+            rhs.line = ctx.rhs.start.line
+            rhs.column = ctx.rhs.start.column + 1
+        return ast.AssignmentStatement(lhs, rhs, op)
+
+    def _handle_crement_expr(self, ctx, kind: str):
+        if not self.is_expr_stmt(ctx):
+            raise SyntaxException(f'{kind}-crement expressions are only allowed as statements')
+        op = '+' if ctx.op.text == '++' else '-'
+
+        one = NumberLiteralExpr(1)
+        one.line = ctx.op.line
+        one.column = ctx.op.column + 1
+
+        fct = FunctionCallExpr(BuiltinFunction(op), [self.visit(ctx.expr), one])
+        fct.line = ctx.op.line
+        fct.column = ctx.op.column + 1
+
+        return ast.AssignmentStatement(self.visit(ctx.expr), fct, f'{kind}{ctx.op.text}')
 
     def visitPreCrementExpr(self, ctx: SolidityParser.PreCrementExprContext):
-        if not self.is_expr_stmt(ctx):
-            raise SyntaxException('PreCrement expressions are only allowed as statements')
-        return ast.PreCrementStatement(self.visit(ctx.expr), ctx.op.text == '++')
+        return self._handle_crement_expr(ctx, 'pre')
 
     def visitPostCrementExpr(self, ctx: SolidityParser.PostCrementExprContext):
-        if not self.is_expr_stmt(ctx):
-            raise SyntaxException('PostCrement expressions are only allowed as statements')
-        return ast.PostCrementStatement(self.visit(ctx.expr), ctx.op.text == '++')
+        return self._handle_crement_expr(ctx, 'post')
 
     def visitExpressionStatement(self, ctx: SolidityParser.ExpressionStatementContext):
         e = self.visit(ctx.expr)

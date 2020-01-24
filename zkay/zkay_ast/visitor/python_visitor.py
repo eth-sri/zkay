@@ -9,7 +9,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition, NumberTypeName, EnumTypeName
+    EnumDefinition, EnumTypeName
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast']}
 
@@ -109,8 +109,13 @@ class PythonCodeVisitor(CodeVisitor):
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         lhs = ast.lhs
-        rhs = ast.rhs.args[1] if ast.has_op else ast.rhs
-        op = ast.rhs.func.op if ast.has_op else ''
+        op = ast.op
+        if ast.lhs.annotated_type is not None and ast.lhs.annotated_type.is_private():
+            op = ''
+        rhs = ast.rhs.args[1] if op else ast.rhs
+
+        if op.startswith(('pre', 'post')):
+            op = '+' if op.endswith('++') else '-'
 
         lhs = self.visit(lhs)
         rhs = self.visit(rhs)
