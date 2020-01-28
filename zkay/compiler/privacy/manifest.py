@@ -1,4 +1,5 @@
 class Manifest:
+    """Static class, which holds the string keys of all supported zkay manifest keys """
     uuid = 'uuid'
     project_dir = 'project-dir'
     zkay_version = 'zkay-version'

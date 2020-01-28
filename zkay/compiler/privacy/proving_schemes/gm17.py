@@ -1,3 +1,10 @@
+"""
+This module defines the verification key, proof and verification contract format for the GM17 proving scheme
+
+See Snarky Signatures: Minimal Signatures of Knowledge from Simulation-Extractable SNARKs, Jens Groth and Mary Maller, IACR-CRYPTO-2017
+https://eprint.iacr.org/2017/540
+"""
+
 from typing import List
 
 from zkay.config import cfg
@@ -33,13 +40,14 @@ class ProvingSchemeGm17(ProvingScheme):
         p2 = G2Point('0', '0', '0', '0')
         return VerifyingKeyGm17(p2, p1, p2, p1, p2, [p1, p1])
 
-    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper, should_hash: bool, primary_inputs: List[str]) -> str:
+    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper, primary_inputs: List[str]) -> str:
         vk = verification_key
+        should_hash = cfg.should_use_hash(circuit)
 
         query_length = len(vk.query)
         assert query_length == len(primary_inputs) + 1
 
-        # Verification contract based on (with some modifications by NB):
+        # Verification contract loosely based on:
         # https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/gm17.rs#L199
         assert primary_inputs, "No public inputs"
         first_pi = primary_inputs[0]
@@ -50,7 +58,7 @@ class ProvingSchemeGm17(ProvingScheme):
 
         import "{ProvingScheme.verify_libs_contract_filename}";
 
-        contract {circuit.get_circuit_name()} {{''' / f'''\
+        contract {circuit.get_verification_contract_name()} {{''' / f'''\
             using Pairing for *;
 
             uint256 constant {self.snark_scalar_field_var_name} = {bn128_scalar_field};
@@ -91,7 +99,7 @@ class ProvingSchemeGm17(ProvingScheme):
                 proof.a = Pairing.G1Point(proof_[0], proof_[1]);
                 proof.b = Pairing.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
                 proof.c = Pairing.G1Point(proof_[6], proof_[7]);''' * (
-                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({cfg.zk_in_name}, {cfg.zk_out_name})) >> {256 - bn128_scalar_field_bits});' if should_hash else '') *  \
+                f'\nuint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({cfg.zk_in_name}, {cfg.zk_out_name})) >> {256 - bn128_scalar_field_bits});' if should_hash else '') * \
                 'VerifyingKey memory vk = verifyingKey();' * \
                 f"Pairing.G1Point memory vk_x = {(f'Pairing.scalar_mul(vk.query[1], {first_pi})' if first_pi != '1' else f'vk.query[1]')};" * [
                 f"vk_x = Pairing.addition(vk_x, {(f'Pairing.scalar_mul(vk.query[{idx + 2}], {pi})' if pi != '1' else f'vk.query[{idx + 2}]')});" for idx, pi in enumerate(primary_inputs[1:])] * '''\

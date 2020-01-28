@@ -524,6 +524,9 @@ class IdentifierExpr(LocationExpr):
     def process_children(self, f: Callable[[AST], AST]):
         self.idf = f(self.idf)
 
+    def slice(self, offset: int, size: int, base: Optional[Expression] = None) -> SliceExpr:
+        return SliceExpr(self.clone(), base, offset, size)
+
     def clone(self) -> IdentifierExpr:
         idf = IdentifierExpr(self.idf.clone()).as_type(self.annotated_type)
         idf.target = self.target
@@ -1769,6 +1772,14 @@ class SourceUnit(AST):
 PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
 DataTargetDefinition = Union[VariableDeclaration, Parameter, StateVariableDeclaration]
 TargetDefinition = Union[DataTargetDefinition, ConstructorOrFunctionDefinition, StructDefinition, ContractDefinition]
+
+
+def get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
+    """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
+    if isinstance(plabel, Identifier):
+        return IdentifierExpr(plabel.clone(), AnnotatedTypeName.address_all()).override(target=plabel.parent)
+    else:
+        return plabel.clone()
 
 
 class InstanceTarget(tuple):

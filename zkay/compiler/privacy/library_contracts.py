@@ -1,17 +1,26 @@
+"""
+This module stores the solidity library contracts used by zkay contracts
+"""
+
 from textwrap import dedent
 
 from zkay.config import cfg
 
 
-def get_verify_libs_code():
+def get_verify_libs_code() -> str:
+    """Return all verification contract libraries combined into single string"""
     return f'pragma solidity ^0.5.0;\n\n{bn256_lib}\n\n{pairing_lib}'
 
 
 bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+"""The field prime used by the zk-snark elliptic curve"""
+
 bn128_scalar_field_bits = bn128_scalar_field.bit_length() - 1
+"""Integers of at most this many bits can be represented using field values"""
 
 
 def get_pki_contract() -> str:
+    """Contract of the public key infrastructure used for asymmetric cryptography"""
     return dedent(f'''\
     pragma solidity ^0.5;
 

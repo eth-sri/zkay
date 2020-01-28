@@ -110,7 +110,16 @@ class Config:
     def proof_len(self):
         return provingschemeparams[self.proving_scheme]['proof_len']
 
-    def should_use_hash(self, pub_arg_size: int):
+    def should_use_hash(self, circuit):
+        """
+        :param should_hash: if true, all public circuit inputs are passed as private inputs into the circuit and only their combined hash-
+                            value is passed as a public input. This makes verification constant-cost,
+                            but increases offchain resource usage during key and proof generation.
+        :param circuit:
+        :return:
+        """
+
+        pub_arg_size = circuit.trans_in_size + circuit.trans_out_size
         if self.is_unit_test:
             return pub_arg_size > 70
         else:

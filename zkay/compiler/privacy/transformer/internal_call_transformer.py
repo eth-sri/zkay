@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List, Dict
 
 from zkay.config import cfg
@@ -7,10 +8,10 @@ from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, IdentifierExpr, N
 
 def transform_internal_calls(hybrid_fcts: List[ConstructorOrFunctionDefinition], cgens: Dict[ConstructorOrFunctionDefinition, CircuitHelper]):
     for fct in hybrid_fcts:
-        keyset = set()
+        glob_keys = OrderedDict()
         circuit = cgens[fct]
-        circuit.trans_in_size, circuit.trans_out_size, circuit.trans_priv_size = _compute_transitive_circuit_io_sizes(cgens, fct, keyset)
-        circuit._global_keys = keyset
+        circuit.trans_in_size, circuit.trans_out_size, circuit.trans_priv_size = _compute_transitive_circuit_io_sizes(cgens, fct, glob_keys)
+        circuit._global_keys = glob_keys
     for fct in hybrid_fcts:
         circuit = cgens[fct]
         i, o, p = 0, 0, 0

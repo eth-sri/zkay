@@ -7,7 +7,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
-    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName
+    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName, \
+    get_privacy_expr_from_label
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -203,9 +204,7 @@ class TypeCheckVisitor(AstVisitor):
     def make_private(expr: Expression, privacy: Expression):
         assert (privacy.privacy_annotation_label() is not None)
 
-        pl = privacy.privacy_annotation_label().clone()
-        if isinstance(pl, Identifier):
-            pl = IdentifierExpr(pl.clone(), AnnotatedTypeName.address_all()).override(target=privacy.privacy_annotation_label().parent)
+        pl = get_privacy_expr_from_label(privacy.privacy_annotation_label())
         r = ReclassifyExpr(expr, pl)
 
         # set type

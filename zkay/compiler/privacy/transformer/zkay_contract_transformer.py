@@ -55,8 +55,7 @@ class ZkayTransformer(AstTransformerVisitor):
         import_filename = f'./{vname}.sol'
 
         if gen:
-            gen.verifier_contract_type = c_type
-            gen.verifier_contract_filename = import_filename
+            gen.register_verification_contract_metadata(c_type, import_filename)
 
         cast_0_to_c = PrimitiveCastExpr(c_type, NumberLiteralExpr(0))
         out_filenames.append(import_filename)
@@ -146,12 +145,11 @@ class ZkayTransformer(AstTransformerVisitor):
         for f in hybrid_fcts:
             circuit = self.circuit_generators[f]
             assert circuit.requires_verification()
-            if circuit.out_size + circuit.in_size > 0:
+            if circuit.requires_zk_data_struct():
                 zk_data_struct = StructDefinition(Identifier(circuit.zk_data_struct_name), [
                     VariableDeclaration([], AnnotatedTypeName(idf.t), idf.clone(), '')
                     for idf in circuit.output_idfs + circuit.input_idfs
                 ])
-                circuit.internal_zk_data_struct = zk_data_struct
                 c.struct_definitions.append(zk_data_struct)
             self.create_internal_verification_wrapper(f)
 
@@ -205,7 +203,7 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(RequireStatement(in_start_idx.binop('+', NumberLiteralExpr(circuit.in_size_trans)).binop('<=', in_var.dot('length'))))
 
         # Declare zk_data struct var (if needed)
-        if circuit.internal_zk_data_struct is not None:
+        if circuit.requires_zk_data_struct():
             zk_struct_type = StructTypeName([Identifier(circuit.zk_data_struct_name)])
             stmts += [Identifier(cfg.zk_data_var_name).decl_var(zk_struct_type), BlankLine()]
 
@@ -254,13 +252,19 @@ class ZkayTransformer(AstTransformerVisitor):
         # Verify that out parameter has correct size
         stmts = [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(circuit.out_size_trans)))]
 
+        # IdentifierExpr for array var holding serialized public circuit inputs
+        in_arr_var = IdentifierExpr(cfg.zk_in_name)
+
         # Check encrypted parameters
         param_stmts = []
         offset = 0
         for p in ext_fct.parameters:
             """ * of T_e rule 8 """
             if p.original_type.is_private():
-                param_stmts.append(circuit.ensure_parameter_encryption(int_fct, p, offset))
+                circuit.ensure_parameter_encryption(p)
+
+                # Manually add to circuit inputs
+                param_stmts.append(in_arr_var.slice(offset, cfg.cipher_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_len)))
                 offset += p.annotated_type.type_name.size_in_uints
 
         # Request static public keys
@@ -272,14 +276,15 @@ class ZkayTransformer(AstTransformerVisitor):
                 idf, assignment = circuit.request_public_key(key_owner, circuit.get_glob_key_name(key_owner))
                 assignment.lhs = IdentifierExpr(tmp_key_var.clone())
                 key_req_stmts.append(assignment)
-                key_req_stmts.append(SliceExpr(IdentifierExpr(cfg.zk_in_name), None, offset, idf.t.size_in_uints).assign(
-                    SliceExpr(IdentifierExpr(tmp_key_var.clone()), None, 0, idf.t.size_in_uints)))
+
+                # Manually add to circuit inputs
+                key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
                 offset += idf.t.size_in_uints
                 assert offset == circuit.in_size
 
         # Declare in array
         new_in_array_expr = NewExpr(AnnotatedTypeName(Array(AnnotatedTypeName.uint_all())), [NumberLiteralExpr(circuit.in_size_trans)])
-        in_var_decl = Identifier(cfg.zk_in_name).decl_var(Array(AnnotatedTypeName.uint_all()), new_in_array_expr)
+        in_var_decl = in_arr_var.idf.decl_var(Array(AnnotatedTypeName.uint_all()), new_in_array_expr)
         stmts.append(in_var_decl)
 
         stmts += Comment.comment_wrap_block('Backup private arguments for verification', param_stmts)
@@ -292,7 +297,7 @@ class ZkayTransformer(AstTransformerVisitor):
         ext_fct.called_functions[int_fct] = None
         if int_fct.requires_verification:
             circuit.call_function(internal_call)
-            args += [IdentifierExpr(cfg.zk_in_name), NumberLiteralExpr(circuit.in_size),
+            args += [in_arr_var.clone(), NumberLiteralExpr(circuit.in_size),
                      IdentifierExpr(cfg.zk_out_name), NumberLiteralExpr(circuit.out_size)]
 
         if int_fct.return_parameters:

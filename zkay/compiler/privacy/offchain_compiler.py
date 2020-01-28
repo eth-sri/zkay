@@ -519,9 +519,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if ast.variable_declaration.idf.name == cfg.zk_data_var_name:
             c = self.circuits[ast.function]
             s = ''
-            for idx, val in enumerate(c.internal_zk_data_struct.members):
-                s += f"'{val.idf.name}': {self.get_default_value(val.annotated_type.type_name)},"
+
+            for idx, idf in enumerate(c.output_idfs + c.input_idfs):
+                s += f"'{idf.name}': {self.get_default_value(idf.t)},"
                 s += '\n' if idx % 4 == 3 else ' '
+
             return f'{cfg.zk_data_var_name}: Dict = {{\n' + indent(s) + '}'
         else:
             return super().visitVariableDeclarationStatement(ast)

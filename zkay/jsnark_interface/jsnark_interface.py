@@ -58,13 +58,12 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 '''
 
 
-def get_jsnark_circuit_class_str(name: str, pub_in_size: int, pub_out_size: int, priv_in_size: int,
-                                 fdefs: List[str], input_init: List[str], constraints: List[str]):
+def get_jsnark_circuit_class_str(name: str, circuit, fdefs: List[str], input_init: List[str], constraints: List[str]):
     function_definitions = '\n\n'.join(fdefs)
     if function_definitions:
         function_definitions = f'\n{function_definitions}\n'
     return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend, circuit_name=name,
-                                      key_bits=cfg.key_bits, pub_in_size=pub_in_size, pub_out_size=pub_out_size, priv_in_size=priv_in_size,
-                                      use_input_hashing=str(cfg.should_use_hash(pub_out_size + pub_in_size)).lower(),
+                                      key_bits=cfg.key_bits, pub_in_size=circuit.in_size_trans, pub_out_size=circuit.out_size_trans,
+                                      priv_in_size=circuit.priv_in_size_trans, use_input_hashing=str(cfg.should_use_hash(circuit)).lower(),
                                       fdefs=indent(function_definitions),
                                       init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))))

@@ -1,3 +1,7 @@
+"""
+This module exposes functionality to compile and package zkay code
+"""
+
 import json
 import os
 import pathlib
@@ -6,13 +10,15 @@ import shutil
 import tempfile
 import uuid
 from copy import deepcopy
-from typing import Tuple
+from typing import Tuple, List
 
 from zkay import my_logging
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.privacy.circuit_generation.backends.jsnark_generator import JsnarkGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.manifest import Manifest
+from zkay.compiler.privacy.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformer.zkay_contract_transformer import transform_ast
@@ -25,6 +31,16 @@ from zkay.zkay_ast.process_ast import get_processed_ast, ParseExeception, Prepro
 
 
 def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool = False):
+    """
+    Parse, type-check and compile the given zkay contract file.
+
+    :param input_file_path: path to the zkay contract file
+    :param output_dir: path to a directory where the compilation output should be generated
+    :param import_keys: if false, zk-snark of all modified circuits will be generated during compilation
+                        if true, zk-snark keys for all circuits are expected to be already present in the output directory,
+                                 and the compilation will use the provided keys to generate the verification contracts
+                        This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+    """
     code = read_file(input_file_path)
 
     # log specific features of compiled program
@@ -43,16 +59,26 @@ def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool =
 
 
 def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, import_keys: bool = False) -> Tuple[CircuitGenerator, str]:
+    """
+    Parse, type-check and compile the given zkay code.
+
+    :param code: zkay code to compile
+    :param output_dir: path to a directory where the compilation output should be generated
+    :param output_filename_without_ext: stem of the desired output solidity contract filename
+    :param import_keys: if false, zk-snark of all modified circuits will be generated during compilation
+                        if true, zk-snark keys for all circuits are expected to be already present in the output directory,
+                                 and the compilation will use the provided keys to generate the verification contracts
+                        This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+    """
+
     # Copy zkay code to output
     zkay_filename = f'{output_filename_without_ext}.zkay'
-    if not import_keys:
-        with open(os.path.join(output_dir, zkay_filename), 'w') as f:
-            f.write(code)
-    else:
-        if not os.path.exists(os.path.join(output_dir, zkay_filename)):
-            raise RuntimeError('')
-    output_filename = f'{output_filename_without_ext}.sol'
+    if import_keys and not os.path.exists(os.path.join(output_dir, zkay_filename)):
+        raise RuntimeError('Zkay file is expected to already be in the output directory when importing keys')
+    elif not import_keys:
+        _dump_to_output(code, output_dir, zkay_filename)
 
+    # Type checking
     try:
         ast = get_processed_ast(code)
     except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException) as e:
@@ -61,36 +87,32 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
         else:
             exit(3)
 
+    # Contract transformation
     with print_step("Transforming zkay -> public contract"):
         ast, zkt = transform_ast(deepcopy(ast))
 
+    # Dump libraries
     with print_step("Write library contract files"):
         # Write pki contract
-        pki_filename = os.path.join(output_dir, f'{cfg.pki_contract_name}.sol')
-        with open(pki_filename, 'w') as f:
-            f.write(library_contracts.get_pki_contract())
+        _dump_to_output(library_contracts.get_pki_contract(), output_dir, f'{cfg.pki_contract_name}.sol', dryrun_solc=True)
 
         # Write library contract
-        verifylib_filename = os.path.join(output_dir, ProvingScheme.verify_libs_contract_filename)
-        with open(verifylib_filename, 'w') as f:
-            f.write(library_contracts.get_verify_libs_code())
+        _dump_to_output(library_contracts.get_verify_libs_code(), output_dir, ProvingScheme.verify_libs_contract_filename, dryrun_solc=True)
 
     # Write public contract file
     with print_step('Write public solidity code'):
-        contract_filename = os.path.join(output_dir, output_filename)
-        with open(contract_filename, 'w') as f:
-            solidity_code_output = ast.code()
-            f.write(solidity_code_output)
+        output_filename = f'{output_filename_without_ext}.sol'
+        solidity_code_output = _dump_to_output(ast.code(), output_dir, output_filename)
 
-    with print_step("Dry-run solc compilation (libs)"):
-        for f in [pki_filename, verifylib_filename]:
-            check_compilation(f, show_errors=False)
+    # Get all circuit helpers for the transformed contract
+    circuits: List[CircuitHelper] = list(zkt.circuit_generators.values())
 
-    ps = ProvingSchemeGm17()
-    if cfg.snark_backend == 'jsnark':
-        cg = JsnarkGenerator(ast, list(zkt.circuit_generators.values()), ps, output_dir)
-    else:
-        raise ValueError(f"Selected invalid backend {cfg.snark_backend}")
+    # Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
+    offchain_simulation_code = PythonOffchainVisitor(circuits).visit(ast)
+    _dump_to_output(offchain_simulation_code, output_dir, 'contract.py')
+
+    # Instantiate proving scheme and circuit generator
+    ps, cg = _get_proving_scheme_and_generator(output_dir, circuits)
 
     # Generate manifest
     if not import_keys:
@@ -109,23 +131,24 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
                     cg.circuits_to_prove
                 }
             }
-            with open(os.path.join(output_dir, 'manifest.json'), 'w') as f:
-                f.write(json.dumps(manifest))
+            _dump_to_output(json.dumps(manifest), output_dir, 'manifest.json')
     elif not os.path.exists(os.path.join(output_dir, 'manifest.json')):
         raise RuntimeError('Zkay contract import failed: Manifest file is missing')
 
     # Generate circuits and corresponding verification contracts
     cg.generate_circuits(import_keys=import_keys)
 
-    # Check that all the solidity files would compile
-    with print_step("Dry-run solc compilation (main contracts + verifiers)"):
-        for f in [contract_filename] + cg.get_verification_contract_filenames():
-            check_compilation(f, show_errors=False)
+    # Check that all verification contracts and the main contract compile
+    main_solidity_files = cg.get_verification_contract_filenames() + [os.path.join(output_dir, output_filename)]
+    for f in main_solidity_files:
+        check_compilation(f, show_errors=False)
 
     return cg, solidity_code_output
 
 
 def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):
+    """Package zkay contract for distribution."""
+
     with print_step('Packaging for distribution'):
         # create archive with zkay code + all verification and prover keys
         root = pathlib.Path(cg.output_dir)
@@ -154,3 +177,31 @@ def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):
 
 def import_pkg(filename: str):
     pass
+
+
+def _dump_to_output(content: str, output_dir: str, filename: str, dryrun_solc=False) -> str:
+    """
+    Dump 'content' into file 'output_dir/filename' and optionally check if it compiles error-free with solc.
+
+    :return: dumped content as string
+    """
+
+    path = os.path.join(output_dir, filename)
+    with open(path, 'w') as f:
+        f.write(content)
+    if dryrun_solc:
+        check_compilation(path, show_errors=False)
+    return content
+
+
+def _get_proving_scheme_and_generator(output_dir: str, circuits: List[CircuitHelper]) -> Tuple[ProvingScheme, CircuitGenerator]:
+    """Return proving scheme and circuit generator instances based on backends selected in config."""
+    if True:
+        ps = ProvingSchemeGm17()
+
+    if cfg.snark_backend == 'jsnark':
+        cg = JsnarkGenerator(circuits, ps, output_dir)
+    else:
+        raise ValueError(f"Selected invalid backend {cfg.snark_backend}")
+
+    return ps, cg
