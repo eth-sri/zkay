@@ -3,7 +3,7 @@ import math
 import os
 from typing import Dict
 
-from zkay.compiler.privacy.proving_schemes.meta import provingschemeparams
+from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
 
 __debug_print = True

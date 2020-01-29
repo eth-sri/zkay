@@ -11,7 +11,7 @@ from zkay.config import cfg
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field, bn128_scalar_field_bits
-from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
+from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme, G1Point, G2Point, Proof, VerifyingKey
 from zkay.utils.multiline_formatter import MultiLineFormatter
 
 

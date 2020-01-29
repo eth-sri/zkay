@@ -11,8 +11,8 @@ from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircCom
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
-from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
-from zkay.compiler.privacy.proving_schemes.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
+from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
+from zkay.compiler.privacy.proving_scheme.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.config import cfg
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
     IndexExpr, NumberLiteralExpr, MemberAccessExpr, TypeName, indent, PrimitiveCastExpr, EnumDefinition, Expression

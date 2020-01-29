@@ -1,5 +1,5 @@
 """
-This module provides classes to deal with proof circuits
+This package provides classes to deal with proof circuits
 
 circuit_helper.py:      Helper class to construct high-level abstract proof circuits
 circuit_constraints.py: Defines the different types of abstract circuit statements

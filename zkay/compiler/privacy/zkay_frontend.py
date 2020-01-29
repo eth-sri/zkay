@@ -19,8 +19,8 @@ from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGe
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.offchain_compiler import PythonOffchainVisitor
-from zkay.compiler.privacy.proving_schemes.gm17 import ProvingSchemeGm17
-from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme
+from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17
+from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformer.zkay_contract_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation, SolcException
 from zkay.config import cfg

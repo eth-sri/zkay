@@ -4,7 +4,7 @@ from multiprocessing import Pool, Value
 from typing import List, Tuple
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
-from zkay.compiler.privacy.proving_schemes.proving_scheme import ProvingScheme, VerifyingKey
+from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme, VerifyingKey
 from zkay.config import cfg, debug_print
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
