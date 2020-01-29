@@ -1,4 +1,5 @@
 from zkay.zkay_ast.analysis.partition_state import PartitionState
+from zkay.zkay_ast.analysis.side_effects import has_side_effects
 from zkay.zkay_ast.ast import VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
@@ -51,7 +52,7 @@ class AliasAnalysisVisitor(AstVisitor):
             ast.after_analysis.remove(name)
 
     def visitIfStatement(self, ast: IfStatement):
-        if ast.condition.has_side_effects:
+        if has_side_effects(ast.condition):
             ast.before_analysis = ast.before_analysis.separate_all()
         before = ast.before_analysis
 
@@ -71,7 +72,7 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.after_analysis = before.separate_all()
 
     def visitWhileStatement(self, ast: WhileStatement):
-        if ast.condition.has_side_effects or ast.body.has_side_effects:
+        if has_side_effects(ast.condition) or has_side_effects(ast.body):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         self.visit(ast.condition)
@@ -84,7 +85,8 @@ class AliasAnalysisVisitor(AstVisitor):
 
     def visitDoWhileStatement(self, ast: DoWhileStatement):
         # Could be subsequent loop iteration after condition with side effect
-        if ast.condition.has_side_effects or ast.body.has_side_effects:
+        cond_se = has_side_effects(ast.condition)
+        if cond_se or has_side_effects(ast.body):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         ast.body.before_analysis = ast.before_analysis.copy()
@@ -93,7 +95,7 @@ class AliasAnalysisVisitor(AstVisitor):
         # ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
         ast.before_analysis = ast.body.after_analysis.copy()
         self.visit(ast.condition)
-        if ast.condition.has_side_effects:
+        if cond_se:
             ast.after_analysis = ast.body.after_analysis.separate_all()
         else:
             ast.after_analysis = ast.body.after_analysis.copy()
@@ -104,7 +106,7 @@ class AliasAnalysisVisitor(AstVisitor):
             self.visit(ast.init)
             ast.before_analysis = ast.init.after_analysis.copy() # init should be taken into account when looking up things in the condition
 
-        if ast.condition.has_side_effects or ast.body.has_side_effects or (ast.update is not None and ast.update.has_side_effects):
+        if has_side_effects(ast.condition) or has_side_effects(ast.body) or (ast.update is not None and has_side_effects(ast.update)):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         self.visit(ast.condition)
@@ -120,7 +122,7 @@ class AliasAnalysisVisitor(AstVisitor):
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         e = ast.expr
-        if e and e.has_side_effects:
+        if e and has_side_effects(e):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         # visit expression
@@ -141,7 +143,7 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.after_analysis = after
 
     def visitRequireStatement(self, ast: RequireStatement):
-        if ast.condition.has_side_effects:
+        if has_side_effects(ast.condition):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         self.visit(ast.condition)
@@ -162,7 +164,7 @@ class AliasAnalysisVisitor(AstVisitor):
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         lhs = ast.lhs
         rhs = ast.rhs
-        if lhs.has_side_effects or rhs.has_side_effects:
+        if has_side_effects(lhs) or has_side_effects(rhs):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         # visit expression
@@ -180,7 +182,7 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.after_analysis = after
 
     def visitExpressionStatement(self, ast: ExpressionStatement):
-        if ast.expr.has_side_effects:
+        if has_side_effects(ast.expr):
             ast.before_analysis = ast.before_analysis.separate_all()
 
         # visit expression

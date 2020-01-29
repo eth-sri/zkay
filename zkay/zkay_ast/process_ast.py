@@ -9,8 +9,7 @@ from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
 from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_compliance
 from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
 from zkay.zkay_ast.analysis.loop_checker import check_loops
-from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects, compute_modified_sets, \
-    check_for_undefined_behavior_due_to_eval_order
+from zkay.zkay_ast.analysis.side_effects import compute_modified_sets, check_for_undefined_behavior_due_to_eval_order
 from zkay.zkay_ast.ast import AST
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
@@ -81,7 +80,6 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
                     print("\n\nERROR: Preprocessing failed")
                     print(f'{str(e)}\n')
                 raise PreprocessAstException()
-        detect_expressions_with_side_effects(ast)
         if check_return:
             r(ast)
         if alias_analysis:

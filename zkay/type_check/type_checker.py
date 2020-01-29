@@ -211,9 +211,6 @@ class TypeCheckVisitor(AstVisitor):
         r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl.clone())
         TypeCheckVisitor.check_for_invalid_private_type(r)
 
-        # propagate side effects
-        r.has_side_effects = expr.has_side_effects
-
         # set statement
         r.statement = expr.statement
 
@@ -232,7 +229,7 @@ class TypeCheckVisitor(AstVisitor):
     def implicitly_converted_to(expr: Expression, t: TypeName) -> Expression:
         assert expr.annotated_type.type_name.is_primitive_type()
         cast = PrimitiveCastExpr(t.clone(), expr, is_implicit=True).override(
-            parent=expr.parent, statement=expr.statement, has_side_effects=expr.has_side_effects, line=expr.line, column=expr.column)
+            parent=expr.parent, statement=expr.statement, line=expr.line, column=expr.column)
         cast.elem_type.parent = cast
         expr.parent = cast
         cast.annotated_type = AnnotatedTypeName(t.clone(), expr.annotated_type.privacy_annotation.clone()).override(parent=cast)

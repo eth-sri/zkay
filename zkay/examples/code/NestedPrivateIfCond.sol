@@ -37,7 +37,7 @@ contract NestedPrivateIfCond {
         return ret + reveal(v - v2, all);
     }
 
-    function doit() internal returns(uint) {
+    function doit() pure internal returns(uint) {
         //res = 12;
         return 1;
     }

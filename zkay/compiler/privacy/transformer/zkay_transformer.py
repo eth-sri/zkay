@@ -313,10 +313,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         assert fdef.is_function
         assert fdef.return_parameters
         assert fdef.has_static_body
-        assert not fdef.has_side_effects or ast.has_side_effects
-        assert not ast.has_side_effects
 
-        return self.gen.inline_function_into_circuit(ast, fdef)
+        return self.gen.inline_function_call_into_circuit(ast)
 
     def visitReturnStatement(self, ast: ReturnStatement):
         assert ast.expr is not None
@@ -324,7 +322,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             ast.expr = TupleExpr([ast.expr])
 
         for idx in range(len(ast.function.return_parameters)):
-            self.gen.introduce_temporary_circuit_variable(Identifier(f'{cfg.return_var_name}_{idx}'), ast.expr.elements[idx])
+            self.gen.create_new_idf_version_from_value(Identifier(f'{cfg.return_var_name}_{idx}'), ast.expr.elements[idx])
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.add_assignment_to_circuit(ast)
@@ -334,7 +332,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             t = ast.variable_declaration.annotated_type.type_name
             assert t.can_be_private()
             ast.expr = TypeCheckVisitor.implicitly_converted_to(NumberLiteralExpr(0).override(parent=ast, statement=ast), t.clone())
-        self.gen.introduce_temporary_circuit_variable(ast.variable_declaration.idf, ast.expr)
+        self.gen.create_new_idf_version_from_value(ast.variable_declaration.idf, ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):
         # Bubble up nested pre statements

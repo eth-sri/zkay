@@ -1,17 +1,15 @@
 from typing import List, Union
 
 from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.ast import FunctionCallExpr, FunctionTypeName, LocationExpr, AssignmentStatement, \
+from zkay.zkay_ast.ast import FunctionCallExpr, LocationExpr, AssignmentStatement, \
     AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
     TupleExpr, InstanceTarget, VariableDeclaration, Parameter
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
-def detect_expressions_with_side_effects(ast: AST) -> bool:
-    v = SideEffectsDetector()
-    ret = v.visit(ast)
-    return ret
+def has_side_effects(ast: AST) -> bool:
+    return SideEffectsDetector().visit(ast)
 
 
 def compute_modified_sets(ast: AST):
@@ -29,24 +27,19 @@ def check_for_undefined_behavior_due_to_eval_order(ast: AST):
 class SideEffectsDetector(AstVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        ast.has_side_effects = self.visitExpression(ast)
-        if isinstance(ast.func, LocationExpr) and not ast.is_cast:
-            assert ast.func.target is not None
-            assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
-            ast.has_side_effects |= ast.func.target.has_side_effects
-        return ast.has_side_effects
+        if isinstance(ast.func, LocationExpr) and not ast.is_cast and ast.func.target.has_side_effects:
+            return True
+        else:
+            return self.visitExpression(ast)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        ast.has_side_effects = True
-        return ast.has_side_effects
+        return True
 
     def visitExpression(self, ast: Expression):
-        ast.has_side_effects = self.visitAST(ast)
-        return ast.has_side_effects
+        return self.visitAST(ast)
 
     def visitStatement(self, ast: Statement):
-        ast.has_side_effects = self.visitAST(ast)
-        return ast.has_side_effects
+        return self.visitAST(ast)
 
     def visitAST(self, ast: AST):
         return any(map(self.visit, ast.children()))
@@ -105,10 +98,11 @@ class IndirectModificationDetector(FunctionVisitor):
             rlen = len(ast.read_values)
             ast.read_values.update({v for v in fdef.read_values if isinstance(v.target, StateVariableDeclaration)})
             self.fixed_point_reached &= rlen == len(ast.read_values)
-            if ast.has_side_effects:
-                mlen = len(ast.modified_values)
-                ast.modified_values.update({v for v in fdef.modified_values if isinstance(v.target, StateVariableDeclaration)})
-                self.fixed_point_reached &= mlen == len(ast.modified_values)
+
+            # update modified values if any
+            mlen = len(ast.modified_values)
+            ast.modified_values.update({v for v in fdef.modified_values if isinstance(v.target, StateVariableDeclaration)})
+            self.fixed_point_reached &= mlen == len(ast.modified_values)
 
     def visitAST(self, ast: AST):
         mlen = len(ast.modified_values)

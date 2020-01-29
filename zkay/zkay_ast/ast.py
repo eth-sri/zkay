@@ -175,7 +175,6 @@ class Expression(AST):
         # set by expression to statement
         self.statement: Statement = None
 
-        self.has_side_effects = False
         self.evaluate_privately = False
 
     def is_all_expr(self):
@@ -702,8 +701,6 @@ class Statement(AST):
         # set by circuit helper
         self.pre_statements = []
 
-        self.has_side_effects = False
-
 
 class CircuitComputationStatement(Statement):
     def __init__(self, var: HybridArgumentIdf):
@@ -901,6 +898,10 @@ class TypeName(AST):
     @staticmethod
     def proof_type():
         return Proof()
+
+    @staticmethod
+    def dyn_uint_array():
+        return Array(AnnotatedTypeName.uint_all())
 
     @property
     def size_in_uints(self):

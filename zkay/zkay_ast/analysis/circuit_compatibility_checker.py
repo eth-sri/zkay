@@ -2,8 +2,8 @@ from typing import Union
 
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
-    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, NumberLiteralExpr, \
-    BooleanLiteralExpr, IfStatement, NumberLiteralType, BooleanLiteralType, PrimitiveCastExpr
+    Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, IfStatement, \
+    NumberLiteralType, BooleanLiteralType, PrimitiveCastExpr, AST
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -19,6 +19,8 @@ def check_circuit_compliance(ast):
 
     v = CircuitComplianceChecker()
     v.visit(ast)
+
+    check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast)
 
 
 class DirectCanBePrivateDetector(FunctionVisitor):
@@ -69,18 +71,6 @@ class IndirectCanBePrivateDetector(FunctionVisitor):
                     return
 
 
-def check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast: Union[Statement, Expression], check_side_effects: bool = True):
-    if check_side_effects and ast.has_side_effects:
-        raise TypeException('Expressions with side effects are not allowed inside private expressions', ast)
-
-    v = NonstaticOrIncompatibilityDetector()
-    v.visit(ast)
-    if v.has_nonstatic_fcall:
-        raise TypeException('Function calls to non static functions are not allowed inside private expressions', ast)
-    if not v.can_be_private:
-        raise TypeException('Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions', ast)
-
-
 class CircuitComplianceChecker(FunctionVisitor):
     def __init__(self):
         super().__init__()
@@ -88,7 +78,7 @@ class CircuitComplianceChecker(FunctionVisitor):
 
     def should_evaluate_public_expr_in_circuit(self, expr: Expression) -> bool:
         try:
-            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(expr)
+            check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(expr)
         except TypeException:
             # Cannot evaluate inside circuit -> never do it
             return False
@@ -107,38 +97,34 @@ class CircuitComplianceChecker(FunctionVisitor):
         return False
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
-        ast.evaluate_privately = True
-        if ast.expr.annotated_type.is_public() and not self.should_evaluate_public_expr_in_circuit(ast.expr):
-            self.priv_setter.set_evaluation(ast.expr, evaluate_privately=False)
+        if ast.expr.annotated_type.is_public():
+            eval_in_public = False
+            try:
+                self.priv_setter.set_evaluation(ast, evaluate_privately=True)
+            except TypeException:
+                eval_in_public = True
+            if eval_in_public or not self.should_evaluate_public_expr_in_circuit(ast.expr):
+                self.priv_setter.set_evaluation(ast.expr, evaluate_privately=False)
         else:
-            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
-            self.priv_setter.set_evaluation(ast.expr, evaluate_privately=True)
+            self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visit(ast.expr)
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:
-            for arg in ast.args:
-                check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(arg)
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         elif ast.is_cast and ast.annotated_type.is_private():
-            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.args[0])
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visitChildren(ast)
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
         if ast.expr.annotated_type.is_private():
-            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.expr)
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visitChildren(ast)
 
     def visitIfStatement(self, ast: IfStatement):
         if ast.condition.annotated_type.is_private():
-            # FIXME check that no side effect expressions and no money flow (assignment statements are the only allowed side effect)
-            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.condition)
-            check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.then_branch, check_side_effects=False)
             mod_vals = ast.then_branch.modified_values
             if ast.else_branch is not None:
-                check_for_side_effects_nonstatic_function_calls_or_not_circuit_inlineable(ast.else_branch, check_side_effects=False)
                 mod_vals = mod_vals.union(ast.else_branch.modified_values)
             for val in mod_vals:
                 if not val.target.annotated_type.zkay_type.type_name.is_primitive_type():
@@ -159,35 +145,38 @@ class PrivateSetter(FunctionVisitor):
         self.visit(ast)
         self.evaluate_privately = None
 
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if self.evaluate_privately and isinstance(ast.func, LocationExpr) and not ast.is_cast and ast.func.target.has_side_effects:
+            raise TypeException('Expressions with side effects are not allowed inside private expressions', ast)
+        self.visitExpression(ast)
+
     def visitExpression(self, ast: Expression):
         assert self.evaluate_privately is not None
         ast.evaluate_privately = self.evaluate_privately
         self.visitChildren(ast)
 
-    def visitReclassifyExpr(self, ast: ReclassifyExpr):
-        # this subtree will be set later
-        return
+
+def check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast: AST):
+    NonstaticOrIncompatibilityDetector().visit(ast)
 
 
 class NonstaticOrIncompatibilityDetector(FunctionVisitor):
-    def __init__(self):
-        super().__init__()
-        self.has_nonstatic_fcall = False
-        self.can_be_private = True
-
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if not ast.is_cast:
+        can_be_private = True
+        has_nonstatic_call = False
+        if ast.evaluate_privately and not ast.is_cast:
             if isinstance(ast.func, LocationExpr):
                 assert ast.func.target is not None
                 assert isinstance(ast.func.target.annotated_type.type_name, FunctionTypeName)
-                self.has_nonstatic_fcall |= not ast.func.target.has_static_body
-                self.can_be_private &= ast.func.target.can_be_private
+                has_nonstatic_call |= not ast.func.target.has_static_body
+                can_be_private &= ast.func.target.can_be_private
             elif isinstance(ast.func, BuiltinFunction):
-                self.can_be_private &= ast.func.can_be_private()
+                can_be_private &= ast.func.can_be_private()
                 if ast.func.is_eq() or ast.func.is_ite():
-                    self.can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
+                    can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
+        if has_nonstatic_call:
+            raise TypeException('Function calls to non static functions are not allowed inside private expressions', ast)
+        if not can_be_private:
+            raise TypeException(
+                'Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions', ast)
         self.visitChildren(ast)
-
-    def visitReclassifyExpr(self, ast: ReclassifyExpr):
-        # This subtree will be checked later
-        return

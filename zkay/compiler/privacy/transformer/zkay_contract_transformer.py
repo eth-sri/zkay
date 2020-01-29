@@ -11,7 +11,8 @@ from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
     Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, SliceExpr, LabeledBlock, TupleExpr, PrimitiveCastExpr
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, SliceExpr, LabeledBlock, TupleExpr, \
+    PrimitiveCastExpr, TypeName
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -265,7 +266,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
                 # Manually add to circuit inputs
                 param_stmts.append(in_arr_var.slice(offset, cfg.cipher_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_len)))
-                offset += p.annotated_type.type_name.size_in_uints
+                offset += cfg.cipher_len
 
         # Request static public keys
         key_req_stmts = []
@@ -279,12 +280,12 @@ class ZkayTransformer(AstTransformerVisitor):
 
                 # Manually add to circuit inputs
                 key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
-                offset += idf.t.size_in_uints
+                offset += cfg.key_len
                 assert offset == circuit.in_size
 
         # Declare in array
-        new_in_array_expr = NewExpr(AnnotatedTypeName(Array(AnnotatedTypeName.uint_all())), [NumberLiteralExpr(circuit.in_size_trans)])
-        in_var_decl = in_arr_var.idf.decl_var(Array(AnnotatedTypeName.uint_all()), new_in_array_expr)
+        new_in_array_expr = NewExpr(AnnotatedTypeName(TypeName.dyn_uint_array()), [NumberLiteralExpr(circuit.in_size_trans)])
+        in_var_decl = in_arr_var.idf.decl_var(TypeName.dyn_uint_array(), new_in_array_expr)
         stmts.append(in_var_decl)
 
         stmts += Comment.comment_wrap_block('Backup private arguments for verification', param_stmts)

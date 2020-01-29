@@ -1,7 +1,6 @@
 import inspect
 from typing import TypeVar
 
-from zkay.zkay_ast.analysis.side_effects import detect_expressions_with_side_effects
 from zkay.zkay_ast.ast import AST, Expression, Statement
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
@@ -25,7 +24,6 @@ def deep_copy(ast: T, with_types=False, with_analysis=False) -> T:
     ast_copy.parent = ast.parent
     set_parents(ast_copy)
     link_identifiers(ast_copy)
-    detect_expressions_with_side_effects(ast_copy)
     return ast_copy
 
 
@@ -45,7 +43,6 @@ def _replace_ast(old_ast: AST, new_ast: AST):
     if old_ast.parent is not None:
         set_parents(new_ast)
         link_identifiers(new_ast)
-    detect_expressions_with_side_effects(new_ast)
 
 
 class DeepCopyVisitor(AstVisitor):
