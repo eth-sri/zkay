@@ -238,7 +238,7 @@ class CircuitHelper:
         Roughly corresponds to out() from paper
 
         Note: This function has side effects on expr.statement (adds a pre_statement)
-        :param expr: The expression which should be evaluated privately
+        :param expr: [SIDE EFFECT] The expression which should be evaluated privately
         :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
         :return: Location expression which references the encrypted circuit result
         """
@@ -357,7 +357,7 @@ class CircuitHelper:
 
         Note: This function has side effects on expr.statement (adds a pre_statement)
 
-        :param expr: expression which should be made available inside the circuit as an argument
+        :param expr: [SIDE EFFECT] expression which should be made available inside the circuit as an argument
         :return: HybridArgumentIdf and expression which reference the plaintext value of the newly added input
         """
         privacy = Expression.me_expr() if expr.annotated_type.is_private() else Expression.all_expr()
@@ -512,7 +512,7 @@ class CircuitHelper:
         Add evaluation of expr to the circuit and return the output HybridArgumentIdf corresponding to the evaluation result.
 
         Note: has side effects on expr.statement
-        :param expr: expression to evaluate
+        :param expr: [SIDE EFFECT] expression to evaluate
         :param new_privacy: result owner (determines encryption key)
         :return: HybridArgumentIdf which references the circuit output containing the result of expr
         """

@@ -89,7 +89,7 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
 
     # Contract transformation
     with print_step("Transforming zkay -> public contract"):
-        ast, zkt = transform_ast(deepcopy(ast))
+        ast, circuits = transform_ast(deepcopy(ast))
 
     # Dump libraries
     with print_step("Write library contract files"):
@@ -105,7 +105,7 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
         solidity_code_output = _dump_to_output(ast.code(), output_dir, output_filename)
 
     # Get all circuit helpers for the transformed contract
-    circuits: List[CircuitHelper] = list(zkt.circuit_generators.values())
+    circuits: List[CircuitHelper] = list(circuits.values())
 
     # Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
     offchain_simulation_code = PythonOffchainVisitor(circuits).visit(ast)

@@ -1,43 +1,149 @@
+"""
+This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits
+"""
+
 from typing import Dict, Optional, List, Tuple
 
-from zkay.compiler.privacy.library_contracts import bn128_scalar_field
-from zkay.config import cfg
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.transformer.internal_call_transformer import transform_internal_calls
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.transformer.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
     ZkayStatementTransformer
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.config import cfg
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
-    Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, SliceExpr, LabeledBlock, TupleExpr, \
-    PrimitiveCastExpr, TypeName
+    Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, PrimitiveCastExpr, TypeName, \
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, LabeledBlock, TupleExpr, PrivacyLabelExpr, Parameter
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
-def transform_ast(ast: AST) -> Tuple[AST, 'ZkayTransformer']:
+def transform_ast(ast: AST) -> Tuple[AST, Dict[ConstructorOrFunctionDefinition, CircuitHelper]]:
+    """
+    Convert zkay to solidity AST + proof circuits
+
+    :param ast: zkay AST
+    :return: solidity AST and dictionary which maps all function definitions which require verification
+             to the corresponding circuit helper instance.
+    """
     zt = ZkayTransformer()
     new_ast = zt.visit(ast)
 
     # restore all parent pointers and identifier targets
     set_parents(new_ast)
     link_identifiers(new_ast)
-    return new_ast, zt
+    return new_ast, zt.circuits
 
 
 class ZkayTransformer(AstTransformerVisitor):
-    """ Transformer, which transforms zkay contracts into equivalent public solidity contracts """
+    """
+    Transformer which transforms contract level AST elements (contract, function definitions, constructor definitions)
+
+    Contract level transformations:
+    - Import public key infrastructure contract and make it available as public constant state variable
+    - Import verification contracts for all functions which require verification and make them available as public constant state variables
+      Note: This transformations initializes those state variables with address 0, which is a placeholder. 0 is replaced with the
+            real address upon deployment.
+    - Transform state variable declarations with owner != @all (replace type by cipher type)
+    - For every function and constructor, the parameters and the body are transformed using the transformers defined in zkay_transformer.py
+
+    To support verification, the functions themselves also need additional transformations:
+
+    In the original zkay paper, all the circuit out parameters + the proof are added as additional parameters for all functions which
+    require verification.
+    This makes it impossible to simply call another function, since every function expects its out arguments + a proof.
+
+    Zkay 2.0 uses an improved design, with the goal of supporting function calls in an elegant way.
+    It is based on the following observations:
+    1) zk proof verification is only possible in functions which are called externally via a transaction,
+       as it requires offchain simulation to generate a valid zero knowledge proof.
+    2) public functions can be called externally (transaction) as well as internally (called from other function)
+    3) private and internal functions can only be called internally
+    4) public functions which have private arguments, but don't contain any private expressions in their body (e.g. because they only
+       contain assignments, which are public operations as long as the owner does not change), only need verification if they are called
+       externally (since then the parameters are user supplied and thus their encryption needs to be verified)
+    5) The difference between an external and an internal function can be reduced to argument encryption verification +
+       proof verification via verification contract invocation
+
+    From 1) follows, that the externally called function must also handle the verification of all transitively called functions
+    Observations 2), 4) and 5) suggest, that it is sensible to split each public function into two different parts:
+     a) An internal function which has the original function body and arguments
+     b) An external function which does argument verification, calls the internal function and finally and invokes the verification contract
+        (=> "External Wrapper function")
+
+    This way, calling a public function from within another function works exactly the same as calling a private/internal function,
+    zkay simply has to reroute the call to the internal function.
+    It also means, that no resources are wasted when calling a function such as mentioned in 4) from another function, since in that case
+    the internal function does not require verification.
+
+    What's left is how to deal with 1). Zkay 2.0 uses the following solution:
+    - If a function is purely public (no private arguments, no private expressions in itself or any transitively called functions)
+      => No change in signature and no additional transformations
+
+    - If an internal function requires verification (*), 4 additional arguments are added to its signature:
+          1. a variable length array where public circuit inputs generated by this function should be stored
+          2. a start index which determines at which index this function should start storing circuit inputs into the in array
+          3. a variable length array containing public circuit outputs required in this function
+          4. a start index which determines where in the uint array the out values for the current function call are located
+
+      . A struct definition is added to the contract definition, which includes entries for every circuit and input variable with correct types.
+      . At the beginning of the internal function, a variable of that struct type is declared and all circuit output variables from the out array
+        parameter are deserialized into the struct.
+      . Within the function body, all circuit inputs are stored into the struct and outputs are read from the struct.
+      . At the end of the internal function, all circuit input variables in the struct are serialized into the in array parameter.
+
+      When a function calls another function which requires verification, the start indices for in and out array are advanced such that
+      they point to the correct sections and the in/out arrays + new start indices are added to the arguments of the call.
+      If the called function does not require verification, it is simply called without any additional arguments.
+
+      (*) An internal function requires verification if it contains private expressions.
+          Note: a function body can contain private variables (!= @all) without containing private expressions,
+                since assignment of encrypted variables with the same owner is a public operation.
+
+    - If a function is an external wrapper, 2 additional arguments are added to its signature:
+          1. a variable length array containing public circuit outputs for the function itself and all transitively called functions
+             If we have a call hierarchy like this:
+             func f():
+                calls g(x) which calls h(x)
+                calls h(x)
+
+             then the layout in the output array (same for the input array defined below) will be: f outs | g outs | h outs | h outs
+             (i.e. the current functions circuit outputs come first, followed by those of the called functions in the function call order
+             (according to AST traversal order))
+          2. a zero knowledge proof
+
+      . At the beginning of the external wrapper function a dynamic array is allocated which is large enough to store all circuit inputs
+        from all transitively called functions.
+      . Next all encrypted arguments are stored in the in array (since the circuit will verify the encryption)
+      . Then the wrapper requests all statically known public keys (key for me or for a final address state variable), required by any
+        of the transitively called functions, and also stores them in the in array.
+      . The corresponding internal function is then called.
+        If it requires verification, the newly allocated in array + the out array parameter + initial start indices
+        (0 for out array, after last key for in array) are added as additional arguments.
+      . Finally the verification contract is invoked to verify the proof (the in array was populated by the called functions themselves).
+    """
 
     def __init__(self):
         super().__init__()
-        self.circuit_generators: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {}
+        self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {}
+        """Abstract circuits for all functions which require verification"""
+
         self.var_decl_trafo = ZkayVarDeclTransformer()
+        """Transformer for state variable declarations and parameters"""
 
     @staticmethod
     def set_unique_fct_names(c: ContractDefinition):
+        """
+        Compute and set unambiguous name for all function definitions.
+
+        This is needed because solidity supports function overloading whereas the python simulation does not.
+        -> all function overloads receive unique function names
+        :param c: contract for which to compute the names
+        """
+
         # TODO make sure there are no conflicts with altered names
         fcts_with_same_name: Dict[str, List[ConstructorOrFunctionDefinition]] = {}
         for f in c.constructor_definitions + c.function_definitions:
@@ -50,47 +156,87 @@ class ZkayTransformer(AstTransformerVisitor):
                     fcts[idx].unambiguous_name = f'{name}_{idx}'
 
     @staticmethod
-    def import_contract(vname: str, out_filenames: List[str], out_ext_vars_decls: List[StateVariableDeclaration], gen: Optional[CircuitHelper] = None):
-        inst_idf = get_contract_instance_idf(vname)
-        c_type = ContractTypeName([Identifier(vname)])
-        import_filename = f'./{vname}.sol'
+    def import_contract(cname: str, su: SourceUnit, corresponding_circuit: Optional[CircuitHelper] = None):
+        """
+        Import contract 'vname' into the given source unit.
 
-        if gen:
-            gen.register_verification_contract_metadata(c_type, import_filename)
+        :param cname: contract name (.sol filename stem must match contract type name)
+        :param su: [SIDE EFFECT] source unit where contract should be imported
+        :param corresponding_circuit: [SIDE EFFECT] if contract is a verification contract, this should be the corresponding circuit helper
+        """
+        import_filename = f'./{cname}.sol'
+        su.used_contracts.append(import_filename)
+
+        if corresponding_circuit is not None:
+            c_type = ContractTypeName([Identifier(cname)])
+            corresponding_circuit.register_verification_contract_metadata(c_type, import_filename)
+
+    @staticmethod
+    def create_contract_variable(cname: str) -> StateVariableDeclaration:
+        """Create a public constant state variable with which contract with name 'cname' can be accessed"""
+        inst_idf = get_contract_instance_idf(cname)
+        c_type = ContractTypeName([Identifier(cname)])
 
         cast_0_to_c = PrimitiveCastExpr(c_type, NumberLiteralExpr(0))
-        out_filenames.append(import_filename)
-        out_ext_vars_decls.append(StateVariableDeclaration(AnnotatedTypeName(c_type), ['public', 'constant'], inst_idf.clone(), cast_0_to_c))
+        var_decl = StateVariableDeclaration(AnnotatedTypeName(c_type), ['public', 'constant'], inst_idf.clone(), cast_0_to_c)
+        return var_decl
 
-    def include_verification_contracts(self, c: ContractDefinition, ext_var_decls: List[StateVariableDeclaration]):
-        import_filenames = []
+    def include_verification_contracts(self, su: SourceUnit, c: ContractDefinition) -> List[StateVariableDeclaration]:
+        """
+        Import all verification contracts for 'c' into 'su' and create state variable declarations for all of them + the pki contract.
+        :param su: [SIDE EFFECT] source unit into which contracts should be imported
+        :param c: contract for which verification contracts should be imported
+        :return: list of all constant state variable declarations for the pki contract + all the verification contracts
+        """
+        contract_var_decls = [self.create_contract_variable(cfg.pki_contract_name)]
 
         for f in c.constructor_definitions + c.function_definitions:
             if f.requires_verification_when_external:
                 name = f'Verify_{c.idf.name}_{f.unambiguous_name}'
-                self.import_contract(name, import_filenames, ext_var_decls, self.circuit_generators[f])
+                self.import_contract(name, su, self.circuits[f])
+                contract_var_decls.append(self.create_contract_variable(name))
 
-        # Add external contract state variables
-        c.state_variable_declarations = Comment.comment_list('External contracts', ext_var_decls) + \
-                                        [Comment('User state variables')] + c.state_variable_declarations
-
-        return import_filenames
+        return contract_var_decls
 
     @staticmethod
-    def create_circuit_helper(fct: ConstructorOrFunctionDefinition, global_owners: List, internal_circ: Optional[CircuitHelper] = None):
+    def create_circuit_helper(fct: ConstructorOrFunctionDefinition, global_owners: List[PrivacyLabelExpr],
+                              internal_circ: Optional[CircuitHelper] = None):
+        """
+        Create circuit helper for the given function.
+
+        :param fct: function for which to create a circuit
+        :param global_owners: list of all statically known privacy labels (me + final address state variables)
+        :param internal_circ: the circuit of the internal function on which to base this circuit
+                              (only used when creating the circuit of the external wrapper function)
+        :return: new circuit helper
+        """
         return CircuitHelper(fct, global_owners, ZkayExpressionTransformer, ZkayCircuitTransformer, internal_circ)
 
     def visitSourceUnit(self, ast: SourceUnit):
-        # Include pki contract
-        pki_decl = []
-        self.import_contract(cfg.pki_contract_name, ast.used_contracts, pki_decl)
+        self.import_contract(cfg.pki_contract_name, ast)
 
         for c in ast.contracts:
-            self.transform_contract(ast, c, [deep_copy(pki_decl[0])])
+            self.transform_contract(ast, c)
 
         return ast
 
-    def transform_contract(self, su: SourceUnit, c: ContractDefinition, ext_var_decls: List[StateVariableDeclaration]):
+    def transform_contract(self, su: SourceUnit, c: ContractDefinition) -> ContractDefinition:
+        """
+        Transform an entire zkay contract into a public solidity contract.
+
+        This
+        - transforms state variables, function bodies and signatures
+        - import verification contracts
+        - adds zk_data structs for each function with verification
+          (to store circuit I/O, to bypass solidity stack limit and allow for easy assignment of array variables),
+        - creates external wrapper functions for all public functions which require verification
+        - adds circuit IO serialization/deserialization code from/to zk_data struct to all functions which require verification.
+
+        :param su: [SIDE EFFECTS] Source unit of which this contract is part of
+        :param c: [SIDE EFFECTS] The contract to transform
+        :return: The contract itself
+        """
+
         all_fcts = c.constructor_definitions + c.function_definitions
 
         # Get list of static owner labels for this contract
@@ -108,13 +254,13 @@ class ZkayTransformer(AstTransformerVisitor):
 
         self.set_unique_fct_names(c)
 
-        # Split into functions which require verification and those which don't and create generators
+        # Split into functions which require verification and those which don't need a circuit helper
         req_ext_fcts = {}
         new_fcts, new_constr = [], []
         for fct in all_fcts:
             assert isinstance(fct, ConstructorOrFunctionDefinition)
             if fct.requires_verification or fct.requires_verification_when_external:
-                self.circuit_generators[fct] = self.create_circuit_helper(fct, global_owners)
+                self.circuits[fct] = self.create_circuit_helper(fct, global_owners)
 
             if fct.requires_verification_when_external:
                 req_ext_fcts[fct] = fct.parameters[:]
@@ -123,11 +269,15 @@ class ZkayTransformer(AstTransformerVisitor):
             else:
                 new_fcts.append(fct)
 
-        # Import verification contracts
-        su.used_contracts += self.include_verification_contracts(c, ext_var_decls)
-        c.state_variable_declarations = [StateVariableDeclaration(AnnotatedTypeName.uint_all(), ['public', 'constant'],
-                                                                  Identifier(cfg.field_prime_var_name),
-                                                                  NumberLiteralExpr(bn128_scalar_field)), Comment()] + c.state_variable_declarations
+        # Add constant state variables for external contracts and field prime
+        field_prime_decl = StateVariableDeclaration(AnnotatedTypeName.uint_all(), ['public', 'constant'],
+                                                    Identifier(cfg.field_prime_var_name),
+                                                    NumberLiteralExpr(bn128_scalar_field))
+        contract_var_decls = self.include_verification_contracts(su, c)
+        c.state_variable_declarations = [field_prime_decl, Comment()]\
+                                        + Comment.comment_list('Helper Contracts', contract_var_decls)\
+                                        + [Comment('User state variables')]\
+                                        + c.state_variable_declarations
 
         # Transform signatures
         for f in all_fcts:
@@ -137,16 +287,17 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Transform bodies
         for fct in all_fcts:
-            gen = self.circuit_generators.get(fct, None)
+            gen = self.circuits.get(fct, None)
             fct.body = ZkayStatementTransformer(gen).visit(fct.body)
 
-        # Transform hybrid functions to support verification
-        hybrid_fcts = [fct for fct in all_fcts if fct.requires_verification]
-        transform_internal_calls(hybrid_fcts, self.circuit_generators)
-        for f in hybrid_fcts:
-            circuit = self.circuit_generators[f]
+        # Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
+        fcts_with_verification = [fct for fct in all_fcts if fct.requires_verification]
+        transform_internal_calls(fcts_with_verification, self.circuits)
+        for f in fcts_with_verification:
+            circuit = self.circuits[f]
             assert circuit.requires_verification()
             if circuit.requires_zk_data_struct():
+                # Add zk data struct for f to contract
                 zk_data_struct = StructDefinition(Identifier(circuit.zk_data_struct_name), [
                     VariableDeclaration([], AnnotatedTypeName(idf.t), idf.clone(), '')
                     for idf in circuit.output_idfs + circuit.input_idfs
@@ -154,41 +305,26 @@ class ZkayTransformer(AstTransformerVisitor):
                 c.struct_definitions.append(zk_data_struct)
             self.create_internal_verification_wrapper(f)
 
-        # Introduce external functions which perform verification if necessary
+        # Create external wrapper functions where necessary
         for f, params in req_ext_fcts.items():
-            orig_params = f.parameters[:-4] if f.requires_verification else f.parameters
-
-            def param_copy(parameters, new_storage='memory'):
-                return [deep_copy(p, with_types=True).with_changed_storage('memory', new_storage) for p in parameters]
-
-            new_modifiers = ['payable'] if f.is_payable else []
-            if f.is_constructor:
-                new_f = ConstructorOrFunctionDefinition(None, param_copy(orig_params), ['public'] + new_modifiers, None, Block([]))
-                new_constr.append(new_f)
+            ext_f, int_f = self.split_into_external_and_internal_fct(f, params, global_owners)
+            new_fcts.append(int_f)
+            if ext_f.is_function:
+                new_fcts.append(ext_f)
             else:
-                new_f = ConstructorOrFunctionDefinition(Identifier(f.name), param_copy(orig_params, 'calldata'), ['external'] + new_modifiers,
-                                                        param_copy(f.return_parameters), Block([]))
-                new_fcts.append(new_f)
-
-            # Make function internal
-            f.idf = Identifier(cfg.get_internal_name(f))
-            f.modifiers = ['internal' if mod == 'public' else mod for mod in f.modifiers if mod != 'payable']
-            f.requires_verification_when_external = False
-            new_fcts.append(f)
-
-            # Create new external wrapper function
-            new_f.unambiguous_name = f.unambiguous_name
-            new_f.requires_verification = True
-            new_f.requires_verification_when_external = True
-            new_f.called_functions = f.called_functions
-            self.create_external_verification_wrapper(new_f, f, global_owners)
+                new_constr.append(ext_f)
 
         c.constructor_definitions = new_constr
         c.function_definitions = new_fcts
         return c
 
     def create_internal_verification_wrapper(self, ast: ConstructorOrFunctionDefinition):
-        circuit = self.circuit_generators[ast]
+        """
+        Add the necessary additional parameters and boiler plate code for verification support to the given function.
+
+        :param ast: [SIDE EFFECT] Internal function which requires verification
+        """
+        circuit = self.circuits[ast]
         stmts = []
 
         # Add additional params
@@ -243,15 +379,69 @@ class ZkayTransformer(AstTransformerVisitor):
 
         ast.body.statements[:] = stmts
 
-    def create_external_verification_wrapper(self, ext_fct: ConstructorOrFunctionDefinition, int_fct: ConstructorOrFunctionDefinition, global_owners):
+    def split_into_external_and_internal_fct(self, f: ConstructorOrFunctionDefinition, original_params: List[Parameter],
+                                             global_owners: List[PrivacyLabelExpr]) -> Tuple[ConstructorOrFunctionDefinition,
+                                                                                             ConstructorOrFunctionDefinition]:
+        """
+        Take public function f and split it into an internal function and an external wrapper function.
+
+        :param f: [SIDE EFFECT] function to split (at least requires_verification_if_external)
+        :param original_params: list of transformed function parameters without additional parameters added due to transformation
+        :param global_owners: list of static labels (me + final address state variable identifiers)
+        :return: Tuple of newly created external and internal function definitions
+        """
+        assert f.requires_verification_when_external
+
+        # Create new empty function with same parameters as original -> external wrapper
+        if f.is_function:
+            new_modifiers = ['external']
+            original_params = [deep_copy(p, with_types=True).with_changed_storage('memory', 'calldata') for p in original_params]
+        else:
+            new_modifiers = ['public']
+        if f.is_payable:
+            new_modifiers.append('payable')
+        new_f = ConstructorOrFunctionDefinition(f.idf, original_params, new_modifiers, f.return_parameters, Block([]))
+
+        # Make original function internal
+        f.idf = Identifier(cfg.get_internal_name(f))
+        f.modifiers = ['internal' if mod == 'public' else mod for mod in f.modifiers if mod != 'payable']
+        f.requires_verification_when_external = False
+
         # Create new circuit for external function
-        circuit = self.create_circuit_helper(ext_fct, global_owners, self.circuit_generators[int_fct])
-        if not int_fct.requires_verification:
-            del self.circuit_generators[int_fct]
-        self.circuit_generators[ext_fct] = circuit
+        circuit = self.create_circuit_helper(new_f, global_owners, self.circuits[f])
+        if not f.requires_verification:
+            del self.circuits[f]
+        self.circuits[new_f] = circuit
+
+        # Set meta attributes and populate body
+        new_f.unambiguous_name = f.unambiguous_name
+        new_f.requires_verification = True
+        new_f.requires_verification_when_external = True
+        new_f.called_functions = f.called_functions
+        new_f.called_functions[f] = None
+        new_f.body = self.create_external_wrapper_body(f, circuit, original_params)
+
+        # Add out and proof parameter to external wrapper
+        storage_loc = 'calldata' if new_f.is_function else 'memory'
+        new_f.add_param(Array(AnnotatedTypeName.uint_all()), Identifier(cfg.zk_out_name), storage_loc)
+        new_f.add_param(AnnotatedTypeName.proof_type(), Identifier(cfg.proof_param_name), storage_loc)
+
+        return new_f, f
+
+    @staticmethod
+    def create_external_wrapper_body(int_fct: ConstructorOrFunctionDefinition, ext_circuit: CircuitHelper,
+                                     original_params: List[Parameter]) -> Block:
+        """
+        Return Block with external wrapper function body.
+
+        :param int_fct: corresponding internal function
+        :param ext_circuit: [SIDE EFFECT] circuit helper of the external wrapper function
+        :param original_params: list of transformed function parameters without additional parameters added due to transformation
+        :return: body with wrapper code
+        """
 
         # Verify that out parameter has correct size
-        stmts = [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(circuit.out_size_trans)))]
+        stmts = [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
 
         # IdentifierExpr for array var holding serialized public circuit inputs
         in_arr_var = IdentifierExpr(cfg.zk_in_name)
@@ -259,10 +449,10 @@ class ZkayTransformer(AstTransformerVisitor):
         # Check encrypted parameters
         param_stmts = []
         offset = 0
-        for p in ext_fct.parameters:
+        for p in original_params:
             """ * of T_e rule 8 """
             if p.original_type.is_private():
-                circuit.ensure_parameter_encryption(p)
+                ext_circuit.ensure_parameter_encryption(p)
 
                 # Manually add to circuit inputs
                 param_stmts.append(in_arr_var.slice(offset, cfg.cipher_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_len)))
@@ -270,21 +460,21 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Request static public keys
         key_req_stmts = []
-        if circuit.requested_global_keys:
+        if ext_circuit.requested_global_keys:
             tmp_key_var = Identifier('_tmp_key')
             key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type()))
-            for key_owner in circuit.requested_global_keys:
-                idf, assignment = circuit.request_public_key(key_owner, circuit.get_glob_key_name(key_owner))
+            for key_owner in ext_circuit.requested_global_keys:
+                idf, assignment = ext_circuit.request_public_key(key_owner, ext_circuit.get_glob_key_name(key_owner))
                 assignment.lhs = IdentifierExpr(tmp_key_var.clone())
                 key_req_stmts.append(assignment)
 
                 # Manually add to circuit inputs
                 key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
                 offset += cfg.key_len
-                assert offset == circuit.in_size
+                assert offset == ext_circuit.in_size
 
         # Declare in array
-        new_in_array_expr = NewExpr(AnnotatedTypeName(TypeName.dyn_uint_array()), [NumberLiteralExpr(circuit.in_size_trans)])
+        new_in_array_expr = NewExpr(AnnotatedTypeName(TypeName.dyn_uint_array()), [NumberLiteralExpr(ext_circuit.in_size_trans)])
         in_var_decl = in_arr_var.idf.decl_var(TypeName.dyn_uint_array(), new_in_array_expr)
         stmts.append(in_var_decl)
 
@@ -292,14 +482,14 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts += Comment.comment_wrap_block('Request static public keys', key_req_stmts)
 
         # Call internal function
-        args = [IdentifierExpr(param.idf.clone()) for param in ext_fct.parameters]
+        args = [IdentifierExpr(param.idf.clone()) for param in original_params]
         internal_call = FunctionCallExpr(IdentifierExpr(int_fct.idf.clone()).override(target=int_fct), args)
-        internal_call.sec_start_offset = circuit.priv_in_size
-        ext_fct.called_functions[int_fct] = None
+        internal_call.sec_start_offset = ext_circuit.priv_in_size
+
         if int_fct.requires_verification:
-            circuit.call_function(internal_call)
-            args += [in_arr_var.clone(), NumberLiteralExpr(circuit.in_size),
-                     IdentifierExpr(cfg.zk_out_name), NumberLiteralExpr(circuit.out_size)]
+            ext_circuit.call_function(internal_call)
+            args += [in_arr_var.clone(), NumberLiteralExpr(ext_circuit.in_size),
+                     IdentifierExpr(cfg.zk_out_name), NumberLiteralExpr(ext_circuit.out_size)]
 
         if int_fct.return_parameters:
             ret_var_idfs = [Identifier(f'{cfg.return_var_name}_{idx}') for idx in range(len(int_fct.return_parameters))]
@@ -312,13 +502,8 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(in_call)
         stmts.append(Comment())
 
-        # Add out and proof parameter
-        storage_loc = 'calldata' if ext_fct.is_function else 'memory'
-        ext_fct.add_param(Array(AnnotatedTypeName.uint_all()), Identifier(cfg.zk_out_name), storage_loc)
-        ext_fct.add_param(AnnotatedTypeName.proof_type(), Identifier(cfg.proof_param_name), storage_loc)
-
         # Call verifier
-        verifier = IdentifierExpr(get_contract_instance_idf(circuit.verifier_contract_type.code()))
+        verifier = IdentifierExpr(get_contract_instance_idf(ext_circuit.verifier_contract_type.code()))
         verifier_args = [IdentifierExpr(cfg.proof_param_name), IdentifierExpr(cfg.zk_in_name), IdentifierExpr(cfg.zk_out_name)]
         verify = ExpressionStatement(verifier.call(cfg.verification_function_name, verifier_args))
         stmts.append(LabeledBlock([Comment('Verify zk proof of execution'), verify], 'exclude'))
@@ -327,4 +512,4 @@ class ZkayTransformer(AstTransformerVisitor):
         if int_fct.return_parameters:
             stmts.append(ReturnStatement(TupleExpr([IdentifierExpr(idf.clone()) for idf in ret_var_idfs])))
 
-        ext_fct.body.statements = stmts
+        return Block(stmts)

@@ -4,6 +4,14 @@ from zkay.zkay_ast.ast import AST
 
 
 class AstTransformerVisitor:
+    """
+    Visitor which replaces visited AST elements by the corresponding visit functions return value
+
+    The default action when no matching visit function is defined, is to replace the node with itself and to visit
+    the children. If a matching visit function is defined, children are not automatically visited.
+    (Corresponds to node-or-children traversal order from AstVisitor)
+    """
+
     def __init__(self, log=False):
         self.log = log
 
