@@ -41,15 +41,9 @@ class Config:
         self.indentation = ' '*4
 
         self.jsnark_circuit_classname = 'ZkayCircuit'
-        self.pki_contract_name = 'PublicKeyInfrastructure'
 
-        self.zk_out_name = 'out__'
-        self.zk_in_name = 'in__'
-        self.zk_struct_suffix = 'zk_data'
-        self.return_var_name = 'return_value__'
-        self.proof_param_name = 'proof__'
+        self.reserved_name_prefix = 'zk__'
         self.verification_function_name = 'check_verify'
-        self.field_prime_var_name = 'zk_field_prime'
 
         self.pack_chunk_size = 31
 
@@ -77,10 +71,6 @@ class Config:
     @staticmethod
     def override_solc(new_version):
         _init_solc(new_version)
-
-    @property
-    def zk_data_var_name(self):
-        return f'{self.zk_struct_suffix}__'
 
     @property
     def key_bits(self):
@@ -127,9 +117,41 @@ class Config:
 
     def get_internal_name(self, fct) -> str:
         if fct.requires_verification_when_external:
-            return f'_{fct.name}'
+            return f'_{self.reserved_name_prefix}{fct.name}'
         else:
             return fct.name
+
+    @property
+    def pki_contract_name(self) -> str:
+        return f'{self.reserved_name_prefix}PublicKeyInfrastructure'
+
+    @property
+    def zk_out_name(self) -> str:
+        return f'{self.reserved_name_prefix}out'
+
+    @property
+    def zk_in_name(self) -> str:
+        return f'{self.reserved_name_prefix}in'
+
+    @property
+    def proof_param_name(self) -> str:
+        return f'{self.reserved_name_prefix}proof'
+
+    @property
+    def return_var_name(self) -> str:
+        return f'{self.reserved_name_prefix}ret'
+
+    @property
+    def field_prime_var_name(self) -> str:
+        return f'{self.reserved_name_prefix}field_prime'
+
+    @property
+    def zk_struct_prefix(self) -> str:
+        return f'{self.reserved_name_prefix}data'
+
+    @property
+    def zk_data_var_name(self):
+        return f'{self.zk_struct_prefix}'
 
 
 cfg = Config()

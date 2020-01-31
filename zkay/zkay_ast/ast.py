@@ -1595,9 +1595,6 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         self.annotated_type = None
         self._update_fct_type()
 
-        # Unique name (differs from idf if there are multiple overloads)
-        self.unambiguous_name: Optional[str] = None
-
         # Analysis properties
         self.called_functions: OrderedDict[ConstructorOrFunctionDefinition, None] = OrderedDict()
         self.is_recursive = False

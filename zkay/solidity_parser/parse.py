@@ -9,7 +9,13 @@ class SyntaxException(Exception):
     """
     Error during parsing"
     """
-    pass
+
+    def __init__(self, msg: str, ctx=None, code=None) -> None:
+        if ctx is not None:
+            assert code is not None
+            from zkay.zkay_ast.ast import get_code_error_msg
+            msg = f'{get_code_error_msg(ctx.start.line, ctx.start.column + 1, str(code).splitlines())}\n{msg}'
+        super().__init__(msg)
 
 
 class MyErrorListener(ErrorListener):

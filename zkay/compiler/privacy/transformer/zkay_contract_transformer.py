@@ -135,27 +135,6 @@ class ZkayTransformer(AstTransformerVisitor):
         """Transformer for state variable declarations and parameters"""
 
     @staticmethod
-    def set_unique_fct_names(c: ContractDefinition):
-        """
-        Compute and set unambiguous name for all function definitions.
-
-        This is needed because solidity supports function overloading whereas the python simulation does not.
-        -> all function overloads receive unique function names
-        :param c: contract for which to compute the names
-        """
-
-        # TODO make sure there are no conflicts with altered names
-        fcts_with_same_name: Dict[str, List[ConstructorOrFunctionDefinition]] = {}
-        for f in c.constructor_definitions + c.function_definitions:
-            fcts_with_same_name.setdefault(f.name, []).append(f)
-        for name, fcts in fcts_with_same_name.items():
-            if len(fcts) == 1:
-                fcts[0].unambiguous_name = name
-            else:
-                for idx in range(len(fcts)):
-                    fcts[idx].unambiguous_name = f'{name}_{idx}'
-
-    @staticmethod
     def import_contract(cname: str, su: SourceUnit, corresponding_circuit: Optional[CircuitHelper] = None):
         """
         Import contract 'vname' into the given source unit.
@@ -192,7 +171,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         for f in c.constructor_definitions + c.function_definitions:
             if f.requires_verification_when_external:
-                name = f'Verify_{c.idf.name}_{f.unambiguous_name}'
+                name = f'{cfg.reserved_name_prefix}Verify_{c.idf.name}_{f.name}'
                 self.import_contract(name, su, self.circuits[f])
                 contract_var_decls.append(self.create_contract_variable(name))
 
@@ -252,8 +231,6 @@ class ZkayTransformer(AstTransformerVisitor):
         # Transform types of normal state variables
         c.state_variable_declarations = self.var_decl_trafo.visit_list(c.state_variable_declarations)
 
-        self.set_unique_fct_names(c)
-
         # Split into functions which require verification and those which don't need a circuit helper
         req_ext_fcts = {}
         new_fcts, new_constr = [], []
@@ -308,11 +285,11 @@ class ZkayTransformer(AstTransformerVisitor):
         # Create external wrapper functions where necessary
         for f, params in req_ext_fcts.items():
             ext_f, int_f = self.split_into_external_and_internal_fct(f, params, global_owners)
-            new_fcts.append(int_f)
             if ext_f.is_function:
                 new_fcts.append(ext_f)
             else:
                 new_constr.append(ext_f)
+            new_fcts.append(int_f)
 
         c.constructor_definitions = new_constr
         c.function_definitions = new_fcts
@@ -329,12 +306,12 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Add additional params
         ast.add_param(Array(AnnotatedTypeName.uint_all()), cfg.zk_in_name)
-        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_in_name}_start_idx')
+        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_in_name}start_idx')
         ast.add_param(Array(AnnotatedTypeName.uint_all()), cfg.zk_out_name)
-        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_out_name}_start_idx')
+        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_out_name}start_idx')
 
         # Verify that in/out parameters have correct size
-        out_start_idx, in_start_idx = IdentifierExpr(f'{cfg.zk_out_name}_start_idx'), IdentifierExpr(f'{cfg.zk_in_name}_start_idx')
+        out_start_idx, in_start_idx = IdentifierExpr(f'{cfg.zk_out_name}start_idx'), IdentifierExpr(f'{cfg.zk_in_name}start_idx')
         out_var, in_var = IdentifierExpr(cfg.zk_out_name), IdentifierExpr(cfg.zk_in_name)
         stmts.append(RequireStatement(out_start_idx.binop('+', NumberLiteralExpr(circuit.out_size_trans)).binop('<=', out_var.dot('length'))))
         stmts.append(RequireStatement(in_start_idx.binop('+', NumberLiteralExpr(circuit.in_size_trans)).binop('<=', in_var.dot('length'))))
@@ -414,7 +391,6 @@ class ZkayTransformer(AstTransformerVisitor):
         self.circuits[new_f] = circuit
 
         # Set meta attributes and populate body
-        new_f.unambiguous_name = f.unambiguous_name
         new_f.requires_verification = True
         new_f.requires_verification_when_external = True
         new_f.called_functions = f.called_functions

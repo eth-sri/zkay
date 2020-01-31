@@ -74,7 +74,6 @@ class DeepCopyVisitor(AstVisitor):
         '_annotated_type',
 
         # Function stuff
-        'unambiguous_name',
         'called_functions',
         'is_recursive',
         'has_static_body',

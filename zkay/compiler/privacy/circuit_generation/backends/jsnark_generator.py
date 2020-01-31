@@ -50,7 +50,7 @@ class JsnarkVisitor(AstVisitor):
         return f'/*** BEGIN {stmt.name} ***/\n' + indent('\n'.join(stmts)) + '\n' + f'/***  END  {stmt.name} ***/'
 
     def visitCircCall(self, stmt: CircCall):
-        return f'_{stmt.fct.unambiguous_name}();'
+        return f'_{stmt.fct.name}();'
 
     def visitCircVarDecl(self, stmt: CircVarDecl):
         assert stmt.lhs.t.size_in_uints == 1
@@ -206,11 +206,11 @@ class JsnarkGenerator(CircuitGenerator):
                 target_circuit = self.circuits[fct]
                 body_stmts = JsnarkVisitor(target_circuit.phi).visitCircuit()
 
-                body = '\n'.join([f'stepIn("{fct.unambiguous_name}");'] +
+                body = '\n'.join([f'stepIn("{fct.name}");'] +
                                  add_function_circuit_arguments(target_circuit) + [''] +
                                  [stmt.strip() for stmt in body_stmts] +
                                  ['stepOut();'])
-                fdef = f'private void _{fct.unambiguous_name}() {{\n' + indent(body) + '\n}'
+                fdef = f'private void _{fct.name}() {{\n' + indent(body) + '\n}'
                 fdefs.append(f'{fdef}')
 
         # Generate java code for the function corresponding to this circuit

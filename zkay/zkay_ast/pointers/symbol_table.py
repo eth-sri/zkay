@@ -61,7 +61,11 @@ class SymbolTableFiller(AstVisitor):
 
     def visitContractDefinition(self, ast: ContractDefinition):
         state_vars = {d.idf.name: d.idf for d in ast.state_variable_declarations if not isinstance(d, Comment)}
-        funcs = {f.idf.name: f.idf for f in ast.function_definitions}
+        funcs = {}
+        for f in ast.function_definitions:
+            if f.idf.name in funcs:
+                raise UnknownIdentifierException(f'Zkay does not currently support method overloading.', f)
+            funcs[f.idf.name] = f.idf
         structs = {s.idf.name: s.idf for s in ast.struct_definitions}
         enums = {e.idf.name: e.idf for e in ast.enum_definitions}
         ast.names = merge_dicts(state_vars, funcs, structs, enums)

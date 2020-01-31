@@ -111,7 +111,7 @@ def check_compilation(filename: str, show_errors: bool = False, code: str = None
 
         debug_print('')
         if had_error:
-            raise SolcException()
+            raise SolcException(report)
 
 
 def check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str):

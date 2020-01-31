@@ -50,7 +50,7 @@ versionConstraint
 
 // REMOVED: interface, library, inheritance
 contractDefinition
-  : ( 'contract' ) identifier
+  : ( 'contract' ) idf=identifier
     '{' parts+=contractPart* '}' ;
 
 // REMOVED: structDefinition, usingForDeclaration, modifierDefinition, eventDefinition

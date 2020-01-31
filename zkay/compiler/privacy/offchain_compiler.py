@@ -429,7 +429,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 # Use cast for correct overflow behavior according to type
                 res = self.handle_cast(res, t)
             return res
-
         elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
             return ast.func.format_string().format(*args)

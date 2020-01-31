@@ -1,6 +1,8 @@
 from antlr4.Token import CommonToken
 
 import zkay.zkay_ast.ast as ast
+
+from zkay.config import cfg
 from zkay.solidity_parser.parse import SyntaxException
 from zkay.solidity_parser.emit import Emitter
 from zkay.solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
@@ -97,6 +99,12 @@ class BuildASTVisitor(SolidityVisitor):
             # other
             return self.visit(field)
 
+    def visitIdentifier(self, ctx: SolidityParser.IdentifierContext):
+        name: str = ctx.name.text
+        if name.startswith(cfg.reserved_name_prefix) or name.startswith(f'_{cfg.reserved_name_prefix}'):
+            raise SyntaxException(f'Identifiers must not start with reserved prefix _?{cfg.reserved_name_prefix}', ctx, self.code)
+        return ast.Identifier(name)
+
     def visitBlock(self, ctx: SolidityParser.BlockContext):
         statements = [self.visit(s) for s in ctx.statements]
         for i in range(len(statements)):
@@ -111,7 +119,7 @@ class BuildASTVisitor(SolidityVisitor):
                         name = f.idf.name
                         if name == 'require':
                             if len(e.args) != 1:
-                                RequireException(f'Invalid number of arguments for require: {e}')
+                                RequireException(f'Invalid number of arguments for require: {e}', e)
                             r = ast.RequireStatement(e.args[0])
                             statements[i] = r
 
@@ -125,7 +133,9 @@ class BuildASTVisitor(SolidityVisitor):
 
     # Visit a parse tree produced by SolidityParser#contractDefinition.
     def visitContractDefinition(self, ctx: SolidityParser.ContractDefinitionContext):
-        identifier = self.visit(ctx.identifier())
+        identifier = self.visit(ctx.idf)
+        if '$' in identifier.name:
+            raise SyntaxException('$ is not allowed in zkay contract identifiers', ctx.idf, self.code)
         parts = [self.visit(c) for c in ctx.parts]
         state_vars = [p for p in parts if isinstance(p, StateVariableDeclaration)]
         cfdefs = [p for p in parts if isinstance(p, ast.ConstructorOrFunctionDefinition)]
@@ -139,6 +149,8 @@ class BuildASTVisitor(SolidityVisitor):
             idf, ret_params = None, None
         else:
             idf, ret_params = self.visit(ctx.idf), self.handle_field(ctx.return_parameters)
+            if '$' in idf.name:
+                raise SyntaxException('$ is not allowed in zkay function identifiers', ctx.idf, self.code)
         params, mods, body = self.handle_field(ctx.parameters), self.handle_field(ctx.modifiers), self.visit(ctx.body)
         return ast.ConstructorOrFunctionDefinition(idf, params, mods, ret_params, body)
 
@@ -147,6 +159,13 @@ class BuildASTVisitor(SolidityVisitor):
 
     def visitConstructorDefinition(self, ctx:SolidityParser.ConstructorDefinitionContext):
         return self.handle_fdef(ctx)
+
+    def visitEnumDefinition(self, ctx:SolidityParser.EnumDefinitionContext):
+        idf = self.visit(ctx.idf)
+        if '$' in idf.name:
+            raise SyntaxException('$ is not allowed in zkay enum identifiers', ctx.idf, self.code)
+        values = [self.visit(v) for v in ctx.values]
+        return ast.EnumDefinition(idf, values)
 
     # Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
     def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):
@@ -185,9 +204,7 @@ class BuildASTVisitor(SolidityVisitor):
             pa = self.visit(ctx.privacy_annotation)
 
             if not (isinstance(pa, ast.AllExpr) or isinstance(pa, ast.MeExpr) or isinstance(pa, IdentifierExpr)):
-                report = f'{ast.get_code_error_msg(pa.line, pa.column + 1, str(self.code).splitlines())}\n' \
-                         f'Privacy annotation can only be me | all | Identifier'
-                raise SyntaxException(report)
+                raise SyntaxException('Privacy annotation can only be me | all | Identifier', ctx.privacy_annotation, self.code)
 
         return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa)
 
@@ -341,7 +358,7 @@ class BuildASTVisitor(SolidityVisitor):
 
     def visitAssignmentExpr(self, ctx: SolidityParser.AssignmentExprContext):
         if not self.is_expr_stmt(ctx):
-            raise SyntaxException('Assignments are only allowed as statements')
+            raise SyntaxException('Assignments are only allowed as statements', ctx, self.code)
         lhs = self.visit(ctx.lhs)
         rhs = self.visit(ctx.rhs)
         assert ctx.op.text[-1] == '='
@@ -355,7 +372,7 @@ class BuildASTVisitor(SolidityVisitor):
 
     def _handle_crement_expr(self, ctx, kind: str):
         if not self.is_expr_stmt(ctx):
-            raise SyntaxException(f'{kind}-crement expressions are only allowed as statements')
+            raise SyntaxException(f'{kind}-crement expressions are only allowed as statements', ctx, self.code)
         op = '+' if ctx.op.text == '++' else '-'
 
         one = NumberLiteralExpr(1)

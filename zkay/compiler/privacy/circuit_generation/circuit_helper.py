@@ -128,7 +128,7 @@ class CircuitHelper:
     @property
     def zk_data_struct_name(self):
         """Name of the data struct type"""
-        return f'{self.fct.unambiguous_name}_{cfg.zk_struct_suffix}'
+        return f'{cfg.zk_struct_prefix}_{self.fct.name}'
 
     @property
     def priv_in_size_trans(self) -> int:
