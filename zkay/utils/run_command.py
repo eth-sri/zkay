@@ -11,16 +11,17 @@ def run_command(cmd: List[str], cwd=None, key: str = None):
 
     if key in cfg.debug_output_whitelist and not cfg.is_unit_test:
         process = subprocess.Popen(cmd, cwd=cwd)
+        output, error = process.communicate() # will be None
     else:
         # run
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
 
-    # collect output
-    output, error = process.communicate()
+        # collect output
+        output, error = process.communicate()
 
-    # decode output
-    output = output.decode('utf-8').rstrip()
-    error = error.decode('utf-8').rstrip()
+        # decode output
+        output = output.decode('utf-8').rstrip()
+        error = error.decode('utf-8').rstrip()
 
     # check for error
     if process.returncode != 0:
