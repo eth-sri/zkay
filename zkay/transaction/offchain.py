@@ -17,6 +17,35 @@ class RequireException(Exception):
     pass
 
 
+class LocalsDict:
+    def __init__(self) -> None:
+        self._scopes: List[dict] = [{}]
+
+    def push_scope(self):
+        self._scopes.append({})
+
+    def pop_scope(self):
+        self._scopes.pop()
+
+    def decl(self, name, val):
+        if name in self._scopes[-1]:
+            raise ValueError('Variable declared twice in same scope')
+        self._scopes[-1][name] = val
+
+    def __getitem__(self, key):
+        for scope in reversed(self._scopes):
+            if key in scope:
+                return scope[key]
+        raise ValueError('Variable not found')
+
+    def __setitem__(self, key, value):
+        for scope in reversed(self._scopes):
+            if key in scope:
+                scope[key] = value
+                return
+        raise ValueError('Variable not found')
+
+
 class ContractSimulator:
     def __init__(self, project_dir: str, user_addr: AddressValue):
         self.project_dir = project_dir
@@ -25,6 +54,7 @@ class ContractSimulator:
         self.keystore = Runtime.keystore()
         self.prover = Runtime.prover()
 
+        self.locals = None
         self.current_priv_values: Dict[str, Union[int, bool, RandomnessValue]] = {}
         self.all_priv_values: List[Union[int, bool, RandomnessValue]] = []
         self.current_all_index = None
@@ -130,6 +160,12 @@ class ContractSimulator:
         yield
         self.current_priv_values, self.current_all_index = old_priv_values, old_all_idx
 
+    @contextmanager
+    def scope(self):
+        self.locals.push_scope()
+        yield
+        self.locals.pop_scope()
+
 
 class FunctionCtx:
     def __init__(self, v: ContractSimulator, trans_sec_size, *, value: int = 0):
@@ -137,10 +173,12 @@ class FunctionCtx:
         self.was_external = None
         self.trans_sec_size = trans_sec_size
         self.value = value
+        self.prev_locals = None
 
     def __enter__(self):
         self.was_external = self.v.is_external
         if self.v.is_external is None:
+            assert self.v.locals is None
             self.v.is_external = True
             self.v.state_values.clear()
             self.v.all_priv_values = [0 for _ in range(self.trans_sec_size)]
@@ -149,9 +187,13 @@ class FunctionCtx:
             self.v.current_msg, self.v.current_block, self.v.current_tx = self.v.conn.get_special_variables(self.v.user_addr, self.value)
         else:
             self.v.is_external = False
+        self.prev_locals = self.v.locals
+        self.v.locals = LocalsDict()
 
     def __exit__(self, exec_type, exec_value, traceback):
+        self.v.locals = self.prev_locals
         if self.v.is_external:
+            assert self.v.locals is None
             self.v.state_values.clear()
             self.v.all_priv_values = None
             self.v.current_all_index = 0

@@ -2,6 +2,7 @@ import keyword
 from textwrap import dedent
 from typing import Union, List
 
+from zkay.config import cfg
 from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
@@ -9,7 +10,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition, EnumTypeName, LocationExpr
+    EnumDefinition, EnumTypeName
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast']}
 
@@ -49,10 +50,12 @@ class PythonCodeVisitor(CodeVisitor):
         return f'def {sanitized(ast.name)}({params}):\n{indent(body)}'
 
     def visitStatementList(self, ast: StatementList):
-        return self.visit_list(ast.statements)
+        b = self.visit_list(ast.statements)
+        return b if b else 'pass'
 
     def visitBlock(self, ast: Block):
-        return self.visit_list(ast.statements)
+        ret = self.visitStatementList(ast)
+        return f'with self.scope():\n{indent(ret)}'
 
     def visitIndentBlock(self, ast: IndentBlock):
         return f'### BEGIN {ast.name}\n{self.visit_list(ast.statements)}\n###  END  {ast.name}'
@@ -147,11 +150,19 @@ class PythonCodeVisitor(CodeVisitor):
         else:
             return f'{self.visit(t)}()'
 
+    @staticmethod
+    def is_special_var(idf: Identifier):
+        return idf.name.startswith(cfg.reserved_name_prefix) or idf.name in ['msg', 'block', 'tx', '_tmp_key']
+
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         t = ast.variable_declaration.annotated_type.type_name
-        s = self.visit(ast.variable_declaration)
         e = self.get_default_value(t) if ast.expr is None else self.visit(ast.expr)
-        return f'{s} = {e}'
+        if self.is_special_var(ast.variable_declaration.idf):
+            s = self.visit(ast.variable_declaration)
+            return f'{s} = {e}'
+        else:
+            s = ast.variable_declaration.idf.name
+            return f'self.locals.decl("{s}", {e})'
 
     def visitNewExpr(self, ast: NewExpr):
         if isinstance(ast.annotated_type.type_name, Array):

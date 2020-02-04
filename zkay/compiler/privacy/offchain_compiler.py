@@ -11,7 +11,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, NumberTypeName, \
     CircuitComputationStatement, VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, IntTypeName, EnumDefinition, EnumTypeName, \
-    UintTypeName, NumberLiteralExpr
+    UintTypeName, NumberLiteralExpr, VariableDeclaration
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -162,7 +162,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             val_str = f"{GET_STATE}({', '.join([name_str] + indices)}, count={size}, is_encrypted={is_encrypted}{constr})"
             return val_str
         else:
-            return self.get_loc_value(idf.idf, indices)
+            name = idf.idf
+            if isinstance(idf.target, VariableDeclaration) and not self.inside_circuit and not self.is_special_var(idf.idf):
+                name = Identifier(f'self.locals["{idf.idf.name}"]')
+            return self.get_loc_value(name, indices)
 
     def get_lvalue(self, idf: IdentifierExpr, indices: List[str]):
         if isinstance(idf.target, StateVariableDeclaration) and not self._is_builtin_var(idf):
@@ -170,7 +173,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             fstr = '[{}]' * len(indices)
             return f"{STATE_VALUES_NAME}['{idf.idf.name}{fstr}'.format({idxvals})]"
         else:
-            return self.get_loc_value(idf.idf, indices)
+            name = idf.idf
+            if isinstance(idf.target, VariableDeclaration) and not self.inside_circuit and not self.is_special_var(idf.idf):
+                name = Identifier(f'self.locals["{idf.idf.name}"]')
+            return self.get_loc_value(name, indices)
 
     def visitContractDefinition(self, ast: ContractDefinition):
         enums = self.visit_list(ast.enum_definitions, '\n\n')
@@ -257,11 +263,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             enc_param_str = ''
             for arg in self.current_params:
                 if arg.original_type is not None and arg.original_type.is_private():
-                    sname = self.visit(arg.idf)
+                    pname = self.visit(arg.idf)
+                    plain_val = pname
                     if arg.original_type.type_name.is_signed_numeric:
-                        sname = self.handle_cast(sname, UintTypeName(f'uint{arg.original_type.type_name.elem_bitwidth}'))
-                    enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {sname}\n'
-                    enc_param_str += f'{sname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {CRYPTO_OBJ_NAME}.enc({sname}, {GET_PK})\n'
+                        plain_val = self.handle_cast(pname, UintTypeName(f'uint{arg.original_type.type_name.elem_bitwidth}'))
+                    enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
+                    enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {CRYPTO_OBJ_NAME}.enc({self.get_priv_value(arg.idf.name)}, {GET_PK})\n'
             enc_param_comment_str = '\n# Encrypt parameters' if enc_param_str else ''
             enc_param_str = enc_param_str[:-1] if enc_param_str else ''
 
