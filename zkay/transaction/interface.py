@@ -206,7 +206,9 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
             plain = int.from_bytes(plain.val, byteorder='big')
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
+        assert int(plain) < bn128_scalar_field, f"Integer overflow, plaintext is > field prime"
         debug_print(f'Encrypting value {plain} with public key "{pk}"')
+
         while True:
             # Retry until cipher text is not 0
             cipher, rnd = self._enc(int(plain), self.deserialize_bigint(pk[:]))
@@ -247,12 +249,12 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         return ZkayCryptoInterface.pack_byte_array(bin)
 
     @staticmethod
-    def pack_byte_array(bin: bytes) -> List[int]:
+    def pack_byte_array(bin: bytes, chunk_size=cfg.pack_chunk_size) -> List[int]:
         total_bytes = len(bin)
-        first_chunk_size = total_bytes % cfg.pack_chunk_size
+        first_chunk_size = total_bytes % chunk_size
         arr = [] if first_chunk_size == 0 else [int.from_bytes(bin[:first_chunk_size], byteorder='big')]
-        for i in range(first_chunk_size, total_bytes - first_chunk_size, cfg.pack_chunk_size):
-            arr.append(int.from_bytes(bin[i:i + cfg.pack_chunk_size], byteorder='big'))
+        for i in range(first_chunk_size, total_bytes - first_chunk_size, chunk_size):
+            arr.append(int.from_bytes(bin[i:i + chunk_size], byteorder='big'))
         return list(reversed(arr))
 
     @staticmethod

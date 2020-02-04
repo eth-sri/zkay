@@ -13,7 +13,7 @@ class RSAOAEPCrypto(RSACrypto):
         pub_key = RSA.construct((pk, self.default_exponent))
 
         encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256).encrypt)
-        cipher_bytes = encrypt(plain.to_bytes(cfg.pack_chunk_size, byteorder='big'))
+        cipher_bytes = encrypt(plain.to_bytes(32, byteorder='big'))
         cipher = self.pack_byte_array(cipher_bytes)
 
         rnd_bytes = encrypt.locals['ros']

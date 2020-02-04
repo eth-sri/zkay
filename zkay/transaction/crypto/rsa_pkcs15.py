@@ -13,7 +13,7 @@ class RSAPKCS15Crypto(RSACrypto):
         pub_key = RSA.construct((pk, self.default_exponent))
         encrypt = PersistentLocals(PKCS1_v1_5.new(pub_key).encrypt)
 
-        cipher_bytes = encrypt(plain.to_bytes(cfg.pack_chunk_size, byteorder='big'))
+        cipher_bytes = encrypt(plain.to_bytes(32, byteorder='big'))
         cipher = self.pack_byte_array(cipher_bytes)
 
         rnd_bytes = encrypt.locals['ps']
