@@ -89,6 +89,7 @@ class TestOffchainBase(TestScenarios):
                 # Check assertion
                 trans_or_assert.check_assertion(self, users)
             else:
+                print(f'Transaction: {trans_or_assert}')
                 assert isinstance(trans_or_assert, Transaction)
                 exception = trans_or_assert.expected_exception
                 with nullcontext() if exception is None else self.assertRaises(exception):

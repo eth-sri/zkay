@@ -22,7 +22,15 @@ contract NestedPrivateIfCond {
                 x = 2;
                 ret = 14;
             } else {
-                x = 42;
+                x = 5;
+                {
+                    x = 42;
+                    uint x;
+                    {
+                        x = 3;
+                        uint x = 5;
+                    }
+                }
                 ret = v - v2 + x - 42;
                 hans = 42;
             }
@@ -68,5 +76,18 @@ contract NestedPrivateIfCond {
         } else {
             res = x - 100;
         }
+
+        uint res;
+        {
+            res = 2;
+            uint res = 6;
+            require(res == 6);
+        }
+        res = 7;
+        {
+            uint res = 27;
+            require(res == 27);
+        }
+        require(res == 7);
     }
 }
