@@ -3,7 +3,9 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Generic, TypeVar, Dict, ContextManager, Any, Callable
 
-from zkay.zkay_ast.ast import Expression, IdentifierExpr, HybridArgumentIdf
+from zkay.zkay_ast.ast import Expression, IdentifierExpr, HybridArgumentIdf, Identifier, StateVariableDeclaration, BuiltinFunction, \
+    FunctionCallExpr
+from zkay.zkay_ast.pointers.symbol_table import SymbolTableLinker
 
 K = TypeVar('K')
 V = TypeVar('V')
@@ -46,45 +48,44 @@ class Remapper(Generic[K, V]):
     def clear(self):
         self.rmap.clear()
 
-    def remap(self, key: K, is_local: bool, value: V):
+    def remap(self, key: K, value: V):
         """
         Remap key to refer to new version element 'value'.
 
         :param key: The key/identifier to update
-        :param is_local: Remappings for local keys will be discarded once the current remap scope is left
         :param value: latest version of the element to which key refers
         """
-        self.rmap[(is_local, key)] = value
+        assert key.parent is not None
+        self.rmap[key] = value
 
     @contextmanager
-    def remap_scope(self, persist_globals: bool) -> ContextManager:
+    def remap_scope(self, scope_stmt=None) -> ContextManager:
         """
         Return a context manager which will automatically rollback the remap state once the end of the with statement is reached.
 
-        :param persist_globals: If True, keys with is_local=False will not be removed upon rollback
+        :param persist_globals: If True, entries with keys referring to state variables will not be removed during rollback
         :return: context manager
         """
         prev = self.rmap.copy()
         yield
-        if persist_globals:
-            prev.update({(is_loc, key): val for (is_loc, key), val in self.rmap.items() if not is_loc})
+        if scope_stmt:
+            prev.update({key: val for key, val in self.rmap.items() if SymbolTableLinker.in_scope_at(key, scope_stmt)})
         self.rmap = prev
 
-    def is_remapped(self, key: K, is_local=True) -> bool:
-        return (is_local, key) in self.rmap
+    def is_remapped(self, key: K) -> bool:
+        return key in self.rmap
 
-    def get_current(self, key: K, is_local=True, default=None) -> V:
+    def get_current(self, key: K, default=None) -> V:
         """
         Return the value to which key currently refers.
 
         :param key: Name to lookup
-        :param is_local: Is it a local name?
         :param default: If set, this will be returned if key is not currently remapped
 
         :except KeyError: raised if key not currently mapped and default=None
         :return: The current value
         """
-        k = (is_local, key)
+        k = key
         if k in self.rmap:
             return self.rmap[k]
         else:
@@ -101,7 +102,7 @@ class Remapper(Generic[K, V]):
         assert isinstance(state, Dict)
         self.rmap = state
 
-    def join_branch(self, true_cond_for_other_branch: IdentifierExpr, other_branch_state: Any, create_val_for_name_and_cond_fct: Callable[[K, Expression], V]):
+    def join_branch(self, stmt, true_cond_for_other_branch: IdentifierExpr, other_branch_state: Any, create_val_for_name_and_cond_fct: Callable[[K, Expression], V]):
         """
         Perform an SSA join for two branches.
 
@@ -123,19 +124,40 @@ class Remapper(Generic[K, V]):
         true_state = other_branch_state
         false_state = self.rmap
         self.rmap = {}
+
+        def join(then_idf, else_idf):
+            rhs = FunctionCallExpr(BuiltinFunction('ite'), [true_cond_for_other_branch.clone(), then_idf, else_idf]).as_type(val.t)
+            return create_val_for_name_and_cond_fct(key.name, rhs)
+
         for key, val in true_state.items():
-            if key not in false_state or false_state[key].name == val.name:
+            if not SymbolTableLinker.in_scope_at(key, stmt):
+                # Don't keep local values
+                continue
+
+            if key in false_state and false_state[key].name == val.name:
+                assert false_state[key] == val
                 # no conflict
                 self.rmap[key] = val
+            elif key not in false_state:
+                assert key.parent.annotated_type.declared_type is not None
+                prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
+                prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
+                self.rmap[key] = join(true_state[key].get_loc_expr(stmt), prev_val)
             else:
                 # conflict -> assign conditional assignment result to new version of variable
-                then_idf = true_state[key]
-                else_idf = false_state[key]
-                rhs = true_cond_for_other_branch.clone().ite(IdentifierExpr(then_idf).as_type(then_idf.t),
-                                                     IdentifierExpr(else_idf).as_type(else_idf.t)).as_type(then_idf.t)
-                self.rmap[key] = create_val_for_name_and_cond_fct(key[1], rhs)
+                self.rmap[key] = join(true_state[key].get_loc_expr(stmt), false_state[key].get_loc_expr(stmt))
+        for key, val in false_state.items():
+            if not SymbolTableLinker.in_scope_at(key, stmt):
+                # Don't keep local values
+                continue
+
+            if key not in true_state:
+                assert key.parent.annotated_type.declared_type is not None
+                prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
+                prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
+                self.rmap[key] = join(prev_val, false_state[key].get_loc_expr(stmt))
 
 
-class CircVarRemapper(Remapper[str, HybridArgumentIdf]):
+class CircVarRemapper(Remapper[Identifier, HybridArgumentIdf]):
     """Remapper class used by CircuitHelper"""
     pass

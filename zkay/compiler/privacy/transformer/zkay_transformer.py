@@ -148,8 +148,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
             assert not self.gen.has_return_var
             self.gen.has_return_var = True
             expr = self.expr_trafo.visit(ast.expr)
-            ret_params = [IdentifierExpr(f'{cfg.return_var_name}_{idx}') for idx in range(len(ast.function.return_parameters))]
-            return TupleExpr(ret_params).assign(expr).override(pre_statements=ast.pre_statements)
+            ret_args = [IdentifierExpr(vd.idf.clone()).override(target=vd) for vd in ast.function.return_var_decls]
+            return TupleExpr(ret_args).assign(expr).override(pre_statements=ast.pre_statements)
         else:
             ast.expr = self.expr_trafo.visit(ast.expr)
             return ast
@@ -272,7 +272,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         return self.transform_location(ast)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        ast = self.gen.get_remapped_idf_expr(ast)
+        if not isinstance(ast.idf, HybridArgumentIdf):
+            ast = self.gen.get_remapped_idf_expr(ast)
         if isinstance(ast, IdentifierExpr) and isinstance(ast.idf, HybridArgumentIdf):
             assert ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
             return ast
@@ -321,8 +322,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         if not isinstance(ast.expr, TupleExpr):
             ast.expr = TupleExpr([ast.expr])
 
-        for idx in range(len(ast.function.return_parameters)):
-            self.gen.create_new_idf_version_from_value(Identifier(f'{cfg.return_var_name}_{idx}'), ast.expr.elements[idx])
+        for vd, expr in zip(ast.function.return_var_decls, ast.expr.elements):
+            self.gen.create_new_idf_version_from_value(vd.idf, expr)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.add_assignment_to_circuit(ast)
@@ -335,20 +336,10 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         self.gen.create_new_idf_version_from_value(ast.variable_declaration.idf, ast.expr)
 
     def visitIfStatement(self, ast: IfStatement):
-        # Bubble up nested pre statements
         self.gen.add_if_statement_to_circuit(ast)
-        ast.pre_statements += ast.then_branch.pre_statements
-        ast.then_branch.pre_statements = []
-        if ast.else_branch is not None:
-            ast.pre_statements += ast.else_branch.pre_statements
-            ast.else_branch.pre_statements = []
 
     def visitBlock(self, ast: Block):
-        # Bubble up nested pre statements
-        for i in range(len(ast.statements)):
-            self.visit(ast.statements[i])
-            ast.pre_statements += ast.statements[i].pre_statements
-            ast.statements[i].pre_statements = []
+        self.gen.add_block_to_circuit(ast)
 
     def visitStatement(self, ast: Statement):
         raise NotImplementedError("Unsupported statement")

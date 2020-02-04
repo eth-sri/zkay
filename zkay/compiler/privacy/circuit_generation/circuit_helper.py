@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from typing import List, Optional, Tuple, Callable, Union, ContextManager
 
 from zkay.compiler.name_remapper import CircVarRemapper
@@ -13,7 +13,8 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
     CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
-    Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label
+    Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label, Comment, \
+    ExpressionStatement, NumberLiteralExpr
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
@@ -243,7 +244,7 @@ class CircuitHelper:
         :return: Location expression which references the encrypted circuit result
         """
         assert not self._remapper
-        with self._remapper.remap_scope(persist_globals=False):
+        with self._remapper.remap_scope():
             return self._get_circuit_output_for_private_expression(expr, new_privacy)
 
     def evaluate_stmt_in_circuit(self, ast: Statement) -> AssignmentStatement:
@@ -262,8 +263,13 @@ class CircuitHelper:
         :return: AssignmentStatement as described above
         """
         assert not self._remapper
-        with self._remapper.remap_scope(persist_globals=False):
-            astmt = AssignmentStatement(None, None)
+        with self._remapper.remap_scope():
+            astmt = ExpressionStatement(NumberLiteralExpr(0))
+            for var in ast.modified_values:
+                if var.in_scope_at(ast):
+                    astmt = AssignmentStatement(None, None)
+                    break
+
             astmt.before_analysis = ast.before_analysis
 
             # External values read inside statement -> function call arguments
@@ -293,13 +299,13 @@ class CircuitHelper:
             # Build the imaginary function
             fdef = ConstructorOrFunctionDefinition(
                 Identifier('<stmt_fct>'),
-                [Parameter([], arg.annotated_type, arg.idf.clone()) for arg in args], ['private'],
-                [Parameter([], ret.annotated_type, ret.idf.clone()) for ret in ret_params],
+                [Parameter([], arg.annotated_type, arg.target.idf) for arg in args], ['private'],
+                [Parameter([], ret.annotated_type, ret.target.idf) for ret in ret_params],
                 Block([ast, ReturnStatement(TupleExpr(ret_params))])
             )
             fdef.original_body = fdef.body
             fdef.body.parent = fdef
-            fdef.parent = ast.function.body
+            fdef.parent = ast
 
             # inline "Call" to the imaginary function
             fcall = FunctionCallExpr(IdentifierExpr('<stmt_fct>').override(target=fdef), args)
@@ -317,9 +323,13 @@ class CircuitHelper:
             ]
 
             # Create assignment statement
-            astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
-            astmt.rhs = TupleExpr(ret_arg_outs)
-            return astmt
+            if ret_params:
+                astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
+                astmt.rhs = TupleExpr(ret_arg_outs)
+                return astmt
+            else:
+                assert isinstance(astmt, ExpressionStatement)
+                return astmt
 
     def call_function(self, ast: FunctionCallExpr):
         """
@@ -397,15 +407,15 @@ class CircuitHelper:
         :return: Either idf itself (not currently remapped)
                  or a loc expr for the HybridArgumentIdf which references the most recent value of idf
         """
-
-        is_local = not isinstance(idf.target, StateVariableDeclaration)
-        if self._remapper.is_remapped(idf.idf.name, is_local):
-            remapped_idf = self._remapper.get_current(idf.idf.name, is_local)
+        assert idf.target is not None
+        assert not isinstance(idf.idf, HybridArgumentIdf)
+        if self._remapper.is_remapped(idf.target.idf):
+            remapped_idf = self._remapper.get_current(idf.target.idf)
             return remapped_idf.get_loc_expr(idf.parent).as_type(idf.annotated_type)
         else:
             return idf
 
-    def create_new_idf_version_from_value(self, orig_idf: Identifier, expr: Expression, is_local: bool = True):
+    def create_new_idf_version_from_value(self, orig_idf: Identifier, expr: Expression):
         """
         Store expr in a new version of orig_idf (for SSA).
 
@@ -414,7 +424,7 @@ class CircuitHelper:
         :param is_local: whether orig_idf refers to a local variable (as opposed to a state variable)
         """
         tmp_var = self._create_temp_var(orig_idf.name, expr)
-        self._remapper.remap(orig_idf.name, is_local, tmp_var)
+        self._remapper.remap(orig_idf, tmp_var)
 
     def inline_function_call_into_circuit(self, fcall: FunctionCallExpr) -> Union[Expression, TupleExpr]:
         """
@@ -425,11 +435,11 @@ class CircuitHelper:
         """
         assert isinstance(fcall.func, LocationExpr) and fcall.func.target is not None
         fdef = fcall.func.target
-        with self._remapper.remap_scope(persist_globals=True):
+        with self._remapper.remap_scope(fcall.func.target.body):
             with self.circ_indent_block(f'INLINED {fcall.code()}'):
                 # Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
                 for param, arg in zip(fdef.parameters, fcall.args):
-                    self.create_new_idf_version_from_value(Identifier(param.idf.name), arg)
+                    self.create_new_idf_version_from_value(param.idf, arg)
 
                 # Visit the untransformed target function body to include all statements in this circuit
                 inlined_body = deep_copy(fdef.original_body, with_types=True, with_analysis=True)
@@ -437,7 +447,7 @@ class CircuitHelper:
                 fcall.statement.pre_statements += inlined_body.pre_statements
 
                 # Create TupleExpr with location expressions corresponding to the function return values as elements
-                ret_idfs = [self._remapper.get_current(f'{cfg.return_var_name}_{idx}') for idx in range(len(fdef.return_parameters))]
+                ret_idfs = [self._remapper.get_current(vd.idf) for vd in fdef.return_var_decls]
                 ret = TupleExpr([IdentifierExpr(idf.clone()).as_type(idf.t) for idf in ret_idfs])
         if len(ret.elements) == 1:
             # Unpack 1-length tuple
@@ -454,11 +464,15 @@ class CircuitHelper:
             cond, _ = self._evaluate_private_expression(ast.condition)
 
             # Handle if branch
-            with self._remapper.remap_scope(persist_globals=False):
+            with self._remapper.remap_scope():
                 self._phi.append(CircComment(f'if ({cond.name})'))
                 with self.guarded(cond, True):
                     self._circ_trafo.visit(ast.then_branch)
                 then_remap = self._remapper.get_state()
+
+                # Bubble up nested pre statements
+                ast.pre_statements += ast.then_branch.pre_statements
+                ast.then_branch.pre_statements = []
 
             # Handle else branch
             if ast.else_branch is not None:
@@ -466,10 +480,25 @@ class CircuitHelper:
                 with self.guarded(cond, False):
                     self._circ_trafo.visit(ast.else_branch)
 
+                # Bubble up nested pre statements
+                ast.pre_statements += ast.else_branch.pre_statements
+                ast.else_branch.pre_statements = []
+
             # SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
             self._phi.append(CircComment(f'join ({cond.name})'))
-            true_cond = IdentifierExpr(cond.clone(), AnnotatedTypeName(TypeName.bool_type(), Expression.me_expr()))
-            self._remapper.join_branch(true_cond, then_remap, self._create_temp_var)
+            cond_idf_expr = cond.get_loc_expr(ast)
+            assert isinstance(cond_idf_expr, IdentifierExpr)
+            self._remapper.join_branch(ast, cond_idf_expr, then_remap, self._create_temp_var)
+
+    def add_block_to_circuit(self, ast: Block):
+        assert ast.parent is not None
+        is_already_scoped = isinstance(ast.parent, (ConstructorOrFunctionDefinition, IfStatement))
+        with nullcontext() if is_already_scoped else self._remapper.remap_scope(ast):
+            for stmt in ast.statements:
+                self._circ_trafo.visit(stmt)
+                # Bubble up nested pre statements
+                ast.pre_statements += stmt.pre_statements
+                stmt.pre_statements = []
 
     # Internal functionality #
 
@@ -496,7 +525,8 @@ class CircuitHelper:
         :param rhs: source
         """
         if isinstance(lhs, IdentifierExpr): # for now no ref types
-            self.create_new_idf_version_from_value(lhs.idf, rhs, is_local=not isinstance(lhs.target, StateVariableDeclaration))
+            assert lhs.target is not None
+            self.create_new_idf_version_from_value(lhs.target.idf, rhs)
         elif isinstance(lhs, IndexExpr):
             raise NotImplementedError()
         else:
