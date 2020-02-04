@@ -167,6 +167,12 @@ class BuildASTVisitor(SolidityVisitor):
         values = [self.visit(v) for v in ctx.values]
         return ast.EnumDefinition(idf, values)
 
+    def visitEnumValue(self, ctx:SolidityParser.EnumValueContext):
+        idf = self.visit(ctx.idf)
+        if '$' in idf.name:
+            raise SyntaxException('$ is not allowed in zkay enum value identifiers', ctx.idf, self.code)
+        return ast.EnumValue(idf)
+
     # Visit a parse tree produced by SolidityParser#NumberLiteralExpr.
     def visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext):
         v = int(ctx.getText().replace('_', ''), 0)
