@@ -85,6 +85,7 @@ class DeepCopyVisitor(AstVisitor):
         'is_payable',
         'original_body',
         'original_code',
+        'return_var_decls',
 
         'pre_statements',
         'is_final',

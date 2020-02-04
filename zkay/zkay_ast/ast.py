@@ -514,7 +514,7 @@ class IdentifierExpr(LocationExpr):
 
     def __init__(self, idf: Union[str, Identifier], annotated_type: Optional[AnnotatedTypeName] = None):
         super().__init__()
-        self.idf = idf if isinstance(idf, Identifier) else Identifier(idf)
+        self.idf: Identifier = idf if isinstance(idf, Identifier) else Identifier(idf)
         self.annotated_type = annotated_type
 
     def get_annotated_type(self):
@@ -1587,6 +1587,13 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         self.body = body
         self.return_parameters = [] if return_parameters is None else return_parameters
 
+        self.return_var_decls: List[VariableDeclaration] = [
+            VariableDeclaration([], rp.annotated_type, Identifier(f'{cfg.return_var_name}_{idx}'), rp.storage_location)
+            for idx, rp in enumerate(self.return_parameters)
+        ]
+        for vd in self.return_var_decls:
+            vd.idf.parent = vd
+
         # specify parent type
         self.parent: ContractDefinition = None
         self.original_body: Optional[Block] = None
@@ -1830,12 +1837,7 @@ class InstanceTarget(tuple):
 
     def in_scope_at(self, ast: AST) -> bool:
         from zkay.zkay_ast.pointers.symbol_table import SymbolTableLinker
-        from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
-        try:
-            _ = SymbolTableLinker.find_identifier_declaration(ast, self.target.idf.name)
-            return True
-        except UnknownIdentifierException:
-            return False
+        return SymbolTableLinker.in_scope_at(self.target.idf, ast)
 
 
 # UTIL FUNCTIONS

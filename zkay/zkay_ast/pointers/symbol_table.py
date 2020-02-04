@@ -1,7 +1,7 @@
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
     StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, EnumValue, \
-    NamespaceDefinition
+    NamespaceDefinition, Expression, VariableDeclarationStatement, Statement
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -101,13 +101,39 @@ class SymbolTableLinker(AstVisitor):
 
     @staticmethod
     def find_identifier_declaration(ast: AST, name: str):
+        def find_parent_which_is_immediate_child_of(a: AST, target: Block):
+            while a is not None and a.parent != target:
+                a = a.parent
+            return a
+
+        ref_stmt = ast.statement if isinstance(ast, Expression) else None
         ancestor = ast.parent
         while ancestor:
             if name in ancestor.names:
+                decl = ancestor.names[name].parent
+                if isinstance(ancestor, Block) and isinstance(decl, VariableDeclaration):
+                    rs = find_parent_which_is_immediate_child_of(ref_stmt, ancestor)
+                    if rs is not None:
+                        decl = decl.parent
+                        assert isinstance(decl, VariableDeclarationStatement) and decl in ancestor.statements
+                        if ancestor.statements.index(rs) < ancestor.statements.index(decl):
+                            # identifier occurs before definition 'ancestor' -> refers to decl higher up in tree
+                            ancestor = ancestor.parent
+                            continue
                 # found name
                 return ancestor.names[name]
             ancestor = ancestor.parent
         raise UnknownIdentifierException(f'Undefined identifier {name}', ast)
+
+    @staticmethod
+    def in_scope_at(target_idf: Identifier, ast: AST) -> bool:
+        ancestor = ast.parent
+        while ancestor:
+            if target_idf.name in ancestor.names and ancestor.names[target_idf.name] == target_idf:
+                # found name
+                return True
+            ancestor = ancestor.parent
+        return False
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         idf = self.find_identifier_declaration(ast, ast.idf.name)
