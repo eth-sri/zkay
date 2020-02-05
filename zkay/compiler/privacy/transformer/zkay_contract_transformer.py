@@ -6,7 +6,7 @@ from typing import Dict, Optional, List, Tuple
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
-from zkay.compiler.privacy.transformer.internal_call_transformer import transform_internal_calls
+from zkay.compiler.privacy.transformer.internal_call_transformer import transform_internal_calls, compute_transitive_circuit_io_sizes
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.transformer.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
     ZkayStatementTransformer
@@ -271,6 +271,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
         fcts_with_verification = [fct for fct in all_fcts if fct.requires_verification]
+        compute_transitive_circuit_io_sizes(fcts_with_verification, self.circuits)
         transform_internal_calls(fcts_with_verification, self.circuits)
         for f in fcts_with_verification:
             circuit = self.circuits[f]

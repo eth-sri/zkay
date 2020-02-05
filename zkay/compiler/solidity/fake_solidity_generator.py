@@ -58,7 +58,25 @@ def create_surrogate_string(instr: str):
     return ''.join(['\n' if e == '\n' else ' ' for e in instr])
 
 
-def find_matching_parens(code: str, open_parens_loc: int, open_sym: str, close_sym: str) -> int:
+def find_matching_parenthesis(code: str, open_parens_loc: int) -> int:
+    """
+    Get index of matching parenthesis/bracket/brace.
+    :param code: code in which to search
+    :param open_parens_loc: index of the opening parenthesis within code
+    :return: index of the matching closing parenthesis
+    """
+
+    # Determine parenthesis characters
+    open_sym = code[open_parens_loc]
+    if open_sym == '(':
+        close_sym = ')'
+    elif open_sym == '{':
+        close_sym = '}'
+    elif open_sym == '[':
+        close_sym = ']'
+    else:
+        raise ValueError('Unsupported parenthesis type')
+
     pattern = re.compile(f'[{open_sym}{close_sym}]')
     idx = open_parens_loc + 1
     open = 1
@@ -72,13 +90,14 @@ def find_matching_parens(code: str, open_parens_loc: int, open_sym: str, close_s
 
 # Replacing reveals only with regex is impossible because they could be nested -> do it with a stack
 def strip_reveals(code: str):
+    """Replace reveal expressions by their inner expression, with whitespace padding."""
     matches = re.finditer(REVEAL_START_PATTERN, code)
     for m in matches:
         before_reveal_loc = m.start()
         reveal_open_parens_loc = m.end()
 
         # Find matching closing parenthesis
-        reveal_close_parens_loc = find_matching_parens(code, reveal_open_parens_loc, '(', ')')
+        reveal_close_parens_loc = find_matching_parenthesis(code, reveal_open_parens_loc)
 
         # Go backwards to find comma before owner tag
         last_comma_loc = code[:reveal_close_parens_loc].rfind(',')
@@ -93,10 +112,11 @@ def strip_reveals(code: str):
 
 
 def inject_me_decls(code: str):
+    """Add an additional address me = msg.sender state variable declaration right before the closing brace of each contract definition."""
     matches = re.finditer(CONTRACT_START_PATTERN, code)
     insert_indices = []
     for m in matches:
-        insert_indices.append(find_matching_parens(code, m.end(), '{', '}'))
+        insert_indices.append(find_matching_parenthesis(code, m.end()))
     parts = [code[i:j] for i, j in zip([0] + insert_indices, insert_indices + [None])]
     return ME_DECL.join(parts)
 
