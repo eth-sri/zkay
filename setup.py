@@ -1,10 +1,11 @@
 from setuptools import setup, find_packages
 test_package = 'zkay.tests'
+packages = find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*'])
 
 setup(
     name='zkay',
     version='0.2',
-    packages=find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*']),
+    packages=packages,
     package_data={
         'zkay.examples': ['**/*.sol', 'scenarios/*.py'],
         'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'run_snark'],
@@ -13,11 +14,11 @@ setup(
     license='',
     install_requires=[
         'Cython==0.29.14',
-        'web3[tester]==v5.4.0',
+        'web3[tester]==v5.5.0',
         'antlr4-python3-runtime==4.7.2',
         'parameterized==0.7.1',
-        'py-solc-x==0.7.0',
-        'pycryptodome==3.9.4',
+        'py-solc-x==0.7.2',
+        'pycryptodome==3.9.6',
     ],
     python_requires='>=3.7,<4',
     author='nicbauma',
