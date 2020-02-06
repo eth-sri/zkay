@@ -3,7 +3,7 @@ from typing import Union
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
     Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, IfStatement, \
-    NumberLiteralType, BooleanLiteralType, PrimitiveCastExpr, AST
+    NumberLiteralType, BooleanLiteralType, PrimitiveCastExpr, AST, IndexExpr
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -75,6 +75,7 @@ class CircuitComplianceChecker(FunctionVisitor):
     def __init__(self):
         super().__init__()
         self.priv_setter = PrivateSetter()
+        self.inside_privif_stmt = False
 
     def should_evaluate_public_expr_in_circuit(self, expr: Expression) -> bool:
         try:
@@ -96,7 +97,16 @@ class CircuitComplianceChecker(FunctionVisitor):
         # (If this avoids unnecessary encryption operations it may be cheaper)
         return False
 
+    def visitIndexExpr(self, ast: IndexExpr):
+        if ast.evaluate_privately:
+            assert ast.key.annotated_type.is_public()
+            self.priv_setter.set_evaluation(ast.key, False)
+        return self.visitChildren(ast)
+
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
+        if self.inside_privif_stmt and not ast.statement.before_analysis.same_partition(ast.privacy.privacy_annotation_label(), Expression.me_expr()):
+            raise TypeException('Revealing information to other parties is not allowed inside private if statements', ast)
+
         if ast.expr.annotated_type.is_public():
             eval_in_public = False
             try:
@@ -122,6 +132,7 @@ class CircuitComplianceChecker(FunctionVisitor):
         self.visitChildren(ast)
 
     def visitIfStatement(self, ast: IfStatement):
+        old_in_privif_stmt = self.inside_privif_stmt
         if ast.condition.annotated_type.is_private():
             mod_vals = ast.then_branch.modified_values
             if ast.else_branch is not None:
@@ -131,8 +142,10 @@ class CircuitComplianceChecker(FunctionVisitor):
                     raise TypeException('Writes to non-primitive type variables are not allowed inside private if statements', ast)
                 if val.in_scope_at(ast) and not ast.before_analysis.same_partition(val.privacy, Expression.me_expr()):
                     raise TypeException('If statement with private condition must not contain side effects to variables with owner != me', ast)
+            self.inside_privif_stmt = True
             self.priv_setter.set_evaluation(ast, evaluate_privately=True)
         self.visitChildren(ast)
+        self.inside_privif_stmt = old_in_privif_stmt
 
 
 class PrivateSetter(FunctionVisitor):
