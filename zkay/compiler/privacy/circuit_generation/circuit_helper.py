@@ -243,9 +243,7 @@ class CircuitHelper:
         :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
         :return: Location expression which references the encrypted circuit result
         """
-        assert not self._remapper
-        with self._remapper.remap_scope():
-            return self._get_circuit_output_for_private_expression(expr, new_privacy)
+        return self._get_circuit_output_for_private_expression(expr, new_privacy)
 
     def evaluate_stmt_in_circuit(self, ast: Statement) -> AssignmentStatement:
         """
@@ -254,82 +252,72 @@ class CircuitHelper:
         This works by turning the statement into an assignment statement where the
             - lhs is a tuple of all external locations (defined outside statement), which are modified inside the statement
             - rhs is the return value of an inlined function call expression to a virtual function where
-              - args = external locations (defined outside statement) which are read inside the statement
-              - body = the statement + return statement which returns a tuple of the most recent SSA version of all modified locations
+              body = the statement + return statement which returns a tuple of the most recent SSA version of all modified locations
 
         Note: Modifying external locations which are not owned by @me inside the statement is illegal (would leak information).
         Note: At the moment, this is only used for if statements with a private condition.
         :param ast: the statement to evaluate inside the circuit
         :return: AssignmentStatement as described above
         """
-        assert not self._remapper
-        with self._remapper.remap_scope():
-            astmt = ExpressionStatement(NumberLiteralExpr(0))
-            for var in ast.modified_values:
-                if var.in_scope_at(ast):
-                    astmt = AssignmentStatement(None, None)
-                    break
+        astmt = ExpressionStatement(NumberLiteralExpr(0))
+        for var in ast.modified_values:
+            if var.in_scope_at(ast):
+                astmt = AssignmentStatement(None, None)
+                break
 
-            astmt.before_analysis = ast.before_analysis
+        astmt.before_analysis = ast.before_analysis
 
-            # External values read inside statement -> function call arguments
-            args = []
-            for var in ast.read_values:
-                if var.in_scope_at(ast): # defined outside if statement -> need to be passed in as arg
-                    assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                    arg = IdentifierExpr(var.target.idf.clone(), var.target.annotated_type.declared_type.clone()).override(target=var.target)
-                    arg.statement = astmt
-                    args.append(arg)
-                    # technically only need to add those, which are not written before they are read
+        # External values written inside statement -> function return values
+        ret_params = []
+        for var in ast.modified_values:
+            if var.in_scope_at(ast):
+                # side effect affects location outside statement and has privacy @me
+                assert ast.before_analysis.same_partition(var.privacy, Expression.me_expr())
+                assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
+                t = var.target.annotated_type.zkay_type.type_name
+                if not t.is_primitive_type():
+                    raise NotImplementedError('Reference types inside private if statements are not supported')
+                ret_param = IdentifierExpr(var.target.idf.clone(), AnnotatedTypeName(t, Expression.me_expr())).override(target=var.target)
+                ret_param.statement = astmt
+                ret_params.append(ret_param)
 
-            # External values written inside statement -> function return values
-            ret_params = []
-            for var in ast.modified_values:
-                if var.in_scope_at(ast):
-                    # side effect affects location outside statement and has privacy @me
-                    assert ast.before_analysis.same_partition(var.privacy, Expression.me_expr())
-                    assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                    t = var.target.annotated_type.zkay_type.type_name
-                    if not t.is_primitive_type():
-                        raise NotImplementedError('Reference types inside private if statements are not supported')
-                    ret_param = IdentifierExpr(var.target.idf.clone(), AnnotatedTypeName(t, Expression.me_expr())).override(target=var.target)
-                    ret_param.statement = astmt
-                    ret_params.append(ret_param)
+        # Build the imaginary function
+        fdef = ConstructorOrFunctionDefinition(
+            Identifier('<stmt_fct>'), [], ['private'],
+            [Parameter([], ret.annotated_type, ret.target.idf) for ret in ret_params],
+            Block([ast, ReturnStatement(TupleExpr(ret_params))])
+        )
+        fdef.original_body = fdef.body
+        fdef.body.parent = fdef
+        fdef.parent = ast
 
-            # Build the imaginary function
-            fdef = ConstructorOrFunctionDefinition(
-                Identifier('<stmt_fct>'),
-                [Parameter([], arg.annotated_type, arg.target.idf) for arg in args], ['private'],
-                [Parameter([], ret.annotated_type, ret.target.idf) for ret in ret_params],
-                Block([ast, ReturnStatement(TupleExpr(ret_params))])
-            )
-            fdef.original_body = fdef.body
-            fdef.body.parent = fdef
-            fdef.parent = ast
+        # inline "Call" to the imaginary function
+        fcall = FunctionCallExpr(IdentifierExpr('<stmt_fct>').override(target=fdef), [])
+        fcall.statement = astmt
+        ret_args = self.inline_function_call_into_circuit(fcall)
 
-            # inline "Call" to the imaginary function
-            fcall = FunctionCallExpr(IdentifierExpr('<stmt_fct>').override(target=fdef), args)
-            fcall.statement = astmt
-            ret_args = self.inline_function_call_into_circuit(fcall)
+        # Move all return values out of the circuit
+        if not isinstance(ret_args, TupleExpr):
+            ret_args = TupleExpr([ret_args])
+        for ret_arg in ret_args.elements:
+            ret_arg.statement = astmt
+        ret_arg_outs = [
+            self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr())
+            for ret_param, ret_arg in zip(ret_params, ret_args.elements)
+        ]
 
-            # Move all return values out of the circuit
-            if not isinstance(ret_args, TupleExpr):
-                ret_args = TupleExpr([ret_args])
-            for ret_arg in ret_args.elements:
-                ret_arg.statement = astmt
-            ret_arg_outs = [
-                self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr())
-                for ret_param, ret_arg in zip(ret_params, ret_args.elements)
-            ]
+        # Create assignment statement
+        if ret_params:
+            astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
+            astmt.rhs = TupleExpr(ret_arg_outs)
+            return astmt
+        else:
+            assert isinstance(astmt, ExpressionStatement)
+            return astmt
 
-            # Create assignment statement
-            if ret_params:
-                astmt.lhs = TupleExpr([ret_param.clone() for ret_param in ret_params])
-                astmt.rhs = TupleExpr(ret_arg_outs)
-                return astmt
-            else:
-                assert isinstance(astmt, ExpressionStatement)
-                return astmt
+    def invalidate_idf(self, target_idf: Identifier):
+        if self._remapper.is_remapped(target_idf):
+            self._remapper.reset_key(target_idf)
 
     def call_function(self, ast: FunctionCallExpr):
         """
@@ -365,6 +353,10 @@ class CircuitHelper:
         If expr is encrypted (privacy != @all), this function also automatically ensures that the circuit has access to
         the correctly decrypted expression value in the form of a new private circuit input.
 
+        If expr is an IdentifierExpr, its value will be cached
+        (i.e. when the same identifier is needed again as a circuit input, its value will be retrieved from cache rather
+         than adding an expensive redundant input. The cache is invalidated as soon as the identifier is overwritten in public code)
+
         Note: This function has side effects on expr.statement (adds a pre_statement)
 
         :param expr: [SIDE EFFECT] expression which should be made available inside the circuit as an argument
@@ -383,6 +375,12 @@ class CircuitHelper:
         elif isinstance(t, NumberLiteralType):
             return self._evaluate_private_expression(input_expr, str(t.value))
 
+        if isinstance(expr, IdentifierExpr):
+            # Look in cache before doing expensive move-in
+            if self._remapper.is_remapped(expr.target.idf):
+                remapped_idf = self._remapper.get_current(expr.target.idf)
+                return remapped_idf, remapped_idf.get_loc_expr(expr.parent).as_type(expr.annotated_type)
+
         if privacy.is_all_expr():
             input_idf = self._in_name_factory.get_new_idf(expr.annotated_type.type_name)
             locally_decrypted_idf = input_idf
@@ -391,6 +389,11 @@ class CircuitHelper:
             locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(expr.annotated_type.type_name)
             input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
             self._ensure_encryption(None, locally_decrypted_idf, Expression.me_expr(), input_idf, False, True)
+
+        # Cache if possible
+        if isinstance(expr, IdentifierExpr):
+            assert expr.annotated_type.type_name.is_primitive_type()
+            self._remapper.remap(expr.target.idf, locally_decrypted_idf)
 
         self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
 

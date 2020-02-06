@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Generic, TypeVar, Dict, ContextManager, Any, Callable
 
-from zkay.zkay_ast.ast import Expression, IdentifierExpr, HybridArgumentIdf, Identifier, BuiltinFunction, FunctionCallExpr
+from zkay.zkay_ast.ast import Expression, IdentifierExpr, HybridArgumentIdf, Identifier, BuiltinFunction, FunctionCallExpr, HybridArgType
 from zkay.zkay_ast.pointers.symbol_table import SymbolTableLinker
 
 K = TypeVar('K')
@@ -45,7 +45,12 @@ class Remapper(Generic[K, V]):
         return bool(self.rmap)
 
     def clear(self):
+        """Discard the entire remap state."""
         self.rmap.clear()
+
+    def reset_key(self, key: K):
+        """Invalidate remapping information for the given key (is_remapped returns false after this)."""
+        del self.rmap[key]
 
     def remap(self, key: K, value: V):
         """
@@ -100,9 +105,10 @@ class Remapper(Generic[K, V]):
     def set_state(self, state: Any):
         """ Restore internal state from an opaque copy previously obtained using get_state. """
         assert isinstance(state, Dict)
-        self.rmap = state
+        self.rmap = state.copy()
 
-    def join_branch(self, stmt, true_cond_for_other_branch: IdentifierExpr, other_branch_state: Any, create_val_for_name_and_expr_fct: Callable[[K, Expression], V]):
+    def join_branch(self, stmt, true_cond_for_other_branch: IdentifierExpr,
+                    other_branch_state: Any, create_val_for_name_and_expr_fct: Callable[[K, Expression], V]):
         """
         Perform an SSA join for two branches.
 
@@ -141,12 +147,17 @@ class Remapper(Generic[K, V]):
                 assert false_state[key] == val
                 self.rmap[key] = val
             elif key not in false_state:
-                # key was only modified in true branch
-                # remap key -> new temporary with value cond ? new_value : old_value
-                assert key.parent.annotated_type.declared_type is not None
-                prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
-                prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
-                self.rmap[key] = join(true_state[key].get_loc_expr(stmt), prev_val)
+                # If value was only read (remapping points to a circuit input) -> can just take as-is,
+                # otherwise have to use conditional assignment
+                if isinstance(val, HybridArgumentIdf) and (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG or val.arg_type == HybridArgType.PRIV_CIRCUIT_VAL):
+                    self.rmap[key] = val
+                else:
+                    # key was only modified in true branch
+                    # remap key -> new temporary with value cond ? new_value : old_value
+                    assert key.parent.annotated_type.declared_type is not None
+                    prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
+                    prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
+                    self.rmap[key] = join(true_state[key].get_loc_expr(stmt), prev_val)
             else:
                 # key was modified in both branches
                 # remap key -> new temporary with value cond ? true_val : false_val
@@ -157,12 +168,15 @@ class Remapper(Generic[K, V]):
                 continue
 
             if key not in true_state:
-                # key was only modified in false branch
-                # remap key -> new temporary with value cond ? old_value : new_value
-                assert key.parent.annotated_type.declared_type is not None
-                prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
-                prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
-                self.rmap[key] = join(prev_val, false_state[key].get_loc_expr(stmt))
+                if isinstance(val, HybridArgumentIdf) and (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG or val.arg_type == HybridArgType.PRIV_CIRCUIT_VAL):
+                    self.rmap[key] = val
+                else:
+                    # key was only modified in false branch
+                    # remap key -> new temporary with value cond ? old_value : new_value
+                    assert key.parent.annotated_type.declared_type is not None
+                    prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
+                    prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
+                    self.rmap[key] = join(prev_val, false_state[key].get_loc_expr(stmt))
 
 
 class CircVarRemapper(Remapper[Identifier, HybridArgumentIdf]):

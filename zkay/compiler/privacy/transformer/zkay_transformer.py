@@ -125,6 +125,16 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         ast.process_children(self.process_statement_child)
         return ast
 
+    def visitAssignmentStatement(self, ast: AssignmentStatement):
+        """Rule (2)"""
+        ret = self.visitStatement(ast)
+        if self.gen is not None:
+            for val in ast.modified_values:
+                if val.key is None:
+                    # TODO don't invalidate but rather update if rhs is circuit output (-> real value is already in circuit)
+                    self.gen.invalidate_idf(val.target.idf)
+        return ret
+
     def visitIfStatement(self, ast: IfStatement):
         """
         Rule (6) + additional support for private conditions
@@ -138,12 +148,20 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         """
         if ast.condition.annotated_type.is_public():
             if contains_private_expr(ast.then_branch) or contains_private_expr(ast.else_branch):
+                before_if_state = self.gen._remapper.get_state()
                 guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
                 with self.gen.guarded(guard_var, True):
                     ast.then_branch = self.visit(ast.then_branch)
+                    self.gen._remapper.set_state(before_if_state)
                 if ast.else_branch is not None:
                     with self.gen.guarded(guard_var, False):
                         ast.else_branch = self.visit(ast.else_branch)
+                        self.gen._remapper.set_state(before_if_state)
+
+                # Invalidate values modified in either branch
+                for val in ast.modified_values:
+                    if val.key is None:
+                        self.gen.invalidate_idf(val.target.idf)
             else:
                 ast.condition = self.expr_trafo.visit(ast.condition)
                 ast.then_branch = self.visit(ast.then_branch)
@@ -310,6 +328,11 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             if ast.func.target.requires_verification:
                 # If the target function has an associated circuit, make this function's circuit aware of the call.
                 self.gen.call_function(ast)
+            elif ast.func.target.has_side_effects and self.gen is not None:
+                # Invalidate modified state variables for the current circuit
+                for val in ast.modified_values:
+                    if val.key is None and isinstance(val.target, StateVariableDeclaration):
+                        self.gen.invalidate_idf(val.target.idf)
 
             # The call will be present as a normal function call in the output solidity code.
             return ast
