@@ -43,7 +43,8 @@ class StateValueAssertion(TransactionAssertion):
         actual_val = user.get_state(self.name, *indices, is_encrypted=self.should_decrypt)
         if self.should_decrypt and self.plain_type is not None and self.plain_type.is_signed_numeric:
             actual_val = ContractSimulator.cast(actual_val, self.plain_type.elem_bitwidth, signed=True)
-        test.assertEqual(self.expected, actual_val, f"Assertion {self.name}[{', '.join([str(i) for i in self.indices])}] == {self.expected}")
+        ind_str = f"[{', '.join([str(i) for i in self.indices])}]" if self.indices else ''
+        test.assertEqual(self.expected, actual_val, f"Assertion {self.name}{ind_str} == {self.expected}")
 
 
 class Transaction:
