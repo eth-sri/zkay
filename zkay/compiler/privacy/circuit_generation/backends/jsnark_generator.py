@@ -47,14 +47,17 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircIndentBlock(self, stmt: CircIndentBlock):
         stmts = list(map(self.visit, stmt.statements))
-        return f'/*** BEGIN {stmt.name} ***/\n' + indent('\n'.join(stmts)) + '\n' + f'/***  END  {stmt.name} ***/'
+        if stmt.name:
+            return f'//[ --- {stmt.name} ---\n' + indent('\n'.join(stmts)) + '\n' + f'//] --- {stmt.name} ---\n'
+        else:
+            return indent('\n'.join(stmts))
 
     def visitCircCall(self, stmt: CircCall):
         return f'_{stmt.fct.name}();'
 
     def visitCircVarDecl(self, stmt: CircVarDecl):
         assert stmt.lhs.t.size_in_uints == 1
-        return f'assign("{stmt.lhs.name}", {self.visit(stmt.expr)});'
+        return f'decl("{stmt.lhs.name}", {self.visit(stmt.expr)});'
 
     def visitCircEqConstraint(self, stmt: CircEqConstraint):
         assert stmt.tgt.t.size_in_uints == stmt.val.t.size_in_uints
@@ -97,64 +100,28 @@ class JsnarkVisitor(AstVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
-            op = ast.func.op
+            assert ast.func.can_be_private()
             args = list(map(self.visit, ast.args))
             if ast.func.is_shiftop():
                 assert ast.args[1].annotated_type.type_name.is_literal
                 args[1] = ast.args[1].annotated_type.type_name.value
 
+            op = ast.func.op
+            op = '-' if op == 'sign-' else op
+
             if op == 'ite':
-                fstr = f'ite({{}}, {{}}, {{}})'
+                fstr = "o_({}, '?', {}, ':', {})"
             elif op == 'parenthesis':
                 fstr = '({})'
-
             elif op == 'sign+':
                 raise NotImplementedError()
-            elif op == 'sign-':
-                fstr = 'negate({})'
-            elif op == '+':
-                fstr = 'add({}, {})'
-            elif op == '-':
-                fstr = 'sub({}, {})'
-            elif op == '*':
-                fstr = 'mul({}, {})'
-
-            elif op == '|':
-                fstr = 'bitOr({}, {})'
-            elif op == '&':
-                fstr = 'bitAnd({}, {})'
-            elif op == '^':
-                fstr = 'bitXor({}, {})'
-            elif op == '~':
-                fstr = 'bitInv({})'
-
-            elif op == '<<':
-                fstr = 'shiftLeft({}, {})'
-            elif op == '>>':
-                fstr = 'shiftRight({}, {})'
-
-            elif op == '==':
-                fstr = 'eq({}, {})'
-            elif op == '!=':
-                fstr = 'neq({}, {})'
-
-            elif op == '<':
-                fstr = 'lt({}, {})'
-            elif op == '<=':
-                fstr = 'le({}, {})'
-            elif op == '>':
-                fstr = 'gt({}, {})'
-            elif op == '>=':
-                fstr = 'ge({}, {})'
-
-            elif op == '&&':
-                fstr = 'and({}, {})'
-            elif op == '||':
-                fstr = 'or({}, {})'
-            elif op == '!':
-                fstr = 'not({})'
             else:
-                raise ValueError(f'Unsupported builtin function {ast.func.op}')
+                o = f"'{op}'" if len(op) == 1 else f'"{op}"'
+                if len(args) == 1:
+                    fstr = f"o_({o}, {{}})"
+                else:
+                    assert len(args) == 2
+                    fstr = f'o_({{}}, {o}, {{}})'
 
             return fstr.format(*args)
         elif ast.is_cast and isinstance(ast.func.target, EnumDefinition):
@@ -208,7 +175,7 @@ class JsnarkGenerator(CircuitGenerator):
 
                 body = '\n'.join([f'stepIn("{fct.name}");'] +
                                  add_function_circuit_arguments(target_circuit) + [''] +
-                                 [stmt.strip() for stmt in body_stmts] +
+                                 [stmt for stmt in body_stmts] +
                                  ['stepOut();'])
                 fdef = f'private void _{fct.name}() {{\n' + indent(body) + '\n}'
                 fdefs.append(f'{fdef}')

@@ -439,30 +439,19 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         return self.gen.inline_function_call_into_circuit(ast)
 
     def visitReturnStatement(self, ast: ReturnStatement):
-        assert ast.expr is not None
-        if not isinstance(ast.expr, TupleExpr):
-            ast.expr = TupleExpr([ast.expr])
-
-        for vd, expr in zip(ast.function.return_var_decls, ast.expr.elements):
-            # Assign return value to new version of return variable
-            self.gen.create_new_idf_version_from_value(vd.idf, expr)
+        self.gen.add_return_stmt_to_circuit(ast)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         self.gen.add_assignment_to_circuit(ast)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
-        if ast.expr is None:
-            # Default initialization is made explicit for circuit variables
-            t = ast.variable_declaration.annotated_type.type_name
-            assert t.can_be_private()
-            ast.expr = TypeCheckVisitor.implicitly_converted_to(NumberLiteralExpr(0).override(parent=ast, statement=ast), t.clone())
-        self.gen.create_new_idf_version_from_value(ast.variable_declaration.idf, ast.expr)
+        self.gen.add_var_decl_to_circuit(ast)
 
     def visitIfStatement(self, ast: IfStatement):
         self.gen.add_if_statement_to_circuit(ast)
 
-    def visitBlock(self, ast: Block):
-        self.gen.add_block_to_circuit(ast)
+    def visitBlock(self, ast: Block, guard_cond: Optional[HybridArgumentIdf] = None, guard_val: Optional[bool] = None):
+        self.gen.add_block_to_circuit(ast, guard_cond, guard_val)
 
     def visitStatement(self, ast: Statement):
         """Fail if statement type was not handled."""

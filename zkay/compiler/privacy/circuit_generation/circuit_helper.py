@@ -9,12 +9,13 @@ from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.config import cfg
+from zkay.type_check.type_checker import TypeCheckVisitor
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
     CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
     Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label, Comment, \
-    ExpressionStatement, NumberLiteralExpr
+    ExpressionStatement, NumberLiteralExpr, VariableDeclarationStatement
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
@@ -192,16 +193,16 @@ class CircuitHelper:
         return [(self._in_name_factory.base_name, self.in_size_trans), (self._out_name_factory.base_name, self.out_size_trans)]
 
     @contextmanager
-    def circ_indent_block(self, name: str):
+    def circ_indent_block(self, name: str = ''):
         """
         Return context manager which manages the lifetime of a CircIndentBlock.
 
         All statements which are inserted into self.phi during the lifetime of this context manager are automatically wrapped inside
         a CircIndentBlock statement with the supplied name.
         """
-        old_phi = self.phi[:]
+        old_len = len(self.phi)
         yield
-        self.phi[:] = old_phi + [CircIndentBlock(name, self.phi[len(old_phi):])]
+        self.phi[:] = self.phi[:old_len] + [CircIndentBlock(name, self.phi[old_len:])]
 
     def guarded(self, guard_idf: HybridArgumentIdf, is_true: bool) -> ContextManager:
         """Return a context manager which manages the lifetime of a guard variable."""
@@ -243,7 +244,8 @@ class CircuitHelper:
         :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
         :return: Location expression which references the encrypted circuit result
         """
-        return self._get_circuit_output_for_private_expression(expr, new_privacy)
+        with self.circ_indent_block(expr.code()):
+            return self._get_circuit_output_for_private_expression(expr, new_privacy)
 
     def evaluate_stmt_in_circuit(self, ast: Statement) -> AssignmentStatement:
         """
@@ -375,27 +377,33 @@ class CircuitHelper:
         elif isinstance(t, NumberLiteralType):
             return self._evaluate_private_expression(input_expr, str(t.value))
 
+        t_suffix = ''
         if isinstance(expr, IdentifierExpr):
             # Look in cache before doing expensive move-in
             if self._remapper.is_remapped(expr.target.idf):
                 remapped_idf = self._remapper.get_current(expr.target.idf)
                 return remapped_idf, remapped_idf.get_loc_expr(expr.parent).as_type(expr.annotated_type)
 
+            t_suffix = f'_{expr.idf.name}'
+
         if privacy.is_all_expr():
-            input_idf = self._in_name_factory.get_new_idf(expr.annotated_type.type_name)
+            tname = f'{self._in_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
+            input_idf = self._in_name_factory.add_idf(tname, expr.annotated_type.type_name)
+            self._phi.append(CircComment(f'{input_idf.name} = {expr_text}'))
             locally_decrypted_idf = input_idf
         else:
             # Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
-            locally_decrypted_idf = self._secret_input_name_factory.get_new_idf(expr.annotated_type.type_name)
-            input_idf = self._in_name_factory.get_new_idf(TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
+            tname = f'{self._secret_input_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
+            locally_decrypted_idf = self._secret_input_name_factory.add_idf(tname, expr.annotated_type.type_name)
+            tname = f'{self._in_name_factory.get_new_name(TypeName.cipher_type())}{t_suffix}'
+            input_idf = self._in_name_factory.add_idf(tname, TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
+            self._phi.append(CircComment(f'{locally_decrypted_idf} = dec({expr_text}) [{input_idf.name}]'))
             self._ensure_encryption(None, locally_decrypted_idf, Expression.me_expr(), input_idf, False, True)
 
         # Cache if possible
         if isinstance(expr, IdentifierExpr):
             assert expr.annotated_type.type_name.is_primitive_type()
             self._remapper.remap(expr.target.idf, locally_decrypted_idf)
-
-        self._phi.append(CircComment(f'{input_idf.name} (dec: {locally_decrypted_idf.name}) = {expr_text}'))
 
         # Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         # but also signals the offchain simulator to perform decryption if necessary
@@ -439,10 +447,12 @@ class CircuitHelper:
         assert isinstance(fcall.func, LocationExpr) and fcall.func.target is not None
         fdef = fcall.func.target
         with self._remapper.remap_scope(fcall.func.target.body):
-            with self.circ_indent_block(f'INLINED {fcall.code()}'):
+            with nullcontext() if fcall.func.target.idf.name == '<stmt_fct>' else self.circ_indent_block(f'INLINED {fcall.code()}'):
                 # Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
                 for param, arg in zip(fdef.parameters, fcall.args):
-                    self.create_new_idf_version_from_value(param.idf, arg)
+                    self.phi.append(CircComment(f'ARG {param.idf.name}: {arg.code()}'))
+                    with self.circ_indent_block():
+                        self.create_new_idf_version_from_value(param.idf, arg)
 
                 # Visit the untransformed target function body to include all statements in this circuit
                 inlined_body = deep_copy(fdef.original_body, with_types=True, with_analysis=True)
@@ -459,49 +469,72 @@ class CircuitHelper:
 
     def add_assignment_to_circuit(self, ast: AssignmentStatement):
         """Include private assignment statement in this circuit."""
+        self.phi.append(CircComment(ast.code()))
         self._add_assign(ast.lhs, ast.rhs)
+
+    def add_var_decl_to_circuit(self, ast: VariableDeclarationStatement):
+        self.phi.append(CircComment(ast.code()))
+        if ast.expr is None:
+            # Default initialization is made explicit for circuit variables
+            t = ast.variable_declaration.annotated_type.type_name
+            assert t.can_be_private()
+            ast.expr = TypeCheckVisitor.implicitly_converted_to(NumberLiteralExpr(0).override(parent=ast, statement=ast), t.clone())
+        self.create_new_idf_version_from_value(ast.variable_declaration.idf, ast.expr)
+
+    def add_return_stmt_to_circuit(self, ast: ReturnStatement):
+        self.phi.append(CircComment(ast.code()))
+        assert ast.expr is not None
+        if not isinstance(ast.expr, TupleExpr):
+            ast.expr = TupleExpr([ast.expr])
+
+        for vd, expr in zip(ast.function.return_var_decls, ast.expr.elements):
+            # Assign return value to new version of return variable
+            self.create_new_idf_version_from_value(vd.idf, expr)
 
     def add_if_statement_to_circuit(self, ast: IfStatement):
         """Include private if statement in this circuit."""
-        with self.circ_indent_block(f'if {ast.condition.code()}'):
+
+        # Handle if branch
+        with self._remapper.remap_scope():
+            comment = CircComment(f'if ({ast.condition.code()})')
+            self._phi.append(comment)
             cond, _ = self._evaluate_private_expression(ast.condition)
+            comment.text += f' [{cond.name}]'
+            self._circ_trafo.visitBlock(ast.then_branch, cond, True)
+            then_remap = self._remapper.get_state()
 
-            # Handle if branch
-            with self._remapper.remap_scope():
-                self._phi.append(CircComment(f'if ({cond.name})'))
-                with self.guarded(cond, True):
-                    self._circ_trafo.visit(ast.then_branch)
-                then_remap = self._remapper.get_state()
+            # Bubble up nested pre statements
+            ast.pre_statements += ast.then_branch.pre_statements
+            ast.then_branch.pre_statements = []
 
-                # Bubble up nested pre statements
-                ast.pre_statements += ast.then_branch.pre_statements
-                ast.then_branch.pre_statements = []
+        # Handle else branch
+        if ast.else_branch is not None:
+            self._phi.append(CircComment(f'else [{cond.name}]'))
+            self._circ_trafo.visitBlock(ast.else_branch, cond, False)
 
-            # Handle else branch
-            if ast.else_branch is not None:
-                self._phi.append(CircComment(f'else ({cond.name})'))
-                with self.guarded(cond, False):
-                    self._circ_trafo.visit(ast.else_branch)
+            # Bubble up nested pre statements
+            ast.pre_statements += ast.else_branch.pre_statements
+            ast.else_branch.pre_statements = []
 
-                # Bubble up nested pre statements
-                ast.pre_statements += ast.else_branch.pre_statements
-                ast.else_branch.pre_statements = []
-
-            # SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
-            self._phi.append(CircComment(f'join ({cond.name})'))
+        # SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
+        with self.circ_indent_block(f'JOIN [{cond.name}]'):
             cond_idf_expr = cond.get_loc_expr(ast)
             assert isinstance(cond_idf_expr, IdentifierExpr)
             self._remapper.join_branch(ast, cond_idf_expr, then_remap, self._create_temp_var)
 
-    def add_block_to_circuit(self, ast: Block):
+    def add_block_to_circuit(self, ast: Block, guard_cond: Optional[HybridArgumentIdf], guard_val: Optional[bool]):
         assert ast.parent is not None
         is_already_scoped = isinstance(ast.parent, (ConstructorOrFunctionDefinition, IfStatement))
-        with nullcontext() if is_already_scoped else self._remapper.remap_scope(ast):
-            for stmt in ast.statements:
-                self._circ_trafo.visit(stmt)
-                # Bubble up nested pre statements
-                ast.pre_statements += stmt.pre_statements
-                stmt.pre_statements = []
+        self.phi.append(CircComment('{'))
+        with self.circ_indent_block():
+            with nullcontext() if guard_cond is None else self.guarded(guard_cond, guard_val):
+                with nullcontext() if is_already_scoped else self._remapper.remap_scope(ast):
+                    for stmt in ast.statements:
+                        self._circ_trafo.visit(stmt)
+                        # Bubble up nested pre statements
+                        ast.pre_statements += stmt.pre_statements
+                        stmt.pre_statements = []
+        self.phi.append(CircComment('}'))
 
     # Internal functionality #
 
@@ -549,31 +582,31 @@ class CircuitHelper:
         :param new_privacy: result owner (determines encryption key)
         :return: HybridArgumentIdf which references the circuit output containing the result of expr
         """
-        ecode = expr.code()
-        with self.circ_indent_block(f'{ecode}'):
-            is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
-            if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
-                plain_result_idf, private_expr = self._evaluate_private_expression(expr)
-            else:
-                # For public expressions which should not be evaluated in private, only the result is moved into the circuit
-                plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
+        is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
+        if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
+            plain_result_idf, private_expr = self._evaluate_private_expression(expr)
+        else:
+            # For public expressions which should not be evaluated in private, only the result is moved into the circuit
+            plain_result_idf, private_expr = self.add_to_circuit_inputs(expr)
 
-            if isinstance(new_privacy, AllExpr):
-                # If the result is public, add an equality constraint to ensure that the user supplied public output
-                # is equal to the circuit evaluation result
-                new_out_param = self._out_name_factory.get_new_idf(expr.annotated_type.type_name, private_expr)
-                self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
-                out_var = new_out_param.get_loc_expr().explicitly_converted(expr.annotated_type.type_name)
-            else:
-                # If the result is encrypted, add an encryption constraint to ensure that the user supplied encrypted output
-                # is equal to the correctly encrypted circuit evaluation result
-                new_privacy = self._get_canonical_privacy_label(expr.analysis, new_privacy)
-                privacy_label_expr = get_privacy_expr_from_label(new_privacy)
-                new_out_param = self._out_name_factory.get_new_idf(TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
-                self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
-                out_var = new_out_param.get_loc_expr()
+        tname = f'{self._out_name_factory.get_new_name(expr.annotated_type.type_name)}'
+        if isinstance(expr, IdentifierExpr) and not is_circ_val:
+            tname += f'_{expr.idf.name}'
 
-        self._phi.append(CircComment(f'{new_out_param.name} = {ecode}\n'))
+        if isinstance(new_privacy, AllExpr):
+            # If the result is public, add an equality constraint to ensure that the user supplied public output
+            # is equal to the circuit evaluation result
+            new_out_param = self._out_name_factory.add_idf(tname, expr.annotated_type.type_name, private_expr)
+            self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
+            out_var = new_out_param.get_loc_expr().explicitly_converted(expr.annotated_type.type_name)
+        else:
+            # If the result is encrypted, add an encryption constraint to ensure that the user supplied encrypted output
+            # is equal to the correctly encrypted circuit evaluation result
+            new_privacy = self._get_canonical_privacy_label(expr.analysis, new_privacy)
+            privacy_label_expr = get_privacy_expr_from_label(new_privacy)
+            new_out_param = self._out_name_factory.add_idf(tname, TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
+            self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
+            out_var = new_out_param.get_loc_expr()
 
         # Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         # that the value the contained out variable must be computed at this point by simulating expression evaluation
@@ -618,6 +651,8 @@ class CircuitHelper:
         """
         rnd = self._secret_input_name_factory.add_idf(f'{plain.name if is_param else cipher.name}_R', TypeName.rnd_type())
         pk = self._require_public_key_for_label_at(stmt, new_privacy)
+        if not is_dec:
+            self.phi.append(CircComment(f'{cipher.name} = enc({plain.name}, {pk.name})'))
         self._phi.append(CircEncConstraint(plain, rnd, pk, cipher, is_dec))
 
     def _require_public_key_for_label_at(self, stmt: Optional[Statement], privacy: PrivacyLabelExpr) -> HybridArgumentIdf:
