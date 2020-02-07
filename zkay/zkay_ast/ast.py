@@ -1053,12 +1053,13 @@ class NumberTypeName(ElementaryTypeName):
 class NumberLiteralType(NumberTypeName):
     def __init__(self, name: Union[str, int]):
         name = int(name) if isinstance(name, str) else name
-        bitwidth = name.bit_length()
+        blen = name.bit_length()
         if name < 0:
             signed = True
-            bitwidth += 1
+            bitwidth = blen + 1 if name != -(1 << (blen-1)) else blen
         else:
             signed = False
+            bitwidth = blen
         bitwidth = max(int(math.ceil(bitwidth / 8.0)) * 8, 8)
         assert 8 <= bitwidth <= 256 and bitwidth % 8 == 0
 
