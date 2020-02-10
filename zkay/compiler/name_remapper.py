@@ -157,11 +157,11 @@ class Remapper(Generic[K, V]):
                     assert key.parent.annotated_type.declared_type is not None
                     prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
                     prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
-                    self.rmap[key] = join(true_state[key].get_loc_expr(stmt), prev_val)
+                    self.rmap[key] = join(true_state[key].get_idf_expr(stmt), prev_val)
             else:
                 # key was modified in both branches
                 # remap key -> new temporary with value cond ? true_val : false_val
-                self.rmap[key] = join(true_state[key].get_loc_expr(stmt), false_state[key].get_loc_expr(stmt))
+                self.rmap[key] = join(true_state[key].get_idf_expr(stmt), false_state[key].get_idf_expr(stmt))
         for key, val in false_state.items():
             if not SymbolTableLinker.in_scope_at(key, stmt):
                 # Don't keep local values
@@ -176,7 +176,7 @@ class Remapper(Generic[K, V]):
                     assert key.parent.annotated_type.declared_type is not None
                     prev_val = IdentifierExpr(key.clone()).as_type(key.parent.annotated_type.declared_type.clone())
                     prev_val = prev_val.override(target=key.parent, parent=stmt, statement=stmt)
-                    self.rmap[key] = join(prev_val, false_state[key].get_loc_expr(stmt))
+                    self.rmap[key] = join(prev_val, false_state[key].get_idf_expr(stmt))
 
 
 class CircVarRemapper(Remapper[Identifier, HybridArgumentIdf]):

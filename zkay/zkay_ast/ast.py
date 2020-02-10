@@ -627,12 +627,18 @@ class HybridArgumentIdf(Identifier):
         self.corresponding_priv_expression = corresponding_priv_expression
         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
 
-    def get_loc_expr(self, parent=None) -> LocationExpr:
-        if self.arg_type == HybridArgType.PRIV_CIRCUIT_VAL or self.arg_type == HybridArgType.TMP_CIRCUIT_VAL:
-            ie = IdentifierExpr(self.clone()).as_type(self.t)
+    def get_loc_expr(self, parent=None) -> Union[LocationExpr, NumberLiteralExpr, BooleanLiteralExpr]:
+        if self.arg_type == HybridArgType.TMP_CIRCUIT_VAL and isinstance(self.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType):
+            return BooleanLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
+        elif self.arg_type == HybridArgType.TMP_CIRCUIT_VAL and isinstance(self.corresponding_priv_expression.annotated_type.type_name, NumberLiteralType):
+            return NumberLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
         else:
             assert self.arg_type == HybridArgType.PUB_CIRCUIT_ARG
-            ie = IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
+            ma = IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
+            return ma.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
+
+    def get_idf_expr(self, parent=None) -> IdentifierExpr:
+        ie = IdentifierExpr(self.clone()).as_type(self.t)
         return ie.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
 
     def clone(self) -> HybridArgumentIdf:

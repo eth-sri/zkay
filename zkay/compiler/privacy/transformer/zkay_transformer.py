@@ -9,14 +9,13 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgume
 from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
 from zkay.config import cfg
-from zkay.type_check.type_checker import TypeCheckVisitor
 from zkay.zkay_ast.analysis.contains_private_checker import contains_private_expr
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
     VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
     Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, NumberLiteralExpr, \
     MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
-    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr, EnumDefinition
+    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr, EnumDefinition, EncryptionExpression
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 
 
@@ -117,7 +116,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
 
     def visitStatement(self, ast: Statement):
         """
-        Rules (2), (3), (4)
+        Rules (3), (4)
 
         This is for all the statements where the statements themselves remain untouched and only the children are altered.
         """
@@ -127,13 +126,26 @@ class ZkayStatementTransformer(AstTransformerVisitor):
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
         """Rule (2)"""
-        ret = self.visitStatement(ast)
+        ast.lhs = self.expr_trafo.visit(ast.lhs)
+        ast.rhs = self.expr_trafo.visit(ast.rhs)
+        modvals = ast.modified_values
+        if cfg.opt_cache_circuit_outputs and isinstance(ast.lhs, IdentifierExpr) and isinstance(ast.rhs, MemberAccessExpr):
+            # Skip invalidation if rhs is circuit output
+            if isinstance(ast.rhs.member, HybridArgumentIdf) and ast.rhs.member.arg_type == HybridArgType.PUB_CIRCUIT_ARG:
+                modvals = [mv for mv in modvals if mv.target != ast.lhs.target]
+                if isinstance(ast.rhs.member.corresponding_priv_expression, EncryptionExpression):
+                    ridf = ast.rhs.member.corresponding_priv_expression.expr.idf
+                else:
+                    ridf = ast.rhs.member.corresponding_priv_expression.idf
+                assert isinstance(ridf, HybridArgumentIdf)
+                self.gen._remapper.remap(ast.lhs.target.idf, ridf)
+
         if self.gen is not None:
-            for val in ast.modified_values:
+            # Invalidate circuit value for assignment targets
+            for val in modvals:
                 if val.key is None:
-                    # TODO don't invalidate but rather update if rhs is circuit output (-> real value is already in circuit)
                     self.gen.invalidate_idf(val.target.idf)
-        return ret
+        return ast
 
     def visitIfStatement(self, ast: IfStatement):
         """
@@ -149,7 +161,8 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         if ast.condition.annotated_type.is_public():
             if contains_private_expr(ast.then_branch) or contains_private_expr(ast.else_branch):
                 before_if_state = self.gen._remapper.get_state()
-                guard_var, ast.condition = self.gen.add_to_circuit_inputs(ast.condition)
+                guard_var = self.gen.add_to_circuit_inputs(ast.condition)
+                ast.condition = guard_var.get_loc_expr(ast)
                 with self.gen.guarded(guard_var, True):
                     ast.then_branch = self.visit(ast.then_branch)
                     self.gen._remapper.set_state(before_if_state)
@@ -292,7 +305,8 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
                 # handle short-circuiting
                 if ast.func.has_shortcircuiting() and any(map(contains_private_expr, ast.args[1:])):
                     op = ast.func.op
-                    guard_var, ast.args[0] = self.gen.add_to_circuit_inputs(ast.args[0])
+                    guard_var = self.gen.add_to_circuit_inputs(ast.args[0])
+                    ast.args[0] = guard_var.get_loc_expr(ast)
                     if op == 'ite':
                         ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1])
                         ast.args[2] = self.visit_guarded_expression(guard_var, False, ast.args[2])
@@ -347,13 +361,11 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         # If new pre statements were added, they must be guarded using an if statement in the public solidity code
         new_pre_stmts = expr.statement.pre_statements[prelen:]
         if new_pre_stmts:
-            if guard_var.arg_type == HybridArgType.TMP_CIRCUIT_VAL:
-                # Guard condition is a constant
-                assert isinstance(guard_var.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType)
-                cond_expr = BooleanLiteralExpr(guard_var.corresponding_priv_expression.annotated_type.type_name.value == if_true)
-            else:
-                # Guard condition is a plaintext circuit input
-                cond_expr = guard_var.get_loc_expr() if if_true else guard_var.get_loc_expr().unop('!')
+            cond_expr = guard_var.get_loc_expr()
+            if isinstance(cond_expr, BooleanLiteralExpr):
+                cond_expr = BooleanLiteralExpr(cond_expr.value == if_true)
+            elif not if_true:
+                cond_expr = cond_expr.unop('!')
             expr.statement.pre_statements = expr.statement.pre_statements[:prelen] + [IfStatement(cond_expr, Block(new_pre_stmts), None)]
         return ret
 
@@ -402,7 +414,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def transform_location(self, loc: LocationExpr):
         """Rule (14), move location into the circuit."""
-        return self.gen.add_to_circuit_inputs(loc)[1]
+        return self.gen.add_to_circuit_inputs(loc).get_idf_expr()
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """Rule (15), boundary crossing if analysis determined that it is """
@@ -410,7 +422,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             return self.visit(ast.expr)
         else:
             assert ast.expr.annotated_type.is_public()
-            return self.gen.add_to_circuit_inputs(ast.expr)[1]
+            return self.gen.add_to_circuit_inputs(ast.expr).get_idf_expr()
 
     def visitExpression(self, ast: Expression):
         """Rule (16), other expressions don't need special treatment."""

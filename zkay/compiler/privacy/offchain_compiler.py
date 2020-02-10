@@ -139,6 +139,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def get_loc_value(self, arr: Identifier, indices: List[str]) -> str:
         if isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PRIV_CIRCUIT_VAL and not arr.name.startswith('tmp'):
             return self.get_priv_value(arr.name)
+        elif isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PUB_CIRCUIT_ARG:
+            return self.visit(arr.get_loc_expr())
         else:
             idxvals = ''.join([f'[{idx}]' for idx in indices])
             return f'{self.visit(arr)}{idxvals}'

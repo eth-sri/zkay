@@ -52,6 +52,24 @@ class Config:
             'libsnark',
         }
 
+        # Optimization options
+        self.opt_cache_circuit_inputs = True
+        """
+        If true, identifier circuit inputs will be cached (i.e. if an identifier is referenced multiple times within a private expression,
+        or multiple times in different private expressions without being publicly written to in between,
+        then the identifier will only be added to the circuit inputs once and all private uses will share the same input variable.
+        """
+
+        self.opt_cache_circuit_outputs = True
+        """
+        Normally, the value cached in the circuit for a particular identifier must be invalidated whenever the identifier is
+        assigned to in public code.
+
+        If this optimization is enabled, assignments where the lhs is an Identifier and the rhs is a private expression
+        will update the cached value stored in the circuit instead of invalidating it. (since updated value == private expression result,
+        the corresponding plaintext value is already available in the circuit)
+        """
+
         self.libsnark_check_verify_locally_during_proof_generation: bool = False
 
     def override_defaults(self, overrides: Dict[str, str]):
