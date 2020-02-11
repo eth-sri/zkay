@@ -234,29 +234,29 @@ class BuildASTVisitor(SolidityVisitor):
         return IndexExpr(arr, index)
 
     def visitParenthesisExpr(self, ctx: SolidityParser.ParenthesisExprContext):
-        f = BuiltinFunction('parenthesis')
+        f = BuiltinFunction('parenthesis').override(line=ctx.start.line, column=ctx.start.column)
         expr = self.visit(ctx.expr)
         return FunctionCallExpr(f, [expr])
 
     def visitSignExpr(self, ctx: SolidityParser.SignExprContext):
-        f = BuiltinFunction('sign' + ctx.op.text)
+        f = BuiltinFunction('sign' + ctx.op.text).override(line=ctx.op.line, column=ctx.op.column)
         expr = self.visit(ctx.expr)
         return FunctionCallExpr(f, [expr])
 
     def visitNotExpr(self, ctx: SolidityParser.NotExprContext):
-        f = BuiltinFunction('!')
+        f = BuiltinFunction('!').override(line=ctx.start.line, column=ctx.start.column)
         expr = self.visit(ctx.expr)
         return FunctionCallExpr(f, [expr])
 
     def visitBitwiseNotExpr(self, ctx: SolidityParser.BitwiseNotExprContext):
-        f = BuiltinFunction('~')
+        f = BuiltinFunction('~').override(line=ctx.start.line, column=ctx.start.column)
         expr = self.visit(ctx.expr)
         return FunctionCallExpr(f, [expr])
 
     def _visitBinaryExpr(self, ctx):
         lhs = self.visit(ctx.lhs)
         rhs = self.visit(ctx.rhs)
-        f = BuiltinFunction(ctx.op.text)
+        f = BuiltinFunction(ctx.op.text).override(line=ctx.op.line, column=ctx.op.column)
         return FunctionCallExpr(f, [lhs, rhs])
 
     def _visitBoolExpr(self, ctx):
@@ -371,7 +371,7 @@ class BuildASTVisitor(SolidityVisitor):
         op = ctx.op.text[:-1] if ctx.op.text != '=' else ''
         if op:
             # If the assignment contains an additional operator -> replace lhs = rhs with lhs = lhs 'op' rhs
-            rhs = FunctionCallExpr(ast.BuiltinFunction(op), [self.visit(ctx.lhs), rhs])
+            rhs = FunctionCallExpr(BuiltinFunction(op).override(line=ctx.op.line, column=ctx.op.column), [self.visit(ctx.lhs), rhs])
             rhs.line = ctx.rhs.start.line
             rhs.column = ctx.rhs.start.column + 1
         return ast.AssignmentStatement(lhs, rhs, op)
@@ -385,7 +385,7 @@ class BuildASTVisitor(SolidityVisitor):
         one.line = ctx.op.line
         one.column = ctx.op.column + 1
 
-        fct = FunctionCallExpr(BuiltinFunction(op), [self.visit(ctx.expr), one])
+        fct = FunctionCallExpr(BuiltinFunction(op).override(line=ctx.op.line, column=ctx.op.column), [self.visit(ctx.expr), one])
         fct.line = ctx.op.line
         fct.column = ctx.op.column + 1
 

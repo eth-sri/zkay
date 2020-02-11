@@ -8,7 +8,7 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
     BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName, \
-    get_privacy_expr_from_label
+    get_privacy_expr_from_label, issue_compiler_warning
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -175,7 +175,22 @@ class TypeCheckVisitor(AstVisitor):
                 if func.is_bitop() or func.is_shiftop():
                     for arg in ast.args:
                         if arg.annotated_type.type_name.elem_bitwidth == 256:
-                            raise TypeException('Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type', arg)
+                            raise TypeException('Private bitwise and shift operations are only supported for integer types < 256 bit, '
+                                                'please use a smaller type', arg)
+
+                if func.is_arithmetic():
+                    for a in ast.args:
+                        if a.annotated_type.type_name.elem_bitwidth == 256:
+                            issue_compiler_warning(func, "Private arithmetic 256bit operations overflow at FIELD_PRIME.\n"
+                                                         "If you need correct overflow behavior, use a smaller integer type.")
+                            break
+                elif func.is_comp():
+                    for a in ast.args:
+                        if a.annotated_type.type_name.elem_bitwidth == 256:
+                            issue_compiler_warning(func, "Private 256bit comparison operations will fail for values >= 2^252.\n"
+                                                         "If you cannot guarantee that the value stays in range, you must use "
+                                                         "a smaller integer type to ensure correctness.")
+                            break
 
                 func.is_private = True
                 p = Expression.me_expr()

@@ -11,6 +11,7 @@ from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 
 from zkay.config import cfg
+from zkay.utils.progress_printer import colored_print, TermColor
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -1885,44 +1886,53 @@ def get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[Co
         return error_msg
 
 
+def get_ast_exception_msg(ast: AST, msg: str):
+    # Get surrounding statement
+    if isinstance(ast, Expression):
+        stmt = ast.statement
+    elif isinstance(ast, Statement):
+        stmt = ast
+    else:
+        stmt = None
+
+    # Get surrounding function
+    if stmt is not None:
+        fct = stmt.function
+    elif isinstance(ast, ConstructorOrFunctionDefinition):
+        fct = ast
+    else:
+        fct = None
+
+    # Get surrounding contract
+    ctr = ast if fct is None else fct
+    while ctr is not None and not isinstance(ctr, ContractDefinition):
+        ctr = ctr.parent
+
+    # Get source root
+    root = ast if ctr is None else ctr
+    while root is not None and not isinstance(root, SourceUnit):
+        root = root.parent
+
+    if root is None:
+        error_msg = 'error'
+    else:
+        error_msg = get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
+
+    return f'\n{error_msg}\n{msg}'
+
+
+def issue_compiler_warning(ast: AST, msg: str):
+    with colored_print(TermColor.WARNING):
+        print(get_ast_exception_msg(ast, f'WARNING:\n{msg}\n'))
+
+
 class AstException(Exception):
     """
     Generic exception for errors in an AST
     """
 
     def __init__(self, msg, ast):
-        # Get surrounding statement
-        if isinstance(ast, Expression):
-            stmt = ast.statement
-        elif isinstance(ast, Statement):
-            stmt = ast
-        else:
-            stmt = None
-
-        # Get surrounding function
-        if stmt is not None:
-            fct = stmt.function
-        elif isinstance(ast, ConstructorOrFunctionDefinition):
-            fct = ast
-        else:
-            fct = None
-
-        # Get surrounding contract
-        ctr = ast if fct is None else fct
-        while ctr is not None and not isinstance(ctr, ContractDefinition):
-            ctr = ctr.parent
-
-        # Get source root
-        root = ast if ctr is None else ctr
-        while root is not None and not isinstance(root, SourceUnit):
-            root = root.parent
-
-        if root is None:
-            error_msg = 'error'
-        else:
-            error_msg = get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
-
-        super().__init__(f'\n{error_msg}\n{msg}')
+        super().__init__(get_ast_exception_msg(ast, msg))
 
 
 # CODE GENERATION
