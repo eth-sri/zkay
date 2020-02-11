@@ -26,33 +26,51 @@ def _init_solc(version):
 
 class Config:
     def __init__(self):
-        self.config_dir = os.path.dirname(os.path.realpath(__file__))
+        # User configuration
 
-        self.is_unit_test = False
-        self.use_circuit_cache_during_testing_with_encryption = True
-
-        # proving scheme to use for nizk proof [gm17]
         self.proving_scheme = 'gm17'
-        # prover backend [jsnark]
+        """NIZK proving scheme to use [gm17]"""
+
         self.snark_backend = 'jsnark'
-        # encryption algorithm [dummy, rsa_pkcs1_5, rsa_oaep]
+        """Snark backend to use [jsnark]"""
+
         self.crypto_backend = 'dummy'
+        """Encryption backend to use [dummy, rsa_pkcs1_5, rsa_oaep]"""
 
         self.indentation = ' '*4
+        """Specifies the identation which should be used for the generated code output."""
 
-        self.jsnark_circuit_classname = 'ZkayCircuit'
-
-        self.reserved_name_prefix = 'zk__'
-        self.verification_function_name = 'check_verify'
-
-        self.pack_chunk_size = 31
+        self.libsnark_check_verify_locally_during_proof_generation: bool = False
+        """If true, the libsnark interface verifies locally whether the proof can be verified during proof generation."""
 
         self.debug_output_whitelist = {
             'jsnark',
             'libsnark',
         }
+        """
+        If the 'key' argument of run_command matches an entry in this list, the commands output directly goes to stdout
+        instead of being captured. -> Useful for debugging, but must not specify a key if output capturing is required.
+        """
 
-        # Optimization options
+        self.opt_solc_optimizer_runs = 50
+        """SOLC: optimize for how many times to run the code"""
+
+        self.opt_hash_threshold = 70
+        """
+        If there are more than this many public circuit inputs (in uints), the hashing optimization will be used
+        (only the hash of all public inputs will be passed as public input, public inputs are passed as private circuit inputs and
+        the circuit verifies that the hash matches to ensure correctness)
+
+        When hashing is enabled -> cheaper on-chain costs for verification (O(1) in #public args instead of O(n)),
+        but much higher off-chain costs (key and proof generation time, memory consumption).
+        """
+
+        self.opt_eval_constexpr_in_circuit = True
+        """
+        If true, literal expressions are folded and the result is baked into the circuit as a constant
+        (as opposed to being evaluated outside the circuit and the result being moved in as an additional circuit input)
+        """
+
         self.opt_cache_circuit_inputs = True
         """
         If true, identifier circuit inputs will be cached (i.e. if an identifier is referenced multiple times within a private expression,
@@ -70,7 +88,16 @@ class Config:
         the corresponding plaintext value is already available in the circuit)
         """
 
-        self.libsnark_check_verify_locally_during_proof_generation: bool = False
+        # Internal values
+
+        self._options_with_effect_on_circuit_output = [
+            'proving_scheme', 'snark_backend', 'crypto_backend',
+            'opt_solc_optimizer_runs', 'opt_hash_threshold',
+            'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs'
+        ]
+        self.config_dir = os.path.dirname(os.path.realpath(__file__))
+        self.is_unit_test = False
+        self.use_circuit_cache_during_testing_with_encryption = True
 
     def override_defaults(self, overrides: Dict[str, str]):
         for arg, val in overrides.items():
@@ -78,12 +105,24 @@ class Config:
                 raise ValueError(f'Tried to override non-existing config value {arg}')
             setattr(self, arg, ast.literal_eval(val))
 
+    def serialize(self) -> dict:
+        out = {}
+        for k in self._options_with_effect_on_circuit_output:
+            out[k] = getattr(self, k)
+        return out
+
+    def deserialize(self, vals: dict):
+        for k in vals:
+            if k not in self._options_with_effect_on_circuit_output:
+                raise KeyError(f'vals contains unknown option "{k}"')
+            setattr(self, k, vals[k])
+
     @property
-    def zkay_version(self):
+    def zkay_version(self) -> str:
         return '0.2'
 
     @property
-    def solc_version(self):
+    def solc_version(self) -> str:
         return 'v0.5.16'
 
     @staticmethod
@@ -129,9 +168,13 @@ class Config:
 
         pub_arg_size = circuit.trans_in_size + circuit.trans_out_size
         if self.is_unit_test:
-            return pub_arg_size > 70
+            return pub_arg_size > self.opt_hash_threshold
         else:
             return True
+
+    @property
+    def reserved_name_prefix(self) -> str:
+        return 'zk__'
 
     def get_internal_name(self, fct) -> str:
         if fct.requires_verification_when_external:
@@ -170,6 +213,18 @@ class Config:
     @property
     def zk_data_var_name(self):
         return f'{self.zk_struct_prefix}'
+
+    @property
+    def jsnark_circuit_classname(self) -> str:
+        return 'ZkayCircuit'
+
+    @property
+    def verification_function_name(self) -> str:
+        return 'check_verify'
+
+    @property
+    def pack_chunk_size(self) -> int:
+        return 31
 
 
 cfg = Config()

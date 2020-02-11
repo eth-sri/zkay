@@ -8,7 +8,7 @@ from typing import Optional, Dict, Tuple
 from solcx import compile_standard
 from solcx.exceptions import SolcError
 
-from zkay.config import debug_print
+from zkay.config import debug_print, cfg
 from zkay.zkay_ast.ast import get_code_error_msg
 
 
@@ -147,12 +147,13 @@ def check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str):
         check_compilation(f.name, True, display_code=zkay_code)
 
 
-def compile_solidity_code(code: str, output_directory: str) -> Dict:
+def compile_solidity_code(code: str, output_directory: str, optimizer_runs=cfg.opt_solc_optimizer_runs) -> Dict:
     """
     Compile the given solidity code with default settings.
 
     :param code: code to compile
     :param output_directory: compiler output directory
+    :param optimizer_runs: solc optimizer argument "runs", a negative value disables the optimizer
     :return: json compilation output
     """
 
@@ -162,4 +163,4 @@ def compile_solidity_code(code: str, output_directory: str) -> Dict:
     with tempfile.NamedTemporaryFile('w', suffix='.sol') as f:
         f.write(code)
         f.flush()
-        return compile_solidity_json(f.name, output_dir=output_directory)
+        return compile_solidity_json(f.name, output_dir=output_directory, optimizer_runs=optimizer_runs)

@@ -1,5 +1,6 @@
 from typing import Union
 
+from zkay.config import cfg
 from zkay.type_check.type_exceptions import TypeException
 from zkay.zkay_ast.ast import ConstructorOrFunctionDefinition, FunctionCallExpr, BuiltinFunction, LocationExpr, \
     Statement, AssignmentStatement, ReturnStatement, ReclassifyExpr, StatementList, Expression, FunctionTypeName, IfStatement, \
@@ -77,7 +78,8 @@ class CircuitComplianceChecker(FunctionVisitor):
         self.priv_setter = PrivateSetter()
         self.inside_privif_stmt = False
 
-    def should_evaluate_public_expr_in_circuit(self, expr: Expression) -> bool:
+    @staticmethod
+    def should_evaluate_public_expr_in_circuit(expr: Expression) -> bool:
         try:
             check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(expr)
         except TypeException:
@@ -85,13 +87,14 @@ class CircuitComplianceChecker(FunctionVisitor):
             return False
 
         assert expr.annotated_type is not None
-        if isinstance(expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
-            # Expressions for which the value is known at compile time -> embed constant expression value into the circuit
-            return True
+        if cfg.opt_eval_constexpr_in_circuit:
+            if isinstance(expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
+                # Expressions for which the value is known at compile time -> embed constant expression value into the circuit
+                return True
 
-        if isinstance(expr, PrimitiveCastExpr) and isinstance(expr.expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
-            # Constant casts should also be evaluated inside the circuit
-            return True
+            if isinstance(expr, PrimitiveCastExpr) and isinstance(expr.expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
+                # Constant casts should also be evaluated inside the circuit
+                return True
 
         # Could evaluate in circuit, use analysis to determine whether this would be better performance wise
         # (If this avoids unnecessary encryption operations it may be cheaper)

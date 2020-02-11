@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import tempfile
 from abc import abstractmethod
 from pathlib import Path
@@ -15,7 +14,6 @@ from zkay.config import cfg, debug_print
 from zkay.transaction.interface import Manifest, ZkayBlockchainInterface
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 from zkay.utils.helpers import get_contract_names, without_extension
-from zkay.utils.progress_printer import colored_print, TermColor
 
 max_gas_limit = 10000000
 
@@ -31,7 +29,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
     @staticmethod
     def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
         solp = Path(sol_filename)
-        jout = compile_solidity_json(sol_filename, libs, optimizer_runs=10)['contracts'][solp.name][contract_name]
+        jout = compile_solidity_json(sol_filename, libs, optimizer_runs=cfg.opt_solc_optimizer_runs)['contracts'][solp.name][contract_name]
         return {
             'abi': json.loads(jout['metadata'])['output']['abi'],
             'bin': jout['evm']['bytecode']['object'],
