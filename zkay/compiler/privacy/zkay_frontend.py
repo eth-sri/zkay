@@ -121,9 +121,9 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
                 Manifest.uuid: uuid.uuid1().hex,
                 Manifest.zkay_version: cfg.zkay_version,
                 Manifest.solc_version: cfg.solc_version,
+                Manifest.zkay_options: cfg.serialize(),
                 Manifest.zkay_contract_filename: zkay_filename,
                 Manifest.contract_filename: output_filename,
-                Manifest.proving_scheme: ps.name,
                 Manifest.pki_lib: f'{cfg.pki_contract_name}.sol',
                 Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
                 Manifest.verifier_names: {

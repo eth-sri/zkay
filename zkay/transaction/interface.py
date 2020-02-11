@@ -81,16 +81,6 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
     def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
         manifest = parse_manifest(project_dir)
 
-        # Check if zkay version matches
-        if manifest[Manifest.zkay_version] != cfg.zkay_version:
-            with colored_print(TermColor.WARNING):
-                print(f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
-                      f'Compilation or integrity check with deployed bytecode might fail due to version differences')
-
-        # Set correct solc version
-        old_solc = cfg.solc_version
-        cfg.override_solc(manifest[Manifest.solc_version])
-
         # Compile zkay file, generate circuits and verification contracts (but don't generate new prover/verification keys and manifest)
         compile_zkay_file(os.path.join(project_dir, manifest[Manifest.zkay_contract_filename]), project_dir, import_keys=True)
 
@@ -119,7 +109,6 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         # Check zkay contract integrity
         self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, manifest[Manifest.contract_filename]), pki_verifier_addresses)
-        cfg.override_solc(old_solc)
 
         with colored_print(TermColor.OKGREEN):
             debug_print(f'OK: Bytecode on blockchain matches local zkay contract')

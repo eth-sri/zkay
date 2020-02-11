@@ -95,6 +95,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if __name__ == '__main__':
             log_file = my_logging.get_log_file(filename='transactions', parent_dir="", include_timestamp=True, label=None)
             my_logging.prepare_logger(log_file)
+            ContractSimulator.use_config_from_manifest(os.path.dirname(os.path.realpath(__file__)))
             ContractSimulator.init_key_pair(me)
             code.interact(local=locals())
         ''')

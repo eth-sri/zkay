@@ -3,8 +3,10 @@ from contextlib import contextmanager
 from enum import Enum
 from typing import Dict, Union, Callable, Any, Optional, List, Tuple, Type
 
+from zkay.compiler.privacy.manifest import Manifest
 from zkay.config import cfg
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
+from zkay.transaction.interface import parse_manifest
 from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct
 from zkay.transaction.runtime import Runtime
 from zkay.utils.progress_printer import colored_print, TermColor
@@ -141,6 +143,19 @@ class ContractSimulator:
         account = AddressValue(address)
         key_pair = Runtime.crypto().generate_or_load_key_pair(account)
         Runtime.keystore().add_keypair(account, key_pair)
+
+    @staticmethod
+    def use_config_from_manifest(project_dir: str):
+        manifest = parse_manifest(project_dir)
+
+        # Check if zkay version matches
+        if manifest[Manifest.zkay_version] != cfg.zkay_version:
+            with colored_print(TermColor.WARNING):
+                print(f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
+                      f'Compilation or integrity check with deployed bytecode might fail due to version differences')
+
+        cfg.override_solc(manifest[Manifest.solc_version])
+        cfg.deserialize(manifest[Manifest.zkay_options])
 
     @staticmethod
     def create_dummy_accounts(count: int) -> Union[str, Tuple]:
