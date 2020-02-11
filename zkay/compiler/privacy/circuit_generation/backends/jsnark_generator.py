@@ -185,7 +185,7 @@ class JsnarkGenerator(CircuitGenerator):
         constraints = JsnarkVisitor(circuit.phi).visitCircuit()
 
         # Inject the function definitions into the java template
-        code = jsnark.get_jsnark_circuit_class_str(circuit.get_verification_contract_name(), circuit, fdefs, input_init_stmts, constraints)
+        code = jsnark.get_jsnark_circuit_class_str(circuit, fdefs, input_init_stmts + [''] + constraints)
 
         # Compute combined hash of the current jsnark interface jar and of the contents of the java file
         hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.sha512')

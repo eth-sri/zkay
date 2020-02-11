@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.config import cfg
 from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent
@@ -13,6 +14,11 @@ with open(circuit_builder_jar, 'rb') as jarfile:
 
 
 def compile_circuit(circuit_dir: str, javacode: str):
+    """
+    Compile the given circuit java code and then compile the circuit which it describes using jsnark.
+    :param circuit_dir: output directory
+    :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
+    """
     jfile = os.path.join(circuit_dir, cfg.jsnark_circuit_classname + ".java")
     with open(jfile, 'w') as f:
         f.write(javacode)
@@ -25,6 +31,11 @@ def compile_circuit(circuit_dir: str, javacode: str):
 
 
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
+    """
+    Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
+    :param circuit_dir: directory where the compiled circuit is located
+    :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
+    """
     serialized_arg_str = [format(arg, 'x') for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
@@ -45,9 +56,7 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
     @Override
     protected void buildCircuit() {{
         super.buildCircuit();
-{init_inputs}
-
-{constraints}
+{circuit_statements}
     }}
 
     public static void main(String[] args) {{
@@ -58,12 +67,20 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 '''
 
 
-def get_jsnark_circuit_class_str(name: str, circuit, fdefs: List[str], input_init: List[str], constraints: List[str]):
+def get_jsnark_circuit_class_str(circuit: CircuitHelper, fdefs: List[str], circuit_statements: List[str]) -> str:
+    """
+    Inject circuit and input code into jsnark-wrapper skeleton.
+
+    :param circuit: the abstract circuit to which this java code corresponds
+    :param fdefs: java function definition with circuit code for each transitively called function (public calls in this circuit's function)
+    :param circuit_statements: the java code corresponding to this circuit
+    :return: complete java file as string
+    """
     function_definitions = '\n\n'.join(fdefs)
     if function_definitions:
         function_definitions = f'\n{function_definitions}\n'
-    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend, circuit_name=name,
+    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend,
+                                      circuit_name=circuit.get_verification_contract_name(),
                                       key_bits=cfg.key_bits, pub_in_size=circuit.in_size_trans, pub_out_size=circuit.out_size_trans,
                                       priv_in_size=circuit.priv_in_size_trans, use_input_hashing=str(cfg.should_use_hash(circuit)).lower(),
-                                      fdefs=indent(function_definitions),
-                                      init_inputs=indent(indent('\n'.join(input_init))), constraints=indent(indent('\n'.join(constraints))))
+                                      fdefs=indent(function_definitions), circuit_statements=indent(indent('\n'.join(circuit_statements))))
