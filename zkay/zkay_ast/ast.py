@@ -200,13 +200,6 @@ class Expression(AST):
     def instanceof_data_type(self, expected: TypeName) -> bool:
         return self.annotated_type.type_name.implicitly_convertible_to(expected)
 
-    def is_lvalue(self) -> bool:
-        # TODO not really correct once we have reference types (there can be nested rvalues in left assignment subexpressions)
-        return isinstance(self.statement, AssignmentStatement) and self.statement.lhs.is_parent_of(self)
-
-    def is_rvalue(self) -> bool:
-        return not self.is_lvalue()
-
     def unop(self, op: str) -> FunctionCallExpr:
         return FunctionCallExpr(BuiltinFunction(op), [self])
 
@@ -472,7 +465,23 @@ class StringLiteralExpr(LiteralExpr):
         self.value = value
 
 
-class TupleExpr(Expression):
+class TupleOrLocationExpr(Expression):
+    def is_lvalue(self) -> bool:
+        if isinstance(self.parent, AssignmentStatement):
+            return self == self.parent.lhs
+        if isinstance(self.parent, IndexExpr) and self == self.parent.arr:
+            return self.parent.is_lvalue()
+        if isinstance(self.parent, MemberAccessExpr) and self == self.parent.expr:
+            return self.parent.is_lvalue()
+        if isinstance(self.parent, TupleExpr):
+            return self.parent.is_lvalue()
+        return False
+
+    def is_rvalue(self) -> bool:
+        return not self.is_lvalue()
+
+
+class TupleExpr(TupleOrLocationExpr):
     def __init__(self, elements: List[Expression]):
         super().__init__()
         self.elements = elements
@@ -484,7 +493,7 @@ class TupleExpr(Expression):
         return AssignmentStatement(self, val)
 
 
-class LocationExpr(Expression):
+class LocationExpr(TupleOrLocationExpr):
     def __init__(self):
         super().__init__()
         # set later by symbol table
