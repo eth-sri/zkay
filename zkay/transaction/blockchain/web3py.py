@@ -37,7 +37,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
             'deployed_bin': jout['evm']['deployedBytecode']['object']
         }
 
-    def deploy_contract(self, sender: Union[bytes, str], contract_interface, *args, value: Optional[int] = None):
+    def deploy_contract(self, sender: Union[bytes, str], contract_interface, *args, wei_amount: Optional[int] = None):
         if args is None:
             args = []
 
@@ -46,15 +46,15 @@ class Web3Blockchain(ZkayBlockchainInterface):
             bytecode=contract_interface['bin']
         )
 
-        tx_receipt = self._transact(contract, sender, 'constructor', *args, value=value)
+        tx_receipt = self._transact(contract, sender, 'constructor', *args, wei_amount=wei_amount)
         contract = self.w3.eth.contract(
             address=tx_receipt.contractAddress, abi=contract_interface['abi']
         )
         return contract
 
-    def get_special_variables(self, sender: AddressValue, value: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
+    def get_special_variables(self, sender: AddressValue, wei_amount: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         block = self.w3.eth.getBlock('pending')
-        return MsgStruct(sender, value), \
+        return MsgStruct(sender, wei_amount), \
                BlockStruct(AddressValue(self.w3.eth.coinbase), block['difficulty'], block['gasLimit'], block['number'], block['timestamp']),\
                TxStruct(self.w3.eth.gasPrice, sender)
 
@@ -91,11 +91,11 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
         return contract_handle.functions[name](*indices).call()
 
-    def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, value: Optional[int] = None) -> Any:
+    def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, wei_amount: Optional[int] = None) -> Any:
         fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
         tx = {'from': sender, 'gas': max_gas_limit}
-        if value:
-            tx['value'] = value
+        if wei_amount:
+            tx['value'] = wei_amount
         tx_hash = fobj(*actual_params).transact(tx)
         tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         if tx_receipt['status'] == 0:
@@ -103,11 +103,11 @@ class Web3Blockchain(ZkayBlockchainInterface):
         debug_print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
-    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, value: Optional[int] = None):
+    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None):
         filename = self.__hardcode_external_contracts(os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename]),
                                                       self._pki_verifier_addresses(sender, manifest))
         cout = self.compile_contract(filename, contract)
-        return self.deploy_contract(sender, cout, *actual_args, value=value)
+        return self.deploy_contract(sender, cout, *actual_args, wei_amount=wei_amount)
 
     def _deploy_libraries(self, sender: Union[bytes, str]):
         # Compile and deploy global libraries

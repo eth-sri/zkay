@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from datetime import datetime
 from textwrap import dedent
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, ContextManager
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
 from zkay.config import cfg
@@ -10,7 +10,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
-    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration
+    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration, Block
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -55,6 +55,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     to obtain all required public circuit inputs. Finally it automatically generates the zero knowledge proof and issues a
     transformed transaction (encrypted arguments, additional circuit output and proof arguments added).
     If a require statement fails during simulation, a RequireException is raised.
+    When a state variable is read before it is written in a transaction, its initial value is pulled from the blockchain.
+    Required foreign public keys are also downloaded from the PKI contract on the block chain.
 
     The main function simply loads the zkay configuration from the circuit's manifest, generates encryption keys if necessary
     and enters an interactive python shell.
@@ -71,17 +73,15 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         self.current_index_t: Optional[AnnotatedTypeName] = None
 
         self.inside_circuit: bool = False
-        self.follow_private: bool = False
-
-    def visitAddressTypeName(self, ast: AddressTypeName):
-        return 'AddressValue'
+        self.flatten_hybrid_args: bool = False
 
     def visitSourceUnit(self, ast: SourceUnit):
         contracts = self.visit_list(ast.contracts)
         is_payable = ast.contracts[0].constructor_definitions and ast.contracts[0].constructor_definitions[0].is_payable
-        val_param = ', value=0' if is_payable else ''
-        val_arg = ', value=value' if is_payable else ''
+        val_param = ', wei_amount=0' if is_payable else ''
+        val_arg = ', wei_amount=wei_amount' if is_payable else ''
 
+        # Create skeleton with global functions and main method
         return dedent(f'''\
         ###########################################
         ## THIS CODE WAS GENERATED AUTOMATICALLY ##
@@ -127,13 +127,15 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         ''')
 
     def generate_constructors(self, ast: ContractDefinition) -> str:
+        """Generate class constructor (!= contract constructor) and static connect/deploy methods."""
+
         # Priv values: private function args plaintext, locally decrypted plaintexts, encryption randomness
         # State values: if key not in dict -> pull value from chain on read, otherwise retrieve cached value
         name = self.visit(ast.idf)
 
         is_payable = ast.constructor_definitions and ast.constructor_definitions[0].is_payable
-        val_param = ', value=0' if is_payable else ''
-        val_arg = ', value=value' if is_payable else ''
+        val_param = ', wei_amount=0' if is_payable else ''
+        val_arg = ', wei_amount=wei_amount' if is_payable else ''
 
         if not ast.constructor_definitions:
             deploy_cmd = f'c.conn.deploy(project_dir, c.user_addr, \'{ast.idf.name}\', [], []{val_arg})'
@@ -160,13 +162,21 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         '''))
 
     @staticmethod
+    def is_special_var(idf: Identifier):
+        return idf.name.startswith(cfg.reserved_name_prefix) or idf.name in ['msg', 'block', 'tx', '_tmp_key']
+
+    @staticmethod
     def get_priv_value(idf: str):
+        """Retrieve value of private circuit variable from private-value dictionary"""
         return f'{PRIV_VALUES_NAME}["{idf}"]'
 
     def get_loc_value(self, arr: Identifier, indices: List[str]) -> str:
+        """Get the location of the given identifier/array element."""
         if isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PRIV_CIRCUIT_VAL and not arr.name.startswith('tmp'):
+            # Private circuit values are located in private value dictionary
             return self.get_priv_value(arr.name)
         elif isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PUB_CIRCUIT_ARG:
+            # Public circuit inputs are in the zk_data dict
             return self.visit(arr.get_loc_expr())
         else:
             idxvals = ''.join([f'[{idx}]' for idx in indices])
@@ -174,6 +184,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     @staticmethod
     def _is_builtin_var(idf: IdentifierExpr):
+        """Return true if idf is one of the builtin variables (msg, block, tx, etc...)"""
         if idf.target is None or idf.target.annotated_type is None:
             return False
         else:
@@ -181,7 +192,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return isinstance(t, StructTypeName) and t.names[0].name.startswith('<')
 
     def get_rvalue(self, idf: IdentifierExpr, val_type: AnnotatedTypeName, indices: List[str]) -> str:
+        """
+        Get code corresponding to the rvalue location of an identifier or index expression.
+
+        e.g. idf = x and indices = [some_addr, 5] corresponds to x[some_addr][5]
+        State variable values are downloaded from the chain if their value is not yet present in the local state variable dict.
+        """
         if isinstance(idf.target, StateVariableDeclaration) and not self._is_builtin_var(idf):
+            # If a state variable appears as an rvalue, the value may need to be requested from the blockchain
             is_encrypted = val_type.zkay_type.is_private()
             name_str = f"'{idf.idf.name}'"
             constr = ''
@@ -193,21 +211,30 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         else:
             name = idf.idf
             if isinstance(idf.target, VariableDeclaration) and not self.inside_circuit and not self.is_special_var(idf.idf):
+                # Local variables are stored in locals dict
                 name = Identifier(f'self.locals["{idf.idf.name}"]')
             return self.get_loc_value(name, indices)
 
-    def get_lvalue(self, idf: IdentifierExpr, indices: List[str]):
+    def get_lvalue(self, idf: IdentifierExpr, indices: List[str]) -> str:
+        """
+        Get code corresponding to the lvalue location of an identifier or index expression.
+
+        e.g. idf = x and indices = [some_addr, 5] corresponds to x[some_addr][5]
+        """
         if isinstance(idf.target, StateVariableDeclaration) and not self._is_builtin_var(idf):
+            # State variables are stored in the state variable dict
             idxvals = ', '.join([f'str({idx})' for idx in indices])
             fstr = '[{}]' * len(indices)
             return f"{STATE_VALUES_NAME}['{idf.idf.name}{fstr}'.format({idxvals})]"
         else:
             name = idf.idf
             if isinstance(idf.target, VariableDeclaration) and not self.inside_circuit and not self.is_special_var(idf.idf):
+                # Local variables are stored in locals dict
                 name = Identifier(f'self.locals["{idf.idf.name}"]')
             return self.get_loc_value(name, indices)
 
     def visitContractDefinition(self, ast: ContractDefinition):
+        """Generate a python class with methods for each function and constructor definition and nested classes for each enum definition."""
         enums = self.visit_list(ast.enum_definitions, '\n\n')
         constr = self.visit_list(ast.constructor_definitions, '\n\n')
         fcts = self.visit_list(ast.function_definitions, '\n\n')
@@ -236,11 +263,20 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def handle_function_params(self, ast: ConstructorOrFunctionDefinition, params: List[Parameter]):
         param_str = super().handle_function_params(ast, self.current_params)
         if ast.is_payable:
-            param_str += ', *, value: int = 0'
+            param_str += ', *, wei_amount: int = 0'
         return param_str
 
     @staticmethod
-    def do_if_external(ast: ConstructorOrFunctionDefinition, extern_elems: Optional[List[str]] = None, intern_elems: Optional[List[str]] = None):
+    def do_if_external(ast: ConstructorOrFunctionDefinition, extern_elems: Optional[List[str]] = None, intern_elems: Optional[List[str]] = None) -> str:
+        """
+        Wrap the python statements in extern_elems and intern_elems such that extern_elems are only executed if the surrounding function
+        (python function corresponding to ast) is called externally and intern_elems are only executed if it is not called externally.
+
+        :param ast: the function to which extern_elems and intern_elems belong
+        :param extern_elems: list of python statements to execute when function is called externally
+        :param intern_elems: list of python statements to execute when function is called internally
+        :return: wrapped code
+        """
         extern_s = ('\n'.join(dedent(s) for s in extern_elems if s) if extern_elems else '').strip()
         intern_s = ('\n'.join(dedent(s) for s in intern_elems if s) if intern_elems else '').strip()
         if ast.can_be_external:
@@ -364,12 +400,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if ast.is_constructor:
             invoke_transact_str = f'''
             # Deploy contract
-            return {CONN_OBJ_NAME}.deploy({PROJECT_DIR_NAME}, {SELF_ADDR}, {CONTRACT_NAME}, actual_params, [{should_encrypt}]{", value=value" if ast.is_payable else ""})
+            return {CONN_OBJ_NAME}.deploy({PROJECT_DIR_NAME}, {SELF_ADDR}, {CONTRACT_NAME}, actual_params, [{should_encrypt}]{", wei_amount=wei_amount" if ast.is_payable else ""})
             '''
         elif circuit or ast.has_side_effects:
             invoke_transact_str = f'''
             # Invoke public transaction
-            return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, {SELF_ADDR}, '{ast.name}', actual_params, [{should_encrypt}]{", value=value" if ast.is_payable else ""})
+            return {CONN_OBJ_NAME}.transact({CONTRACT_HANDLE}, {SELF_ADDR}, '{ast.name}', actual_params, [{should_encrypt}]{", wei_amount=wei_amount" if ast.is_payable else ""})
             '''
         elif ast.return_parameters:
             lambda_params = []
@@ -407,7 +443,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             post_body_code
         ] if s)
 
-        return f'with FunctionCtx(self, {circuit.priv_in_size_trans if circuit else -1}{", value=value" if ast.is_payable else ""}):\n' + indent(code)
+        return f'with FunctionCtx(self, {circuit.priv_in_size_trans if circuit else -1}{", wei_amount=wei_amount" if ast.is_payable else ""}):\n' + indent(code)
+
+    def visitBlock(self, ast: Block):
+        ret = super().visitBlock(ast)
+        return f'with self.scope():\n{indent(ret)}'
 
     def visitReturnStatement(self, ast: ReturnStatement):
         if not ast.function.requires_verification:
@@ -424,7 +464,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")}' \
                           f' = {CRYPTO_OBJ_NAME}.dec({self.visit(in_idf.get_loc_expr())}, {GET_SK})'
             plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
-            with self.circuit_computation(follow_private=False):
+            with self.circuit_computation(flatten_hybrid_args=False):
                 conv = self.visit(plain_idf.explicitly_converted(in_idf.corresponding_priv_expression.idf.t))
             if conv != plain_idf_name:
                 in_decrypt += f'\n{plain_idf_name} = {conv}'
@@ -439,7 +479,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         else:
             s = f'{self.visit(out_idf.get_loc_expr())}'
 
-        with self.circuit_computation(follow_private=True):
+        with self.circuit_computation(flatten_hybrid_args=True):
             rhs = self.visit(out_val)
         if not isinstance(out_idf.t, CipherText):
             rhs = self.handle_cast(rhs, out_idf.t)
@@ -530,10 +570,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return f'{SCALAR_FIELD_NAME}'
 
         if self.current_index:
+            # This identifier is the beginning of an Index expression e.g. idf[1][2] or idf[me]
             indices, t = list(reversed(self.current_index)), self.current_index_t
             self.current_index, self.current_index_t = [], None
             indices = [self.visit(idx) for idx in indices]
-        elif self.inside_circuit and isinstance(ast.idf, HybridArgumentIdf) and ast.idf.corresponding_priv_expression is not None and self.follow_private:
+        elif self.inside_circuit and isinstance(ast.idf, HybridArgumentIdf) and ast.idf.corresponding_priv_expression is not None and self.flatten_hybrid_args:
             return self.visit(ast.idf.corresponding_priv_expression)
         else:
             indices, t = [], ast.target.annotated_type if isinstance(ast.target, StateVariableDeclaration) else None
@@ -544,24 +585,48 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return self.get_lvalue(ast, indices)
 
     def visitIndexExpr(self, ast: IndexExpr):
+        """
+        Convert an index expression.
+
+        Since Index.arr can be an IndexExpr, it is possible that this IndexExpr is actually part of a nested index expression.
+        e.g. when we have x[p][i], this will be parsed as IndexExpr(IndexExpr(x, p), i) and the outer IndexExpr will be visited first.
+        This is problematic in the case where x is a state variable, since the value has to be requested from the chain
+        using the call x(p, i).
+        One has to recursively visit all the IndexExpr.arr children to know which state variable to call, as the Index expressions
+        are basically visited in reverse order.
+
+        At the moment, this problem is solved by constructing the full, combined index expression in reverse order
+        (by keeping track of all index keys and their types in the list self.current_index until IndexExpr.arr is an IdentifierExpr,
+         which terminates the recursion/nesting. Evaluation of IndexExpr.key for all encountered IndexExpr is also delayed
+         until then, since nested IndexExpr in the key expressions would otherwise break the current_index array).
+        """
         if self.current_index_t is None:
             self.current_index_t = ast.target.annotated_type
         self.current_index.append(ast.key)
-
         return self.visit(ast.arr)
+
+    def get_default_value(self, t: TypeName):
+        if isinstance(t, (AddressTypeName, AddressPayableTypeName)):
+            return 'AddressValue(0)'
+        else:
+            return super().get_default_value(t)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         if ast.variable_declaration.idf.name == cfg.zk_data_var_name:
             c = self.circuits[ast.function]
             s = ''
-
             for idx, idf in enumerate(c.output_idfs + c.input_idfs):
                 s += f"'{idf.name}': {self.get_default_value(idf.t)},"
                 s += '\n' if idx % 4 == 3 else ' '
-
             return f'{cfg.zk_data_var_name}: Dict = {{\n' + indent(s) + '}'
-        else:
+        elif self.is_special_var(ast.variable_declaration.idf):
             return super().visitVariableDeclarationStatement(ast)
+        else:
+            s = ast.variable_declaration.idf.name
+            e = self.handle_var_decl_expr(ast)
+            return f'self.locals.decl("{s}", {e})'
+
+    # Types with special wrapper classes
 
     def visitCipherText(self, _):
         return 'CipherValue'
@@ -572,8 +637,17 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def visitRandomness(self, _):
         return 'RandomnessValue'
 
+    def visitAddressTypeName(self, ast: AddressTypeName):
+        return 'AddressValue'
+
     @contextmanager
-    def circuit_ctx(self, ast: ConstructorOrFunctionDefinition):
+    def circuit_ctx(self, ast: ConstructorOrFunctionDefinition) -> ContextManager:
+        """
+        Return a context manager which sets the sets the current function, circuit and parameter fields to match the specified function.
+
+        :param ast: function definition which will be visited within this context
+        :return: context manager
+        """
         self.current_f = ast
         self.current_circ = self.circuits.get(ast, None)
         if self.current_circ and self.current_f.can_be_external:
@@ -584,12 +658,20 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         self.current_f, self.current_circ, self.current_params = None, None, None
 
     @contextmanager
-    def circuit_computation(self, follow_private: bool = False):
+    def circuit_computation(self, flatten_hybrid_args: bool = False) -> ContextManager:
+        """
+        Return a context manager which enables the inside_circuit flag and sets the flatten_hybrid_args flag as specified
+        for the duration of its lifetime.
+
+        :param flatten_hybrid_args: if true, all encountered HybridArgumentIdfs which have a private expression associated with them are
+                                    replaced by that private expression (recursively) during the lifetime of this context manager.
+        :return: context manager
+        """
         assert not self.inside_circuit
         self.inside_circuit = True
-        old_fp = self.follow_private
-        self.follow_private = follow_private
+        old_fp = self.flatten_hybrid_args
+        self.flatten_hybrid_args = flatten_hybrid_args
         yield
         assert self.inside_circuit
         self.inside_circuit = False
-        self.follow_private = old_fp
+        self.flatten_hybrid_args = old_fp

@@ -293,11 +293,11 @@ class FunctionCtx:
     Context manager which manages the lifetime of transaction instance variables.
     """
 
-    def __init__(self, v: ContractSimulator, trans_sec_size, *, value: int = 0):
+    def __init__(self, v: ContractSimulator, trans_sec_size, *, wei_amount: int = 0):
         self.v = v
         self.was_external = None
         self.trans_sec_size = trans_sec_size
-        self.value = value
+        self.wei_amount = wei_amount
         self.prev_locals = None
 
     def __enter__(self):
@@ -309,7 +309,7 @@ class FunctionCtx:
             self.v.all_priv_values = [0 for _ in range(self.trans_sec_size)]
             self.v.current_all_index = 0
             self.v.current_priv_values.clear()
-            self.v.current_msg, self.v.current_block, self.v.current_tx = self.v.conn.get_special_variables(self.v.user_addr, self.value)
+            self.v.current_msg, self.v.current_block, self.v.current_tx = self.v.conn.get_special_variables(self.v.user_addr, self.wei_amount)
         else:
             self.v.is_external = False
         self.prev_locals = self.v.locals

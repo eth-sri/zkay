@@ -35,7 +35,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         raise NotImplementedError('Current blockchain backend does not support creating pre-funded test accounts.')
 
     @abstractmethod
-    def get_special_variables(self, sender: AddressValue, value: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
+    def get_special_variables(self, sender: AddressValue, wei_amount: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         pass
 
     def get_balance(self, address: AddressValue) -> int:
@@ -66,16 +66,16 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Got return value {val}')
         return val
 
-    def transact(self, contract_handle, sender: AddressValue, function: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
+    def transact(self, contract_handle, sender: AddressValue, function: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
-        return self._transact(contract_handle, sender.val, function, *Value.unwrap_values(actual_args), value=value)
+        return self._transact(contract_handle, sender.val, function, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
-    def deploy(self, project_dir: str, sender: AddressValue, contract: str, actual_args: List, should_encrypt: List[bool], value: Optional[int] = None) -> Any:
+    def deploy(self, project_dir: str, sender: AddressValue, contract: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
-        return self._deploy(parse_manifest(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), value=value)
+        return self._deploy(parse_manifest(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
     def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
         manifest = parse_manifest(project_dir)
@@ -156,11 +156,11 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_args, value: Optional[int] = None) -> Any:
+    def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod
-    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, value: Optional[int] = None) -> Any:
+    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod

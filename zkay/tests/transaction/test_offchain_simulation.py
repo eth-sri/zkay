@@ -69,7 +69,7 @@ class TestOffchainBase(TestScenarios):
                     contract = oc.deploy(*deployment_transaction.args, user=address)
                 else:
                     contract = oc.deploy(*deployment_transaction.args, user=address,
-                                         value=deployment_transaction.amount)
+                                         wei_amount=deployment_transaction.amount)
                 self.assertIsNotNone(contract)
                 contract_address = contract.address
                 users[owner] = contract
@@ -99,7 +99,7 @@ class TestOffchainBase(TestScenarios):
                     if trans_or_assert.amount is None:
                         receipt = transact(*args)
                     else:
-                        receipt = transact(*args, value=trans_or_assert.amount)
+                        receipt = transact(*args, wei_amount=trans_or_assert.amount)
                     self.assertIsNotNone(receipt)
 
         if not use_cache:
@@ -136,7 +136,7 @@ class TestOffchainRsaPkcs15Enc(TestOffchainBase):
     def test_offchain_simulation_rsa_pkcs_15(self):
         old = cfg.crypto_backend
         old_sh = cfg.should_use_hash
-        cfg.crypto_backend = 'rsa_pkcs1_5'
+        cfg.crypto_backend = 'rsa-pkcs1.5'
         cfg.should_use_hash = lambda _: True
         self.run_scenario(suffix='RsaPkcs15', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
         cfg.crypto_backend = old
@@ -148,7 +148,7 @@ class TestOffchainRsaPkcs15Enc(TestOffchainBase):
 #     def test_offchain_simulation_rsa_oaep(self):
 #         old = cfg.crypto_backend
 #         old_sh = cfg.should_use_hash
-#         cfg.crypto_backend = 'rsa_oaep'
+#         cfg.crypto_backend = 'rsa-oaep'
 #         cfg.should_use_hash = lambda _: True
 #         self.run_scenario(suffix='RsaOaep', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 #         cfg.crypto_backend = old

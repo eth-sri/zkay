@@ -2,7 +2,6 @@ import keyword
 from textwrap import dedent
 from typing import Union, List
 
-from zkay.config import cfg
 from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
@@ -12,7 +11,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
     EnumDefinition, EnumTypeName
 
-kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast']}
+kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast', 'wei_amount']}
 
 
 def sanitized(name):
@@ -20,9 +19,17 @@ def sanitized(name):
 
 
 class PythonCodeVisitor(CodeVisitor):
+    """
+    Visitor to convert a solidity AST 1:1 to python code.
+
+    This does not generate the additional code necessary for offchain simulation / transaction transformation
+    and it also does not support nested local scopes.
+    Such functionality is implemented in the PythonOffchainVisitor subclass.
+    """
+
     def __init__(self, replace_with_corresponding_private=False):
         super().__init__(False)
-        self.follow_private = replace_with_corresponding_private
+        self.flatten_hybrid_args = replace_with_corresponding_private
 
     def visitSourceUnit(self, ast: SourceUnit):
         return self.visit_list(ast.contracts)
@@ -40,6 +47,9 @@ class PythonCodeVisitor(CodeVisitor):
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
         return self.visit(ast.body)
 
+    def visitBlock(self, ast: Block):
+        return self.visitStatementList(ast)
+
     def visitEnumDefinition(self, ast: EnumDefinition):
         body = '\n'.join([f'{self.visit(val)} = {idx}' for idx, val in enumerate(ast.values)])
         return f'class {self.visit(ast.idf)}(IntEnum):\n{indent(body)}'
@@ -52,10 +62,6 @@ class PythonCodeVisitor(CodeVisitor):
     def visitStatementList(self, ast: StatementList):
         b = self.visit_list(ast.statements)
         return b if b else 'pass'
-
-    def visitBlock(self, ast: Block):
-        ret = self.visitStatementList(ast)
-        return f'with self.scope():\n{indent(ret)}'
 
     def visitIndentBlock(self, ast: IndentBlock):
         return f'### BEGIN {ast.name}\n{self.visit_list(ast.statements)}\n###  END  {ast.name}'
@@ -101,6 +107,42 @@ class PythonCodeVisitor(CodeVisitor):
         e = '' if ast.expr is None else self.visit(ast.expr)
         return f'return {e}'
 
+    def get_default_value(self, t: TypeName) -> str:
+        """Return python expression corresponding to the default value of the given type."""
+        if isinstance(t, Array) and not isinstance(t, (CipherText, Key, Randomness)):
+            expr = t.expr
+            if expr is None:
+                return '[]'
+            else:
+                return f'[{self.get_default_value(t.value_type)} for _ in range({self.visit(expr)})]'
+        elif isinstance(t, Mapping):
+            return '{}'
+        elif isinstance(t, EnumTypeName):
+            return f'{self.visit_list(t.target.qualified_name, sep=".")}(0)'
+        elif isinstance(t, (AddressTypeName, AddressPayableTypeName)):
+            return ''
+        elif isinstance(t, UserDefinedTypeName):
+            return '{}'
+        else:
+            return f'{self.visit(t)}()'
+
+    def handle_var_decl_expr(self, ast: VariableDeclarationStatement) -> str:
+        """
+        Return python expression corresponding to the variable declaration statement's expression.
+
+        If the declaration has no expression (default initialization in solidity), an expression
+        corresponding to the declaration type's default value is returned
+        (-> explicit initialization necessary to preserve semantics since python default initializes to undefined).
+        """
+        t = ast.variable_declaration.annotated_type.type_name
+        e = self.get_default_value(t) if ast.expr is None else self.visit(ast.expr)
+        return e
+
+    def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
+        s = self.visit(ast.variable_declaration)
+        e = self.handle_var_decl_expr(ast)
+        return f'{s} = {e}'
+
     def visitExpressionStatement(self, ast: ExpressionStatement):
         return self.visit(ast.expr)
 
@@ -131,38 +173,6 @@ class PythonCodeVisitor(CodeVisitor):
             base = ''
 
         return f'{self.visit(ast.arr)}[{base}{ast.start_offset}:{base}{ast.start_offset + ast.size}]'
-
-    def get_default_value(self, t: TypeName):
-        if isinstance(t, Array) and not isinstance(t, (CipherText, Key, Randomness)):
-            expr = t.expr
-            if expr is None:
-                return '[]'
-            else:
-                return f'[{self.get_default_value(t.value_type)} for _ in range({self.visit(expr)})]'
-        elif isinstance(t, Mapping):
-            return '{}'
-        elif isinstance(t, EnumTypeName):
-            return f'{self.visit_list(t.target.qualified_name, sep=".")}(0)'
-        elif isinstance(t, (AddressTypeName, AddressPayableTypeName)):
-            return f'AddressValue(0)'
-        elif isinstance(t, UserDefinedTypeName):
-            return '{}'
-        else:
-            return f'{self.visit(t)}()'
-
-    @staticmethod
-    def is_special_var(idf: Identifier):
-        return idf.name.startswith(cfg.reserved_name_prefix) or idf.name in ['msg', 'block', 'tx', '_tmp_key']
-
-    def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
-        t = ast.variable_declaration.annotated_type.type_name
-        e = self.get_default_value(t) if ast.expr is None else self.visit(ast.expr)
-        if self.is_special_var(ast.variable_declaration.idf):
-            s = self.visit(ast.variable_declaration)
-            return f'{s} = {e}'
-        else:
-            s = ast.variable_declaration.idf.name
-            return f'self.locals.decl("{s}", {e})'
 
     def visitNewExpr(self, ast: NewExpr):
         if isinstance(ast.annotated_type.type_name, Array):
