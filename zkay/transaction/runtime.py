@@ -1,4 +1,5 @@
 from zkay.config import cfg
+from zkay.transaction.blockchain.web3py import Web3IpcBlockchain, Web3WebsocketBlockchain, Web3HttpBlockchain, Web3CustomBlockchain
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
 from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 
@@ -8,23 +9,23 @@ from zkay.transaction.crypto.dummy import DummyCrypto
 from zkay.transaction.keystore import SimpleKeystore
 from zkay.transaction.prover import JsnarkProver
 
+_crypto_classes = {
+    'dummy': DummyCrypto,
+    'rsa-pkcs1.5': RSAPKCS15Crypto,
+    'rsa-oaep': RSAOAEPCrypto
+}
 
-def get_crypto_class(name: str):
-    if name == 'rsa_pkcs1_5':
-        return RSAPKCS15Crypto
-    elif name == 'rsa_oaep':
-        return RSAOAEPCrypto
-    elif name == 'dummy':
-        return DummyCrypto
-    else:
-        raise ValueError(f'Invalid crypto backend {name}')
+_prover_classes = {
+    'jsnark': JsnarkProver
+}
 
-
-def get_prover_class(name: str):
-    if name == 'jsnark':
-        return JsnarkProver
-    else:
-        raise ValueError(f'Invalid prover backend {name}')
+_blockchain_classes = {
+    'w3-eth-tester': Web3TesterBlockchain,
+    'w3-ipc': Web3IpcBlockchain,
+    'w3-websocket': Web3WebsocketBlockchain,
+    'w3-http': Web3HttpBlockchain,
+    'w3-custom': Web3CustomBlockchain
+}
 
 
 class Runtime:
@@ -43,7 +44,7 @@ class Runtime:
     @staticmethod
     def blockchain() -> ZkayBlockchainInterface:
         if Runtime.__blockchain is None:
-            Runtime.__blockchain = Web3TesterBlockchain()
+            Runtime.__blockchain = _blockchain_classes[cfg.blockchain_backend]()
             from zkay.transaction.types import AddressValue
             AddressValue.get_balance = Runtime.__blockchain.get_balance
         return Runtime.__blockchain
@@ -51,7 +52,7 @@ class Runtime:
     @staticmethod
     def crypto() -> ZkayCryptoInterface:
         if Runtime.__crypto is None:
-            Runtime.__crypto = get_crypto_class(cfg.crypto_backend)()
+            Runtime.__crypto = _crypto_classes[cfg.crypto_backend]()
         return Runtime.__crypto
 
     @staticmethod
@@ -63,5 +64,5 @@ class Runtime:
     @staticmethod
     def prover() -> ZkayProverInterface:
         if Runtime.__prover is None:
-            Runtime.__prover = get_prover_class(cfg.snark_backend)()
+            Runtime.__prover = _prover_classes[cfg.snark_backend]()
         return Runtime.__prover

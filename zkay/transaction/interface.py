@@ -24,15 +24,15 @@ def parse_manifest(project_dir: str):
 
 class ZkayBlockchainInterface(metaclass=ABCMeta):
     @property
-    def my_address(self) -> AddressValue:
-        return self._my_address()
+    def default_address(self) -> AddressValue:
+        return self._default_address()
 
-    def deploy_libraries(self, sender: AddressValue = None):
-        self._deploy_libraries(self.my_address.val if sender is None else sender.val)
+    def deploy_libraries(self, sender: AddressValue):
+        self._deploy_libraries(sender.val)
 
     def create_test_accounts(self, count: int) -> Tuple:
         # may not be supported by all backends
-        raise NotImplementedError()
+        raise NotImplementedError('Current blockchain backend does not support creating pre-funded test accounts.')
 
     @abstractmethod
     def get_special_variables(self, sender: AddressValue, value: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
@@ -52,18 +52,17 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         debug_print(f'Announcing public key "{pk}" for address "{address}"')
         self._announce_public_key(address.val, pk[:])
 
-    def req_state_var(self, contract_handle, name: str, *indices, sender: AddressValue = None) -> Union[bool, int, str]:
+    def req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         assert contract_handle is not None
         debug_print(f'Requesting state variable "{name}"')
-        sender = self.my_address.val if sender is None else sender
-        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)), sender=sender)
+        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)))
         debug_print(f'Got value {val} for state variable "{name}"')
         return val
 
-    def call(self, contract_handle, sender: AddressValue, name: str, *args) -> Union[bool, int, str, List]:
+    def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, List]:
         assert contract_handle is not None
         debug_print(f'Calling contract function {name}{Value.collection_to_string(args)}')
-        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)), sender=sender.val)
+        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
         debug_print(f'Got return value {val}')
         return val
 
@@ -90,7 +89,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pki_verifier_addresses = {}
 
         # Check pki integrity
-        pki_address = self._req_state_var(contract_on_chain, f'{cfg.pki_contract_name}_inst', sender=self.my_address.val)
+        pki_address = self._req_state_var(contract_on_chain, f'{cfg.pki_contract_name}_inst')
         pki_verifier_addresses[cfg.pki_contract_name] = AddressValue(pki_address)
         self._verify_contract_integrity(pki_address, os.path.join(project_dir, manifest[Manifest.pki_lib]))
 
@@ -99,11 +98,11 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         if verifier_names:
             some_vname = next(iter(verifier_names))
             libraries = [('BN256G2', os.path.join(project_dir, manifest[Manifest.verify_lib]))]
-            some_vcontract = self._req_state_var(contract_on_chain, f'{some_vname}_inst', sender=self.my_address.val)
+            some_vcontract = self._req_state_var(contract_on_chain, f'{some_vname}_inst')
             libs = self._verify_library_integrity(libraries, some_vcontract, os.path.join(project_dir, f'{some_vname}.sol'))
 
             for verifier in verifier_names:
-                v_address = self._req_state_var(contract_on_chain, f'{verifier}_inst', sender=self.my_address.val)
+                v_address = self._req_state_var(contract_on_chain, f'{verifier}_inst')
                 pki_verifier_addresses[verifier] = AddressValue(v_address)
                 self._verify_contract_integrity(v_address, os.path.join(project_dir, f'{verifier}.sol'), libraries=libs)
 
@@ -133,7 +132,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _my_address(self) -> AddressValue:
+    def _default_address(self) -> AddressValue:
         pass
 
     @abstractmethod
@@ -153,7 +152,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _req_state_var(self, contract_handle, name: str, *indices, sender: Union[bytes, str]) -> Union[bool, int, str]:
+    def _req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str]:
         pass
 
     @abstractmethod

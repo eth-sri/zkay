@@ -1,7 +1,7 @@
 import ast
 import math
 import os
-from typing import Dict
+from typing import Dict, Any, Optional
 
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
@@ -35,7 +35,23 @@ class Config:
         """Snark backend to use [jsnark]"""
 
         self.crypto_backend = 'dummy'
-        """Encryption backend to use [dummy, rsa_pkcs1_5, rsa_oaep]"""
+        """Encryption backend to use [dummy, rsa-pkcs1.5, rsa-oaep]"""
+
+        self.blockchain_backend = 'w3-eth-tester'
+        """
+        Backend to use when interacting with the blockchain [w3-eth-tester, w3-ipc, w3-websocket, w3-http, w3-custom]
+        See https://web3py.readthedocs.io/en/stable/providers.html for more information
+        """
+
+        self.blockchain_node_uri: Optional[Any] = None
+        """
+        Backend specific location of the ethereum node
+        w3-eth-tester: unused
+        w3-ipc       : path to ipc socket file
+        w3-websocket : web socket uri
+        w3-http      : url
+        w3-custom    : web3 instance, must not be None
+        """
 
         self.indentation = ' '*4
         """Specifies the identation which should be used for the generated code output."""

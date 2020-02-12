@@ -9,9 +9,8 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
-    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, NumberTypeName, \
-    CircuitComputationStatement, VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, IntTypeName, EnumDefinition, EnumTypeName, \
-    UintTypeName, NumberLiteralExpr, VariableDeclaration
+    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
+    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -34,6 +33,33 @@ SCALAR_FIELD_NAME = 'bn128_scalar_field'
 
 
 class PythonOffchainVisitor(PythonCodeVisitor):
+    """
+    This visitor generates python code which is able to deploy, connect to and issue transactions for the specified contract.
+
+    The generated code includes both a class corresponding to the contract, as well as a main function for interactive use.
+
+    The class has the following two static methods:
+    - deploy: Can be used to compile all necessary contracts (main contract + libraries) and deploy them onto a test chain.
+              Returns a contract instance.
+    - connect: Can be used to get a new instance of an already deployed contract (by specifying the on-chain address of the contract).
+               This method will verify the integrity of the contract at the specified address. If the evm bytecode of the deployed contract
+               and all necessary libraries does not match the bytecode obtained through local compilation, the connection is refused.
+               Returns a contract instance if integrity check succeeds.
+
+    If the visited AST contains only a single contract, global deploy and connect functions for that contract are also added to the python
+    code.
+
+    For every zkay function, the class has a corresponding instance method with matching name and (untransformed) signature.
+    To issue a zkay transaction, simply call one of these functions.
+    All private parameters will be encrypted automatically. The function will then simulate solidity execution and circuit computations
+    to obtain all required public circuit inputs. Finally it automatically generates the zero knowledge proof and issues a
+    transformed transaction (encrypted arguments, additional circuit output and proof arguments added).
+    If a require statement fails during simulation, a RequireException is raised.
+
+    The main function simply loads the zkay configuration from the circuit's manifest, generates encryption keys if necessary
+    and enters an interactive python shell.
+    """
+
     def __init__(self, circuits: List[CircuitHelper]):
         super().__init__(False)
         self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {cg.fct: cg for cg in circuits}
@@ -74,11 +100,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
 
         ''') + contracts + (dedent(f'''
-        def deploy(*args, user: Union[bytes, str] = ContractSimulator.my_address().val{val_param}):
+        def deploy(*args, user: Union[bytes, str] = ContractSimulator.default_address().val{val_param}):
             return {self.visit(ast.contracts[0].idf)}.deploy(os.path.dirname(os.path.realpath(__file__)), *args, user=user{val_arg})
 
 
-        def connect(address: Union[bytes, str], *, user: Union[bytes, str] = ContractSimulator.my_address().val):
+        def connect(address: Union[bytes, str], *, user: Union[bytes, str] = ContractSimulator.default_address().val):
             return {self.visit(ast.contracts[0].idf)}.connect(os.path.dirname(os.path.realpath(__file__)), address, user=user)
 
 
@@ -90,7 +116,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             ContractSimulator.help(inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction))
 
 
-        me = ContractSimulator.my_address().val
+        me = ContractSimulator.default_address().val
         ''') if len(ast.contracts) == 1 else '') + dedent('''
         if __name__ == '__main__':
             log_file = my_logging.get_log_file(filename='transactions', parent_dir="", include_timestamp=True, label=None)
@@ -363,7 +389,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
             invoke_transact_str = f'''
             # Call pure/view function and return value
-            return {lambda_str.format(f"{CONN_OBJ_NAME}.call({CONTRACT_HANDLE}, {SELF_ADDR}, '{ast.name}', *actual_params)")}
+            return {lambda_str.format(f"{CONN_OBJ_NAME}.call({CONTRACT_HANDLE}, '{ast.name}', *actual_params)")}
             '''
         else:
             invoke_transact_str = ''

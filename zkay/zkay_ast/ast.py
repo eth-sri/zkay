@@ -1922,6 +1922,8 @@ def get_ast_exception_msg(ast: AST, msg: str):
 
 
 def issue_compiler_warning(ast: AST, msg: str):
+    if cfg.is_unit_test:
+        return
     with colored_print(TermColor.WARNING):
         print(get_ast_exception_msg(ast, f'WARNING:\n{msg}\n'))
 

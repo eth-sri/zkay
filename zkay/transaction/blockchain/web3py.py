@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, List, Union
 
 from eth_tester import PyEVMBackend, EthereumTester
+from eth_typing import URI
 from web3 import Web3
 
 from zkay.compiler.privacy import library_contracts
@@ -75,20 +76,20 @@ class Web3Blockchain(ZkayBlockchainInterface):
         ret[cfg.pki_contract_name] = AddressValue(self.pki_contract.address)
         return ret
 
-    def _my_address(self) -> AddressValue:
-        return AddressValue(self.w3.eth.defaultAccount)
+    def _default_address(self) -> AddressValue:
+        return AddressValue(self.w3.eth.accounts[0])
 
     def _get_balance(self, address: Union[bytes, str]) -> int:
         return self.w3.eth.getBalance(address)
 
     def _req_public_key(self, address: Union[bytes, str]) -> PublicKeyValue:
-        return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address, sender=self.my_address.val))
+        return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address))
 
     def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]):
         return self._transact(self.pki_contract, address, 'announcePk', pk)
 
-    def _req_state_var(self, contract_handle, name: str, *indices, sender: Union[bytes, str]) -> Any:
-        return contract_handle.functions[name](*indices).call({'from': sender})
+    def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
+        return contract_handle.functions[name](*indices).call()
 
     def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, value: Optional[int] = None) -> Any:
         fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
@@ -193,7 +194,7 @@ class Web3TesterBlockchain(Web3Blockchain):
     def __init__(self) -> None:
         self.eth_tester = None
         super().__init__()
-        self.deploy_libraries(self.my_address)
+        self.deploy_libraries(AddressValue(self.w3.eth.accounts[0]))
         self.next_acc_idx = 1
 
     def _create_w3_instance(self) -> Web3:
@@ -201,7 +202,6 @@ class Web3TesterBlockchain(Web3Blockchain):
         custom_genesis_params = PyEVMBackend._generate_genesis_params(overrides=genesis_overrides)
         self.eth_tester = EthereumTester(backend=PyEVMBackend(genesis_parameters=custom_genesis_params))
         w3 = Web3(Web3.EthereumTesterProvider(self.eth_tester))
-        w3.eth.defaultAccount = w3.eth.accounts[0]
         return w3
 
     def create_test_accounts(self, count: int) -> Tuple:
@@ -211,3 +211,27 @@ class Web3TesterBlockchain(Web3Blockchain):
         dummy_accounts = tuple(accounts[self.next_acc_idx:self.next_acc_idx + count])
         self.next_acc_idx += count
         return dummy_accounts
+
+
+class Web3IpcBlockchain(Web3Blockchain):
+    def _create_w3_instance(self) -> Web3:
+        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, str)
+        return Web3(Web3.IPCProvider(cfg.blockchain_node_uri))
+
+
+class Web3WebsocketBlockchain(Web3Blockchain):
+    def _create_w3_instance(self) -> Web3:
+        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, URI)
+        return Web3(Web3.WebsocketProvider(cfg.blockchain_node_uri))
+
+
+class Web3HttpBlockchain(Web3Blockchain):
+    def _create_w3_instance(self) -> Web3:
+        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, URI)
+        return Web3(Web3.HTTPProvider(cfg.blockchain_node_uri))
+
+
+class Web3CustomBlockchain(Web3Blockchain):
+    def _create_w3_instance(self) -> Web3:
+        assert isinstance(cfg.blockchain_node_uri, Web3)
+        return cfg.blockchain_node_uri
