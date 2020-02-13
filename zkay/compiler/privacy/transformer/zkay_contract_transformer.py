@@ -15,8 +15,8 @@ from zkay.config import cfg
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
     Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, PrimitiveCastExpr, TypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, LabeledBlock, TupleExpr, PrivacyLabelExpr, Parameter, \
-    VariableDeclarationStatement
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, TupleExpr, PrivacyLabelExpr, Parameter, \
+    VariableDeclarationStatement, StatementList
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -309,12 +309,12 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Add additional params
         ast.add_param(Array(AnnotatedTypeName.uint_all()), cfg.zk_in_name)
-        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_in_name}start_idx')
+        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_in_name}_start_idx')
         ast.add_param(Array(AnnotatedTypeName.uint_all()), cfg.zk_out_name)
-        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_out_name}start_idx')
+        ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_out_name}_start_idx')
 
         # Verify that in/out parameters have correct size
-        out_start_idx, in_start_idx = IdentifierExpr(f'{cfg.zk_out_name}start_idx'), IdentifierExpr(f'{cfg.zk_in_name}start_idx')
+        out_start_idx, in_start_idx = IdentifierExpr(f'{cfg.zk_out_name}_start_idx'), IdentifierExpr(f'{cfg.zk_in_name}_start_idx')
         out_var, in_var = IdentifierExpr(cfg.zk_out_name), IdentifierExpr(cfg.zk_in_name)
         stmts.append(RequireStatement(out_start_idx.binop('+', NumberLiteralExpr(circuit.out_size_trans)).binop('<=', out_var.dot('length'))))
         stmts.append(RequireStatement(in_start_idx.binop('+', NumberLiteralExpr(circuit.in_size_trans)).binop('<=', in_var.dot('length'))))
@@ -335,7 +335,7 @@ class ZkayTransformer(AstTransformerVisitor):
             deserialize_stmts += [s.deserialize(cfg.zk_out_name, out_start_idx, offset)]
             offset += s.t.size_in_uints
         if deserialize_stmts:
-            stmts.append(LabeledBlock(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), 'exclude'))
+            stmts.append(StatementList(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), excluded_from_simulation=True))
 
         # Include original transformed function body
         stmts += ast.body.statements
@@ -480,7 +480,7 @@ class ZkayTransformer(AstTransformerVisitor):
         verifier = IdentifierExpr(get_contract_instance_idf(ext_circuit.verifier_contract_type.code()))
         verifier_args = [IdentifierExpr(cfg.proof_param_name), IdentifierExpr(cfg.zk_in_name), IdentifierExpr(cfg.zk_out_name)]
         verify = ExpressionStatement(verifier.call(cfg.verification_function_name, verifier_args))
-        stmts.append(LabeledBlock([Comment('Verify zk proof of execution'), verify], 'exclude'))
+        stmts.append(StatementList([Comment('Verify zk proof of execution'), verify], excluded_from_simulation=True))
 
         # Add return statement at the end if necessary
         if int_fct.return_parameters:

@@ -8,9 +8,10 @@ from zkay.config import cfg
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
-    ReturnStatement, EncryptionExpression, MeExpr, Expression, LabeledBlock, CipherText, Key, Array, \
+    ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
-    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration, Block
+    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration, Block, \
+    StatementList
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 PROJECT_DIR_NAME = 'self.project_dir'
@@ -75,11 +76,23 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         self.inside_circuit: bool = False
         self.flatten_hybrid_args: bool = False
 
+    def get_constructor_args_and_params(self, ast: ContractDefinition):
+        if not ast.constructor_definitions:
+            return '', ''
+        with self.circuit_ctx(ast.constructor_definitions[0]):
+            a, p = '', ''
+            for param in self.current_params:
+                a += f'{self.visit(param.idf)}, '
+                p += f'{self.visit(param)}, '
+            return a, p
+
     def visitSourceUnit(self, ast: SourceUnit):
         contracts = self.visit_list(ast.contracts)
         is_payable = ast.contracts[0].constructor_definitions and ast.contracts[0].constructor_definitions[0].is_payable
         val_param = ', wei_amount=0' if is_payable else ''
         val_arg = ', wei_amount=wei_amount' if is_payable else ''
+
+        c_args, c_params = self.get_constructor_args_and_params(ast.contracts[0])
 
         # Create skeleton with global functions and main method
         return dedent(f'''\
@@ -98,31 +111,44 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
         from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, FunctionCtx, RequireException
 
+        me = None
+
 
         ''') + contracts + (dedent(f'''
-        def deploy(*args, user: Union[bytes, str] = ContractSimulator.default_address().val{val_param}):
-            return {self.visit(ast.contracts[0].idf)}.deploy(os.path.dirname(os.path.realpath(__file__)), *args, user=user{val_arg})
+
+        def deploy({c_params}user: Union[None, bytes, str] = None{val_param}):
+            user = me if user is None else user
+            return {self.visit(ast.contracts[0].idf)}.deploy({c_args}user=user{val_arg})
 
 
-        def connect(address: Union[bytes, str], *, user: Union[bytes, str] = ContractSimulator.default_address().val):
-            return {self.visit(ast.contracts[0].idf)}.connect(os.path.dirname(os.path.realpath(__file__)), address, user=user)
+        def connect(address: Union[bytes, str], user: Union[None, bytes, str] = None):
+            user = me if user is None else user
+            return {self.visit(ast.contracts[0].idf)}.connect(address, user=user)
 
 
         def create_dummy_accounts(count: int) -> Tuple:
             return ContractSimulator.create_dummy_accounts(count)
 
 
-        def help():
-            ContractSimulator.help(inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction))
+        def help(val=None):
+            if val is None:
+                import sys
+                ContractSimulator.help(inspect.getmembers(sys.modules[__name__], inspect.isfunction),
+                                       inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction),
+                                       '{self.visit(ast.contracts[0].idf)}')
+            else:
+                __builtins__.help(val)
 
 
-        me = ContractSimulator.default_address().val
         ''') if len(ast.contracts) == 1 else '') + dedent('''
         if __name__ == '__main__':
             log_file = my_logging.get_log_file(filename='transactions', parent_dir="", include_timestamp=True, label=None)
             my_logging.prepare_logger(log_file)
             ContractSimulator.use_config_from_manifest(os.path.dirname(os.path.realpath(__file__)))
-            ContractSimulator.init_key_pair(me)
+            me = ContractSimulator.default_address()
+            if me is not None:
+                me = me.val
+                ContractSimulator.initialize_keys_for(me)
             code.interact(local=locals())
         ''')
 
@@ -135,12 +161,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         is_payable = ast.constructor_definitions and ast.constructor_definitions[0].is_payable
         val_param = ', wei_amount=0' if is_payable else ''
-        val_arg = ', wei_amount=wei_amount' if is_payable else ''
+        val_arg = 'wei_amount=wei_amount' if is_payable else ''
+
+        c_args, c_params = self.get_constructor_args_and_params(ast)
 
         if not ast.constructor_definitions:
             deploy_cmd = f'c.conn.deploy(project_dir, c.user_addr, \'{ast.idf.name}\', [], []{val_arg})'
         else:
-            deploy_cmd = f'c.constructor(*constructor_args{val_arg})'
+            deploy_cmd = f'c.constructor({c_args}{val_arg})'
 
         return indent(dedent(f'''\
             def __init__(self, project_dir: str, user_addr: AddressValue):
@@ -148,14 +176,18 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 {CONTRACT_NAME} = '{ast.idf.name}'
 
             @staticmethod
-            def connect(project_dir: str, address: Union[bytes, str], *, user: Union[str, bytes]) -> '{name}':
+            def connect(address: Union[bytes, str], user: Union[str, bytes], project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
+                if not c.keystore.has_initialized_keys_for(AddressValue(user)):
+                    ContractSimulator.initialize_keys_for(user)
                 c.contract_handle = c.conn.connect(project_dir, '{ast.idf.name}', AddressValue(address))
                 return c
 
             @staticmethod
-            def deploy(project_dir: str, *constructor_args, user: Union[str, bytes]{val_param}) -> '{name}':
+            def deploy({c_params}user: Union[str, bytes]{val_param}, project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
+                if not c.keystore.has_initialized_keys_for(AddressValue(user)):
+                    ContractSimulator.initialize_keys_for(user)
                 c.contract_handle = {deploy_cmd}
                 return c
 
@@ -310,6 +342,20 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 return f'{loc} = {expr}'
 
     def handle_function_body(self, ast: ConstructorOrFunctionDefinition):
+        """
+        Return offchain simulation python code for the body of function ast.
+
+        In addition to what the original code does, the generated python code also:
+        - checks that internal functions are not called externally
+        - processes arguments (encryption, address wrapping for external calls),
+        - introduces msg, block and tx objects as local variables (populated with current blockchain state)
+        - serializes the public circuit outputs and the private circuit inputs, which are obtained during
+          simulation into int lists so that they can be passed to the proof generation
+        - generates the NIZK proof (if needed)
+        - calls/issues transaction with transformed arguments ((encrypted) original args, out array, proof)
+          (or deploys the contract in case of the constructor)
+        """
+
         preamble_str = 'msg = self.current_msg\n' \
                        'block = self.current_block\n' \
                        'tx = self.current_tx\n'
@@ -317,6 +363,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         all_params = ', '.join([f'{self.visit(param.idf)}' for param in self.current_params])
         if ast.can_be_external:
+            # Wrap address strings in AddressValue object for external calls
             address_params = [self.visit(param.idf) for param in self.current_params if
                               param.original_type.is_address()]
             if address_params:
@@ -445,9 +492,16 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         return f'with FunctionCtx(self, {circuit.priv_in_size_trans if circuit else -1}{", wei_amount=wei_amount" if ast.is_payable else ""}):\n' + indent(code)
 
+    def visitStatementList(self, ast: StatementList):
+        if ast.excluded_from_simulation:
+            return None
+        else:
+            return super().visitStatementList(ast)
+
     def visitBlock(self, ast: Block):
+        # Introduce a new virtual local scope when visiting a block
         ret = super().visitBlock(ast)
-        return f'with self.scope():\n{indent(ret)}'
+        return f'with self._scope():\n{indent(ret)}'
 
     def visitReturnStatement(self, ast: ReturnStatement):
         if not ast.function.requires_verification:
@@ -456,6 +510,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return None
 
     def visitCircuitInputStatement(self, ast: CircuitInputStatement):
+        """
+        Generate code which assigns the specified value to a circuit input variable.
+
+        If the circuit input is encrypted, this will also generate code to add a decrypted
+        version + the corresponding randomness to the private circuit input dict.
+        """
         in_decrypt = ''
         in_idf = ast.lhs.member
         assert isinstance(in_idf, HybridArgumentIdf)
@@ -471,6 +531,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return self.visitAssignmentStatement(ast) + in_decrypt
 
     def visitCircuitComputationStatement(self, ast: CircuitComputationStatement):
+        """
+        Generate code which simulates the evaluation of a private expression.
+
+        The expression is evaluated with finite field semantics and its (encrypted) result
+        is assigned to the corresponding circuit output variable.
+        """
         out_initializations = ''
         out_idf = ast.idf
         out_val = out_idf.corresponding_priv_expression
@@ -486,9 +552,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         s = f'{s} = {rhs}'
         out_initializations += f'{s}\n'
         return out_initializations
-
-    def visitLabeledBlock(self, ast: LabeledBlock):
-        return None
 
     def visitEncryptionExpression(self, ast: EncryptionExpression):
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())

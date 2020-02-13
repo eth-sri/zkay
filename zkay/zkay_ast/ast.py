@@ -836,9 +836,10 @@ class CircuitInputStatement(AssignmentStatement):
 
 
 class StatementList(Statement):
-    def __init__(self, statements: List[Statement]):
+    def __init__(self, statements: List[Statement], excluded_from_simulation: bool = False):
         super().__init__()
         self.statements = statements
+        self.excluded_from_simulation = excluded_from_simulation
 
         # Special case, if processing a statement returns a list of statements,
         # all statements will be integrated into this block
@@ -862,12 +863,6 @@ class Block(StatementList):
     def __init__(self, statements: List[Statement], was_single_statement=False):
         super().__init__(statements)
         self.was_single_statement = was_single_statement
-
-
-class LabeledBlock(StatementList):
-    def __init__(self, statements: List[Statement], label: str):
-        super().__init__(statements)
-        self.label = label
 
 
 class IndentBlock(StatementList):
@@ -2138,9 +2133,6 @@ class CodeVisitor(AstVisitor):
     def visitIndentBlock(self, ast: IndentBlock):
         fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"
         return f"{fstr.format('', 'BEGIN')}{self.handle_block(ast)}\n{fstr.format(' ', 'END ')}"
-
-    def visitLabeledBlock(self, ast: LabeledBlock):
-        return self.visit_list(ast.statements)
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
         return ast.name

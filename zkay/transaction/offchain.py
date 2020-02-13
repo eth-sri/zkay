@@ -175,12 +175,18 @@ class ContractSimulator:
             return trunc_val
 
     def _call(self, sec_offset, fct, *args) -> Any:
-        with self.call_ctx(sec_offset):
+        with self._call_ctx(sec_offset):
             return fct(*args)
 
     @staticmethod
-    def help(members):
+    def help(global_fcts, members, contract_name):
         """Display help for contract functions."""
+        signatures = [(fname, str(inspect.signature(sig))) for fname, sig in global_fcts]
+        print("Global functions:")
+        print('\n'.join([f'{fname}({sig[1:]}' for fname, sig in signatures
+                         if not fname.startswith('_') and fname != 'help']))
+        print()
+        print(f'Members for {contract_name} contract instances (either deploy or connect to create one):')
         signatures = [(fname, str(inspect.signature(sig))) for fname, sig in members]
         print('\n'.join([f'{fname}({sig[5:] if not sig[5:].startswith(",") else sig[7:]}'
                          for fname, sig in signatures
@@ -233,7 +239,7 @@ class ContractSimulator:
         return Runtime.blockchain().default_address
 
     @staticmethod
-    def init_key_pair(address: str):
+    def initialize_keys_for(address: Union[bytes, str]):
         """Generate/Load keys for the given address."""
         account = AddressValue(address)
         key_pair = Runtime.crypto().generate_or_load_key_pair(account)
@@ -265,14 +271,14 @@ class ContractSimulator:
         """
         accounts = Runtime.blockchain().create_test_accounts(count)
         for account in accounts:
-            ContractSimulator.init_key_pair(account)
+            ContractSimulator.initialize_keys_for(account)
         if len(accounts) == 1:
             return accounts[0]
         else:
             return accounts
 
     @contextmanager
-    def call_ctx(self, sec_offset) -> ContextManager:
+    def _call_ctx(self, sec_offset) -> ContextManager:
         """Return context manager which sets the correct current_all_index for the given sec_offset during its lifetime."""
         old_priv_values, old_all_idx = self.current_priv_values, self.current_all_index
         self.current_priv_values = {}
@@ -281,7 +287,7 @@ class ContractSimulator:
         self.current_priv_values, self.current_all_index = old_priv_values, old_all_idx
 
     @contextmanager
-    def scope(self) -> ContextManager:
+    def _scope(self) -> ContextManager:
         """Return context manager which manages the lifetime of a local scope."""
         self.locals.push_scope()
         yield
