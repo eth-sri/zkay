@@ -39,7 +39,8 @@ class Config:
 
         self.blockchain_backend = 'w3-eth-tester'
         """
-        Backend to use when interacting with the blockchain [w3-eth-tester, w3-ipc, w3-websocket, w3-http, w3-custom]
+        Backend to use when interacting with the blockchain [w3-eth-tester, w3-ganache, w3-ipc, w3-websocket, w3-http, w3-custom]
+        Running unit tests is only supported with w3-eth-tester and w3-ganache at the moment (because they need pre-funded dummy accounts).
         See https://web3py.readthedocs.io/en/stable/providers.html for more information
         """
 
@@ -47,6 +48,7 @@ class Config:
         """
         Backend specific location of the ethereum node
         w3-eth-tester : unused
+        w3-ganache    : url
         w3-ipc        : path to ipc socket file
         w3-websocket  : web socket uri
         w3-http       : url

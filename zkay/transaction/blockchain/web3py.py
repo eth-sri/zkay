@@ -6,13 +6,12 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, List, Union
 
 from eth_tester import PyEVMBackend, EthereumTester
-from eth_typing import URI
 from web3 import Web3
 
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, debug_print
-from zkay.transaction.interface import Manifest, ZkayBlockchainInterface
+from zkay.transaction.interface import Manifest, ZkayBlockchainInterface, IntegrityError
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 from zkay.utils.helpers import get_contract_names, without_extension
 
@@ -22,10 +21,9 @@ max_gas_limit = 10000000
 class Web3Blockchain(ZkayBlockchainInterface):
     def __init__(self) -> None:
         super().__init__()
-
         self.w3 = self._create_w3_instance()
-
         self.verifiers_for_uuid: Dict[str, Dict[str, AddressValue]] = {}
+        self.deploy_or_connect_libraries(self.default_address)
 
     @staticmethod
     def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
@@ -76,8 +74,13 @@ class Web3Blockchain(ZkayBlockchainInterface):
         ret[cfg.pki_contract_name] = AddressValue(self.pki_contract.address)
         return ret
 
-    def _default_address(self) -> AddressValue:
-        return AddressValue(self.w3.eth.accounts[0])
+    def _default_address(self) -> Optional[AddressValue]:
+        if cfg.blockchain_default_account is None:
+            return None
+        elif isinstance(cfg.blockchain_default_account, int):
+            return AddressValue(self.w3.eth.accounts[cfg.blockchain_default_account])
+        else:
+            return AddressValue(cfg.blockchain_default_account)
 
     def _get_balance(self, address: Union[bytes, str]) -> int:
         return self.w3.eth.getBalance(address)
@@ -93,7 +96,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
     def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, wei_amount: Optional[int] = None) -> Any:
         fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
-        tx = {'from': sender, 'gas': max_gas_limit}
+        gas_amount = self._gas_heuristic(sender, fobj(*actual_params))
+        tx = {'from': sender, 'gas': gas_amount}
         if wei_amount:
             tx['value'] = wei_amount
         tx_hash = fobj(*actual_params).transact(tx)
@@ -107,22 +111,32 @@ class Web3Blockchain(ZkayBlockchainInterface):
         filename = self.__hardcode_external_contracts(os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename]),
                                                       self._pki_verifier_addresses(sender, manifest))
         cout = self.compile_contract(filename, contract)
-        return self.deploy_contract(sender, cout, *actual_args, wei_amount=wei_amount)
+        handle = self.deploy_contract(sender, cout, *actual_args, wei_amount=wei_amount)
+        debug_print(f'Deployed contract "{contract}" at address "{handle.address}"')
+        return handle
 
-    def _deploy_libraries(self, sender: Union[bytes, str]):
+    def _deploy_or_connect_libraries(self, sender: Union[bytes, str]):
         # Compile and deploy global libraries
         with tempfile.TemporaryDirectory() as tmpdir:
             pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
             with open(pki_sol, 'w') as f:
                 f.write(library_contracts.get_pki_contract())
+            if cfg.blockchain_pki_address:
+                self.pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
+            else:
+                self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
+                debug_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
 
             verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
             with open(verify_sol, 'w') as f:
                 f.write(library_contracts.get_verify_libs_code())
-
-            self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
+            if cfg.blockchain_bn256g2_address:
+                bn256 = self._verify_contract_integrity(cfg.blockchain_bn256g2_address, verify_sol, contract_name='BN256G2', is_library=True)
+            else:
+                bn256 = self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2'))
+                debug_print(f'Deployed bn256 contract at address "{bn256.address}"')
             self.lib_addresses = {
-                f'BN256G2': self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2')).address,
+                'BN256G2': bn256.address,
             }
 
     def _connect(self, manifest, contract: str, address: Union[bytes, str]) -> Any:
@@ -132,8 +146,11 @@ class Web3Blockchain(ZkayBlockchainInterface):
             address=address, abi=cout['abi']
         )
 
-    def _verify_contract_integrity(self, address: str, sol_filename: str, *,
-                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False):
+    def _verify_contract_integrity(self, address: Union[bytes, str], sol_filename: str, *,
+                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False) -> Any:
+        if isinstance(address, bytes):
+            address = self.w3.toChecksumAddress(address)
+
         if contract_name is None:
             contract_name = get_contract_names(sol_filename)[0]
         actual_byte_code = self.__normalized_hex(self.w3.eth.getCode(address))
@@ -145,8 +162,12 @@ class Web3Blockchain(ZkayBlockchainInterface):
             expected_byte_code = expected_byte_code[:2] + self.__normalized_hex(address) + expected_byte_code[42:]
 
         if actual_byte_code != expected_byte_code:
-            raise ValueError(f'Deployed contract at address {address} does not match local contract {sol_filename}')
+            raise IntegrityError(f'Deployed contract at address {address} does not match local contract {sol_filename}')
         debug_print(f'Contract@{address} matches {sol_filename[sol_filename.rfind("/")+1:]}:{contract_name}')
+
+        return self.w3.eth.contract(
+            address=address, abi=cout['abi']
+        )
 
     def _verify_library_integrity(self, libraries: List[Tuple[str, str]], contract_with_libs_addr: str, sol_with_libs_filename: str) -> Dict[str, str]:
         cname = get_contract_names(sol_with_libs_filename)[0]
@@ -189,12 +210,16 @@ class Web3Blockchain(ZkayBlockchainInterface):
         val = val[2:] if val.startswith('0x') else val
         return val.lower()
 
+    def _gas_heuristic(self, sender, tx) -> int:
+        limit = self.w3.eth.getBlock('latest')['gasLimit']
+        estimate = tx.estimateGas({'from': sender, 'gas': limit})
+        return min(int(estimate * 1.2), limit)
+
 
 class Web3TesterBlockchain(Web3Blockchain):
     def __init__(self) -> None:
         self.eth_tester = None
         super().__init__()
-        self.deploy_libraries(AddressValue(self.w3.eth.accounts[0]))
         self.next_acc_idx = 1
 
     def _create_w3_instance(self) -> Web3:
@@ -212,6 +237,9 @@ class Web3TesterBlockchain(Web3Blockchain):
         self.next_acc_idx += count
         return dummy_accounts
 
+    def _gas_heuristic(self, sender, tx) -> int:
+        return max_gas_limit
+
 
 class Web3IpcBlockchain(Web3Blockchain):
     def _create_w3_instance(self) -> Web3:
@@ -221,14 +249,31 @@ class Web3IpcBlockchain(Web3Blockchain):
 
 class Web3WebsocketBlockchain(Web3Blockchain):
     def _create_w3_instance(self) -> Web3:
-        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, URI)
+        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, str)
         return Web3(Web3.WebsocketProvider(cfg.blockchain_node_uri))
 
 
 class Web3HttpBlockchain(Web3Blockchain):
     def _create_w3_instance(self) -> Web3:
-        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, URI)
+        assert cfg.blockchain_node_uri is None or isinstance(cfg.blockchain_node_uri, str)
         return Web3(Web3.HTTPProvider(cfg.blockchain_node_uri))
+
+
+class Web3HttpGanacheBlockchain(Web3HttpBlockchain):
+    def __init__(self) -> None:
+        super().__init__()
+        self.next_acc_idx = 1
+
+    def create_test_accounts(self, count: int) -> Tuple:
+        accounts = self.w3.eth.accounts
+        if len(accounts[self.next_acc_idx:]) < count:
+            raise ValueError(f'Can have at most {len(accounts)-1} dummy accounts in total')
+        dummy_accounts = tuple(accounts[self.next_acc_idx:self.next_acc_idx + count])
+        self.next_acc_idx += count
+        return dummy_accounts
+
+    def _gas_heuristic(self, sender, tx) -> int:
+        return self.w3.eth.getBlock('latest')['gasLimit']
 
 
 class Web3CustomBlockchain(Web3Blockchain):

@@ -22,13 +22,17 @@ def parse_manifest(project_dir: str):
     return j
 
 
+class IntegrityError(Exception):
+    pass
+
+
 class ZkayBlockchainInterface(metaclass=ABCMeta):
     @property
-    def default_address(self) -> AddressValue:
+    def default_address(self) -> Optional[AddressValue]:
         return self._default_address()
 
-    def deploy_libraries(self, sender: AddressValue):
-        self._deploy_libraries(sender.val)
+    def deploy_or_connect_libraries(self, sender: AddressValue):
+        self._deploy_or_connect_libraries(sender.val)
 
     def create_test_accounts(self, count: int) -> Tuple:
         # may not be supported by all backends
@@ -104,7 +108,14 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
             for verifier in verifier_names:
                 v_address = self._req_state_var(contract_on_chain, f'{verifier}_inst')
                 pki_verifier_addresses[verifier] = AddressValue(v_address)
-                self._verify_contract_integrity(v_address, os.path.join(project_dir, f'{verifier}.sol'), libraries=libs)
+                vcontract = self._verify_contract_integrity(v_address, os.path.join(project_dir, f'{verifier}.sol'), libraries=libs)
+
+                # Verify prover key
+                expected_hash = self._req_state_var(vcontract, cfg.prover_key_hash_name)
+                from zkay.transaction.runtime import Runtime
+                actual_hash = Runtime.prover().get_prover_key_hash(os.path.join(project_dir, f'{verifier}_out'))
+                if expected_hash != actual_hash:
+                    raise IntegrityError(f'Prover key hash in deployed verification contract does not match local prover key file for "{verifier}"')
 
         # Check zkay contract integrity
         self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, manifest[Manifest.contract_filename]), pki_verifier_addresses)
@@ -116,7 +127,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def _verify_contract_integrity(self, address: str, sol_filename: str, *,
-                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False):
+                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False) -> Any:
         pass
 
     @abstractmethod
@@ -132,7 +143,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _default_address(self) -> AddressValue:
+    def _default_address(self) -> Optional[AddressValue]:
         pass
 
     @abstractmethod
@@ -164,7 +175,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _deploy_libraries(self, sender: Union[bytes, str]):
+    def _deploy_or_connect_libraries(self, sender: Union[bytes, str]):
         pass
 
     @abstractmethod
@@ -281,6 +292,9 @@ class ZkayKeystoreInterface:
         except:
             self.conn.announce_public_key(address, key_pair.pk)
 
+    def has_initialized_keys_for(self, address: AddressValue) -> bool:
+        return address in self.local_key_pairs
+
     def getPk(self, address: AddressValue) -> PublicKeyValue:
         assert isinstance(address, AddressValue)
         debug_print(f'Requesting public key for address {address.val}')
@@ -325,4 +339,8 @@ class ZkayProverInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:
+        pass
+
+    @abstractmethod
+    def get_prover_key_hash(self, verifier_directory: str) -> bytes:
         pass

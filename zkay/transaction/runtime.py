@@ -1,5 +1,6 @@
 from zkay.config import cfg
-from zkay.transaction.blockchain.web3py import Web3IpcBlockchain, Web3WebsocketBlockchain, Web3HttpBlockchain, Web3CustomBlockchain
+from zkay.transaction.blockchain.web3py import Web3IpcBlockchain, Web3WebsocketBlockchain, Web3HttpBlockchain, Web3CustomBlockchain, \
+    Web3HttpGanacheBlockchain
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
 from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 
@@ -21,6 +22,7 @@ _prover_classes = {
 
 _blockchain_classes = {
     'w3-eth-tester': Web3TesterBlockchain,
+    'w3-ganache': Web3HttpGanacheBlockchain,
     'w3-ipc': Web3IpcBlockchain,
     'w3-websocket': Web3WebsocketBlockchain,
     'w3-http': Web3HttpBlockchain,

@@ -5,6 +5,7 @@ from typing import List
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.transaction.interface import ZkayProverInterface
+from zkay.utils.helpers import hash_file
 from zkay.utils.timer import time_measure
 
 
@@ -22,3 +23,6 @@ class JsnarkProver(ZkayProverInterface):
             proof_lines = f.read().splitlines()
         proof = list(map(lambda x: int(x, 0), proof_lines))
         return proof
+
+    def get_prover_key_hash(self, verifier_directory: str) -> bytes:
+        return hash_file(os.path.join(verifier_directory, 'proving.key'))
