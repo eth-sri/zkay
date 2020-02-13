@@ -72,13 +72,15 @@ class ProvingScheme(metaclass=ABCMeta):
     """Proving scheme name, overridden by child classes"""
 
     @abstractmethod
-    def generate_verification_contract(self, verification_key: VerifyingKey, circuit: CircuitHelper, primary_inputs: List[str]) -> str:
+    def generate_verification_contract(self, verification_key: VerifyingKey, circuit: CircuitHelper, primary_inputs: List[str],
+                                       prover_key_hash: bytes) -> str:
         """
         Generate a verification contract for the zk-snark corresponding to circuit.
 
         :param verification_key: parsed verification key which was previously generated for circuit
         :param circuit: the circuit for which to generate the verification contract
         :param primary_inputs: list of all public input locations (strings which represent either identifiers or array index expressions)
+        :param prover_key_hash: sha3 hash of the prover key
         :return: verification contract text
         """
         pass

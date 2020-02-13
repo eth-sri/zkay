@@ -1,7 +1,6 @@
 """Circuit Generator implementation for the jsnark backend"""
 
 import os
-from hashlib import sha512
 from typing import List, Optional, Union, Tuple
 
 import zkay.jsnark_interface.jsnark_interface as jsnark
@@ -14,6 +13,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_scheme.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.config import cfg
+from zkay.utils.helpers import hash_file, hash_string
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
     IndexExpr, NumberLiteralExpr, MemberAccessExpr, TypeName, indent, PrimitiveCastExpr, EnumDefinition, Expression
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -188,8 +188,8 @@ class JsnarkGenerator(CircuitGenerator):
         code = jsnark.get_jsnark_circuit_class_str(circuit, fdefs, input_init_stmts + [''] + constraints)
 
         # Compute combined hash of the current jsnark interface jar and of the contents of the java file
-        hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.sha512')
-        hash = sha512((jsnark.circuit_builder_jar_hash + code).encode('utf-8')).hexdigest()
+        hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.hash')
+        digest = hash_string((jsnark.circuit_builder_jar_hash + code).encode('utf-8')).hex()
         if os.path.exists(hashfile):
             with open(hashfile, 'r') as f:
                 oldhash = f.read()
@@ -197,14 +197,14 @@ class JsnarkGenerator(CircuitGenerator):
             oldhash = ''
 
         # Invoke jsnark compilation if either the jsnark-wrapper or the current circuit was modified (based on hash comparison)
-        if oldhash != hash or not os.path.exists(os.path.join(output_dir, 'circuit.arith')):
+        if oldhash != digest or not os.path.exists(os.path.join(output_dir, 'circuit.arith')):
             # Remove old keys
             for f in self._get_vk_and_pk_paths(circuit):
                 if os.path.exists(f):
                     os.remove(f)
             jsnark.compile_circuit(output_dir, code)
             with open(hashfile, 'w') as f:
-                f.write(hash)
+                f.write(digest)
             return True
         else:
             print(f'Circuit \'{circuit.get_verification_contract_name()}\' not modified, skipping compilation')
@@ -235,6 +235,9 @@ class JsnarkGenerator(CircuitGenerator):
             return VerifyingKeyGm17(h, g_alpha, h_beta, g_gamma, h_gamma, query)
         else:
             raise NotImplementedError()
+
+    def _get_prover_key_hash(self, circuit: CircuitHelper) -> bytes:
+        return hash_file(self._get_vk_and_pk_paths(circuit)[1])
 
     def _get_primary_inputs(self, circuit: CircuitHelper) -> List[str]:
         # Jsnark requires an additional public input with the value 1 as first input

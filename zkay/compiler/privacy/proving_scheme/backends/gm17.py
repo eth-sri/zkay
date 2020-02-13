@@ -40,7 +40,8 @@ class ProvingSchemeGm17(ProvingScheme):
         p2 = G2Point('0', '0', '0', '0')
         return VerifyingKeyGm17(p2, p1, p2, p1, p2, [p1, p1])
 
-    def generate_verification_contract(self, verification_key: VerifyingKeyGm17, circuit: CircuitHelper, primary_inputs: List[str]) -> str:
+    def generate_verification_contract(self, verification_key: VerifyingKey, circuit: CircuitHelper, primary_inputs: List[str],
+                                       prover_key_hash: bytes) -> str:
         vk = verification_key
         should_hash = cfg.should_use_hash(circuit)
 
@@ -61,6 +62,7 @@ class ProvingSchemeGm17(ProvingScheme):
         contract {circuit.get_verification_contract_name()} {{''' / f'''\
             using Pairing for *;
 
+            bytes32 public constant {cfg.prover_key_hash_name} = 0x{prover_key_hash.hex()};
             uint256 constant {self.snark_scalar_field_var_name} = {bn128_scalar_field};
 
             struct VerifyingKey {{

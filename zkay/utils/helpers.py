@@ -1,5 +1,6 @@
 import os
 import re
+import hashlib
 from typing import Optional, List
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
 
@@ -17,6 +18,26 @@ def save_to_file(output_directory: Optional[str], filename: str, code: str):
 def read_file(filename: str):
     with open(filename, 'r') as f:
         return f.read()
+
+
+def hash_string(data: str) -> bytes:
+    digest = hashlib.sha512(data).digest()
+    assert len(digest) == 64
+    return digest[:32]
+
+
+def hash_file(filename: str, chunk_size: int = 1 << 27) -> bytes:
+    digest = hashlib.sha512()
+    with open(filename, 'rb') as f:
+        while True:
+            # Hash prover key in 128mb chunks
+            data = f.read(chunk_size)
+            if not data:
+                break
+            digest.update(data)
+    digest = digest.digest()
+    assert len(digest) == 64
+    return digest[:32]
 
 
 def without_extension(filename: str) -> str:

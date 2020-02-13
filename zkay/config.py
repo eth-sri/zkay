@@ -1,7 +1,7 @@
 import ast
 import math
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
@@ -43,14 +43,30 @@ class Config:
         See https://web3py.readthedocs.io/en/stable/providers.html for more information
         """
 
-        self.blockchain_node_uri: Optional[Any] = None
+        self.blockchain_node_uri: Optional[Any] = 'http://localhost:7545'
         """
         Backend specific location of the ethereum node
-        w3-eth-tester: unused
-        w3-ipc       : path to ipc socket file
-        w3-websocket : web socket uri
-        w3-http      : url
-        w3-custom    : web3 instance, must not be None
+        w3-eth-tester : unused
+        w3-ipc        : path to ipc socket file
+        w3-websocket  : web socket uri
+        w3-http       : url
+        w3-custom     : web3 instance, must not be None
+        """
+
+        self.blockchain_pki_address: str = ''
+        """Address of the deployed pki contract, if empty, the pki contract will be deployed on startup (for debugging)"""
+
+        self.blockchain_bn256g2_address: str = ''
+        """Address of the deployed bn256 contract, if empty, the library will be deployed on startup (for debugging)"""
+
+        self.blockchain_default_account: Union[int, str, None] = 0
+        """
+        Address of the wallet which should be used when no sender is specified.
+        (will also be used to deploy the pki contract when no pki_address is specified)
+
+        If None -> must always specify a sender, empty blockchain_pki_address is invalid
+        If int -> use eth.accounts[int]
+        If str -> use address str
         """
 
         self.indentation = ' '*4
@@ -109,7 +125,10 @@ class Config:
         self._options_with_effect_on_circuit_output = [
             'proving_scheme', 'snark_backend', 'crypto_backend',
             'opt_solc_optimizer_runs', 'opt_hash_threshold',
-            'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs'
+            'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs',
+        ]
+        self._options_with_effect_if_not_empty = [
+            'blockchain_pki_address', 'blockchain_bn256g2_address',
         ]
         self.config_dir = os.path.dirname(os.path.realpath(__file__))
         self.is_unit_test = False
@@ -125,11 +144,14 @@ class Config:
         out = {}
         for k in self._options_with_effect_on_circuit_output:
             out[k] = getattr(self, k)
+        for k in self._options_with_effect_if_not_empty:
+            if getattr(self, k):
+                out[k] = getattr(self, k)
         return out
 
     def deserialize(self, vals: dict):
         for k in vals:
-            if k not in self._options_with_effect_on_circuit_output:
+            if k not in self._options_with_effect_on_circuit_output and k not in self._options_with_effect_if_not_empty:
                 raise KeyError(f'vals contains unknown option "{k}"')
             setattr(self, k, vals[k])
 
@@ -221,6 +243,10 @@ class Config:
     @property
     def field_prime_var_name(self) -> str:
         return f'{self.reserved_name_prefix}field_prime'
+
+    @property
+    def prover_key_hash_name(self) -> str:
+        return f'{self.reserved_name_prefix}prover_key_hash'
 
     @property
     def zk_struct_prefix(self) -> str:
