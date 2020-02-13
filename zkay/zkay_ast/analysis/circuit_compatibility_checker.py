@@ -80,12 +80,6 @@ class CircuitComplianceChecker(FunctionVisitor):
 
     @staticmethod
     def should_evaluate_public_expr_in_circuit(expr: Expression) -> bool:
-        try:
-            check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(expr)
-        except TypeException:
-            # Cannot evaluate inside circuit -> never do it
-            return False
-
         assert expr.annotated_type is not None
         if cfg.opt_eval_constexpr_in_circuit:
             if isinstance(expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
@@ -95,6 +89,12 @@ class CircuitComplianceChecker(FunctionVisitor):
             if isinstance(expr, PrimitiveCastExpr) and isinstance(expr.expr.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType)):
                 # Constant casts should also be evaluated inside the circuit
                 return True
+
+        try:
+            check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(expr)
+        except TypeException:
+            # Cannot evaluate inside circuit -> never do it
+            return False
 
         # Could evaluate in circuit, use analysis to determine whether this would be better performance wise
         # (If this avoids unnecessary encryption operations it may be cheaper)
@@ -187,7 +187,7 @@ class NonstaticOrIncompatibilityDetector(FunctionVisitor):
                 has_nonstatic_call |= not ast.func.target.has_static_body
                 can_be_private &= ast.func.target.can_be_private
             elif isinstance(ast.func, BuiltinFunction):
-                can_be_private &= ast.func.can_be_private()
+                can_be_private &= (ast.func.can_be_private() or ast.annotated_type.type_name.is_literal)
                 if ast.func.is_eq() or ast.func.is_ite():
                     can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
         if has_nonstatic_call:
