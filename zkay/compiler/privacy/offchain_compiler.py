@@ -562,18 +562,23 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and (ast.func.is_arithmetic() or ast.func.op == '~'):
+            # For arithmetic operations, need to simulate finite integer semantics (since python has arbitrary precision ints)
             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
             res = super().visitFunctionCallExpr(ast)
             if not t.is_literal:
                 # Use cast for correct overflow behavior according to type
                 res = self.handle_cast(res, t)
             return res
-        elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp():
+        elif isinstance(ast.func, BuiltinFunction) and ast.func.is_comp() and self.inside_circuit:
+            # Inside circuit, only comparisons with values using less than 252 bits are valid
+            # -> perform additional check
             args = [f'self.comp_overflow_checked({self.visit(a)})' for a in ast.args]
             return ast.func.format_string().format(*args)
         elif ast.is_cast:
             return self.handle_cast(self.visit(ast.args[0]), ast.func.target.annotated_type.type_name)
         elif isinstance(ast.func, LocationExpr) and ast.func.target is not None and ast.func.target.requires_verification:
+            # Function calls to functions which require verification need to be treated differently
+            # (called function has a different priv-value dictionary)
             f = self.visit(ast.func)
             a = self.visit_list(ast.args, ', ')
             return f'self._call({ast.sec_start_offset}, self.{f}, {a})'
@@ -582,11 +587,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
         if ast.is_implicit and not self.inside_circuit:
+            # Implicit casts in public code can be ignored, since they have to effect on the value
             return self.visit(ast.expr)
         else:
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
 
-    def handle_cast(self, expr: str, t: TypeName):
+    def handle_cast(self, expr: str, t: TypeName) -> str:
+        """Return python expr which corresponds to expr converted to type t."""
+
         if not t.is_primitive_type():
             raise NotImplementedError()
         signed = t.is_signed_numeric
@@ -626,6 +634,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         return self.get_loc_value(Identifier(e), indices)
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
+        # Special identifiers
         if ast.idf.name == f'{cfg.pki_contract_name}_inst' and not ast.is_lvalue():
             return f'{KEYSTORE_OBJ_NAME}'
         elif ast.idf.name == cfg.field_prime_var_name:
@@ -675,14 +684,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return super().get_default_value(t)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
-        if ast.variable_declaration.idf.name == cfg.zk_data_var_name:
-            c = self.circuits[ast.function]
-            s = ''
-            for idx, idf in enumerate(c.output_idfs + c.input_idfs):
-                s += f"'{idf.name}': {self.get_default_value(idf.t)},"
-                s += '\n' if idx % 4 == 3 else ' '
-            return f'{cfg.zk_data_var_name}: Dict = {{\n' + indent(s) + '}'
-        elif self.is_special_var(ast.variable_declaration.idf):
+        if self.is_special_var(ast.variable_declaration.idf):
             return super().visitVariableDeclarationStatement(ast)
         else:
             s = ast.variable_declaration.idf.name

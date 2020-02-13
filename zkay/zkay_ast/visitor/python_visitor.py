@@ -9,7 +9,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition, EnumTypeName
+    EnumDefinition, EnumTypeName, StructTypeName
 
 kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast', 'wei_amount']}
 
@@ -121,6 +121,13 @@ class PythonCodeVisitor(CodeVisitor):
             return f'{self.visit_list(t.target.qualified_name, sep=".")}(0)'
         elif isinstance(t, (AddressTypeName, AddressPayableTypeName)):
             return ''
+        elif isinstance(t, StructTypeName) and t.target is not None:
+            sd = t.target
+            s = ''
+            for idx, vd in enumerate(sd.members):
+                s += f"'{vd.idf.name}': {self.get_default_value(vd.annotated_type.type_name)},"
+                s += '\n' if idx % 4 == 3 else ' '
+            return f'{{\n{indent(s)}}}'
         elif isinstance(t, UserDefinedTypeName):
             return '{}'
         else:
@@ -229,7 +236,7 @@ class PythonCodeVisitor(CodeVisitor):
         return 'str'
 
     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
-        return 'Any'
+        return 'Dict'
 
     def visitEnumTypeName(self, ast: EnumTypeName):
         return f'{self.visit_list(ast.target.qualified_name, sep=".")}'
