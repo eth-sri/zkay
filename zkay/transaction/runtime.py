@@ -31,6 +31,13 @@ _blockchain_classes = {
 
 
 class Runtime:
+    """
+    Provides global access to singleton runtime API backend instances.
+    See interface.py for more information.
+
+    The global configuration in config.py determines which backends are made available via the Runtime class.
+    """
+
     __blockchain = None
     __crypto = None
     __keystore = None
@@ -38,6 +45,11 @@ class Runtime:
 
     @staticmethod
     def reset():
+        """
+        Reboot the runtime.
+
+        When a new backend is selected in the configuration, it will only be loaded after a runtime reset.
+        """
         Runtime.__blockchain = None
         Runtime.__crypto = None
         Runtime.__keystore = None
@@ -45,6 +57,7 @@ class Runtime:
 
     @staticmethod
     def blockchain() -> ZkayBlockchainInterface:
+        """Return singleton object which implements ZkayBlockchainInterface."""
         if Runtime.__blockchain is None:
             Runtime.__blockchain = _blockchain_classes[cfg.blockchain_backend]()
             from zkay.transaction.types import AddressValue
@@ -53,18 +66,21 @@ class Runtime:
 
     @staticmethod
     def crypto() -> ZkayCryptoInterface:
+        """Return singleton object which implements ZkayCryptoInterface."""
         if Runtime.__crypto is None:
             Runtime.__crypto = _crypto_classes[cfg.crypto_backend]()
         return Runtime.__crypto
 
     @staticmethod
     def keystore() -> ZkayKeystoreInterface:
+        """Return singleton object which implements ZkayKeystoreInterface."""
         if Runtime.__keystore is None:
             Runtime.__keystore = SimpleKeystore(Runtime.blockchain())
         return Runtime.__keystore
 
     @staticmethod
     def prover() -> ZkayProverInterface:
+        """Return singleton object which implements ZkayProverInterface."""
         if Runtime.__prover is None:
             Runtime.__prover = _prover_classes[cfg.snark_backend]()
         return Runtime.__prover

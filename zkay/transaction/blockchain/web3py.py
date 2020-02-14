@@ -11,7 +11,7 @@ from web3 import Web3
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, debug_print
-from zkay.transaction.interface import Manifest, ZkayBlockchainInterface, IntegrityError
+from zkay.transaction.interface import Manifest, ZkayBlockchainInterface, IntegrityError, BlockChainError, TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 from zkay.utils.helpers import get_contract_names, without_extension
 
@@ -23,7 +23,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         super().__init__()
         self.w3 = self._create_w3_instance()
         self.verifiers_for_uuid: Dict[str, Dict[str, AddressValue]] = {}
-        self.deploy_or_connect_libraries(self.default_address)
+        self._deploy_or_connect_libraries(self._default_address())
 
     @staticmethod
     def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
@@ -74,13 +74,13 @@ class Web3Blockchain(ZkayBlockchainInterface):
         ret[cfg.pki_contract_name] = AddressValue(self.pki_contract.address)
         return ret
 
-    def _default_address(self) -> Optional[AddressValue]:
+    def _default_address(self) -> Union[None, bytes, str]:
         if cfg.blockchain_default_account is None:
             return None
         elif isinstance(cfg.blockchain_default_account, int):
-            return AddressValue(self.w3.eth.accounts[cfg.blockchain_default_account])
+            return self.w3.eth.accounts[cfg.blockchain_default_account]
         else:
-            return AddressValue(cfg.blockchain_default_account)
+            return cfg.blockchain_default_account
 
     def _get_balance(self, address: Union[bytes, str]) -> int:
         return self.w3.eth.getBalance(address)
@@ -88,22 +88,29 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _req_public_key(self, address: Union[bytes, str]) -> PublicKeyValue:
         return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address))
 
-    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]):
+    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]) -> Any:
         return self._transact(self.pki_contract, address, 'announcePk', pk)
 
     def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
-        return contract_handle.functions[name](*indices).call()
+        try:
+            return contract_handle.functions[name](*indices).call()
+        except Exception as e:
+            raise BlockChainError(e.args)
 
     def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, wei_amount: Optional[int] = None) -> Any:
-        fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
-        gas_amount = self._gas_heuristic(sender, fobj(*actual_params))
-        tx = {'from': sender, 'gas': gas_amount}
-        if wei_amount:
-            tx['value'] = wei_amount
-        tx_hash = fobj(*actual_params).transact(tx)
-        tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+        try:
+            fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
+            gas_amount = self._gas_heuristic(sender, fobj(*actual_params))
+            tx = {'from': sender, 'gas': gas_amount}
+            if wei_amount:
+                tx['value'] = wei_amount
+            tx_hash = fobj(*actual_params).transact(tx)
+            tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+        except Exception as e:
+            raise BlockChainError(e.args)
+
         if tx_receipt['status'] == 0:
-            raise Exception("Transaction failed")
+            raise TransactionFailedException("Transaction failed")
         debug_print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
@@ -116,28 +123,29 @@ class Web3Blockchain(ZkayBlockchainInterface):
         return handle
 
     def _deploy_or_connect_libraries(self, sender: Union[bytes, str]):
-        # Compile and deploy global libraries
-        with tempfile.TemporaryDirectory() as tmpdir:
-            pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
-            with open(pki_sol, 'w') as f:
-                f.write(library_contracts.get_pki_contract())
-            if cfg.blockchain_pki_address:
-                self.pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
-            else:
-                self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
-                debug_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
+        # Compile and deploy global libraries (using a fixed configuration)
+        with cfg.library_compilation_environment():
+            with tempfile.TemporaryDirectory() as tmpdir:
+                pki_sol = os.path.join(tmpdir, f'{cfg.pki_contract_name}.sol')
+                with open(pki_sol, 'w') as f:
+                    f.write(library_contracts.get_pki_contract())
+                if cfg.blockchain_pki_address:
+                    self.pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
+                else:
+                    self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
+                    debug_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
 
-            verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
-            with open(verify_sol, 'w') as f:
-                f.write(library_contracts.get_verify_libs_code())
-            if cfg.blockchain_bn256g2_address:
-                bn256 = self._verify_contract_integrity(cfg.blockchain_bn256g2_address, verify_sol, contract_name='BN256G2', is_library=True)
-            else:
-                bn256 = self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2'))
-                debug_print(f'Deployed bn256 contract at address "{bn256.address}"')
-            self.lib_addresses = {
-                'BN256G2': bn256.address,
-            }
+                verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
+                with open(verify_sol, 'w') as f:
+                    f.write(library_contracts.get_verify_libs_code())
+                if cfg.blockchain_bn256g2_address:
+                    bn256 = self._verify_contract_integrity(cfg.blockchain_bn256g2_address, verify_sol, contract_name='BN256G2', is_library=True)
+                else:
+                    bn256 = self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2'))
+                    debug_print(f'Deployed bn256 contract at address "{bn256.address}"')
+                self.lib_addresses = {
+                    'BN256G2': bn256.address,
+                }
 
     def _connect(self, manifest, contract: str, address: Union[bytes, str]) -> Any:
         filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
@@ -185,11 +193,12 @@ class Web3Blockchain(ZkayBlockchainInterface):
             lib_address_offset = code_with_placeholders.find(placeholder)
             if lib_address_offset != -1:
                 lib_address = self.w3.toChecksumAddress(actual_code[lib_address_offset:lib_address_offset+40])
-                self._verify_contract_integrity(lib_address, lib_sol, contract_name=lib_name, is_library=True)
+                with cfg.library_compilation_environment():
+                    self._verify_contract_integrity(lib_address, lib_sol, contract_name=lib_name, is_library=True)
                 addresses[lib_name] = lib_address
         return addresses
 
-    def _verify_zkay_contract_integrity(self, address: str, sol_file: str, pki_verifier_addresses):
+    def _verify_zkay_contract_integrity(self, address: str, sol_file: str, pki_verifier_addresses: Dict):
         sol_file = self.__hardcode_external_contracts(sol_file, pki_verifier_addresses)
         self._verify_contract_integrity(address, sol_file)
 
