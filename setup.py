@@ -19,6 +19,7 @@ setup(
         'parameterized==0.7.1',
         'py-solc-x==0.7.2',
         'pycryptodome==3.9.6',
+        'appdirs==1.4.3',
     ],
     python_requires='>=3.7,<4',
     author='nicbauma',

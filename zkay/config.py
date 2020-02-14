@@ -1,7 +1,9 @@
 import ast
 import math
-import os
-from typing import Dict, Any, Optional, Union
+from contextlib import contextmanager
+from typing import Dict, Any, Optional, Union, ContextManager
+
+import appdirs
 
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.transaction.crypto.meta import cryptoparams
@@ -132,7 +134,8 @@ class Config:
         self._options_with_effect_if_not_empty = [
             'blockchain_pki_address', 'blockchain_bn256g2_address',
         ]
-        self.config_dir = os.path.dirname(os.path.realpath(__file__))
+        self.config_dir = appdirs.user_config_dir('zkay', False, None, True)
+        self.data_dir = appdirs.user_data_dir('zkay', False, None, True)
         self.is_unit_test = False
         self.use_circuit_cache_during_testing_with_encryption = True
 
