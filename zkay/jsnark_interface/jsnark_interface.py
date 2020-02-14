@@ -17,6 +17,7 @@ def compile_circuit(circuit_dir: str, javacode: str):
     Compile the given circuit java code and then compile the circuit which it describes using jsnark.
     :param circuit_dir: output directory
     :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
+    :raise SubprocessError: if compilation fails
     """
     jfile = os.path.join(circuit_dir, cfg.jsnark_circuit_classname + ".java")
     with open(jfile, 'w') as f:
@@ -26,7 +27,7 @@ def compile_circuit(circuit_dir: str, javacode: str):
     run_command(['javac', '-cp', f'{circuit_builder_jar}', jfile], cwd=circuit_dir)
 
     # Run jsnark to generate the circuit
-    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, key='jsnark')
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, debug_output_key='jsnark')
 
 
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
@@ -34,11 +35,12 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
     :param circuit_dir: directory where the compiled circuit is located
     :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
+    :raise SubprocessError: if circuit evaluation fails
     """
     serialized_arg_str = [format(arg, 'x') for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, key='jsnark')
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, debug_output_key='jsnark')
 
 
 _class_template_str = '''\

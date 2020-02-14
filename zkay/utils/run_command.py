@@ -2,14 +2,23 @@ import os
 import subprocess
 
 from zkay.config import cfg
-from typing import List
+from typing import List, Optional, Tuple
 
 
-def run_command(cmd: List[str], cwd=None, key: str = None):
+def run_command(cmd: List[str], cwd=None, debug_output_key: str = None) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Run arbitrary command.
+
+    :param cmd: the command to run (list of command and arguments)
+    :param cwd: if specified, use this path as working directory (otherwise current working directory is used)
+    :param debug_output_key:
+    :return:
+    """
+
     if cwd is not None:
         cwd = os.path.abspath(cwd)
 
-    if key in cfg.debug_output_whitelist and not cfg.is_unit_test:
+    if debug_output_key in cfg.debug_output_whitelist and not cfg.is_unit_test:
         process = subprocess.Popen(cmd, cwd=cwd)
         output, error = process.communicate() # will be None
     else:
