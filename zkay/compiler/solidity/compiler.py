@@ -136,6 +136,7 @@ def check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str):
     Run fake solidity code (stripped privacy features) through solc and report errors in the context of the original zkay code.
 
     Fake solidity code = zkay code with privacy features removed in a source-location preserving way (whitespace padding)
+
     :param zkay_code: Original zkay code
     :param fake_solidity_code: Corresponding "fake solidity code"
     """

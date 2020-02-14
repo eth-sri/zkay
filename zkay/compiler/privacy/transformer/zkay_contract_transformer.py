@@ -164,6 +164,7 @@ class ZkayTransformer(AstTransformerVisitor):
     def include_verification_contracts(self, su: SourceUnit, c: ContractDefinition) -> List[StateVariableDeclaration]:
         """
         Import all verification contracts for 'c' into 'su' and create state variable declarations for all of them + the pki contract.
+
         :param su: [SIDE EFFECT] source unit into which contracts should be imported
         :param c: contract for which verification contracts should be imported
         :return: list of all constant state variable declarations for the pki contract + all the verification contracts

@@ -53,6 +53,7 @@ REVEAL_START_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()'
 def create_surrogate_string(instr: str):
     """
     Preserve newlines and replace all other characters with spaces
+
     :return whitespace string with same length as instr and with the same line breaks
     """
     return ''.join(['\n' if e == '\n' else ' ' for e in instr])
@@ -61,6 +62,7 @@ def create_surrogate_string(instr: str):
 def find_matching_parenthesis(code: str, open_parens_loc: int) -> int:
     """
     Get index of matching parenthesis/bracket/brace.
+
     :param code: code in which to search
     :param open_parens_loc: index of the opening parenthesis within code
     :return: index of the matching closing parenthesis
@@ -123,11 +125,12 @@ def inject_me_decls(code: str):
 
 def replace_with_surrogate(code: str, search_pattern: Pattern, replacement_fstr: str = '{}'):
     """
-    Replaces all occurrences of search_pattern in code with:
-        content of capture group <keep> (if any) + either
+    Replace all occurrences of search_pattern with capture group <keep> (if any) + replacement.
+
+    Replacement is either
         a) replacement_fstr (if replacement_fstr does not contain '{}')
         b) replacement_fstr with {} replaced by whitespace corresponding to content of capture group <repl>
-            (such that replacement length == <repl> length with line breaks preserved)
+           (such that replacement length == <repl> length with line breaks preserved)
 
     The <repl> capture group must be the last thing that is matched in search pattern
     """

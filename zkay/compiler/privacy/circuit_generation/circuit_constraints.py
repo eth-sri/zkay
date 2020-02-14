@@ -106,11 +106,11 @@ class CircGuardModification(CircuitStatement):
     (like a stack, CircGuardModification(None) always ends the last opened scope)
 
     The circuit generator must ensure that any assertion statement ASSERT(COND) which is added inside a guarded scope (guard_var, is_true),
-    is transformed into ASSERT((previous_guard_constraint && (guard_var == is_true)) => COND)
+    is transformed into ``ASSERT((previous_guard_constraint && (guard_var == is_true)) => COND)``
 
     The circuit generator must also ensure that any CircVarDecl(var, expr) which corresponds to a real assignment to a variable
     (i.e. an AssignmentStatement inside a private expression (function call) or if statement),
-    is transformed from 'var = expr' into 'var = (previous_guard_constraint && (guard_var == is_true)) ? expr : var'
+    is transformed from ``var = expr`` into ``var = (previous_guard_constraint && (guard_var == is_true)) ? expr : var``
     """
 
     def __init__(self, new_cond: Optional[HybridArgumentIdf], is_true: Optional[bool] = None):
@@ -139,7 +139,7 @@ class CircEncConstraint(CircuitStatement):
     """
     Depending on is_dec, either represents an encryption or a decryption constraint
 
-    Both types are generally modelled using the constraint 'enc(plain, pk, rnd) == cipher'
+    Both types are generally modelled using the constraint ``enc(plain, pk, rnd) == cipher``
 
     IMPORTANT FOR SECURITY:
     To support solidity's default initialization semantics for encrypted variables, a cipher value of 0 is always decrypted to

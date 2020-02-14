@@ -644,7 +644,7 @@ class CircuitHelper:
 
         This automatically requests necessary keys and adds a circuit input for the randomness.
 
-        :param stmt [Optional]: if new_privacy is != MeExpr(),
+        :param stmt: [Optional] if new_privacy is != MeExpr(),
                                 stmt must be the statement which contains the expression which requires this encryption
         :param plain: circuit variable referencing the plaintext value
         :param new_privacy: privacy label corresponding to the destination key address

@@ -118,6 +118,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         Announce a public key to the PKI
 
         WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)
+
         :param sender: public key owner, its eth private key must be hosted in the eth node to which the backend connects.
         :param pk: the public key to announce
         :raise BlockChainError: if there is an error in the backend
@@ -167,6 +168,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         Issue a transaction for the specified function in the given contract with the provided arguments
 
         WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)
+
         :param contract_handle: the contract in which the function resides
         :param sender: sender address, its eth private key must be hosted in the eth node to which the backend connects.
         :param function: name of the function
@@ -188,6 +190,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         Issue a deployment transaction which constructs the specified contract with the provided constructor arguments on the chain.
 
         WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)
+
         :param project_dir: directory where the zkay file, manifest and snark keys reside
         :param sender: creator address, its eth private key must be hosted in the eth node to which the backend connects.
         :param contract: name of the contract to instantiate

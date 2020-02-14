@@ -15,6 +15,7 @@ circuit_builder_jar_hash = hash_file(circuit_builder_jar).hex()
 def compile_circuit(circuit_dir: str, javacode: str):
     """
     Compile the given circuit java code and then compile the circuit which it describes using jsnark.
+
     :param circuit_dir: output directory
     :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
     :raise SubprocessError: if compilation fails
@@ -33,6 +34,7 @@ def compile_circuit(circuit_dir: str, javacode: str):
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     """
     Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
+
     :param circuit_dir: directory where the compiled circuit is located
     :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
     :raise SubprocessError: if circuit evaluation fails
