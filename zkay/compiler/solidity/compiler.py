@@ -108,6 +108,7 @@ def check_compilation(filename: str, show_errors: bool = False, display_code: st
         debug_print('')
         errors = sorted(errors['errors'], key=get_error_order_key)
 
+        fatal_error_report = ''
         for error in errors:
             from zkay.utils.progress_printer import colored_print, TermColor
             is_error = error['severity'] == 'error'
@@ -121,14 +122,16 @@ def check_compilation(filename: str, show_errors: bool = False, display_code: st
                         had_error |= is_error
                     else:
                         report = f"In imported file '{file}' idx: {error['sourceLocation']['start']}\n"
-                report += error['message']
+                report = f'\n{error["severity"].upper()}: {error["type"] if is_error else ""}\n{report}\n{error["message"]}'
 
-                debug_print(f'\n{error["severity"].upper()}: {error["type"] if is_error else ""}')
-                debug_print(f'{report}')
+                if is_error:
+                    fatal_error_report += report
+                else:
+                    debug_print(report)
 
         debug_print('')
         if had_error:
-            raise SolcException(report)
+            raise SolcException(fatal_error_report)
 
 
 def check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str):

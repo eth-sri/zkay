@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors
+from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors, SolcException
+from zkay.errors.exceptions import ZkayCompilerError, ParseExeception, PreprocessAstException, TypeCheckException
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step, colored_print, TermColor
@@ -18,44 +19,23 @@ from zkay.zkay_ast.pointers.symbol_table import link_identifiers as link
 from zkay.zkay_ast.visitor.return_checker import check_return as r
 
 
-class ParseExeception(Exception):
-    """
-    Error during parsing"
-    """
-    pass
-
-
-class PreprocessAstException(Exception):
-    """
-    Error during ast preprocessing"
-    """
-    pass
-
-
-class TypeCheckException(Exception):
-    """
-    Error during type checking"
-    """
-    pass
-
-
 def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
     with print_step("Parsing"):
         from zkay.solidity_parser.parse import SyntaxException
         try:
             ast = build_ast(code)
         except SyntaxException as e:
-            with colored_print(TermColor.FAIL):
-                print("\n\nERROR: Syntax error")
-                print(f'{str(e)}\n')
-            raise ParseExeception()
+            raise ParseExeception(f'\n\nPARSER ERROR: {e}')
 
     from zkay.compiler.solidity.fake_solidity_generator import fake_solidity_code
     fake_code = fake_solidity_code(str(code))
     if solc_check:
         # Solc type checking
         with print_step("Type checking with solc"):
-            check_for_zkay_solc_errors(code, fake_code)
+            try:
+                check_for_zkay_solc_errors(code, fake_code)
+            except SolcException as e:
+                raise ZkayCompilerError(f'{e}')
     return ast, fake_code
 
 
@@ -76,10 +56,7 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
             try:
                 link(ast)
             except UnknownIdentifierException as e:
-                with colored_print(TermColor.FAIL):
-                    print("\n\nERROR: Preprocessing failed")
-                    print(f'{str(e)}\n')
-                raise PreprocessAstException()
+                raise PreprocessAstException(f'\n\nSYMBOL ERROR: {e}')
         if check_return:
             r(ast)
         if alias_analysis:
@@ -94,8 +71,5 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
                 check_circuit_compliance(ast)
                 detect_hybrid_functions(ast)
                 check_loops(ast)
-            except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as te:
-                with colored_print(TermColor.FAIL):
-                    print("\n\nERROR: Type check failed")
-                    print(f'{str(te)}\n')
-                raise TypeCheckException()
+            except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
+                raise TypeCheckException(f'\n\nCOMPILER ERROR: {e}')

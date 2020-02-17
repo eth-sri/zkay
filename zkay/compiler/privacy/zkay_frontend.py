@@ -21,13 +21,13 @@ from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
-from zkay.compiler.privacy.transformer.zkay_contract_transformer import transform_ast
-from zkay.compiler.solidity.compiler import check_compilation, SolcException
+from zkay.compiler.privacy.transformation.zkay_contract_transformer import transform_ast
+from zkay.compiler.solidity.compiler import check_compilation
 from zkay.config import cfg
 from zkay.utils.helpers import read_file, lines_of_code, without_extension
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
-from zkay.zkay_ast.process_ast import get_processed_ast, ParseExeception, PreprocessAstException, TypeCheckException
+from zkay.zkay_ast.process_ast import get_processed_ast
 
 
 def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool = False):
@@ -40,6 +40,8 @@ def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool =
                         if true, zk-snark keys for all circuits are expected to be already present in the output directory,
                                  and the compilation will use the provided keys to generate the verification contracts
                         This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+    :raise ZkayCompilerError: if any compilation stage fails
+    :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
     """
     code = read_file(input_file_path)
 
@@ -62,6 +64,9 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     """
     Parse, type-check and compile the given zkay code.
 
+    Note: If a SolcException is raised, this indicates a bug in zkay
+          (i.e. zkay produced solidity code which doesn't compile, without raising a ZkayCompilerError)
+
     :param code: zkay code to compile
     :param output_dir: path to a directory where the compilation output should be generated
     :param output_filename_without_ext: stem of the desired output solidity contract filename
@@ -69,6 +74,8 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
                         if true, zk-snark keys for all circuits are expected to be already present in the output directory,
                                  and the compilation will use the provided keys to generate the verification contracts
                         This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+    :raise ZkayCompilerError: if any compilation stage fails
+    :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
     """
 
     # Copy zkay code to output
@@ -79,13 +86,7 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
         _dump_to_output(code, output_dir, zkay_filename)
 
     # Type checking
-    try:
-        ast = get_processed_ast(code)
-    except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException) as e:
-        if cfg.is_unit_test:
-            raise e
-        else:
-            exit(3)
+    ast = get_processed_ast(code)
 
     # Contract transformation
     with print_step("Transforming zkay -> public contract"):
@@ -183,6 +184,7 @@ def _dump_to_output(content: str, output_dir: str, filename: str, dryrun_solc=Fa
     """
     Dump 'content' into file 'output_dir/filename' and optionally check if it compiles error-free with solc.
 
+    :raise SolcException: if dryrun_solc is True and there are compilation errors
     :return: dumped content as string
     """
 

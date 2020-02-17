@@ -1867,7 +1867,7 @@ def get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[Co
     assert line <= len(code)
 
     # Print Location
-    error_msg = f'Line: {line};{column}'
+    error_msg = f'At line: {line};{column}'
     if fct is not None:
         assert ctr is not None
         error_msg += f', in function \'{fct.name}\' of contract \'{ctr.idf.name}\''
@@ -1922,14 +1922,14 @@ def get_ast_exception_msg(ast: AST, msg: str):
     else:
         error_msg = get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
 
-    return f'\n{error_msg}\n{msg}'
+    return f'\n{error_msg}\n\n{msg}'
 
 
-def issue_compiler_warning(ast: AST, msg: str):
+def issue_compiler_warning(ast: AST, warning_type: str, msg: str):
     if cfg.is_unit_test:
         return
     with colored_print(TermColor.WARNING):
-        print(get_ast_exception_msg(ast, f'WARNING:\n{msg}\n'))
+        print(f'\n\nWARNING: {warning_type}{get_ast_exception_msg(ast, msg)}')
 
 
 class AstException(Exception):

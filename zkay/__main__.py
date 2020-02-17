@@ -6,6 +6,7 @@ from zkay import my_logging
 from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
 from zkay.compiler.solidity.compiler import SolcException
 from zkay.config import cfg
+from zkay.errors.exceptions import ZkayCompilerError
 from zkay.my_logging.log_context import log_context
 from zkay.utils.helpers import read_file
 from zkay.utils.progress_printer import TermColor, colored_print
@@ -82,12 +83,19 @@ if __name__ == '__main__':
         code = read_file(str(input_file))
         try:
             ast = get_processed_ast(code)
-        except (ParseExeception, PreprocessAstException, TypeCheckException, SolcException):
+        except ZkayCompilerError as e:
+            with colored_print(TermColor.FAIL):
+                print(f'{e}')
             exit(3)
     else:
         # compile
         with log_context('inputfile', os.path.basename(a.input)):
-            compile_zkay_file(str(input_file), str(output_dir))
+            try:
+                compile_zkay_file(str(input_file), str(output_dir))
+            except ZkayCompilerError as e:
+                with colored_print(TermColor.FAIL):
+                    print(f'{e}')
+                exit(3)
 
     with colored_print(TermColor.OKGREEN):
         print("Finished successfully")
