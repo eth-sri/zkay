@@ -6,11 +6,10 @@ from typing import Dict, Optional, List, Tuple
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
-from zkay.compiler.privacy.transformer.internal_call_transformer import transform_internal_calls, compute_transitive_circuit_io_sizes
-from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from zkay.compiler.privacy.transformer.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
+from zkay.compiler.privacy.transformation.internal_call_transformer import transform_internal_calls, compute_transitive_circuit_io_sizes
+from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
+from zkay.compiler.privacy.transformation.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
     ZkayStatementTransformer
-from zkay.compiler.privacy.used_contract import get_contract_instance_idf
 from zkay.config import cfg
 from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
@@ -154,7 +153,7 @@ class ZkayTransformer(AstTransformerVisitor):
     @staticmethod
     def create_contract_variable(cname: str) -> StateVariableDeclaration:
         """Create a public constant state variable with which contract with name 'cname' can be accessed"""
-        inst_idf = get_contract_instance_idf(cname)
+        inst_idf = Identifier(cfg.get_contract_var_name(cname))
         c_type = ContractTypeName([Identifier(cname)])
 
         cast_0_to_c = PrimitiveCastExpr(c_type, NumberLiteralExpr(0))
@@ -478,7 +477,7 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(Comment())
 
         # Call verifier
-        verifier = IdentifierExpr(get_contract_instance_idf(ext_circuit.verifier_contract_type.code()))
+        verifier = IdentifierExpr(cfg.get_contract_var_name(ext_circuit.verifier_contract_type.code()))
         verifier_args = [IdentifierExpr(cfg.proof_param_name), IdentifierExpr(cfg.zk_in_name), IdentifierExpr(cfg.zk_out_name)]
         verify = ExpressionStatement(verifier.call(cfg.verification_function_name, verifier_args))
         stmts.append(StatementList([Comment('Verify zk proof of execution'), verify], excluded_from_simulation=True))

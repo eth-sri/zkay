@@ -235,6 +235,16 @@ class Config:
         else:
             return fct.name
 
+    @staticmethod
+    def get_contract_var_name(type_name: str) -> str:
+        """
+        Return an identifier referring to the address variable of verification contract of type 'type_name'
+
+        :param type_name: name of the unqualified verification contract type
+        :return: new identifier
+        """
+        return f'{type_name}_inst'
+
     @property
     def pki_contract_name(self) -> str:
         return f'{self.reserved_name_prefix}PublicKeyInfrastructure'

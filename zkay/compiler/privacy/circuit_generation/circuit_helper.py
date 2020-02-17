@@ -6,15 +6,14 @@ from zkay.compiler.name_remapper import CircVarRemapper
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
     CircEqConstraint, CircComment, CircIndentBlock, CircGuardModification, CircCall
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
-from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
-from zkay.compiler.privacy.used_contract import get_contract_instance_idf
+from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.config import cfg
 from zkay.type_check.type_checker import TypeCheckVisitor
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
     CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
-    Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label, Comment, \
+    Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label, \
     ExpressionStatement, NumberLiteralExpr, VariableDeclarationStatement
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
@@ -340,7 +339,7 @@ class CircuitHelper:
         :return: HybridArgumentIdf containing the requested key and an AssignmentStatement which assigns the key request to the idf location
         """
         idf = self._in_name_factory.add_idf(name, TypeName.key_type())
-        pki = IdentifierExpr(get_contract_instance_idf(cfg.pki_contract_name))
+        pki = IdentifierExpr(cfg.get_contract_var_name(cfg.pki_contract_name))
         privacy_label_expr = get_privacy_expr_from_label(plabel)
         return idf, idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy_label_expr)]))
 

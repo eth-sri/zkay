@@ -6,7 +6,7 @@ import re
 from typing import Optional
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper
-from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
+from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
 from zkay.config import cfg
 from zkay.zkay_ast.analysis.contains_private_checker import contains_private_expr

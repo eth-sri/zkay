@@ -2,7 +2,7 @@ import re
 
 from parameterized import parameterized_class
 
-from zkay.compiler.privacy.transformer.transformer_visitor import AstTransformerVisitor
+from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.examples.examples import analysis, all_examples
 from zkay.tests.utils.test_examples import TestExamples
 from zkay.tests.zkay_unit_test import ZkayTestCase
