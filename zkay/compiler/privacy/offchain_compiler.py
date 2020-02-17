@@ -40,12 +40,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     The generated code includes both a class corresponding to the contract, as well as a main function for interactive use.
 
     The class has the following two static methods:
-    - deploy: Can be used to compile all necessary contracts (main contract + libraries) and deploy them onto a test chain.
-              Returns a contract instance.
-    - connect: Can be used to get a new instance of an already deployed contract (by specifying the on-chain address of the contract).
-               This method will verify the integrity of the contract at the specified address. If the evm bytecode of the deployed contract
-               and all necessary libraries does not match the bytecode obtained through local compilation, the connection is refused.
-               Returns a contract instance if integrity check succeeds.
+
+    * deploy: Compile all necessary contracts (main contract + libraries), deploy them onto a test chain and return a contract handle.
+    * connect: Get a handle for an already deployed contract (by specifying the on-chain address of the contract). This method automatically verifies the integrity of the remote contract.
 
     If the visited AST contains only a single contract, global deploy and connect functions for that contract are also added to the python
     code.
@@ -346,13 +343,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         Return offchain simulation python code for the body of function ast.
 
         In addition to what the original code does, the generated python code also:
-        - checks that internal functions are not called externally
-        - processes arguments (encryption, address wrapping for external calls),
-        - introduces msg, block and tx objects as local variables (populated with current blockchain state)
-        - serializes the public circuit outputs and the private circuit inputs, which are obtained during
+
+        * checks that internal functions are not called externally
+        * processes arguments (encryption, address wrapping for external calls),
+        * introduces msg, block and tx objects as local variables (populated with current blockchain state)
+        * serializes the public circuit outputs and the private circuit inputs, which are obtained during \
           simulation into int lists so that they can be passed to the proof generation
-        - generates the NIZK proof (if needed)
-        - calls/issues transaction with transformed arguments ((encrypted) original args, out array, proof)
+        * generates the NIZK proof (if needed)
+        * calls/issues transaction with transformed arguments ((encrypted) original args, out array, proof)
           (or deploys the contract in case of the constructor)
         """
 
@@ -668,9 +666,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         are basically visited in reverse order.
 
         At the moment, this problem is solved by constructing the full, combined index expression in reverse order
-        (by keeping track of all index keys and their types in the list self.current_index until IndexExpr.arr is an IdentifierExpr,
-         which terminates the recursion/nesting. Evaluation of IndexExpr.key for all encountered IndexExpr is also delayed
-         until then, since nested IndexExpr in the key expressions would otherwise break the current_index array).
+        (by keeping track of all index keys and their types in the list self.current_index until IndexExpr.arr is an IdentifierExpr, which terminates the recursion/nesting.
+        Evaluation of IndexExpr.key for all encountered IndexExpr is also delayed until then, since nested IndexExpr in the key expressions would otherwise break the current_index array).
         """
         if self.current_index_t is None:
             self.current_index_t = ast.target.annotated_type

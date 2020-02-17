@@ -144,8 +144,7 @@ class CircEncConstraint(CircuitStatement):
     IMPORTANT FOR SECURITY:
     To support solidity's default initialization semantics for encrypted variables, a cipher value of 0 is always decrypted to
     the plain value 0. To ensure correctness, the circuit should thus reject user-supplied (private input) cipher values equal to 0.
-    (When a legitimate encryption operation produces cipher = 0 during simulation (extremely unlikely),
-     it should be repeated with a different randomness)
+    (When a legitimate encryption operation produces cipher = 0 during simulation (extremely unlikely), it should be repeated with a different randomness)
 
     For encryption (user supplies the cipher text as private input)
      => the generated circuit must prove that enc(plain, pk, rnd) == cipher AND that cipher != 0

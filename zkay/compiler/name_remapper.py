@@ -13,18 +13,20 @@ class Remapper(Generic[K, V]):
     Helper class to simulate static single assignment, mostly used by CircuitHelper
     For a given name it keeps track which value the name currently refers to (e.g. current SSA identifier)
 
-    e.g. if we have
-    x = 1
-    x = 2
-    x = x + 1
+    e.g. if we have::
 
-    we can then simulate ssa by using the remapper whenever an identifier is read or written:
-    tmp1 = 1
-    remap(x, tmp1)
-    tmp2 = 2
-    remap(x, tmp2)
-    tmp3 = get_current(x) + 1
-    remap(x, tmp3)
+        x = 1
+        x = 2
+        x = x + 1
+
+    we can then simulate ssa by using the remapper whenever an identifier is read or written::
+
+        tmp1 = 1
+        remap(x, tmp1)
+        tmp2 = 2
+        remap(x, tmp2)
+        tmp3 = get_current(x) + 1
+        remap(x, tmp3)
 
     :param K: name type
     :param V: type of element to which key refers at a code location
@@ -112,21 +114,24 @@ class Remapper(Generic[K, V]):
         """
         Perform an SSA join for two branches.
 
-        i.e. if key is not remapped in any branch -> keep previous remapping
-             if key is altered in at least one branch -> remap to conditional assignment of latest remapped version in either branch
+        | i.e. if key is not remapped in any branch -> keep previous remapping
+        |      if key is altered in at least one branch -> remap to conditional assignment of latest remapped version in either branch
 
-        example usage:
+        :param stmt: the branch statement, variables which are not already in scope at that statement are not included in the joined state
+        :param true_cond_for_other_branch: IdentifierExpression which evaluates to true at runtime if other_branch is taken
+        :param other_branch_state: remap state at the end of other branch (obtained using get_state)
+        :param create_val_for_name_and_expr_fct: function to introduce a new temporary variable to which the given expression is assigned
+
+        :Example use:
+
+        ::
+
             with remapper.remap_scope(persist_globals=False):
                 <process true branch>
                 true_state = remapper.get_state()
             if <has false branch>:
                 <process false branch>
             remapper.join_branch(cond_idf_expr, true_state, <create_tmp_var(idf, expr) function>)
-
-        :param stmt: the branch statement, variables which are not already in scope at that statement are not included in the joined state
-        :param true_cond_for_other_branch: IdentifierExpression which evaluates to true at runtime if other_branch is taken
-        :param other_branch_state: remap state at the end of other branch (obtained using get_state)
-        :param create_val_for_name_and_expr_fct: function to introduce a new temporary variable to which the given expression is assigned
         """
         true_state = other_branch_state
         false_state = self.rmap

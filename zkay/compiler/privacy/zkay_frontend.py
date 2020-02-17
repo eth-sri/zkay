@@ -36,10 +36,9 @@ def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool =
 
     :param input_file_path: path to the zkay contract file
     :param output_dir: path to a directory where the compilation output should be generated
-    :param import_keys: if false, zk-snark of all modified circuits will be generated during compilation
-                        if true, zk-snark keys for all circuits are expected to be already present in the output directory,
-                                 and the compilation will use the provided keys to generate the verification contracts
-                        This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+    :param import_keys: | if false, zk-snark of all modified circuits will be generated during compilation
+                        | if true, zk-snark keys for all circuits are expected to be already present in the output directory, and the compilation will use the provided keys to generate the verification contracts
+                        | This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
     :raise ZkayCompilerError: if any compilation stage fails
     :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
     """
@@ -70,10 +69,10 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     :param code: zkay code to compile
     :param output_dir: path to a directory where the compilation output should be generated
     :param output_filename_without_ext: stem of the desired output solidity contract filename
-    :param import_keys: if false, zk-snark of all modified circuits will be generated during compilation
-                        if true, zk-snark keys for all circuits are expected to be already present in the output directory,
-                                 and the compilation will use the provided keys to generate the verification contracts
-                        This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+    :param import_keys: | if false, zk-snark of all modified circuits will be generated during compilation
+                        | if true, zk-snark keys for all circuits are expected to be already present in the output directory, \
+                          and the compilation will use the provided keys to generate the verification contracts
+                        | This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
     :raise ZkayCompilerError: if any compilation stage fails
     :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
     """

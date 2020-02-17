@@ -391,7 +391,8 @@ class BuiltinFunction(Expression):
 
     def can_be_private(self) -> bool:
         """
-        :return: true if operation itself can be run inside a circuit
+
+        :return: true if operation itself can be run inside a circuit \
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
         return self.op not in ['**', '%', '/']
@@ -1052,7 +1053,7 @@ class NumberTypeName(ElementaryTypeName):
         return 256 if self._size_in_bits == 0 else self._size_in_bits
 
     def can_represent(self, value: int):
-        """ Return true if value can be represented by this type """
+        """Return true if value can be represented by this type"""
         lo = - (1 << self.elem_bitwidth - 1) if self.signed else 0
         hi = (1 << self.elem_bitwidth - 1) if self.signed else (1 << self.elem_bitwidth)
         return lo <= value < hi
@@ -1318,9 +1319,7 @@ class DummyAnnotation:
 
 
 class TupleType(TypeName):
-    """
-    Does not appear in the syntax, but is necessary for type checking
-    """
+    """Does not appear in the syntax, but is necessary for type checking"""
 
     @staticmethod
     def ensure_tuple(t: AnnotatedTypeName):
@@ -1339,9 +1338,7 @@ class TupleType(TypeName):
         return len(self.types)
 
     def __iter__(self):
-        """
-        Make this class iterable, by iterating over its types
-        """
+        """Make this class iterable, by iterating over its types."""
         return self.types.__iter__()
 
     def __getitem__(self, i: int):
@@ -1933,9 +1930,7 @@ def issue_compiler_warning(ast: AST, warning_type: str, msg: str):
 
 
 class AstException(Exception):
-    """
-    Generic exception for errors in an AST
-    """
+    """Generic exception for errors in an AST"""
 
     def __init__(self, msg, ast):
         super().__init__(get_ast_exception_msg(ast, msg))

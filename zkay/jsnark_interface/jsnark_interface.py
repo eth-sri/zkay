@@ -45,7 +45,7 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, debug_output_key='jsnark')
 
 
-_class_template_str = '''\
+_class_template_str = '' + '''\
 import zkay.ZkayCircuitBase;
 import static zkay.ZkayType.ZkUint;
 import static zkay.ZkayType.ZkInt;
@@ -68,6 +68,7 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
     }}
 }}
 '''
+"""Java circuit code template"""
 
 
 def get_jsnark_circuit_class_str(circuit: CircuitHelper, fdefs: List[str], circuit_statements: List[str]) -> str:

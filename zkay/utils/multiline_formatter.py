@@ -4,10 +4,13 @@ from typing import Union, List
 
 class MultiLineFormatter:
     """
-    * operator -> add de-dented text (+ \n), if operand is a list -> add \n joined elements
-    % operator -> add de-dented text (+ \n), if operand is a list -> add , joined elements
-    / operator -> increase indentation level and add text (+ \n)
-    // operator -> decrease indentation level and add text (+ \n)
+    \\* operator -> add de-dented text (+ \\\\n), if operand is a list -> add \\\\n-joined elements
+
+    % operator -> add de-dented text (+ \\\\n), if operand is a list -> add ,-joined elements
+
+    / operator -> increase indentation level and add text (+ \\\\n)
+
+    // operator -> decrease indentation level and add text (+ \\\\n)
     """
     def __init__(self, indent_str=' ' * 4) -> None:
         self.text = ''

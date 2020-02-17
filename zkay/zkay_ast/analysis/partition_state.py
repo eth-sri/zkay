@@ -4,9 +4,10 @@ from typing import Set, Dict
 class PartitionState:
     """
     Supports operations on partitions
-    - insert: create a new partition with a single element
-    - merge: merge partitions
-    - ...
+
+    * insert: create a new partition with a single element
+    * merge: merge partitions
+    * ...
     """
 
     def __init__(self):
@@ -23,6 +24,7 @@ class PartitionState:
 
     def get_index(self, x):
         """
+        Return index for element x.
 
         :param x:
         :return: the index of the partition containing x
@@ -68,6 +70,7 @@ class PartitionState:
     def remove(self, x):
         """
         Removes x from its partition
+
         :param x:
         :return:
         """
@@ -84,10 +87,10 @@ class PartitionState:
 
     def move_to(self, x, y):
         """
+        Moves x to the partition of y
 
         :param x:
         :param y:
-        Moves x to the partition of y
         """
         if self.same_partition(x, y):
             # no action necessary
@@ -104,9 +107,9 @@ class PartitionState:
 
     def move_to_separate(self, x):
         """
+        Moves x to a fresh partition
 
         :param x:
-        Moves x to a fresh partition
         """
 
         # remove
@@ -131,6 +134,7 @@ class PartitionState:
 
     def copy(self, project=None):
         """
+        Create a shallow copy of the partition state.
 
         :param project: (iterator) if not None, only keep entries that are in project
         :return:

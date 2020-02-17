@@ -239,6 +239,7 @@ class CircuitHelper:
         Roughly corresponds to out() from paper
 
         Note: This function has side effects on expr.statement (adds a pre_statement)
+
         :param expr: [SIDE EFFECT] The expression which should be evaluated privately
         :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
         :return: Location expression which references the encrypted circuit result
@@ -251,12 +252,14 @@ class CircuitHelper:
         Evaluate an entire statement privately.
 
         This works by turning the statement into an assignment statement where the
-            - lhs is a tuple of all external locations (defined outside statement), which are modified inside the statement
-            - rhs is the return value of an inlined function call expression to a virtual function where
-              body = the statement + return statement which returns a tuple of the most recent SSA version of all modified locations
+
+        * lhs is a tuple of all external locations (defined outside statement), which are modified inside the statement
+        * rhs is the return value of an inlined function call expression to a virtual function where body = the statement + return statement \
+          which returns a tuple of the most recent SSA version of all modified locations
 
         Note: Modifying external locations which are not owned by @me inside the statement is illegal (would leak information).
         Note: At the moment, this is only used for if statements with a private condition.
+
         :param ast: the statement to evaluate inside the circuit
         :return: AssignmentStatement as described above
         """
@@ -355,7 +358,7 @@ class CircuitHelper:
         the correctly decrypted expression value in the form of a new private circuit input.
 
         If expr is an IdentifierExpr, its value will be cached
-        (i.e. when the same identifier is needed again as a circuit input, its value will be retrieved from cache rather
+        (i.e. when the same identifier is needed again as a circuit input, its value will be retrieved from cache rather \
          than adding an expensive redundant input. The cache is invalidated as soon as the identifier is overwritten in public code)
 
         Note: This function has side effects on expr.statement (adds a pre_statement)
@@ -556,6 +559,7 @@ class CircuitHelper:
     def _add_assign(self, lhs: Expression, rhs: Expression):
         """
         Simulate an assignment of rhs to lhs inside the circuit.
+
         :param lhs: destination
         :param rhs: source
         """
@@ -577,6 +581,7 @@ class CircuitHelper:
         Add evaluation of expr to the circuit and return the output HybridArgumentIdf corresponding to the evaluation result.
 
         Note: has side effects on expr.statement
+
         :param expr: [SIDE EFFECT] expression to evaluate
         :param new_privacy: result owner (determines encryption key)
         :return: HybridArgumentIdf which references the circuit output containing the result of expr
