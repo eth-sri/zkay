@@ -18,5 +18,5 @@ Subpackages
 * :py:mod:`.transaction`: Runtime API (used by the auto-generated offchain transaction simulator classes)
 * :py:mod:`.type_check`: Internal type-checking and program analysis functionality
 * :py:mod:`.utils`: Internal helper functionality
-* :py:mod:`.zkay-ast`: AST-related functionality
+* :py:mod:`.zkay_ast`: AST-related functionality
 """

@@ -1,5 +1,4 @@
-from zkay.zkay_ast.ast import AST, Expression, Statement, ConstructorOrFunctionDefinition, SourceUnit, ContractDefinition, EnumDefinition, \
-    NamespaceDefinition, Identifier, StructDefinition
+from zkay.zkay_ast.ast import AST, Expression, Statement, ConstructorOrFunctionDefinition, SourceUnit, NamespaceDefinition, Identifier
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 

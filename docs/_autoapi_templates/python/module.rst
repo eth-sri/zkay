@@ -12,6 +12,39 @@
 
    {{ obj.docstring|prepare_docstring|indent(3) }}
 
+{% block subpackages_hidden %}
+{% set visible_subpackages = obj.subpackages|selectattr("display")|list %}
+{% if visible_subpackages %}
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+   :hidden:
+
+{% for subpackage in visible_subpackages %}
+   {{ subpackage.short_name }}/index.rst
+
+{% endfor %}
+
+
+{% endif %}
+{% endblock %}
+{% block submodules_hidden %}
+{% set visible_submodules = obj.submodules|selectattr("display")|list %}
+{% if visible_submodules %}
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+{% for submodule in visible_submodules %}
+   {{ submodule.short_name }}/index.rst
+
+{% endfor %}
+
+
+{% endif %}
+{% endblock %}
+
 {% else %}
 
 {% block subpackages %}
@@ -25,6 +58,7 @@ Subpackages
 
 {% for subpackage in visible_subpackages %}
    {{ subpackage.short_name }}/index.rst
+
 {% endfor %}
 
 
@@ -41,6 +75,7 @@ Submodules
 
 {% for submodule in visible_submodules %}
    {{ submodule.short_name }}/index.rst
+
 {% endfor %}
 
 
@@ -73,6 +108,7 @@ Classes
 
 {% for klass in visible_classes %}
    {{ klass.id }}
+
 {% endfor %}
 
 
@@ -88,6 +124,7 @@ Functions
 
 {% for function in visible_functions %}
    {{ function.id }}
+
 {% endfor %}
 
 

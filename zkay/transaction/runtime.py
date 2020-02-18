@@ -1,14 +1,11 @@
 from zkay.config import cfg
-from zkay.transaction.blockchain.web3py import Web3IpcBlockchain, Web3WebsocketBlockchain, Web3HttpBlockchain, Web3CustomBlockchain, \
-    Web3HttpGanacheBlockchain
-from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
-from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
-
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
-from zkay.transaction.blockchain import Web3TesterBlockchain
+from zkay.transaction.blockchain import *
 from zkay.transaction.crypto.dummy import DummyCrypto
-from zkay.transaction.keystore import SimpleKeystore
-from zkay.transaction.prover import JsnarkProver
+from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
+from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
+from zkay.transaction.keystore import *
+from zkay.transaction.prover import *
 
 _crypto_classes = {
     'dummy': DummyCrypto,

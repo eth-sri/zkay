@@ -4,7 +4,7 @@ from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors, SolcExce
 from zkay.errors.exceptions import ZkayCompilerError, ParseExeception, PreprocessAstException, TypeCheckException
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
-from zkay.utils.progress_printer import print_step, colored_print, TermColor
+from zkay.utils.progress_printer import print_step
 from zkay.zkay_ast.analysis.alias_analysis import alias_analysis as a
 from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
 from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_compliance
@@ -16,7 +16,7 @@ from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers as link
-from zkay.zkay_ast.visitor.return_checker import check_return as r
+from zkay.zkay_ast.analysis.return_checker import check_return as r
 
 
 def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
