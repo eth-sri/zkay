@@ -95,7 +95,7 @@ class TestOffchainBase(TestScenarios):
                 with nullcontext() if exception is None else self.assertRaises(exception):
                     # Execute transaction
                     transact = getattr(users[trans_or_assert.user], trans_or_assert.name)
-                    args = [users[user].user_addr.val if user in users else user for user in trans_or_assert.args]
+                    args = [users[user].api.user_address.val if user in users else user for user in trans_or_assert.args]
                     if trans_or_assert.amount is None:
                         receipt = transact(*args)
                     else:

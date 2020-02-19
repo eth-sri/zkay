@@ -1,6 +1,6 @@
 import keyword
 from textwrap import dedent
-from typing import Union, List
+from typing import Union, List, Set
 
 from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, indent, ReturnStatement, Comment, \
     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
@@ -11,11 +11,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
     EnumDefinition, EnumTypeName, StructTypeName
 
-kwords = {kw for kw in keyword.kwlist + ['connect', 'deploy', 'help', 'me', 'self', 'cast', 'wei_amount']}
-
-
-def sanitized(name):
-    return f'{name}_' if name in kwords else name
+_kwords = {kw for kw in keyword.kwlist + ['self']}
 
 
 class PythonCodeVisitor(CodeVisitor):
@@ -30,6 +26,13 @@ class PythonCodeVisitor(CodeVisitor):
     def __init__(self, replace_with_corresponding_private=False):
         super().__init__(False)
         self.flatten_hybrid_args = replace_with_corresponding_private
+
+    def sanitized(self, name):
+        return f'{name}_' if name in self._get_forbidden_words else name
+
+    @property
+    def _get_forbidden_words(self) -> Set[str]:
+        return _kwords
 
     def visitSourceUnit(self, ast: SourceUnit):
         return self.visit_list(ast.contracts)
@@ -57,7 +60,7 @@ class PythonCodeVisitor(CodeVisitor):
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         params = self.handle_function_params(ast, ast.parameters)
         body = self.handle_function_body(ast)
-        return f'def {sanitized(ast.name)}({params}):\n{indent(body)}'
+        return f'def {self.sanitized(ast.name)}({params}):\n{indent(body)}'
 
     def visitStatementList(self, ast: StatementList):
         b = self.visit_list(ast.statements)
@@ -127,7 +130,7 @@ class PythonCodeVisitor(CodeVisitor):
             for idx, vd in enumerate(sd.members):
                 s += f"'{vd.idf.name}': {self.get_default_value(vd.annotated_type.type_name)},"
                 s += '\n' if idx % 4 == 3 else ' '
-            return f'{{\n{indent(s)}}}'
+            return f'{{\n{indent(s.rstrip())}\n}}'
         elif isinstance(t, UserDefinedTypeName):
             return '{}'
         else:
@@ -248,7 +251,7 @@ class PythonCodeVisitor(CodeVisitor):
         return f'List[{self.visit(ast.value_type)}]'
 
     def visitIdentifier(self, ast: Identifier):
-        return sanitized(ast.name)
+        return self.sanitized(ast.name)
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         if ast.had_privacy_annotation:

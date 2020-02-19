@@ -62,18 +62,18 @@ class Runtime:
         return Runtime.__blockchain
 
     @staticmethod
-    def crypto() -> ZkayCryptoInterface:
-        """Return singleton object which implements ZkayCryptoInterface."""
-        if Runtime.__crypto is None:
-            Runtime.__crypto = _crypto_classes[cfg.crypto_backend]()
-        return Runtime.__crypto
-
-    @staticmethod
     def keystore() -> ZkayKeystoreInterface:
         """Return singleton object which implements ZkayKeystoreInterface."""
         if Runtime.__keystore is None:
             Runtime.__keystore = SimpleKeystore(Runtime.blockchain())
         return Runtime.__keystore
+
+    @staticmethod
+    def crypto() -> ZkayCryptoInterface:
+        """Return singleton object which implements ZkayCryptoInterface."""
+        if Runtime.__crypto is None:
+            Runtime.__crypto = _crypto_classes[cfg.crypto_backend](Runtime.keystore())
+        return Runtime.__crypto
 
     @staticmethod
     def prover() -> ZkayProverInterface:

@@ -11,8 +11,8 @@ class DummyCrypto(ZkayCryptoInterface):
         aint = int(address, 16)
         return KeyPair(PublicKeyValue(self.serialize_bigint(aint, cfg.key_bytes)), PrivateKeyValue(aint))
 
-    def _enc(self, plain: int, pk: int) -> Tuple[List[int], List[int]]:
-        cipher = (plain + pk) % bn128_scalar_field
+    def _enc(self, plain: int, _: int, target_pk: int):
+        cipher = (plain + target_pk) % bn128_scalar_field
         return [cipher]*cfg.key_len, list(RandomnessValue()[:])
 
     def _dec(self, cipher: Tuple[int, ...], sk: int) -> Tuple[int, List[int]]:

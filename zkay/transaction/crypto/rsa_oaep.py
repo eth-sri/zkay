@@ -9,8 +9,8 @@ from zkay.transaction.crypto.rsa_base import RSACrypto, PersistentLocals
 
 
 class RSAOAEPCrypto(RSACrypto):
-    def _enc(self, plain: int, pk: int) -> Tuple[List[int], List[int]]:
-        pub_key = RSA.construct((pk, self.default_exponent))
+    def _enc(self, plain: int, _: int, target_pk: int) -> Tuple[List[int], List[int]]:
+        pub_key = RSA.construct((target_pk, self.default_exponent))
 
         encrypt = PersistentLocals(PKCS1_OAEP.new(pub_key, hashAlgo=SHA256).encrypt)
         cipher_bytes = encrypt(plain.to_bytes(32, byteorder='big'))

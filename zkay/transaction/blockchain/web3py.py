@@ -114,7 +114,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         debug_print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
-    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None):
+    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
         filename = self.__hardcode_external_contracts(os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename]),
                                                       self._pki_verifier_addresses(sender, manifest))
         cout = self.compile_contract(filename, contract)

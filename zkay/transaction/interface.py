@@ -201,7 +201,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :param wei_amount: how much money to send along with the constructor transaction (only for payable constructors)
         :raise BlockChainError: if there is an error in the backend
         :raise TransactionFailedException: if the deployment transaction failed
-        :return: backend-specific transaction receipt
+        :return: handle for the newly created contract
         """
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
@@ -378,114 +378,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
             assert should_encrypt[idx] == isinstance(arg, CipherValue)
 
 
-class ZkayCryptoInterface(metaclass=ABCMeta):
-    """API to generate cryptographic keys and perform encryption/decryption operations."""
-
-    def generate_or_load_key_pair(self, address: AddressValue) -> KeyPair:
-        """
-        Return cryptographic keys for the account with the specified address.
-
-        If the pre-existing keys are found for this address, they are loaded from the filesystem, \
-        otherwise new keys are generated.
-
-        :param address: the address for which to generate keys
-        :return: cryptographic keys for address
-        """
-        return self._generate_or_load_key_pair(address.val.hex())
-
-    def enc(self, plain: Union[int, AddressValue], pk: PublicKeyValue) -> Tuple[CipherValue, RandomnessValue]:
-        """
-        Encrypt plain with the provided public key.
-
-        :param plain: plain text to encrypt
-        :param pk: public key
-        :return: Tuple(cipher text, randomness which was used to encrypt plain)
-        """
-        if isinstance(plain, AddressValue):
-            plain = int.from_bytes(plain.val, byteorder='big')
-        assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
-        assert isinstance(pk, PublicKeyValue), f"Tried to use public key of type {type(pk).__name__}"
-        assert int(plain) < bn128_scalar_field, f"Integer overflow, plaintext is > field prime"
-        debug_print(f'Encrypting value {plain} with public key "{pk}"')
-
-        while True:
-            # Retry until cipher text is not 0
-            cipher, rnd = self._enc(int(plain), self.deserialize_bigint(pk[:]))
-            cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
-            if cipher != CipherValue():
-                break
-        return cipher, rnd
-
-    def dec(self, cipher: CipherValue, sk: PrivateKeyValue) -> Tuple[int, RandomnessValue]:
-        """
-        Decrypt cipher with the provided secret key.
-
-        :param cipher: encrypted value
-        :param sk: secret key
-        :return: Tuple(plain text, randomness which was used to encrypt plain)
-        """
-        assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
-        assert isinstance(sk, PrivateKeyValue), f"Tried to use private key of type {type(sk).__name__}"
-        debug_print(f'Decrypting value {cipher} with secret key "{sk}"')
-        if len(cipher) == 1 and isinstance(cipher[0], AddressValue):
-            cipher = CipherValue(cipher[0].val)
-            was_address = True
-        else:
-            was_address = False
-
-        if cipher == CipherValue():
-            ret = 0, RandomnessValue()
-        else:
-            plain, rnd = self._dec(cipher[:], sk.val)
-            ret = plain, RandomnessValue(rnd)
-
-        if was_address:
-            ret = AddressValue(ret[0]), ret[1]
-        return ret
-
-    @staticmethod
-    def serialize_bigint(key: int, total_bytes: int) -> List[int]:
-        """Serialize a large integer into an array of {cfg.pack_chunk_size}-byte ints."""
-        bin = key.to_bytes(total_bytes, byteorder='big')
-        return ZkayCryptoInterface.pack_byte_array(bin)
-
-    @staticmethod
-    def deserialize_bigint(arr: Collection[int]) -> int:
-        """Deserialize an array of {cfg.pack_chunk_size}-byte ints into a single large int"""
-        bin = ZkayCryptoInterface.unpack_to_byte_array(arr, 0)
-        return int.from_bytes(bin, byteorder='big')
-
-    @staticmethod
-    def pack_byte_array(bin: bytes, chunk_size=cfg.pack_chunk_size) -> List[int]:
-        """Pack byte array into an array of {chunk_size}-byte ints"""
-        total_bytes = len(bin)
-        first_chunk_size = total_bytes % chunk_size
-        arr = [] if first_chunk_size == 0 else [int.from_bytes(bin[:first_chunk_size], byteorder='big')]
-        for i in range(first_chunk_size, total_bytes - first_chunk_size, chunk_size):
-            arr.append(int.from_bytes(bin[i:i + chunk_size], byteorder='big'))
-        return list(reversed(arr))
-
-    @staticmethod
-    def unpack_to_byte_array(arr: Collection[int], desired_length: int) -> bytes:
-        """Unpack an array of {cfg.pack_chunk_size}-byte ints into a byte array"""
-        return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
-
-    # Interface implementation
-
-    @abstractmethod
-    def _generate_or_load_key_pair(self, address: str) -> KeyPair:
-        pass
-
-    @abstractmethod
-    def _enc(self, plain: int, pk: int) -> Tuple[List[int], List[int]]:
-        pass
-
-    @abstractmethod
-    def _dec(self, cipher: Tuple[int, ...], sk: Any) -> Tuple[int, List[int]]:
-        pass
-
-
-class ZkayKeystoreInterface:
+class ZkayKeystoreInterface(metaclass=ABCMeta):
     """API to add and retrieve local key pairs, and to request public keys."""
 
     def __init__(self, conn: ZkayBlockchainInterface):
@@ -517,6 +410,8 @@ class ZkayKeystoreInterface:
         Return public key for address.
 
         If the key is cached locally, returned the cached copy, otherwise request from pki contract.
+
+        NOTE: At the moment, the name of this function must match the name in the pki contract.
 
         :param address: address to which the public key belongs
         :raise BlockChainError: if key request fails
@@ -554,6 +449,112 @@ class ZkayKeystoreInterface:
         :return: public key
         """
         return self.local_key_pairs[address].pk
+
+
+class ZkayCryptoInterface(metaclass=ABCMeta):
+    """API to generate cryptographic keys and perform encryption/decryption operations."""
+
+    def __init__(self, keystore: ZkayKeystoreInterface):
+        self.keystore = keystore
+
+    def generate_or_load_key_pair(self, address: AddressValue):
+        """
+        Store cryptographic keys for the account with the specified address in the keystore.
+
+        If the pre-existing keys are found for this address, they are loaded from the filesystem, \
+        otherwise new keys are generated.
+
+        :param address: the address for which to generate keys
+        """
+        self.keystore.add_keypair(address, self._generate_or_load_key_pair(address.val.hex()))
+
+    def enc(self, plain: Union[int, AddressValue], my_addr: AddressValue, target_addr: AddressValue) -> Tuple[CipherValue, RandomnessValue]:
+        """
+        Encrypt plain for receiver with target_addr.
+
+        :param plain: plain text to encrypt
+        :param my_addr: address of the sender who encrypts
+        :param target_addr: address of the receiver for whom to encrypt
+        :return: Tuple(cipher text, randomness which was used to encrypt plain)
+        """
+        if isinstance(plain, AddressValue):
+            plain = int.from_bytes(plain.val, byteorder='big')
+        assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
+        assert isinstance(my_addr, AddressValue) and isinstance(target_addr, AddressValue)
+        assert int(plain) < bn128_scalar_field, f"Integer overflow, plaintext is >= field prime"
+        debug_print(f'Encrypting value {plain} for destination "{target_addr}"')
+
+        sk = self.keystore.sk(my_addr).val
+        pk = self.deserialize_bigint(self.keystore.getPk(target_addr)[:])
+        while True:
+            # Retry until cipher text is not 0
+            cipher, rnd = self._enc(int(plain), sk, pk)
+            cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
+            if cipher != CipherValue():
+                break
+        return cipher, rnd
+
+    def dec(self, cipher: CipherValue, my_addr: AddressValue) -> Tuple[int, RandomnessValue]:
+        """
+        Decrypt cipher encrypted for my_addr.
+
+        :param cipher: encrypted value
+        :param my_addr: cipher is encrypted for this address
+        :return: Tuple(plain text, randomness which was used to encrypt plain)
+        """
+        assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
+        assert isinstance(my_addr, AddressValue)
+        debug_print(f'Decrypting value {cipher} for {my_addr}')
+
+        if cipher == CipherValue():
+            ret = 0, RandomnessValue()
+        else:
+            sk = self.keystore.sk(my_addr)
+            plain, rnd = self._dec(cipher[:], sk.val)
+            ret = plain, RandomnessValue(rnd)
+
+        return ret
+
+    @staticmethod
+    def serialize_bigint(key: int, total_bytes: int) -> List[int]:
+        """Serialize a large integer into an array of {cfg.pack_chunk_size}-byte ints."""
+        bin = key.to_bytes(total_bytes, byteorder='big')
+        return ZkayCryptoInterface.pack_byte_array(bin)
+
+    @staticmethod
+    def deserialize_bigint(arr: Collection[int]) -> int:
+        """Deserialize an array of {cfg.pack_chunk_size}-byte ints into a single large int"""
+        bin = ZkayCryptoInterface.unpack_to_byte_array(arr, 0)
+        return int.from_bytes(bin, byteorder='big')
+
+    @staticmethod
+    def pack_byte_array(bin: bytes, chunk_size=cfg.pack_chunk_size) -> List[int]:
+        """Pack byte array into an array of {chunk_size}-byte ints"""
+        total_bytes = len(bin)
+        first_chunk_size = total_bytes % chunk_size
+        arr = [] if first_chunk_size == 0 else [int.from_bytes(bin[:first_chunk_size], byteorder='big')]
+        for i in range(first_chunk_size, total_bytes - first_chunk_size, chunk_size):
+            arr.append(int.from_bytes(bin[i:i + chunk_size], byteorder='big'))
+        return list(reversed(arr))
+
+    @staticmethod
+    def unpack_to_byte_array(arr: Collection[int], desired_length: int) -> bytes:
+        """Unpack an array of {cfg.pack_chunk_size}-byte ints into a byte array"""
+        return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
+
+    # Interface implementation
+
+    @abstractmethod
+    def _generate_or_load_key_pair(self, address: str) -> KeyPair:
+        pass
+
+    @abstractmethod
+    def _enc(self, plain: int, my_sk: int, target_pk: int):
+        pass
+
+    @abstractmethod
+    def _dec(self, cipher: Tuple[int, ...], sk: Any) -> Tuple[int, List[int]]:
+        pass
 
 
 class ZkayProverInterface(metaclass=ABCMeta):

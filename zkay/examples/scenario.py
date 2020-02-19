@@ -37,10 +37,10 @@ class StateValueAssertion(TransactionAssertion):
 
     def check_assertion(self, test: TestCase, user_terminals: Dict[str, Any]):
         # Replace user names by the corresponding address
-        indices = [user_terminals[user].user_addr if user in user_terminals else user for user in self.indices]
+        indices = [user_terminals[user].api.user_address if user in user_terminals else user for user in self.indices]
 
         user = next(iter(user_terminals.values())) if self.user is None else user_terminals[self.user]
-        actual_val = user.get_state(self.name, *indices, is_encrypted=self.should_decrypt)
+        actual_val = user.api.req_state_var(self.name, *indices, should_decrypt=self.should_decrypt)
         if self.should_decrypt and self.plain_type is not None and self.plain_type.is_signed_numeric:
             actual_val = ContractSimulator.cast(actual_val, self.plain_type.elem_bitwidth, signed=True)
         ind_str = f"[{', '.join([str(i) for i in self.indices])}]" if self.indices else ''

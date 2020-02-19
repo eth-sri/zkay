@@ -1,13 +1,16 @@
+from __future__ import annotations
+
+import functools
 import inspect
 from contextlib import contextmanager
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Dict, Union, Callable, Any, Optional, List, Tuple, Type, ContextManager
 
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.config import cfg
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
-from zkay.transaction.interface import parse_manifest
-from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct
+from zkay.transaction.interface import parse_manifest, BlockChainError
+from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value
 from zkay.transaction.runtime import Runtime
 from zkay.utils.progress_printer import colored_print, TermColor
 
@@ -17,6 +20,64 @@ _bn128_comp_scalar_field = 1 << 252
 
 class RequireException(Exception):
     pass
+
+
+class StateDict:
+    """Dictionary which wraps access to state variables"""
+
+    def __init__(self, api) -> None:
+        self.api = api
+        self.__state: Dict[str, Any] = {}
+        self.__constructors: Dict[str, Callable] = {}
+
+    def clear(self):
+        self.__state.clear()
+
+    def decl(self, name, constructor: Callable = lambda x: x):
+        """Define the wrapper constructor for a state variable."""
+        assert name not in self.__constructors
+        self.__constructors[name] = constructor
+
+    def __getitem__(self, key: Union[str, Tuple]):
+        """
+        Return value of the state variable (or index of state variable) key
+
+        :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
+        :raise KeyError: if location does not exist on the chain
+        :return: The requested value
+        """
+        if not isinstance(key, Tuple):
+            key = (key, )
+        var, indices = key[0], key[1:]
+        loc = var + ''.join(f'[{k}]' for k in key[1:])
+
+        # Retrieve from state scope
+        if loc in self.__state:
+            return self.__state[loc]
+        else:
+            constr = self.__constructors[var]
+            try:
+                val = constr(self.api.req_state_var(var, *indices, count=(cfg.cipher_len if constr == CipherValue else 0)))
+            except BlockChainError:
+                raise KeyError(key)
+            self.__state[loc] = val
+            return val
+
+    def __setitem__(self, key, value):
+        """
+        Assign value to state variable (or to index of state variable)
+
+        :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
+        :param value: Correctly wrapped value which should be assigned to the specified state location
+        """
+
+        if not isinstance(key, Tuple):
+            key = (key, )
+        var = key[0]
+        loc = var + ''.join(f'[{k}]' for k in key[1:])
+
+        # Write to state
+        self.__state[loc] = value
 
 
 class LocalsDict:
@@ -60,7 +121,6 @@ class LocalsDict:
 
         If there are multiple variables with the name key in different scopes, the variable with the lowest declaration scope is used.
         """
-
         for scope in reversed(self._scopes):
             if key in scope:
                 scope[key] = value
@@ -69,80 +129,37 @@ class LocalsDict:
 
 
 class ContractSimulator:
-    def __init__(self, project_dir: str, user_addr: AddressValue):
+    def __init__(self, project_dir: str, user_addr: AddressValue, contract_name: str):
         """
         Create new contract simulator instance.
 
         :param project_dir: Directory where the zkay contract, the manifest and the prover/verification key files are located
         :param user_addr: From address for all transactions which are issued by this ContractSimulator
         """
-
-        self.project_dir = project_dir
-        self.conn = Runtime.blockchain()
-        self.crypto = Runtime.crypto()
-        self.keystore = Runtime.keystore()
-        self.prover = Runtime.prover()
-
-        self.contract_handle = None
-        """Handle which refers to the deployed contract, this is passed to the blockchain interface when e.g. issuing transactions."""
-
-        self.user_addr = user_addr
-        """From address for all transactions which are issued by this ContractSimulator"""
+        self.api = ApiWrapper(project_dir, contract_name, user_addr)
 
         # Transaction instance values (reset between transactions)
 
-        self.locals: Optional[Dict[str, Any]] = None
+        self.locals: Optional[LocalsDict] = None
         """Hierarchical dictionary (scopes are managed internally) which holds the currently accessible local variables"""
 
-        self.current_priv_values: Dict[str, Union[int, bool, RandomnessValue]] = {}
-        """Dictionary which stores the private circuit values (secret inputs) for the current function (no transitivity)"""
-
-        self.all_priv_values: List[Union[int, bool, RandomnessValue]] = []
-        """List which stores all secret circuit inputs for the current transaction in correct order (order of use)"""
-
-        self.current_all_index: Optional[int] = None
-        """
-        Index which designates where in all_priv_values the secret circuit inputs of the current function should be inserted.
-        This is basically private analogue of the start_index parameters which are passed to functions which require verification
-        to designate where in the public IO arrays the functions should store/retrieve public circuit inputs/outputs.
-        """
-
-        self.state_values: Dict[str, Union[int, bool, CipherValue, AddressValue]] = {}
+        self.state: StateDict = StateDict(self.api)
         """
         Dict which stores stores state variable values. Empty at the beginning of a transaction.
         State variable read: 1. if not in dict -> request from chain and insert into dict, 2. return dict value
         State variable write: store in dict
         """
 
-        self.is_external: Optional[bool] = None
-        """
-        True whenever simulation is inside a function which was directly (without transitivity) called by the user.
-        This is mostly used for some checks (e.g. to prevent the user from calling internal functions), or to change
-        function behavior depending on whether a call is external or not (e.g. encrypting parameters or not)
-        """
-
-        self.current_msg: Optional[MsgStruct] = None
-        self.current_block: Optional[BlockStruct] = None
-        self.current_tx: Optional[TxStruct] = None
-        """
-        Builtin variable (msg, block, tx) values for the current transaction
-        """
-
     @property
     def address(self):
-        return self.contract_handle.address
+        return self.api.address
 
-    @staticmethod
-    def comp_overflow_checked(val: int):
-        """
-        Check whether a comparison with value 'val' can be evaluated correctly in the circuit.
-
-        :param val: the value to check
-        :raises ValueError:
-        """
-        if val >= _bn128_comp_scalar_field:
-            raise ValueError(f'Value {val} is too large for comparison, circuit would produce wrong results.')
-        return val
+    @contextmanager
+    def scope(self) -> ContextManager:
+        """Return context manager which manages the lifetime of a local scope."""
+        self.locals.push_scope()
+        yield
+        self.locals.pop_scope()
 
     @staticmethod
     def cast(val: Union[int, Enum, AddressValue], nbits: Optional[int], *, signed: bool = False, constr: Optional[Type] = None):
@@ -174,10 +191,6 @@ class ContractSimulator:
         else:
             return trunc_val
 
-    def _call(self, sec_offset, fct, *args) -> Any:
-        with self._call_ctx(sec_offset):
-            return fct(*args)
-
     @staticmethod
     def help(global_fcts, members, contract_name):
         """Display help for contract functions."""
@@ -192,47 +205,6 @@ class ContractSimulator:
                          for fname, sig in signatures
                          if sig.startswith('(self') and not fname.endswith('_check_proof') and not fname.startswith('_')]))
 
-    def get_state(self, name: str, *indices, count=0, is_encrypted=False, val_constructor: Callable[[Any], Any] = lambda x: x):
-        """
-        Return value of designated state variable, requesting it from blockchain if necessary.
-
-        If the state variable is already in the state_values dict, the cached value will be returned, otherwise
-        the value is read from the chain.
-
-        Note: If get_state is called standalone (not as part of transaction simulation),
-              it returns decrypted values when is_encrypted=True. Otherwise it returns an encrypted CipherValue.
-
-        :param name: state variable name
-        :param indices: if state variable is a (nested) mapping, all index values such that
-        :param count: if state variable is an array, this should be the array size
-                      (-> all entries will be requested and get_state returns an array)
-        :param is_encrypted: should be set to true if the state variable has owner != @all.
-        :param val_constructor: if state variable has a type which needs to be wrapped into another type (e.g. address -> AddressValue),
-                                this should be the constructor of the wrapper type
-        :return: value of the state variable
-        """
-        idxvals = ''.join([f'[{idx}]' for idx in indices])
-        loc = f'{name}{idxvals}'
-        if loc in self.state_values:
-            return self.state_values[loc]
-        else:
-            if self.is_external is None and count == 0 and is_encrypted:
-                count = cfg.cipher_len
-
-            if count == 0:
-                val = val_constructor(self.conn.req_state_var(self.contract_handle, name, *indices))
-            else:
-                val = val_constructor([self.conn.req_state_var(self.contract_handle, name, *indices, i) for i in range(count)])
-            if is_encrypted:
-                val = CipherValue(val)
-
-            if self.is_external is not None:
-                self.state_values[loc] = val
-            elif is_encrypted:
-                # Decrypt encrypted values if get state was called standalone
-                val = self.crypto.dec(val, self.keystore.sk(self.user_addr))[0]
-            return val
-
     @staticmethod
     def default_address() -> AddressValue:
         """Return default wallet address (if supported by backend, otherwise empty address is returned)."""
@@ -242,8 +214,7 @@ class ContractSimulator:
     def initialize_keys_for(address: Union[bytes, str]):
         """Generate/Load keys for the given address."""
         account = AddressValue(address)
-        key_pair = Runtime.crypto().generate_or_load_key_pair(account)
-        Runtime.keystore().add_keypair(account, key_pair)
+        Runtime.crypto().generate_or_load_key_pair(account)
 
     @staticmethod
     def use_config_from_manifest(project_dir: str):
@@ -254,8 +225,9 @@ class ContractSimulator:
         # Check if zkay version matches
         if manifest[Manifest.zkay_version] != cfg.zkay_version:
             with colored_print(TermColor.WARNING):
-                print(f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
-                      f'Compilation or integrity check with deployed bytecode might fail due to version differences')
+                print(
+                    f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
+                    f'Compilation or integrity check with deployed bytecode might fail due to version differences')
 
         cfg.override_solc(manifest[Manifest.solc_version])
         cfg.deserialize(manifest[Manifest.zkay_options])
@@ -278,7 +250,190 @@ class ContractSimulator:
             return accounts
 
     @contextmanager
-    def _call_ctx(self, sec_offset) -> ContextManager:
+    def function_ctx(self, trans_sec_size=-1, *, wei_amount: int = 0):
+        with self.api.api_function_ctx(trans_sec_size, wei_amount) as is_external:
+            if is_external:
+                assert self.locals is None
+                self.state.clear()
+
+            prev_locals = self.locals
+            self.locals = LocalsDict()
+
+            try:
+                yield is_external
+            except RequireException as e:
+                if is_external and not cfg.is_unit_test:
+                    with colored_print(TermColor.FAIL):
+                        print(f'ERROR: {e}')
+                else:
+                    raise e
+            finally:
+                self.locals = prev_locals
+                if is_external:
+                    self.state.clear()
+
+
+class ApiWrapper:
+    def __init__(self, project_dir, contract_name, user_addr) -> None:
+        super().__init__()
+        self.__conn = Runtime.blockchain()
+        self.__keystore = Runtime.keystore()
+        self.__crypto = Runtime.crypto()
+        self.__prover = Runtime.prover()
+
+        self.__project_dir = project_dir
+        self.__contract_name = contract_name
+
+        self.__contract_handle = None
+        """Handle which refers to the deployed contract, this is passed to the blockchain interface when e.g. issuing transactions."""
+
+        self.__user_addr = user_addr
+        """From address for all transactions which are issued by this ContractSimulator"""
+
+        self.__current_msg: Optional[MsgStruct] = None
+        self.__current_block: Optional[BlockStruct] = None
+        self.__current_tx: Optional[TxStruct] = None
+        """
+        Builtin variable (msg, block, tx) values for the current transaction
+        """
+
+        self.current_priv_values: Dict[str, Union[int, bool, RandomnessValue]] = {}
+        """Dictionary which stores the private circuit values (secret inputs) for the current function (no transitivity)"""
+
+        self.all_priv_values: Optional[List[Union[int, bool, RandomnessValue]]] = None
+        """List which stores all secret circuit inputs for the current transaction in correct order (order of use)"""
+
+        self.current_all_index: Optional[int] = None
+        """
+        Index which designates where in all_priv_values the secret circuit inputs of the current function should be inserted.
+        This is basically private analogue of the start_index parameters which are passed to functions which require verification
+        to designate where in the public IO arrays the functions should store/retrieve public circuit inputs/outputs.
+        """
+
+        self.is_external: Optional[bool] = None
+        """
+        True whenever simulation is inside a function which was directly (without transitivity) called by the user.
+        This is mostly used for some checks (e.g. to prevent the user from calling internal functions), or to change
+        function behavior depending on whether a call is external or not (e.g. encrypting parameters or not)
+        """
+
+    @property
+    def address(self):
+        return self.__contract_handle.address
+
+    @property
+    def user_address(self):
+        return self.__user_addr
+
+    @property
+    def keystore(self):
+        return self.__keystore
+
+    def call_fct(self, sec_offset, fct, *args) -> Any:
+        with self.__call_ctx(sec_offset):
+            return fct(*args)
+
+    @staticmethod
+    def range_checked(val: int):
+        """
+        Check whether a comparison with value 'val' can be evaluated correctly in the circuit.
+
+        :param val: the value to check
+        :raises ValueError:
+        """
+        if val >= _bn128_comp_scalar_field:
+            raise ValueError(f'Value {val} is too large for comparison, circuit would produce wrong results.')
+        return val
+
+    def deploy(self, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None):
+        self.__contract_handle = self.__conn.deploy(self.__project_dir, self.__user_addr, self.__contract_name,
+                                                    actual_args, should_encrypt, wei_amount=wei_amount)
+
+    def connect(self, address: AddressValue):
+        self.__contract_handle = self.__conn.connect(self.__project_dir, self.__contract_name, address)
+
+    def transact(self, fname: str, args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
+        return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)
+
+    def call(self, fname: str, args: List, ret_val_constructors: List[Optional[Callable]]):
+        retvals = self.__conn.call(self.__contract_handle, fname, args)
+        assert len(retvals) == len(ret_val_constructors)
+        wrapped_retvals = []
+        for retval, retval_constr in zip(retvals, ret_val_constructors):
+            wrapped_retvals.append(retval if retval_constr is None else retval_constr(retval))
+        return wrapped_retvals
+
+    def get_special_variables(self) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
+        assert self.__current_msg is not None and self.__current_block is not None and self.__current_tx is not None
+        return self.__current_msg, self.__current_block, self.__current_tx
+
+    def update_special_variables(self, wei_amount: int):
+        self.__current_msg, self.__current_block, self.__current_tx = self.__conn.get_special_variables(self.__user_addr, wei_amount)
+
+    def clear_special_variables(self):
+        self.__current_msg, self.__current_block, self.__current_tx = None, None, None
+
+    def req_state_var(self, name: str, *indices, count=0, should_decrypt=False):
+        if should_decrypt:
+            count = cfg.cipher_len
+
+        if count == 0:
+            val = self.__conn.req_state_var(self.__contract_handle, name, *indices)
+        else:
+            val = [self.__conn.req_state_var(self.__contract_handle, name, *indices, i) for i in range(count)]
+
+        if should_decrypt:
+            val = self.__crypto.dec(CipherValue(val), self.__user_addr)[0]
+        return val
+
+    def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None) -> Tuple[CipherValue, RandomnessValue]:
+        target_addr = self.__user_addr if target_addr is None else target_addr
+        return self.__crypto.enc(plain, self.__user_addr, target_addr)
+
+    def dec(self, cipher: CipherValue) -> Tuple[Union[int, AddressValue], RandomnessValue]:
+        return self.__crypto.dec(cipher, self.__user_addr)
+
+    @staticmethod
+    def __serialize_val(val: Any, bitwidth: int):
+        if isinstance(val, AddressValue):
+            val = int.from_bytes(val.val, byteorder='big')
+        elif isinstance(val, IntEnum):
+            val = val.value
+        elif isinstance(val, bool):
+            val = int(val)
+        elif isinstance(val, int):
+            if val < 0:
+                val = ContractSimulator.cast(val, bitwidth, signed=False)
+            elif bitwidth == 256:
+                val %= bn128_scalar_field
+        return val
+
+    @staticmethod
+    def __serialize_circuit_array(data: dict, target_array: List, target_out_start_idx: int, elem_bitwidths: List[int]):
+        idx = target_out_start_idx
+        for (name, val), bitwidth in zip(data.items(), elem_bitwidths):
+            if isinstance(val, (list, Value)) and not isinstance(val, AddressValue):
+                target_array[idx:idx + len(val)] = val[:]
+                idx += len(val)
+            else:
+                target_array[idx] = ApiWrapper.__serialize_val(val, bitwidth)
+                idx += 1
+
+    def serialize_circuit_outputs(self, zk_data: dict, out_elem_bitwidths: List[int]) -> List[int]:
+        out_vals = {name: val for name, val in zk_data.items() if name.startswith(cfg.zk_out_name)}
+        count = sum([len(val) if isinstance(val, (Tuple, list)) else 1 for val in out_vals.values()])
+        zk_out = [None for _ in range(count)]
+        self.__serialize_circuit_array(out_vals, zk_out, 0, out_elem_bitwidths)
+        return zk_out
+
+    def serialize_private_inputs(self, zk_priv: dict, priv_elem_bitwidths: List[int]):
+        self.__serialize_circuit_array(zk_priv, self.all_priv_values, self.current_all_index, priv_elem_bitwidths)
+
+    def gen_proof(self, fname: str, in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
+        return self.__prover.generate_proof(self.__project_dir, self.__contract_name, fname, self.all_priv_values, in_vals, out_vals)
+
+    @contextmanager
+    def __call_ctx(self, sec_offset) -> ContextManager:
         """Return context manager which sets the correct current_all_index for the given sec_offset during its lifetime."""
         old_priv_values, old_all_idx = self.current_priv_values, self.current_all_index
         self.current_priv_values = {}
@@ -287,54 +442,26 @@ class ContractSimulator:
         self.current_priv_values, self.current_all_index = old_priv_values, old_all_idx
 
     @contextmanager
-    def _scope(self) -> ContextManager:
-        """Return context manager which manages the lifetime of a local scope."""
-        self.locals.push_scope()
-        yield
-        self.locals.pop_scope()
-
-
-class FunctionCtx:
-    """
-    Context manager which manages the lifetime of transaction instance variables.
-    """
-
-    def __init__(self, v: ContractSimulator, trans_sec_size, *, wei_amount: int = 0):
-        self.v = v
-        self.was_external = None
-        self.trans_sec_size = trans_sec_size
-        self.wei_amount = wei_amount
-        self.prev_locals = None
-
-    def __enter__(self):
-        self.was_external = self.v.is_external
-        if self.v.is_external is None:
-            assert self.v.locals is None
-            self.v.is_external = True
-            self.v.state_values.clear()
-            self.v.all_priv_values = [0 for _ in range(self.trans_sec_size)]
-            self.v.current_all_index = 0
-            self.v.current_priv_values.clear()
-            self.v.current_msg, self.v.current_block, self.v.current_tx = self.v.conn.get_special_variables(self.v.user_addr, self.wei_amount)
+    def api_function_ctx(self, trans_sec_size, wei_amount) -> ContextManager:
+        was_external = self.is_external
+        if was_external is None:
+            assert self.all_priv_values is None
+            self.is_external = True
+            self.all_priv_values = [0 for _ in range(trans_sec_size)]
+            self.current_all_index = 0
+            self.current_priv_values.clear()
+            self.update_special_variables(wei_amount)
         else:
-            self.v.is_external = False
-        self.prev_locals = self.v.locals
-        self.v.locals = LocalsDict()
+            self.is_external = False
 
-    def __exit__(self, exec_type, exec_value, traceback):
-        self.v.locals = self.prev_locals
-        if self.v.is_external:
-            assert self.v.locals is None
-            self.v.state_values.clear()
-            self.v.all_priv_values = None
-            self.v.current_all_index = 0
-            self.v.current_priv_values.clear()
-            self.v.current_msg, self.v.current_block, self.v.current_tx = None, None, None
+        try:
+            yield self.is_external
+        finally:
+            if self.is_external:
+                assert was_external is None
+                self.all_priv_values = None
+                self.current_all_index = 0
+                self.current_priv_values.clear()
+                self.clear_special_variables()
 
-        self.v.is_external = self.was_external
-
-        if exec_type == RequireException:
-            if self.v.is_external is None and not cfg.is_unit_test:
-                with colored_print(TermColor.FAIL):
-                    print(f'ERROR: {exec_value}')
-                return True
+            self.is_external = was_external
