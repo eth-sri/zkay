@@ -1,6 +1,5 @@
 """
-This package contains modules with functionality related to building, traversing, transforming and outputting
-ASTs.
+The main zkay package.
 
 ==========
 Submodules

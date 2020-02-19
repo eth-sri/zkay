@@ -928,6 +928,9 @@ class TypeName(AST):
     def is_literal(self) -> bool:
         return isinstance(self, (NumberLiteralType, BooleanLiteralType))
 
+    def is_address(self) -> bool:
+        return isinstance(self, (AddressTypeName, AddressPayableTypeName))
+
     def is_primitive_type(self) -> bool:
         return isinstance(self, (ElementaryTypeName, EnumTypeName, AddressTypeName, AddressPayableTypeName))
 
@@ -1632,6 +1635,10 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         return not ('private' in self.modifiers or 'internal' in self.modifiers)
 
     @property
+    def is_external(self):
+        return 'external' in self.modifiers
+
+    @property
     def is_payable(self):
         return 'payable' in self.modifiers
 
@@ -2148,7 +2155,7 @@ class CodeVisitor(AstVisitor):
             if ast.declared_type.type_name == ast.type_name:
                 if ast.declared_type.had_privacy_annotation:
                     t = f'{t}/*@{ast.declared_type.privacy_annotation.code()}*/'
-            else:
+            elif ast.declared_type.type_name.is_primitive_type():
                 t = f'{t}/*{self.visit(ast.declared_type)}*/'
             return t
         else:
