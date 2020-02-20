@@ -12,7 +12,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
     VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration, Block, \
-    StatementList, StructDefinition
+    StatementList, StructDefinition, NumberTypeName
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -119,6 +119,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from zkay import my_logging
         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
         from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, RequireException
+        from zkay.transaction.int_casts import *
 
         me = None
 
@@ -566,24 +567,32 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         else:
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
 
+    def int_cast(self, expr: str, t: NumberTypeName) -> str:
+        assert isinstance(t, NumberTypeName)
+        if self.inside_circuit and t.elem_bitwidth == 256:
+            return f'uint({expr})'
+        elif t.is_signed_numeric:
+            return f'int{t.elem_bitwidth}({expr})'
+        else:
+            return f'uint{t.elem_bitwidth}({expr})'
+
     def handle_cast(self, expr: str, t: TypeName) -> str:
         """Return python expr which corresponds to expr converted to type t."""
 
-        if not t.is_primitive_type():
-            raise NotImplementedError()
-        signed = t.is_signed_numeric
-
-        if isinstance(t, EnumTypeName):
+        if isinstance(t, NumberTypeName):
+            return self.int_cast(expr, t)
+        elif isinstance(t, EnumTypeName):
             constr = self.visit_list(t.target.qualified_name, sep='.')
         elif isinstance(t, (AddressPayableTypeName, AddressTypeName)):
             constr = 'AddressValue'
         else:
-            constr = None
+            assert t.is_boolean
+            return f'self.cast({expr}, 1)'
 
         num_bits = t.elem_bitwidth
         if self.inside_circuit and num_bits == 256:
             num_bits = None
-        return f'self.cast({expr}, {num_bits}{f", signed={bool(signed)}" if signed else ""}{f", constr={constr}" if constr is not None else ""})'
+        return f'self.cast({expr}, {num_bits}, constr={constr})'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert not isinstance(ast.target, StateVariableDeclaration), "State member accesses not handled"

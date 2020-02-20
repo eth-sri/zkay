@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import functools
 import inspect
 from contextlib import contextmanager
 from enum import Enum, IntEnum
 from typing import Dict, Union, Callable, Any, Optional, List, Tuple, Type, ContextManager
 
+from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.config import cfg
-from zkay.compiler.privacy.library_contracts import bn128_scalar_field
+from zkay.transaction.int_casts import __convert as int_cast
 from zkay.transaction.interface import parse_manifest, BlockChainError
-from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value
 from zkay.transaction.runtime import Runtime
+from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value
 from zkay.utils.progress_printer import colored_print, TermColor
 
 bn128_scalar_field = bn128_scalar_field
@@ -172,20 +172,7 @@ class ContractSimulator:
         :param constr: value constructor for the target type (for enums and address only)
         :return: converted value
         """
-
-        # python ints are always signed, is expected to be within range of its type
-        if isinstance(val, Enum):
-            val = val.value
-        elif isinstance(val, AddressValue):
-            val = int.from_bytes(val.val, byteorder='big')
-
-        if nbits is None: # modulo field prime
-            trunc_val = val % bn128_scalar_field
-        else:
-            trunc_val = val & ((1 << nbits) - 1) # unsigned representation
-            if signed and trunc_val & (1 << (nbits - 1)):
-                trunc_val -= (1 << nbits) # signed representation
-
+        trunc_val = int_cast(val, nbits, signed)
         if constr is not None:
             return constr(trunc_val)
         else:
