@@ -23,7 +23,7 @@ class RSAOAEPCrypto(RSACrypto):
 
     def _dec(self, cipher: Tuple[int, ...], sk: RSA.RsaKey) -> Tuple[int, List[int]]:
         decrypt = PersistentLocals(PKCS1_OAEP.new(sk, hashAlgo=SHA256).decrypt)
-        plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.key_bytes)), byteorder='big')
+        plain = int.from_bytes(decrypt(self.unpack_to_byte_array(cipher, cfg.cipher_bytes_payload)), byteorder='big')
 
         rnd_bytes = decrypt.locals['seed']
         rnd = self.pack_byte_array(rnd_bytes)

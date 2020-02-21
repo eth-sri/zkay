@@ -1,6 +1,7 @@
 from zkay.config import cfg
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
 from zkay.transaction.blockchain import *
+from zkay.transaction.crypto.ecdh_aes import EcdhAesCrypto
 from zkay.transaction.crypto.dummy import DummyCrypto
 from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
@@ -10,7 +11,8 @@ from zkay.transaction.prover import *
 _crypto_classes = {
     'dummy': DummyCrypto,
     'rsa-pkcs1.5': RSAPKCS15Crypto,
-    'rsa-oaep': RSAOAEPCrypto
+    'rsa-oaep': RSAOAEPCrypto,
+    'ecdh-aes': EcdhAesCrypto
 }
 
 _prover_classes = {

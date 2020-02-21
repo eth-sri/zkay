@@ -1,5 +1,6 @@
 import os
 import sys
+from abc import ABCMeta
 
 from Crypto.PublicKey import RSA
 
@@ -39,8 +40,12 @@ class PersistentLocals(object):
         return self._locals
 
 
-class RSACrypto(ZkayCryptoInterface):
+class RSACrypto(ZkayCryptoInterface, metaclass=ABCMeta):
     default_exponent = 65537 # == 0x10001
+
+    @classmethod
+    def is_symmetric_cipher(cls) -> bool:
+        return False
 
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
         key_file = os.path.join(cfg.data_dir, 'keys', f'rsa_{cfg.key_bits}_{address}.bin')

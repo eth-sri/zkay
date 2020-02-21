@@ -115,8 +115,9 @@ class SymbolTableLinker(AstVisitor):
                     rs = find_parent_which_is_immediate_child_of(ref_stmt, ancestor)
                     if rs is not None:
                         decl = decl.parent
-                        assert isinstance(decl, VariableDeclarationStatement) and decl in ancestor.statements
-                        if ancestor.statements.index(rs) < ancestor.statements.index(decl):
+                        decl_index = ancestor.index(decl)
+                        assert isinstance(decl, VariableDeclarationStatement) and decl_index != -1
+                        if ancestor.statements.index(rs) < decl_index:
                             # identifier occurs before definition 'ancestor' -> refers to decl higher up in tree
                             ancestor = ancestor.parent
                             continue

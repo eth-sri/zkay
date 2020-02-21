@@ -15,7 +15,7 @@ from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, Ident
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
     Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, PrimitiveCastExpr, TypeName, \
     ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, TupleExpr, PrivacyLabelExpr, Parameter, \
-    VariableDeclarationStatement, StatementList
+    VariableDeclarationStatement, StatementList, CipherText
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -339,7 +339,11 @@ class ZkayTransformer(AstTransformerVisitor):
         deserialize_stmts = []
         offset = 0
         for s in circuit.output_idfs:
-            deserialize_stmts += [s.deserialize(cfg.zk_out_name, out_start_idx, offset)]
+            deserialize_stmts.append(s.deserialize(cfg.zk_out_name, out_start_idx, offset))
+            if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher():
+                # Assign sender field to user-encrypted values if necessary
+                sender = PrimitiveCastExpr(TypeName.uint_type(), IdentifierExpr('msg').dot('sender').as_type(AnnotatedTypeName.address_all()))
+                deserialize_stmts.append(s.get_loc_expr().index(cfg.cipher_payload_len).assign(sender))
             offset += s.t.size_in_uints
         if deserialize_stmts:
             stmts.append(StatementList(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), excluded_from_simulation=True))
@@ -423,9 +427,10 @@ class ZkayTransformer(AstTransformerVisitor):
         :param original_params: list of transformed function parameters without additional parameters added due to transformation
         :return: body with wrapper code
         """
+        stmts = []
 
         # Verify that out parameter has correct size
-        stmts = [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
+        stmts += [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
 
         # IdentifierExpr for array var holding serialized public circuit inputs
         in_arr_var = IdentifierExpr(cfg.zk_in_name)
@@ -436,11 +441,25 @@ class ZkayTransformer(AstTransformerVisitor):
         for p in original_params:
             """ * of T_e rule 8 """
             if p.original_type.is_private():
-                ext_circuit.ensure_parameter_encryption(p)
+                assign_stmt = in_arr_var.slice(offset, cfg.cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_payload_len))
+                ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 
                 # Manually add to circuit inputs
-                param_stmts.append(in_arr_var.slice(offset, cfg.cipher_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_len)))
-                offset += cfg.cipher_len
+                param_stmts.append(assign_stmt)
+                offset += cfg.cipher_payload_len
+
+        if cfg.is_symmetric_cipher():
+            copy_stmts = []
+            for p in original_params:
+                if p.original_type.is_private():
+                    copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], AnnotatedTypeName.cipher_type(), p.idf.clone(), 'memory'), IdentifierExpr(p.idf.clone())))
+            if copy_stmts:
+                param_stmts.append(StatementList([Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts, excluded_from_simulation=True))
+
+            # Set sender field to msg.sender for encrypted parameters
+            for p in original_params:
+                sender = PrimitiveCastExpr(TypeName.uint_type(), IdentifierExpr('msg').dot('sender').as_type(AnnotatedTypeName.address_all()))
+                param_stmts.append(IdentifierExpr(p.idf.clone()).as_type(TypeName.cipher_type()).index(cfg.cipher_payload_len).assign(sender))
 
         # Request static public keys
         key_req_stmts = []
@@ -456,6 +475,10 @@ class ZkayTransformer(AstTransformerVisitor):
                 key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
                 offset += cfg.key_len
                 assert offset == ext_circuit.in_size
+
+        # Prepend secret key argument if needed
+        if cfg.is_symmetric_cipher():
+            stmts = ext_circuit.request_private_key() + stmts
 
         # Declare in array
         new_in_array_expr = NewExpr(AnnotatedTypeName(TypeName.dyn_uint_array()), [NumberLiteralExpr(ext_circuit.in_size_trans)])

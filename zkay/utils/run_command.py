@@ -18,7 +18,7 @@ def run_command(cmd: List[str], cwd=None, debug_output_key: str = None) -> Tuple
     if cwd is not None:
         cwd = os.path.abspath(cwd)
 
-    if debug_output_key in cfg.debug_output_whitelist and not cfg.is_unit_test:
+    if debug_output_key in cfg.debug_output_whitelist:# and not cfg.is_unit_test:
         process = subprocess.Popen(cmd, cwd=cwd)
         output, error = process.communicate() # will be None
     else:

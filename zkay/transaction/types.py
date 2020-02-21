@@ -51,11 +51,13 @@ class Value(tuple):
 
 class CipherValue(Value):
     def __new__(cls, contents: Optional[Collection] = None):
-        if contents is None:
-            return super(CipherValue, cls).__new__(cls, [0] * cfg.cipher_len)
-        else:
-            assert len(contents) == cfg.cipher_len
-            return super(CipherValue, cls).__new__(cls, contents)
+        content = [0] * cfg.cipher_len
+        if contents:
+            content[:len(contents)] = contents[:]
+        return super(CipherValue, cls).__new__(cls, content)
+
+    def __len__(self) -> int:
+        return cfg.cipher_payload_len
 
 
 class PrivateKeyValue(Value):

@@ -719,10 +719,19 @@ class Statement(AST):
         self.pre_statements = []
 
 
-class CircuitComputationStatement(Statement):
+class CircuitDirectiveStatement(Statement):
+    """Invisible statement with instructions for offchain simulator"""
+    pass
+
+
+class CircuitComputationStatement(CircuitDirectiveStatement):
     def __init__(self, var: HybridArgumentIdf):
         super().__init__()
         self.idf = var.clone()
+
+
+class EnterPrivateKeyStatement(CircuitDirectiveStatement):
+    pass
 
 
 class IfStatement(Statement):
@@ -859,6 +868,22 @@ class StatementList(Statement):
     def __getitem__(self, key: int) -> Statement:
         return self.statements[key]
 
+    def index(self, statement: Statement):
+        for idx, stmt in enumerate(self.statements):
+            if stmt == statement:
+                return idx
+            elif isinstance(stmt, StatementList) and statement in stmt:
+                return idx
+        return -1
+
+    def __contains__(self, stmt: Statement):
+        if stmt in self.statements:
+            return True
+        for s in self.statements:
+            if isinstance(s, StatementList) and stmt in s:
+                return True
+        return False
+
 
 class Block(StatementList):
     def __init__(self, statements: List[Statement], was_single_statement=False):
@@ -917,6 +942,7 @@ class TypeName(AST):
 
     @property
     def size_in_uints(self):
+        """How many uints this type occupies when serialized."""
         return 1
 
     @property
@@ -1285,6 +1311,10 @@ class Array(TypeName):
 class CipherText(Array):
     def __init__(self):
         super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.cipher_len))
+
+    @property
+    def size_in_uints(self):
+        return cfg.cipher_payload_len
 
     def __eq__(self, other):
         return isinstance(other, CipherText)
@@ -2114,7 +2144,7 @@ class CodeVisitor(AstVisitor):
             rhs = self.visit(rhs)
             return fstr.format(lhs, op, rhs)
 
-    def visitCircuitComputationStatement(self, ast: CircuitComputationStatement):
+    def visitCircuitDirectiveStatement(self, ast: CircuitDirectiveStatement):
         return None
 
     def handle_block(self, ast: StatementList):

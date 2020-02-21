@@ -11,7 +11,7 @@ from zkay.config import cfg
 from zkay.transaction.int_casts import __convert as int_cast
 from zkay.transaction.interface import parse_manifest, BlockChainError
 from zkay.transaction.runtime import Runtime
-from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value
+from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, PrivateKeyValue
 from zkay.utils.progress_printer import colored_print, TermColor
 
 bn128_scalar_field = bn128_scalar_field
@@ -217,7 +217,7 @@ class ContractSimulator:
                     f'Compilation or integrity check with deployed bytecode might fail due to version differences')
 
         cfg.override_solc(manifest[Manifest.solc_version])
-        cfg.deserialize(manifest[Manifest.zkay_options])
+        cfg.import_compiler_settings(manifest[Manifest.zkay_options])
         Runtime.reset()
 
     @staticmethod
@@ -316,6 +316,9 @@ class ApiWrapper:
     def keystore(self):
         return self.__keystore
 
+    def get_my_sk(self) -> PrivateKeyValue:
+        return self.__keystore.sk(self.user_address)
+
     def call_fct(self, sec_offset, fct, *args) -> Any:
         with self.__call_ctx(sec_offset):
             return fct(*args)
@@ -370,7 +373,9 @@ class ApiWrapper:
             val = [self.__conn.req_state_var(self.__contract_handle, name, *indices, i) for i in range(count)]
 
         if should_decrypt:
-            val = self.__crypto.dec(CipherValue(val), self.__user_addr)[0]
+            val = self.__crypto.dec(CipherValue(val), self.__user_addr)
+            if not cfg.is_symmetric_cipher():
+                val = val[0]
         return val
 
     def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None) -> Tuple[CipherValue, RandomnessValue]:
@@ -407,7 +412,7 @@ class ApiWrapper:
                 idx += 1
 
     def serialize_circuit_outputs(self, zk_data: dict, out_elem_bitwidths: List[int]) -> List[int]:
-        out_vals = {name: val for name, val in zk_data.items() if name.startswith(cfg.zk_out_name)}
+        out_vals = {name: val for name, val in zk_data.items() if name.startswith(cfg.zk_out_name)} # TODO don't depend on out var names for correctness
         count = sum([len(val) if isinstance(val, (Tuple, list)) else 1 for val in out_vals.values()])
         zk_out = [None for _ in range(count)]
         self.__serialize_circuit_array(out_vals, zk_out, 0, out_elem_bitwidths)

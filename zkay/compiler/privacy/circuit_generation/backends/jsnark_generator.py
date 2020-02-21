@@ -6,7 +6,7 @@ from typing import List, Optional, Union, Tuple
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircComment, CircIndentBlock, \
-    CircGuardModification, CircCall
+    CircGuardModification, CircCall, CircSymmEncConstraint
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
@@ -56,7 +56,7 @@ class JsnarkVisitor(AstVisitor):
         return f'_{stmt.fct.name}();'
 
     def visitCircVarDecl(self, stmt: CircVarDecl):
-        assert stmt.lhs.t.size_in_uints == 1
+        assert stmt.lhs.t.size_in_uints == 1, "ERROR, circuit currently only supports operations on plain types which fit into 1 field"
         return f'decl("{stmt.lhs.name}", {self.visit(stmt.expr)});'
 
     def visitCircEqConstraint(self, stmt: CircEqConstraint):
@@ -71,6 +71,16 @@ class JsnarkVisitor(AstVisitor):
             return f'checkDec("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
         else:
             return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+
+    def visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint):
+        assert stmt.iv_cipher.t == TypeName.cipher_type()
+        assert stmt.my_sk.t == TypeName.key_type()
+        assert stmt.my_pk.t == TypeName.key_type()
+        assert stmt.other_pk.t == TypeName.key_type()
+        if stmt.is_dec:
+            return f'checkDec("{stmt.plain.name}", "{stmt.my_sk.name}", "{stmt.my_pk.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
+        else:
+            return f'checkEnc("{stmt.plain.name}", "{stmt.my_sk.name}", "{stmt.my_pk.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
 
     def visitCircGuardModification(self, stmt: CircGuardModification):
         if stmt.new_cond is None:
@@ -145,7 +155,7 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
         input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {_get_t(sec_input.t)});')
 
     for pub_input in circuit.input_idfs:
-        if pub_input.t == TypeName.key_type():
+        if pub_input.t == TypeName.key_type() and not cfg.is_symmetric_cipher():
             input_init_stmts.append(f'addK("{pub_input.name}", {pub_input.t.size_in_uints});')
         else:
             input_init_stmts.append(f'addIn("{pub_input.name}", {pub_input.t.size_in_uints}, {_get_t(pub_input.t)});')

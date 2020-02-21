@@ -1,5 +1,6 @@
 from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.ast import ReclassifyExpr, ConstructorOrFunctionDefinition, AllExpr, FunctionCallExpr, LocationExpr, BuiltinFunction
+from zkay.zkay_ast.ast import ReclassifyExpr, ConstructorOrFunctionDefinition, AllExpr, FunctionCallExpr, LocationExpr, BuiltinFunction, \
+    PrimitiveCastExpr
 from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
 
 
@@ -23,13 +24,22 @@ class DirectHybridFunctionDetectionVisitor(FunctionVisitor):
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         ast.statement.function.requires_verification = True
 
+    def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
+        if ast.expr.evaluate_privately:
+            ast.statement.function.requires_verification = True
+        else:
+            self.visitChildren(ast)
+
     def visitAllExpr(self, ast: AllExpr):
         pass
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and ast.func.is_private:
             ast.statement.function.requires_verification = True
-        self.visitChildren(ast)
+        elif ast.is_cast and ast.evaluate_privately:
+            ast.statement.function.requires_verification = True
+        else:
+            self.visitChildren(ast)
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         self.visit(ast.body)

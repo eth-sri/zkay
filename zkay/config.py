@@ -37,7 +37,7 @@ class Config:
         """Snark backend to use [jsnark]"""
 
         self.crypto_backend = 'dummy'
-        """Encryption backend to use [dummy, rsa-pkcs1.5, rsa-oaep]"""
+        """Encryption backend to use [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes]"""
 
         self.blockchain_backend = 'w3-eth-tester'
         """
@@ -145,7 +145,7 @@ class Config:
                 raise ValueError(f'Tried to override non-existing config value {arg}')
             setattr(self, arg, ast.literal_eval(val))
 
-    def serialize(self) -> dict:
+    def export_compiler_settings(self) -> dict:
         out = {}
         for k in self._options_with_effect_on_circuit_output:
             out[k] = getattr(self, k)
@@ -154,7 +154,7 @@ class Config:
                 out[k] = getattr(self, k)
         return out
 
-    def deserialize(self, vals: dict):
+    def import_compiler_settings(self, vals: dict):
         for k in vals:
             if k not in self._options_with_effect_on_circuit_output and k not in self._options_with_effect_if_not_empty:
                 raise KeyError(f'vals contains unknown option "{k}"')
@@ -183,34 +183,52 @@ class Config:
         _init_solc(new_version)
 
     @property
-    def key_bits(self):
+    def key_bits(self) -> int:
         return cryptoparams[self.crypto_backend]['key_bits']
 
     @property
-    def key_bytes(self):
+    def key_bytes(self) -> int:
         return self.key_bits // 8
 
     @property
-    def rnd_bytes(self):
+    def rnd_bytes(self) -> int:
         return cryptoparams[self.crypto_backend]['rnd_bytes']
 
     @property
-    def cipher_len(self):
+    def cipher_bytes_payload(self) -> int:
+        return cryptoparams[self.crypto_backend]['cipher_payload_bytes']
+
+    @property
+    def cipher_bytes_meta(self) -> int:
+        return cryptoparams[self.crypto_backend]['cipher_meta_bytes']
+
+    def is_symmetric_cipher(self) -> bool:
+        return cryptoparams[self.crypto_backend]['symmetric']
+
+    @property
+    def cipher_payload_len(self) -> int:
+        return int(math.ceil(self.cipher_bytes_payload / self.pack_chunk_size))
+
+    @property
+    def cipher_len(self) -> int:
+        if self.is_symmetric_cipher():
+            return self.cipher_payload_len + 1 # Additional uint to store sender address
+        else:
+            return self.cipher_payload_len
+
+    @property
+    def key_len(self) -> int:
         return int(math.ceil(self.key_bytes / self.pack_chunk_size))
 
     @property
-    def key_len(self):
-        return int(math.ceil(self.key_bytes / self.pack_chunk_size))
-
-    @property
-    def randomness_len(self):
+    def randomness_len(self) -> int:
         return int(math.ceil(self.rnd_bytes / self.pack_chunk_size))
 
     @property
-    def proof_len(self):
+    def proof_len(self) -> int:
         return provingschemeparams[self.proving_scheme]['proof_len']
 
-    def should_use_hash(self, circuit: 'CircuitHelper'):
+    def should_use_hash(self, circuit: 'CircuitHelper') -> bool:
         """
         This function determines whether input hashing is used for a particular circuit.
 
@@ -278,7 +296,7 @@ class Config:
         return f'{self.reserved_name_prefix}data'
 
     @property
-    def zk_data_var_name(self):
+    def zk_data_var_name(self) -> str:
         return f'{self.zk_struct_prefix}'
 
     @property

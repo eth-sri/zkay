@@ -24,7 +24,7 @@ class RSAPKCS15Crypto(RSACrypto):
 
     def _dec(self, cipher: Tuple[int, ...], sk: RSA.RsaKey) -> Tuple[int, List[int]]:
         decrypt = PersistentLocals(PKCS1_v1_5.new(sk).decrypt)
-        ret = decrypt(self.unpack_to_byte_array(cipher, cfg.key_bytes), None)
+        ret = decrypt(self.unpack_to_byte_array(cipher, cfg.cipher_bytes_payload), None)
         if ret is None:
             raise RuntimeError("Tried to decrypt invalid cipher text")
         plain = int.from_bytes(ret, byteorder='big')

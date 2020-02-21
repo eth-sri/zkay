@@ -12,7 +12,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Key, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
     VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration, Block, \
-    StatementList, StructDefinition, NumberTypeName
+    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -366,7 +366,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     if arg.original_type.type_name.is_signed_numeric:
                         plain_val = self.handle_cast(pname, UintTypeName(f'uint{arg.original_type.type_name.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
-                    enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)})\n'
+                    if cfg.is_symmetric_cipher():
+                        address_int = f'{self.handle_cast(api("user_address"), TypeName.uint_type())}'
+                        enc_param_str += f'{pname} = {api("enc")}({self.get_priv_value(arg.idf.name)})[:-1] + ({address_int}, )\n'
+                    else:
+                        enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)})\n'
+
             enc_param_comment_str = '\n# Encrypt parameters' if enc_param_str else ''
             enc_param_str = enc_param_str[:-1] if enc_param_str else ''
 
@@ -496,8 +501,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         assert isinstance(in_idf, HybridArgumentIdf)
         if in_idf.corresponding_priv_expression is not None:
             plain_idf_name = self.get_priv_value(in_idf.corresponding_priv_expression.idf.name)
-            in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")}' \
-                          f' = {api("dec")}({self.visit(in_idf.get_loc_expr())})'
+            if cfg.is_symmetric_cipher():
+                in_decrypt += f'\n{plain_idf_name} = {api("dec")}({self.visit(in_idf.get_loc_expr())})'
+            else:
+                in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")} = {api("dec")}({self.visit(in_idf.get_loc_expr())})'
             plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
             with self.circuit_computation(flatten_hybrid_args=False):
                 conv = self.visit(plain_idf.explicitly_converted(in_idf.corresponding_priv_expression.idf.t))
@@ -516,7 +523,11 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         out_idf = ast.idf
         out_val = out_idf.corresponding_priv_expression
         if isinstance(out_val, EncryptionExpression):
-            s = f'{self.visit(out_idf.get_loc_expr())}, {self.get_priv_value(f"{out_idf.name}_R")}'
+            cipher_loc = self.visit(out_idf.get_loc_expr())
+            if cfg.is_symmetric_cipher():
+                s = cipher_loc
+            else:
+                s = f'{cipher_loc}, {self.get_priv_value(f"{out_idf.name}_R")}'
         else:
             s = f'{self.visit(out_idf.get_loc_expr())}'
 
@@ -524,9 +535,16 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             rhs = self.visit(out_val)
         if not isinstance(out_idf.t, CipherText):
             rhs = self.handle_cast(rhs, out_idf.t)
+        elif cfg.is_symmetric_cipher():
+            address_int = f'{self.handle_cast(api("user_address"), TypeName.uint_type())}'
+            rhs += f'[:-1] + ({address_int}, )'
         s = f'{s} = {rhs}'
         out_initializations += f'{s}\n'
         return out_initializations
+
+    def visitEnterPrivateKeyStatement(self, ast: EnterPrivateKeyStatement):
+        assert self.current_circ
+        return f'{PRIV_VALUES_NAME}["{self.current_circ.get_own_secret_key_name()}"] = {api("get_my_sk")}()'
 
     def visitEncryptionExpression(self, ast: EncryptionExpression):
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())

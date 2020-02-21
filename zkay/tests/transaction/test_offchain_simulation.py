@@ -112,8 +112,11 @@ class TestOffchainDummyEnc(TestOffchainBase):
     @unittest.skipIf(False, "No reason")
     def test_offchain_simulation_dummy(self):
         old = cfg.crypto_backend
-        cfg.crypto_backend = 'dummy'
-        self.run_scenario()
+        old_sh = cfg.should_use_hash
+        cfg.crypto_backend = 'ecdh-aes'
+        cfg.should_use_hash = lambda _: True
+        self.run_scenario(use_cache=True)
+        cfg.should_use_hash = old_sh
         cfg.crypto_backend = old
 
 

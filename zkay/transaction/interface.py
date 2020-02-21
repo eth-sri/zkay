@@ -457,6 +457,11 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
     def __init__(self, keystore: ZkayKeystoreInterface):
         self.keystore = keystore
 
+    @classmethod
+    @abstractmethod
+    def is_symmetric_cipher(cls) -> bool:
+        pass
+
     def generate_or_load_key_pair(self, address: AddressValue):
         """
         Store cryptographic keys for the account with the specified address in the keystore.
@@ -468,14 +473,14 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         self.keystore.add_keypair(address, self._generate_or_load_key_pair(address.val.hex()))
 
-    def enc(self, plain: Union[int, AddressValue], my_addr: AddressValue, target_addr: AddressValue) -> Tuple[CipherValue, RandomnessValue]:
+    def enc(self, plain: Union[int, AddressValue], my_addr: AddressValue, target_addr: AddressValue) -> Union[CipherValue, Tuple[CipherValue, RandomnessValue]]:
         """
         Encrypt plain for receiver with target_addr.
 
         :param plain: plain text to encrypt
         :param my_addr: address of the sender who encrypts
         :param target_addr: address of the receiver for whom to encrypt
-        :return: Tuple(cipher text, randomness which was used to encrypt plain)
+        :return: if symmetric -> cipher text, if asymmetric Tuple(cipher text, randomness which was used to encrypt plain)
         """
         if isinstance(plain, AddressValue):
             plain = int.from_bytes(plain.val, byteorder='big')
@@ -485,22 +490,28 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         debug_print(f'Encrypting value {plain} for destination "{target_addr}"')
 
         sk = self.keystore.sk(my_addr).val
-        pk = self.deserialize_bigint(self.keystore.getPk(target_addr)[:])
+        raw_pk = self.keystore.getPk(target_addr)
+        if self.is_symmetric_cipher():
+            assert len(raw_pk) == 1
+            pk = raw_pk[0]
+        else:
+            pk = self.deserialize_bigint(raw_pk[:])
         while True:
             # Retry until cipher text is not 0
             cipher, rnd = self._enc(int(plain), sk, pk)
             cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
             if cipher != CipherValue():
                 break
-        return cipher, rnd
 
-    def dec(self, cipher: CipherValue, my_addr: AddressValue) -> Tuple[int, RandomnessValue]:
+        return cipher if self.is_symmetric_cipher() else cipher, rnd
+
+    def dec(self, cipher: CipherValue, my_addr: AddressValue) -> Union[int, Tuple[int, RandomnessValue]]:
         """
         Decrypt cipher encrypted for my_addr.
 
         :param cipher: encrypted value
         :param my_addr: cipher is encrypted for this address
-        :return: Tuple(plain text, randomness which was used to encrypt plain)
+        :return: if symmetric -> plain text, if asymmetric Tuple(plain text, randomness which was used to encrypt plain)
         """
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(my_addr, AddressValue)
@@ -513,7 +524,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
             plain, rnd = self._dec(cipher[:], sk.val)
             ret = plain, RandomnessValue(rnd)
 
-        return ret
+        return ret[0] if self.is_symmetric_cipher() else ret
 
     @staticmethod
     def serialize_bigint(key: int, total_bytes: int) -> List[int]:
@@ -549,7 +560,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _enc(self, plain: int, my_sk: int, target_pk: int):
+    def _enc(self, plain: int, my_sk: int, target_pk: int) -> Tuple[List[int], List[int]]:
         pass
 
     @abstractmethod
