@@ -104,6 +104,8 @@ class CircuitHelper:
             self.trans_priv_size = internal_circuit.priv_in_size_trans
             self.trans_in_size = internal_circuit.in_size_trans
             self.trans_out_size = internal_circuit.out_size_trans
+
+            self._need_secret_key = internal_circuit._need_secret_key
         else:
             # Set later by transform_internal_calls
             self.trans_priv_size, self.trans_in_size, self.trans_out_size = None, None, None

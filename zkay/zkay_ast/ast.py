@@ -466,6 +466,16 @@ class StringLiteralExpr(LiteralExpr):
         self.value = value
 
 
+class ArrayLiteralExpr(LiteralExpr):
+
+    def __init__(self, values: List[Expression]):
+        super().__init__()
+        self.values = values
+
+    def process_children(self, f: Callable[[AST], AST]):
+        self.values[:] = map(f, self.values)
+
+
 class TupleOrLocationExpr(Expression):
     def is_lvalue(self) -> bool:
         if isinstance(self.parent, AssignmentStatement):
@@ -868,14 +878,6 @@ class StatementList(Statement):
     def __getitem__(self, key: int) -> Statement:
         return self.statements[key]
 
-    def index(self, statement: Statement):
-        for idx, stmt in enumerate(self.statements):
-            if stmt == statement:
-                return idx
-            elif isinstance(stmt, StatementList) and statement in stmt:
-                return idx
-        return -1
-
     def __contains__(self, stmt: Statement):
         if stmt in self.statements:
             return True
@@ -1111,6 +1113,9 @@ class NumberLiteralType(NumberTypeName):
         if expected.is_numeric and not expected.is_literal:
             # Allow implicit conversion only if it fits
             return expected.can_represent(self.value)
+        elif expected.is_address() and self.elem_bitwidth == 160 and not self.signed:
+            # Address literal case (fake solidity check will catch the cases where this is too permissive)
+            return True
         return super().implicitly_convertible_to(expected)
 
     def combined_type(self, other_type: TypeName, convert_literals: bool):
@@ -2041,6 +2046,9 @@ class CodeVisitor(AstVisitor):
 
     def visitStringLiteralExpr(self, ast: StringLiteralExpr):
         return f'\'{ast.value}\''
+
+    def visitArrayLiteralExpr(self, ast: ArrayLiteralExpr):
+        return f'[{self.visit_list(ast.values, sep=", ")}]'
 
     def visitTupleExpr(self, ast: TupleExpr):
         return f'({self.visit_list(ast.elements, sep=", ")})'

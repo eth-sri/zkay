@@ -10,9 +10,11 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Key, Array, \
-    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, CircuitComputationStatement, \
-    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, VariableDeclaration, Block, \
-    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement
+    AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
+    CircuitComputationStatement, \
+    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
+    VariableDeclaration, Block, \
+    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -278,15 +280,17 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return super().visitConstructorOrFunctionDefinition(ast)
 
     def visitParameter(self, ast: Parameter):
-        if ast.original_type is None:
-            t = 'Any'
-        elif ast.original_type.is_address():
-            if ast.parent.can_be_external:
+        if ast.parent.is_external:
+            if ast.original_type is None:
+                t = 'Any'
+            elif ast.original_type.is_address():
                 t = 'str'
             else:
-                t = 'AddressValue'
+                t = self.visit(ast.original_type.type_name)
+        elif ast.annotated_type is None:
+            t = 'Any'
         else:
-            t = self.visit(ast.original_type.type_name)
+            t = self.visit(ast.annotated_type.type_name)
         return f'{self.visit(ast.idf)}: {t}'
 
     def handle_function_params(self, ast: ConstructorOrFunctionDefinition, params: List[Parameter]):
@@ -368,7 +372,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
                     if cfg.is_symmetric_cipher():
                         address_int = f'{self.handle_cast(api("user_address"), TypeName.uint_type())}'
-                        enc_param_str += f'{pname} = {api("enc")}({self.get_priv_value(arg.idf.name)})[:-1] + ({address_int}, )\n'
+                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[:-1] + ({address_int}, ))\n'
                     else:
                         enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)})\n'
 
@@ -538,6 +542,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         elif cfg.is_symmetric_cipher():
             address_int = f'{self.handle_cast(api("user_address"), TypeName.uint_type())}'
             rhs += f'[:-1] + ({address_int}, )'
+            rhs = f'CipherValue({rhs})'
         s = f'{s} = {rhs}'
         out_initializations += f'{s}\n'
         return out_initializations
@@ -580,8 +585,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
         if ast.is_implicit and not self.inside_circuit:
-            # Implicit casts in public code can be ignored, since they have to effect on the value
-            return self.visit(ast.expr)
+            e = self.visit(ast.expr)
+            if isinstance(ast.expr, NumberLiteralExpr) and ast.annotated_type.is_address():
+                # Special case when implicitly casting address literal to address
+                return f'AddressValue({e})'
+            else:
+                # Implicit casts in public code can be ignored, since they have to effect on the value
+                return e
         else:
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
 
@@ -687,6 +697,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             s = ast.variable_declaration.idf.name
             e = self.handle_var_decl_expr(ast)
             return f'self.locals.decl("{s}", {e})'
+
+    def handle_var_decl_expr(self, ast: VariableDeclarationStatement) -> str:
+        ret = super().handle_var_decl_expr(ast)
+        if TypeName.cipher_type() == ast.variable_declaration.annotated_type.type_name and isinstance(ast.expr, ArrayLiteralExpr):
+            ret = f'CipherValue({ret})'
+        return ret
 
     # Types with special wrapper classes
 

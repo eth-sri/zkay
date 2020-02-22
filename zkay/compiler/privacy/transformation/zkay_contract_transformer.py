@@ -11,11 +11,13 @@ from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.transformation.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
     ZkayStatementTransformer
 from zkay.config import cfg
-from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, AnnotatedTypeName, \
+from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, IdentifierExpr, VariableDeclaration, \
+    AnnotatedTypeName, \
     StateVariableDeclaration, Identifier, ExpressionStatement, SourceUnit, ReturnStatement, AST, \
     Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, PrimitiveCastExpr, TypeName, \
-    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, TupleExpr, PrivacyLabelExpr, Parameter, \
-    VariableDeclarationStatement, StatementList, CipherText
+    ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, TupleExpr, PrivacyLabelExpr, \
+    Parameter, \
+    VariableDeclarationStatement, StatementList, CipherText, ArrayLiteralExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -452,14 +454,14 @@ class ZkayTransformer(AstTransformerVisitor):
             copy_stmts = []
             for p in original_params:
                 if p.original_type.is_private():
-                    copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], AnnotatedTypeName.cipher_type(), p.idf.clone(), 'memory'), IdentifierExpr(p.idf.clone())))
+                    # Set sender field to msg.sender for encrypted parameters
+                    sender = PrimitiveCastExpr(TypeName.uint_type(), IdentifierExpr('msg').dot('sender').as_type(
+                        AnnotatedTypeName.address_all()))
+                    idf = IdentifierExpr(p.idf.clone())
+                    lit = ArrayLiteralExpr([idf.clone().as_type(TypeName.cipher_type()).index(i) for i in range(cfg.cipher_payload_len)] + [sender])
+                    copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], AnnotatedTypeName.cipher_type(), p.idf.clone(), 'memory'), lit))
             if copy_stmts:
-                param_stmts.append(StatementList([Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts, excluded_from_simulation=True))
-
-            # Set sender field to msg.sender for encrypted parameters
-            for p in original_params:
-                sender = PrimitiveCastExpr(TypeName.uint_type(), IdentifierExpr('msg').dot('sender').as_type(AnnotatedTypeName.address_all()))
-                param_stmts.append(IdentifierExpr(p.idf.clone()).as_type(TypeName.cipher_type()).index(cfg.cipher_payload_len).assign(sender))
+                param_stmts += [Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts
 
         # Request static public keys
         key_req_stmts = []

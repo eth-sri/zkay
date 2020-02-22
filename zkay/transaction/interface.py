@@ -503,7 +503,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
             if cipher != CipherValue():
                 break
 
-        return cipher if self.is_symmetric_cipher() else cipher, rnd
+        return cipher if self.is_symmetric_cipher() else (cipher, rnd)
 
     def dec(self, cipher: CipherValue, my_addr: AddressValue) -> Union[int, Tuple[int, RandomnessValue]]:
         """

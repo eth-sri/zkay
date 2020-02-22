@@ -378,11 +378,11 @@ class ApiWrapper:
                 val = val[0]
         return val
 
-    def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None) -> Tuple[CipherValue, RandomnessValue]:
+    def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None) -> Union[CipherValue, Tuple[CipherValue, RandomnessValue]]:
         target_addr = self.__user_addr if target_addr is None else target_addr
         return self.__crypto.enc(plain, self.__user_addr, target_addr)
 
-    def dec(self, cipher: CipherValue) -> Tuple[Union[int, AddressValue], RandomnessValue]:
+    def dec(self, cipher: CipherValue) -> Union[int, Tuple[int, RandomnessValue]]:
         return self.__crypto.dec(cipher, self.__user_addr)
 
     @staticmethod
@@ -405,7 +405,7 @@ class ApiWrapper:
         idx = target_out_start_idx
         for (name, val), bitwidth in zip(data.items(), elem_bitwidths):
             if isinstance(val, (list, Value)) and not isinstance(val, AddressValue):
-                target_array[idx:idx + len(val)] = val[:]
+                target_array[idx:idx + len(val)] = val[:cfg.cipher_payload_len] if isinstance(val, CipherValue) else val[:]
                 idx += len(val)
             else:
                 target_array[idx] = ApiWrapper.__serialize_val(val, bitwidth)

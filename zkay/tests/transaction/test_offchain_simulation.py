@@ -112,11 +112,8 @@ class TestOffchainDummyEnc(TestOffchainBase):
     @unittest.skipIf(False, "No reason")
     def test_offchain_simulation_dummy(self):
         old = cfg.crypto_backend
-        old_sh = cfg.should_use_hash
-        cfg.crypto_backend = 'ecdh-aes'
-        cfg.should_use_hash = lambda _: True
-        self.run_scenario(use_cache=True)
-        cfg.should_use_hash = old_sh
+        cfg.crypto_backend = 'dummy'
+        self.run_scenario()
         cfg.crypto_backend = old
 
 
@@ -131,6 +128,19 @@ class TestOffchainWithHashing(TestOffchainBase):
         self.run_scenario(suffix='WithHashing')
         cfg.should_use_hash = old_sh
         cfg.crypto_backend = old
+
+
+@parameterized_class(('name', 'scenario'), enc_scenarios)
+class TestOffchainEcdhAesEnc(TestOffchainBase):
+    @unittest.skipIf(False, "No reason")
+    def test_offchain_simulation_ecdh_aes(self):
+        old = cfg.crypto_backend
+        old_sh = cfg.should_use_hash
+        cfg.crypto_backend = 'ecdh-aes'
+        cfg.should_use_hash = lambda _: True
+        self.run_scenario(suffix='EcdhAes', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
+        cfg.crypto_backend = old
+        cfg.should_use_hash = old_sh
 
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
