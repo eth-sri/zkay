@@ -316,6 +316,10 @@ class ZkayTransformer(AstTransformerVisitor):
         circuit = self.circuits[ast]
         stmts = []
 
+        if cfg.is_symmetric_cipher() and 'pure' in ast.modifiers:
+            # Symmetric trafo requires msg.sender access -> change from pure to view
+            ast.modifiers = ['view' if mod == 'pure' else mod for mod in ast.modifiers]
+
         # Add additional params
         ast.add_param(Array(AnnotatedTypeName.uint_all()), cfg.zk_in_name)
         ast.add_param(AnnotatedTypeName.uint_all(), f'{cfg.zk_in_name}_start_idx')
