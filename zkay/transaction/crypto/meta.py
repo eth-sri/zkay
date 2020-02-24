@@ -18,4 +18,9 @@ cryptoparams = {'dummy': {
     'cipher_payload_bytes': 48, # 128bit iv + 256 bit ciphertext
     'symmetric': True,
     'rnd_bytes': 0
+}, 'ecdh-chaskey': {
+    'key_bits': 253,
+    'cipher_payload_bytes': 48, # 128bit iv + 256 bit ciphertext
+    'symmetric': True,
+    'rnd_bytes': 0
 }}

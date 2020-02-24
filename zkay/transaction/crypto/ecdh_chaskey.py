@@ -1,30 +1,25 @@
-import os
 import secrets
 from typing import Tuple, List, Any
-
-from Crypto.Cipher import AES
 
 from zkay.config import cfg
 from zkay.jsnark_interface.jsnark_interface import circuit_builder_jar
 from zkay.transaction.crypto.ecdh_base import EcdhBase
-from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair
-from zkay.transaction.interface import ZkayCryptoInterface
 from zkay.transaction.types import AddressValue
 from zkay.utils.run_command import run_command
 
 
-class EcdhAesCrypto(EcdhBase):
+class EcdhChaskeyCrypto(EcdhBase):
+
     def _enc(self, plain: int, my_sk: int, target_pk: int) -> Tuple[List[int], List[int]]:
+        # Compute shared key
         key = self._ecdh_sha256(target_pk, my_sk)
         plain_bytes = plain.to_bytes(32, byteorder='big')
 
-        # Encrypt and extract iv
-        cipher = AES.new(key, AES.MODE_CBC)
-        cipher_bytes = cipher.encrypt(plain_bytes)
-        iv = cipher.iv
-
-        # Pack iv and cipher
-        iv_cipher = b''.join([iv, cipher_bytes])
+        # Call java implementation
+        iv = secrets.token_bytes(16)
+        iv_cipher, _ = run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}',
+                                    'zkay.ChaskeyLtsCbc', 'enc', key.hex(), iv.hex(), plain_bytes.hex()])
+        iv_cipher = iv + int(iv_cipher.splitlines()[-1], 16).to_bytes(32, byteorder='big')
 
         return self.pack_byte_array(iv_cipher), []
 
@@ -37,14 +32,11 @@ class EcdhAesCrypto(EcdhBase):
         # Compute shared key
         key = self._ecdh_sha256(sender_pk, my_sk)
 
-        # Unpack iv and cipher
+        # Call java implementation
         iv_cipher = self.unpack_to_byte_array(cipher, cfg.cipher_bytes_payload)
         iv, cipher_bytes = iv_cipher[:16], iv_cipher[16:]
-
-        # Decrypt
-        cipher = AES.new(key, AES.MODE_CBC, iv=iv)
-        plain_bytes = cipher.decrypt(cipher_bytes)
-
-        plain = int.from_bytes(plain_bytes, byteorder='big')
+        plain, _ = run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}',
+                                'zkay.ChaskeyLtsCbc', 'dec', key.hex(), iv.hex(), cipher_bytes.hex()])
+        plain = int(plain.splitlines()[-1], 16)
 
         return plain, []

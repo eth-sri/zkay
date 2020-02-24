@@ -37,7 +37,7 @@ class Config:
         """Snark backend to use [jsnark]"""
 
         self.crypto_backend = 'dummy'
-        """Encryption backend to use [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes]"""
+        """Encryption backend to use [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey]"""
 
         self.blockchain_backend = 'w3-eth-tester'
         """

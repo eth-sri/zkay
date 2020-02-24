@@ -131,8 +131,21 @@ class TestOffchainWithHashing(TestOffchainBase):
 
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
+class TestOffchainEcdhChaskeyEnc(TestOffchainBase):
+    @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
+    def test_offchain_simulation_ecdh_chaskey(self):
+        old = cfg.crypto_backend
+        old_sh = cfg.should_use_hash
+        cfg.crypto_backend = 'ecdh-chaskey'
+        cfg.should_use_hash = lambda _: True
+        self.run_scenario(suffix='EcdhChaskey', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
+        cfg.crypto_backend = old
+        cfg.should_use_hash = old_sh
+
+
+@parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainEcdhAesEnc(TestOffchainBase):
-    @unittest.skipIf(False, "No reason")
+    @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_ecdh_aes(self):
         old = cfg.crypto_backend
         old_sh = cfg.should_use_hash
