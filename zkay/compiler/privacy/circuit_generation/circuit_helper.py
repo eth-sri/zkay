@@ -402,6 +402,7 @@ class CircuitHelper:
 
             t_suffix = f'_{expr.idf.name}'
 
+        # Generate circuit inputs
         if privacy.is_all_expr():
             tname = f'{self._in_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
             input_idf = self._in_name_factory.add_idf(tname, expr.annotated_type.type_name)
@@ -413,17 +414,21 @@ class CircuitHelper:
             locally_decrypted_idf = self._secret_input_name_factory.add_idf(tname, expr.annotated_type.type_name)
             tname = f'{self._in_name_factory.get_new_name(TypeName.cipher_type())}{t_suffix}'
             input_idf = self._in_name_factory.add_idf(tname, TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
-            self._phi.append(CircComment(f'{locally_decrypted_idf} = dec({expr_text}) [{input_idf.name}]'))
-            self._ensure_encryption(expr.statement, locally_decrypted_idf, Expression.me_expr(), input_idf, False, True)
-
-        # Cache if possible
-        if cfg.opt_cache_circuit_inputs and isinstance(expr, IdentifierExpr):
-            assert expr.annotated_type.type_name.is_primitive_type()
-            self._remapper.remap(expr.target.idf, locally_decrypted_idf)
 
         # Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         # but also signals the offchain simulator to perform decryption if necessary
         expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
+
+        if not privacy.is_all_expr():
+            # Check if the secret plain input corresponds to the decrypted cipher value
+            self._phi.append(CircComment(f'{locally_decrypted_idf} = dec({expr_text}) [{input_idf.name}]'))
+            self._ensure_encryption(expr.statement, locally_decrypted_idf, Expression.me_expr(), input_idf, False, True)
+
+        # Cache circuit input for later reuse if possible
+        if cfg.opt_cache_circuit_inputs and isinstance(expr, IdentifierExpr):
+            assert expr.annotated_type.type_name.is_primitive_type()
+            self._remapper.remap(expr.target.idf, locally_decrypted_idf)
+
         return locally_decrypted_idf
 
     def get_remapped_idf_expr(self, idf: IdentifierExpr) -> LocationExpr:
@@ -594,7 +599,7 @@ class CircuitHelper:
         """
         Add evaluation of expr to the circuit and return the output HybridArgumentIdf corresponding to the evaluation result.
 
-        Note: has side effects on expr.statement
+        Note: has side effects on expr.statement (adds pre_statement)
 
         :param expr: [SIDE EFFECT] expression to evaluate
         :param new_privacy: result owner (determines encryption key)
@@ -655,15 +660,16 @@ class CircuitHelper:
         self.phi.append(stmt)
         return tmp_circ_var_idf
 
-    def _ensure_encryption(self, stmt: Optional[Statement], plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr,
+    def _ensure_encryption(self, stmt: Statement, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr,
                            cipher: HybridArgumentIdf, is_param: bool, is_dec: bool):
         """
         Make sure that cipher = enc(plain, getPk(new_privacy), priv_user_provided_rnd).
 
         This automatically requests necessary keys and adds a circuit input for the randomness.
 
-        :param stmt: [Optional] if new_privacy is != MeExpr(),
-                                stmt must be the statement which contains the expression which requires this encryption
+        Note: This function adds pre-statements to stmt
+
+        :param stmt [SIDE EFFECT]: the statement which contains the expression which requires this encryption
         :param plain: circuit variable referencing the plaintext value
         :param new_privacy: privacy label corresponding to the destination key address
         :param cipher: circuit variable referencing the encrypted value
@@ -703,6 +709,8 @@ class CircuitHelper:
         Otherwise the label is added to the global key set.
         The keys in that set are requested only once at the start of the external wrapper function, to improve efficiency.
 
+        Note: This function has side effects on stmt (adds a pre_statement)
+
         :return: HybridArgumentIdf which references the key
         """
         if privacy in self._static_owner_labels:
@@ -719,7 +727,26 @@ class CircuitHelper:
         stmt.pre_statements.append(get_key_stmt)
         return idf
 
-    def _request_public_key_from_sender_field(self, stmt, cipher) -> HybridArgumentIdf:
+    def _request_public_key_from_sender_field(self, stmt: Statement, cipher: HybridArgumentIdf) -> HybridArgumentIdf:
+        """
+        Ensure the circuit has access to the public key stored in cipher's sender field.
+
+        This adds code with the following semantics to stmt's pre_statements:
+
+        ::
+            if cipher[-1] != 0:
+                input_pk = PKI.getPk(cipher[-1])
+            else:
+                input_pk = 0
+
+
+        Note: This function has side effects on stmt [adds a pre-statement]
+
+        :param stmt [SIDE EFFECT]: statement in which this private expression occurs
+        :param cipher: HybridArgumentIdf which references the cipher value
+        :return: HybridArgumentIdf which references the key in cipher's sender field (or 0 if none)
+        """
+
         # sender address = cipher[-1]
         sender_addr_int = cipher.get_loc_expr(stmt).index(cfg.cipher_payload_len)
         sender_addr = PrimitiveCastExpr(TypeName.address_type(), sender_addr_int)
