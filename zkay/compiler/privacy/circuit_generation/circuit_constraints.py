@@ -166,19 +166,14 @@ class CircSymmEncConstraint(CircuitStatement):
     ECDH+Symmetric encryption constraint
 
     Verifies that:
+    iv_cipher == enc(plain, ecdh(other_pk, my_sk), iv)
 
-    1) my_pk is public key of my_sk
-    2) iv_cipher == enc(plain, ecdh(other_pk, my_sk), iv)
-
+    (circuit also verifies globally that my_pk = DeriveEcPk(my_sk))
     """
 
-    def __init__(self, plain: HybridArgumentIdf,
-                 my_sk: HybridArgumentIdf, my_pk: HybridArgumentIdf, other_pk: HybridArgumentIdf,
-                 iv_cipher: HybridArgumentIdf, is_dec: bool):
+    def __init__(self, plain: HybridArgumentIdf, other_pk: HybridArgumentIdf, iv_cipher: HybridArgumentIdf, is_dec: bool):
         super().__init__()
         self.plain = plain
-        self.my_sk = my_sk
-        self.my_pk = my_pk
         self.other_pk = other_pk
         self.iv_cipher = iv_cipher
         self.is_dec = is_dec # True if this is an inverted decryption

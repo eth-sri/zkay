@@ -356,7 +356,7 @@ class CircuitHelper:
         return idf, idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy_label_expr)]))
 
     def request_private_key(self) -> List[Statement]:
-        assert self._need_secret_key
+        assert self._need_secret_key or any(p.original_type.is_private() for p in self.fct.parameters)
         self._secret_input_name_factory.add_idf(self.get_own_secret_key_name(), TypeName.key_type())
         return [EnterPrivateKeyStatement()]
 
@@ -678,7 +678,7 @@ class CircuitHelper:
         """
         if cfg.is_symmetric_cipher():
             # Need a different set of keys for hybrid-encryption (ecdh-based) backends
-            my_sk = self._require_secret_key()
+            self._require_secret_key()
             my_pk = self._require_public_key_for_label_at(stmt, Expression.me_expr())
             if is_dec:
                 other_pk = self._get_public_key_in_sender_field(stmt, cipher)
@@ -688,8 +688,8 @@ class CircuitHelper:
                 else:
                     other_pk = self._require_public_key_for_label_at(stmt, new_privacy)
 
-                self.phi.append(CircComment(f'{cipher.name} = enc({plain.name}, ecdh({other_pk.name}, {my_sk.name}))'))
-            self._phi.append(CircSymmEncConstraint(plain, my_sk, my_pk, other_pk, cipher, is_dec))
+                self.phi.append(CircComment(f'{cipher.name} = enc({plain.name}, ecdh({other_pk.name}, my_sk))'))
+            self._phi.append(CircSymmEncConstraint(plain, other_pk, cipher, is_dec))
         else:
             rnd = self._secret_input_name_factory.add_idf(f'{plain.name if is_param else cipher.name}_R', TypeName.rnd_type())
             pk = self._require_public_key_for_label_at(stmt, new_privacy)

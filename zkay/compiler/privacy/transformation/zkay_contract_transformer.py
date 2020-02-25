@@ -433,7 +433,16 @@ class ZkayTransformer(AstTransformerVisitor):
         :param original_params: list of transformed function parameters without additional parameters added due to transformation
         :return: body with wrapper code
         """
+        has_priv_args = any([p.original_type.is_private() for p in original_params])
         stmts = []
+
+        if has_priv_args:
+            ext_circuit._require_public_key_for_label_at(None, Expression.me_expr())
+        if cfg.is_symmetric_cipher():
+            # Make sure msg.sender's key pair is available in the circuit
+            assert any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) \
+                   or has_priv_args, "requires verification => both sender keys required"
+            stmts += ext_circuit.request_private_key()
 
         # Verify that out parameter has correct size
         stmts += [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
@@ -448,11 +457,8 @@ class ZkayTransformer(AstTransformerVisitor):
                 glob_me_key_index = idx
                 break
 
-        offset = 0
-        if any([p.original_type.is_private() for p in original_params]):
-            ext_circuit._require_public_key_for_label_at(None, Expression.me_expr())
-
         # Request static public keys
+        offset = 0
         key_req_stmts = []
         if ext_circuit.requested_global_keys:
             # Ensure that me public key is stored starting at in[0]
@@ -478,7 +484,6 @@ class ZkayTransformer(AstTransformerVisitor):
             """ * of T_e rule 8 """
             if p.original_type.is_private():
                 assign_stmt = in_arr_var.slice(offset, cfg.cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_payload_len))
-                # TODO this might request new keys -> needs to happen before other key requests
                 ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 
                 # Manually add to circuit inputs
@@ -486,10 +491,10 @@ class ZkayTransformer(AstTransformerVisitor):
                 offset += cfg.cipher_payload_len
 
         if cfg.is_symmetric_cipher():
+            # Populate sender field of encrypted parameters
             copy_stmts = []
             for p in original_params:
                 if p.original_type.is_private():
-                    # Set sender field to msg.sender's key for encrypted parameters
                     sender_key = in_arr_var.index(0)
                     idf = IdentifierExpr(p.idf.clone())
                     lit = ArrayLiteralExpr([idf.clone().as_type(TypeName.cipher_type()).index(i) for i in range(cfg.cipher_payload_len)] + [sender_key])
@@ -506,10 +511,6 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(Comment())
         stmts += Comment.comment_wrap_block('Request static public keys', key_req_stmts)
         stmts += Comment.comment_wrap_block('Backup private arguments for verification', param_stmts)
-
-        # Prepend secret key argument if needed
-        if cfg.is_symmetric_cipher():
-            stmts = ext_circuit.request_private_key() + stmts
 
         # Call internal function
         args = [IdentifierExpr(param.idf.clone()) for param in original_params]

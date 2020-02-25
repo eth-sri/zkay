@@ -74,13 +74,11 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint):
         assert stmt.iv_cipher.t == TypeName.cipher_type()
-        assert stmt.my_sk.t == TypeName.key_type()
-        assert stmt.my_pk.t == TypeName.key_type()
         assert stmt.other_pk.t == TypeName.key_type()
         if stmt.is_dec:
-            return f'checkDec("{stmt.plain.name}", "{stmt.my_sk.name}", "{stmt.my_pk.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
+            return f'checkDec("{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
         else:
-            return f'checkEnc("{stmt.plain.name}", "{stmt.my_sk.name}", "{stmt.my_pk.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
+            return f'checkEnc("{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
 
     def visitCircGuardModification(self, stmt: CircGuardModification):
         if stmt.new_cond is None:
@@ -155,7 +153,7 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
         input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {_get_t(sec_input.t)});')
 
     for pub_input in circuit.input_idfs:
-        if pub_input.t == TypeName.key_type() and not cfg.is_symmetric_cipher():
+        if pub_input.t == TypeName.key_type():
             input_init_stmts.append(f'addK("{pub_input.name}", {pub_input.t.size_in_uints});')
         else:
             input_init_stmts.append(f'addIn("{pub_input.name}", {pub_input.t.size_in_uints}, {_get_t(pub_input.t)});')
