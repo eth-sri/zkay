@@ -1,4 +1,3 @@
-import ast
 import math
 from contextlib import contextmanager
 from typing import Dict, Any, Optional, Union, ContextManager
@@ -139,11 +138,11 @@ class Config:
         self.is_unit_test = False
         self.use_circuit_cache_during_testing_with_encryption = True
 
-    def override_defaults(self, overrides: Dict[str, str]):
+    def override_defaults(self, overrides: Dict[str, Any]):
         for arg, val in overrides.items():
             if not hasattr(self, arg):
                 raise ValueError(f'Tried to override non-existing config value {arg}')
-            setattr(self, arg, ast.literal_eval(val))
+            setattr(self, arg, val)
 
     def export_compiler_settings(self) -> dict:
         out = {}

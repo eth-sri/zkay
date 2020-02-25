@@ -1,17 +1,16 @@
+import ast
 import argparse
 import os
 from pathlib import Path
 
 from zkay import my_logging
 from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
-from zkay.compiler.solidity.compiler import SolcException
 from zkay.config import cfg
 from zkay.errors.exceptions import ZkayCompilerError
 from zkay.my_logging.log_context import log_context
 from zkay.utils.helpers import read_file
 from zkay.utils.progress_printer import TermColor, colored_print
-from zkay.zkay_ast.process_ast import get_processed_ast, TypeCheckException, PreprocessAstException, ParseExeception, \
-    get_parsed_ast_and_fake_code
+from zkay.zkay_ast.process_ast import get_processed_ast, get_parsed_ast_and_fake_code
 
 
 def parse_arguments():
@@ -28,7 +27,11 @@ def parse_arguments():
         dest='count',
         help="Count the number of statements in the translated program")
     parser.add_argument('input', type=str, help='The source file')
-    parser.add_argument('--config-overrides', default='', dest='overrides', help='semicolon separated list of config_val_name=config_val pairs')
+
+    # Expose config.py user options
+    for copt in vars(cfg):
+        if not copt.startswith('_'):
+            parser.add_argument(f'--{copt}', dest=copt, help='see config.py')
 
     # parse
     a = parser.parse_args()
@@ -40,17 +43,16 @@ if __name__ == '__main__':
     # parse arguments
     a = parse_arguments()
 
-    # Support for overriding any config value via command line
+    # Support for overriding any user config setting via command line
     override_dict = {}
-    if a.overrides:
-        overrides = a.overrides.split(';')
-        for o in overrides:
-            key_val = o.split('=')
-            if len(key_val) != 2:
-                raise ValueError(f'Invalid override argument {key_val}')
-            k, v = key_val
-            v = v.strip().replace('\'', '\\\'')
-            override_dict[k.strip()] = f"'{v}'"
+    for copt in vars(cfg):
+        if hasattr(a, copt) and getattr(a, copt) is not None:
+            v = getattr(a, copt).strip()
+            try:
+                val = ast.literal_eval(v) # Try to interpret type
+            except ValueError:
+                val = v # It is a string
+            override_dict[copt] = val
     cfg.override_defaults(override_dict)
 
     input_file = Path(a.input)
