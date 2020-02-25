@@ -9,7 +9,7 @@ setup(
     package_data={
         'zkay.compiler.privacy': ['bn256g2.sol'],
         'zkay.examples': ['**/*.sol', 'scenarios/*.py'],
-        'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'run_snark'],
+        'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'bcprov-jdk15on-1.64.jar', 'run_snark'],
     },
     url='',
     license='',
