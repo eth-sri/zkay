@@ -11,7 +11,8 @@ from zkay.config import cfg
 from zkay.transaction.int_casts import __convert as int_cast
 from zkay.transaction.interface import parse_manifest, BlockChainError
 from zkay.transaction.runtime import Runtime
-from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, PrivateKeyValue
+from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, PrivateKeyValue, \
+    PublicKeyValue
 from zkay.utils.progress_printer import colored_print, TermColor
 
 bn128_scalar_field = bn128_scalar_field
@@ -318,6 +319,9 @@ class ApiWrapper:
 
     def get_my_sk(self) -> PrivateKeyValue:
         return self.__keystore.sk(self.user_address)
+
+    def get_my_pk(self) -> PublicKeyValue:
+        return self.__keystore.pk(self.user_address)
 
     def call_fct(self, sec_offset, fct, *args) -> Any:
         with self.__call_ctx(sec_offset):

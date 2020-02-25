@@ -476,6 +476,10 @@ class ArrayLiteralExpr(LiteralExpr):
         self.values[:] = map(f, self.values)
 
 
+class KeyLiteralExpr(ArrayLiteralExpr):
+    pass
+
+
 class TupleOrLocationExpr(Expression):
     def is_lvalue(self) -> bool:
         if isinstance(self.parent, AssignmentStatement):

@@ -14,7 +14,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     CircuitComputationStatement, \
     VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
     VariableDeclaration, Block, \
-    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr
+    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr, KeyLiteralExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -371,8 +371,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                         plain_val = self.handle_cast(pname, UintTypeName(f'uint{arg.original_type.type_name.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
                     if cfg.is_symmetric_cipher():
-                        address_int = f'{self.handle_cast(api("user_address"), TypeName.uint_type())}'
-                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[:-1] + ({address_int}, ))\n'
+                        my_pk = f'{api("get_my_pk")}()[0]'
+                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[:-1] + ({my_pk}, ))\n'
                     else:
                         enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)})\n'
 
@@ -540,8 +540,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if not isinstance(out_idf.t, CipherText):
             rhs = self.handle_cast(rhs, out_idf.t)
         elif cfg.is_symmetric_cipher():
-            address_int = f'{self.handle_cast(api("user_address"), TypeName.uint_type())}'
-            rhs += f'[:-1] + ({address_int}, )'
+            my_pk = f'{api("get_my_pk")}()[0]'
+            rhs += f'[:-1] + ({my_pk}, )'
             rhs = f'CipherValue({rhs})'
         s = f'{s} = {rhs}'
         out_initializations += f'{s}\n'
@@ -594,6 +594,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 return e
         else:
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
+
+    def visitKeyLiteralExpr(self, ast: KeyLiteralExpr):
+        return f'PublicKeyValue({super().visitArrayLiteralExpr(ast)})'
 
     def int_cast(self, expr: str, t: NumberTypeName) -> str:
         assert isinstance(t, NumberTypeName)

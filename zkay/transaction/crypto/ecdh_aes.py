@@ -1,16 +1,9 @@
-import os
-import secrets
 from typing import Tuple, List, Any
 
 from Crypto.Cipher import AES
 
 from zkay.config import cfg
-from zkay.jsnark_interface.jsnark_interface import circuit_builder_jar
 from zkay.transaction.crypto.ecdh_base import EcdhBase
-from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair
-from zkay.transaction.interface import ZkayCryptoInterface
-from zkay.transaction.types import AddressValue
-from zkay.utils.run_command import run_command
 
 
 class EcdhAesCrypto(EcdhBase):
@@ -30,7 +23,7 @@ class EcdhAesCrypto(EcdhBase):
 
     def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, List[int]]:
         # Extract sender address from cipher metadata and request corresponding public key
-        sender_pk = self.keystore.getPk(AddressValue(cipher[-1]))[0]
+        sender_pk = cipher[-1]
         cipher = cipher[:-1]
         assert len(cipher) == cfg.cipher_payload_len
 

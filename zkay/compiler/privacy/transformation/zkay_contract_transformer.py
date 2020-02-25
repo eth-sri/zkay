@@ -17,7 +17,7 @@ from zkay.zkay_ast.ast import Expression, ConstructorOrFunctionDefinition, Ident
     Comment, NumberLiteralExpr, StructDefinition, Array, FunctionCallExpr, StructTypeName, PrimitiveCastExpr, TypeName, \
     ContractTypeName, BlankLine, Block, RequireStatement, NewExpr, ContractDefinition, TupleExpr, PrivacyLabelExpr, \
     Parameter, \
-    VariableDeclarationStatement, StatementList, CipherText, ArrayLiteralExpr
+    VariableDeclarationStatement, StatementList, CipherText, ArrayLiteralExpr, MeExpr
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
@@ -328,7 +328,7 @@ class ZkayTransformer(AstTransformerVisitor):
 
         # Verify that in/out parameters have correct size
         out_start_idx, in_start_idx = IdentifierExpr(f'{cfg.zk_out_name}_start_idx'), IdentifierExpr(f'{cfg.zk_in_name}_start_idx')
-        out_var, in_var = IdentifierExpr(cfg.zk_out_name), IdentifierExpr(cfg.zk_in_name)
+        out_var, in_var = IdentifierExpr(cfg.zk_out_name), IdentifierExpr(cfg.zk_in_name).as_type(Array(AnnotatedTypeName.uint_all()))
         stmts.append(RequireStatement(out_start_idx.binop('+', NumberLiteralExpr(circuit.out_size_trans)).binop('<=', out_var.dot('length'))))
         stmts.append(RequireStatement(in_start_idx.binop('+', NumberLiteralExpr(circuit.in_size_trans)).binop('<=', in_var.dot('length'))))
 
@@ -348,8 +348,8 @@ class ZkayTransformer(AstTransformerVisitor):
             deserialize_stmts.append(s.deserialize(cfg.zk_out_name, out_start_idx, offset))
             if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher():
                 # Assign sender field to user-encrypted values if necessary
-                sender = PrimitiveCastExpr(TypeName.uint_type(), IdentifierExpr('msg').dot('sender').as_type(AnnotatedTypeName.address_all()))
-                deserialize_stmts.append(s.get_loc_expr().index(cfg.cipher_payload_len).assign(sender))
+                sender_key = in_var.index(0)
+                deserialize_stmts.append(s.get_loc_expr().index(cfg.cipher_payload_len).assign(sender_key))
             offset += s.t.size_in_uints
         if deserialize_stmts:
             stmts.append(StatementList(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), excluded_from_simulation=True))
@@ -439,15 +439,46 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts += [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
 
         # IdentifierExpr for array var holding serialized public circuit inputs
-        in_arr_var = IdentifierExpr(cfg.zk_in_name)
+        in_arr_var = IdentifierExpr(cfg.zk_in_name).as_type(Array(AnnotatedTypeName.uint_all()))
+
+        # Find index of me's public key in requested_global_keys
+        glob_me_key_index = -1
+        for idx, e in enumerate(ext_circuit.requested_global_keys):
+            if isinstance(e, MeExpr):
+                glob_me_key_index = idx
+                break
+
+        offset = 0
+        if any([p.original_type.is_private() for p in original_params]):
+            ext_circuit._require_public_key_for_label_at(None, Expression.me_expr())
+
+        # Request static public keys
+        key_req_stmts = []
+        if ext_circuit.requested_global_keys:
+            # Ensure that me public key is stored starting at in[0]
+            keys = [key for key in ext_circuit.requested_global_keys]
+            if glob_me_key_index != -1:
+                (keys[0], keys[glob_me_key_index]) = (keys[glob_me_key_index], keys[0])
+
+            tmp_key_var = Identifier('_tmp_key')
+            key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type()))
+            for key_owner in keys:
+                idf, assignment = ext_circuit.request_public_key(key_owner, ext_circuit.get_glob_key_name(key_owner))
+                assignment.lhs = IdentifierExpr(tmp_key_var.clone())
+                key_req_stmts.append(assignment)
+
+                # Manually add to circuit inputs
+                key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
+                offset += cfg.key_len
+                assert offset == ext_circuit.in_size
 
         # Check encrypted parameters
         param_stmts = []
-        offset = 0
         for p in original_params:
             """ * of T_e rule 8 """
             if p.original_type.is_private():
                 assign_stmt = in_arr_var.slice(offset, cfg.cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_payload_len))
+                # TODO this might request new keys -> needs to happen before other key requests
                 ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 
                 # Manually add to circuit inputs
@@ -458,41 +489,27 @@ class ZkayTransformer(AstTransformerVisitor):
             copy_stmts = []
             for p in original_params:
                 if p.original_type.is_private():
-                    # Set sender field to msg.sender for encrypted parameters
-                    sender = PrimitiveCastExpr(TypeName.uint_type(), IdentifierExpr('msg').dot('sender').as_type(
-                        AnnotatedTypeName.address_all()))
+                    # Set sender field to msg.sender's key for encrypted parameters
+                    sender_key = in_arr_var.index(0)
                     idf = IdentifierExpr(p.idf.clone())
-                    lit = ArrayLiteralExpr([idf.clone().as_type(TypeName.cipher_type()).index(i) for i in range(cfg.cipher_payload_len)] + [sender])
+                    lit = ArrayLiteralExpr([idf.clone().as_type(TypeName.cipher_type()).index(i) for i in range(cfg.cipher_payload_len)] + [sender_key])
                     copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], AnnotatedTypeName.cipher_type(), p.idf.clone(), 'memory'), lit))
             if copy_stmts:
                 param_stmts += [Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts
 
-        # Request static public keys
-        key_req_stmts = []
-        if ext_circuit.requested_global_keys:
-            tmp_key_var = Identifier('_tmp_key')
-            key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type()))
-            for key_owner in ext_circuit.requested_global_keys:
-                idf, assignment = ext_circuit.request_public_key(key_owner, ext_circuit.get_glob_key_name(key_owner))
-                assignment.lhs = IdentifierExpr(tmp_key_var.clone())
-                key_req_stmts.append(assignment)
-
-                # Manually add to circuit inputs
-                key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
-                offset += cfg.key_len
-                assert offset == ext_circuit.in_size
-
-        # Prepend secret key argument if needed
-        if cfg.is_symmetric_cipher():
-            stmts = ext_circuit.request_private_key() + stmts
+            assert glob_me_key_index != -1, "Symmetric cipher but did not request me key"
 
         # Declare in array
         new_in_array_expr = NewExpr(AnnotatedTypeName(TypeName.dyn_uint_array()), [NumberLiteralExpr(ext_circuit.in_size_trans)])
         in_var_decl = in_arr_var.idf.decl_var(TypeName.dyn_uint_array(), new_in_array_expr)
         stmts.append(in_var_decl)
-
-        stmts += Comment.comment_wrap_block('Backup private arguments for verification', param_stmts)
+        stmts.append(Comment())
         stmts += Comment.comment_wrap_block('Request static public keys', key_req_stmts)
+        stmts += Comment.comment_wrap_block('Backup private arguments for verification', param_stmts)
+
+        # Prepend secret key argument if needed
+        if cfg.is_symmetric_cipher():
+            stmts = ext_circuit.request_private_key() + stmts
 
         # Call internal function
         args = [IdentifierExpr(param.idf.clone()) for param in original_params]
@@ -509,6 +526,7 @@ class ZkayTransformer(AstTransformerVisitor):
             in_call = TupleExpr([IdentifierExpr(vd.idf.clone()) for vd in int_fct.return_var_decls]).assign(internal_call)
         else:
             in_call = ExpressionStatement(internal_call)
+        stmts.append(Comment("Call internal function"))
         stmts.append(in_call)
         stmts.append(Comment())
 

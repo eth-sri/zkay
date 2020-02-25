@@ -6,7 +6,6 @@ from zkay.compiler.name_remapper import CircVarRemapper
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
     CircEqConstraint, CircComment, CircIndentBlock, CircGuardModification, CircCall, CircSymmEncConstraint
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
-from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.config import cfg
 from zkay.type_check.type_checker import TypeCheckVisitor
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
@@ -14,8 +13,9 @@ from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
     CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
     Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label, \
-    ExpressionStatement, NumberLiteralExpr, VariableDeclarationStatement, EnterPrivateKeyStatement, PrimitiveCastExpr
+    ExpressionStatement, NumberLiteralExpr, VariableDeclarationStatement, EnterPrivateKeyStatement, KeyLiteralExpr
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
+from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 
 
 class CircuitHelper:
@@ -681,7 +681,7 @@ class CircuitHelper:
             my_sk = self._require_secret_key()
             my_pk = self._require_public_key_for_label_at(stmt, Expression.me_expr())
             if is_dec:
-                other_pk = self._request_public_key_from_sender_field(stmt, cipher)
+                other_pk = self._get_public_key_in_sender_field(stmt, cipher)
             else:
                 if new_privacy == Expression.me_expr():
                     other_pk = my_pk
@@ -727,18 +727,9 @@ class CircuitHelper:
         stmt.pre_statements.append(get_key_stmt)
         return idf
 
-    def _request_public_key_from_sender_field(self, stmt: Statement, cipher: HybridArgumentIdf) -> HybridArgumentIdf:
+    def _get_public_key_in_sender_field(self, stmt: Statement, cipher: HybridArgumentIdf) -> HybridArgumentIdf:
         """
         Ensure the circuit has access to the public key stored in cipher's sender field.
-
-        This adds code with the following semantics to stmt's pre_statements:
-
-        ::
-            if cipher[-1] != 0:
-                input_pk = PKI.getPk(cipher[-1])
-            else:
-                input_pk = 0
-
 
         Note: This function has side effects on stmt [adds a pre-statement]
 
@@ -746,19 +737,8 @@ class CircuitHelper:
         :param cipher: HybridArgumentIdf which references the cipher value
         :return: HybridArgumentIdf which references the key in cipher's sender field (or 0 if none)
         """
-
-        # sender address = cipher[-1]
-        sender_addr_int = cipher.get_loc_expr(stmt).index(cfg.cipher_payload_len)
-        sender_addr = PrimitiveCastExpr(TypeName.address_type(), sender_addr_int)
-
-        # sender pk = sender address == 0 ? 0 : pki.getPk(sender address)
-        pki = IdentifierExpr(cfg.get_contract_var_name(cfg.pki_contract_name))
         name = f'{self._in_name_factory.get_new_name(TypeName.key_type())}_sender'
-        idf = self._in_name_factory.add_idf(name, TypeName.key_type())
-        sender_pk = pki.call('getPk', [sender_addr])
-
-        # If cipher[-1] != 0 -> idf = getPk() (otherwise leave at default 0)
-        assign_stmt = idf.get_loc_expr().assign(sender_pk)
-        assign_if_not_zero = IfStatement(sender_addr_int.binop('!=', NumberLiteralExpr(0)), Block([assign_stmt]), None)
-        stmt.pre_statements.append(assign_if_not_zero)
-        return idf
+        key_idf = self._in_name_factory.add_idf(name, TypeName.key_type())
+        key_expr = KeyLiteralExpr([cipher.get_loc_expr(stmt).index(cfg.cipher_payload_len)]).as_type(TypeName.key_type())
+        stmt.pre_statements.append(AssignmentStatement(key_idf.get_loc_expr(), key_expr))
+        return key_idf
