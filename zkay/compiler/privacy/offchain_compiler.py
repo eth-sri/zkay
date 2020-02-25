@@ -79,12 +79,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             'api', 'locals', 'state',
 
             # base class functions
-            'scope', 'help', 'cast', 'default_address', 'initialize_keys_for', 'use_config_from_manifest', 'create_dummy_accounts',
+            '_scope', '_function_ctx', 'cast', 'default_address', 'initialize_keys_for', 'use_config_from_manifest', 'create_dummy_accounts',
 
             # Globals
             'os, code, inspect', 'IntEnum', 'Dict', 'List', 'Tuple', 'Optional', 'Union', 'Any',
             'my_logging', 'CipherValue', 'AddressValue', 'RandomnessValue', 'PublicKeyValue',
-            'ContractSimulator', 'function_ctx', 'RequireException'
+            'ContractSimulator', 'RequireException', 'help'
         ]})
 
     def get_constructor_args_and_params(self, ast: ContractDefinition):
@@ -474,7 +474,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         ] if s)
 
         func_circ_params = f'{circuit.priv_in_size_trans}' if circuit else ''
-        return f'with self.function_ctx({func_circ_params}{", wei_amount=wei_amount" if ast.is_payable else ""}) as {IS_EXTERNAL_CALL}:\n' + indent(code)
+        return f'with self._function_ctx({func_circ_params}{", wei_amount=wei_amount" if ast.is_payable else ""}) as {IS_EXTERNAL_CALL}:\n' + indent(code)
 
     def visitStatementList(self, ast: StatementList):
         if ast.excluded_from_simulation:
@@ -485,7 +485,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def visitBlock(self, ast: Block):
         # Introduce a new virtual local scope when visiting a block
         ret = super().visitBlock(ast)
-        return f'with self.scope():\n{indent(ret)}'
+        return f'with self._scope():\n{indent(ret)}'
 
     def visitReturnStatement(self, ast: ReturnStatement):
         if not ast.function.requires_verification:

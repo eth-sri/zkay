@@ -156,7 +156,7 @@ class ContractSimulator:
         return self.api.address
 
     @contextmanager
-    def scope(self) -> ContextManager:
+    def _scope(self) -> ContextManager:
         """Return context manager which manages the lifetime of a local scope."""
         self.locals.push_scope()
         yield
@@ -182,6 +182,8 @@ class ContractSimulator:
     @staticmethod
     def help(global_fcts, members, contract_name):
         """Display help for contract functions."""
+        global_fcts = [(name, sig) for name, sig in global_fcts if not name.startswith('int') and not name.startswith('uint')]
+
         signatures = [(fname, str(inspect.signature(sig))) for fname, sig in global_fcts]
         print("Global functions:")
         print('\n'.join([f'{fname}({sig[1:]}' for fname, sig in signatures
@@ -238,7 +240,7 @@ class ContractSimulator:
             return accounts
 
     @contextmanager
-    def function_ctx(self, trans_sec_size=-1, *, wei_amount: int = 0):
+    def _function_ctx(self, trans_sec_size=-1, *, wei_amount: int = 0):
         with self.api.api_function_ctx(trans_sec_size, wei_amount) as is_external:
             if is_external:
                 assert self.locals is None
