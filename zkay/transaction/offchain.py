@@ -9,10 +9,10 @@ from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.config import cfg
 from zkay.transaction.int_casts import __convert as int_cast
-from zkay.transaction.interface import parse_manifest, BlockChainError
+from zkay.transaction.interface import BlockChainError
 from zkay.transaction.runtime import Runtime
-from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, PrivateKeyValue, \
-    PublicKeyValue
+from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, \
+    PrivateKeyValue, PublicKeyValue
 from zkay.utils.progress_printer import colored_print, TermColor
 
 bn128_scalar_field = bn128_scalar_field
@@ -209,18 +209,8 @@ class ContractSimulator:
     @staticmethod
     def use_config_from_manifest(project_dir: str):
         """Override zkay configuration with values from the manifest file in project_dir."""
-
-        manifest = parse_manifest(project_dir)
-
-        # Check if zkay version matches
-        if manifest[Manifest.zkay_version] != cfg.zkay_version:
-            with colored_print(TermColor.WARNING):
-                print(
-                    f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
-                    f'Compilation or integrity check with deployed bytecode might fail due to version differences')
-
-        cfg.override_solc(manifest[Manifest.solc_version])
-        cfg.import_compiler_settings(manifest[Manifest.zkay_options])
+        manifest = Manifest.load(project_dir)
+        Manifest.import_manifest_config(manifest)
         Runtime.reset()
 
     @staticmethod

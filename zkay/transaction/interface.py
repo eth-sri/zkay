@@ -8,7 +8,6 @@ It provides high level functions for
 * NIZK-proof generation
 """
 
-import json
 import os
 from abc import ABCMeta, abstractmethod
 from builtins import type
@@ -23,14 +22,6 @@ from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruc
     RandomnessValue, KeyPair
 from zkay.utils.progress_printer import colored_print, TermColor
 from zkay.utils.timer import time_measure
-
-
-def parse_manifest(project_dir: str) -> Dict:
-    """Returned parsed manifest json file located in project dir."""
-    with open(os.path.join(project_dir, 'manifest.json')) as f:
-        j = json.loads(f.read())
-        j[Manifest.project_dir] = project_dir
-    return j
 
 
 class IntegrityError(Exception):
@@ -205,7 +196,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
-        return self._deploy(parse_manifest(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
+        return self._deploy(Manifest.load(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
     def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
         """
@@ -245,7 +236,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :raise IntegrityError: if the integrity check fails (mismatch between local code and remote contract)
         :return: contract handle for the specified contract
         """
-        manifest = parse_manifest(project_dir)
+        manifest = Manifest.load(project_dir)
 
         # Compile zkay file to generate main and verification contracts (but don't generate new prover/verification keys and manifest)
         compile_zkay_file(os.path.join(project_dir, manifest[Manifest.zkay_contract_filename]), project_dir, import_keys=True)
@@ -604,7 +595,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
         for arg in priv_values + in_vals + out_vals:
             assert int(arg) < bn128_scalar_field, 'argument overflow'
 
-        manifest = parse_manifest(project_dir)
+        manifest = Manifest.load(project_dir)
         with time_measure(f'generate_proof_{contract}.{function}', True):
             return self._generate_proof(os.path.join(project_dir, f"{manifest[Manifest.verifier_names][f'{contract}.{function}']}_out"),
                                         priv_values, in_vals, out_vals)

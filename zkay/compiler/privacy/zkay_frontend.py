@@ -24,6 +24,7 @@ from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformation.zkay_contract_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation
 from zkay.config import cfg
+from zkay.errors.exceptions import ZkayCompilerError
 from zkay.utils.helpers import read_file, lines_of_code, without_extension
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
@@ -146,7 +147,7 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     return cg, solidity_code_output
 
 
-def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):
+def package_zkay_contract(zkay_input_filename: str, cg: CircuitGenerator):
     """Package zkay contract for distribution."""
 
     with print_step('Packaging for distribution'):
@@ -175,8 +176,21 @@ def package_zkay(zkay_input_filename: str, cg: CircuitGenerator):
         os.rename(os.path.join(cg.output_dir, f'{output_basename}.zip'), os.path.join(cg.output_dir, f'{output_basename}.zkpkg'))
 
 
-def import_pkg(filename: str):
-    pass
+def extract_zkay_package(zkpkg_filename: str, output_dir: str):
+    """
+    Unpack and compile a zkay contract.
+
+    :param zkpkg_filename: path to the packaged contract
+    :param output_dir: directory where to unpack and compile the contract
+    :raise RuntimeError: if expected content is missing from package
+    :raise ZkayCompilerError: if compilation of the unpacked contract fails
+    """
+
+    shutil.unpack_archive(zkpkg_filename, output_dir)
+    manifest = Manifest.load(output_dir)
+    zkay_filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
+    with Manifest.with_manifest_config(manifest):
+        compile_zkay_file(zkay_filename, output_dir, import_keys=True)
 
 
 def _dump_to_output(content: str, output_dir: str, filename: str, dryrun_solc=False) -> str:
