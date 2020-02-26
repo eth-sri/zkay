@@ -62,18 +62,18 @@ def parse_arguments():
     typecheck_parser = subparsers.add_parser('check', parents=[config_parser], help='Only type-check, do not compile.', formatter_class=ShowSuppressedInHelpFormatter)
     typecheck_parser.add_argument('input', help='The zkay source file', metavar='<zkay_file>')
 
-    # 'fake' parser
-    msg = 'Output fake solidity code (zkay code without privacy features and comments, ' \
-          'useful in conjunction with analysis tools designed for solidity.)'
-    fake_parser = subparsers.add_parser('fake', parents=[config_parser], help=msg, formatter_class=ShowSuppressedInHelpFormatter)
-    fake_parser.add_argument('input', help='The zkay source file', metavar='<zkay_file>')
+    # 'solify' parser
+    msg = 'Output solidity code which corresponds to zkay code with all privacy features and comments removed, ' \
+          'useful in conjunction with analysis tools which operate on solidity code.)'
+    solify_parser = subparsers.add_parser('solify', parents=[config_parser], help=msg, formatter_class=ShowSuppressedInHelpFormatter)
+    solify_parser.add_argument('input', help='The zkay source file', metavar='<zkay_file>')
 
     # 'export' parser
     export_parser = subparsers.add_parser('export', parents=[config_parser], help='Package a compiled zkay contract.', formatter_class=ShowSuppressedInHelpFormatter)
-    msg = 'Directory with the compilation output of the contract which should be packaged. Default: Current Directory'
-    export_parser.add_argument('-i', '--input', default=os.getcwd(), help=msg, metavar='<zkay_compilation_output_dir>')
     msg = 'Output filename. Default: ./contract.zkp'
     export_parser.add_argument('-o', '--output', default='contract.zkp', help=msg, metavar='<output_filename>')
+    msg = 'Directory with the compilation output of the contract which should be packaged.'
+    export_parser.add_argument('input', help=msg, metavar='<zkay_compilation_output_dir>')
 
     # 'import' parser
     import_parser = subparsers.add_parser('import', parents=[config_parser], help='Unpack a packaged zkay contract.', formatter_class=ShowSuppressedInHelpFormatter)
@@ -103,7 +103,7 @@ def main():
             override_dict[copt] = val
     cfg.override_defaults(override_dict)
 
-    if a.cmd in ['compile', 'check', 'fake']:
+    if a.cmd in ['compile', 'check', 'solify']:
         input_file = Path(a.input)
         if not input_file.exists():
             with colored_print(TermColor.FAIL):
@@ -121,7 +121,7 @@ def main():
                 with colored_print(TermColor.FAIL):
                     print(f'{e}')
                 exit(3)
-        elif a.cmd == 'fake':
+        elif a.cmd == 'solify':
             was_unit_test = cfg.is_unit_test
             cfg.is_unit_test = True  # Suppress other output
             try:
