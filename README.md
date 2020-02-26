@@ -6,50 +6,38 @@ private smart contracts.
 
 ## Warning
 
-This is a prototype implementation not intended for use in production. In
-particular, it uses "dummy" encryption `Enc(v,R,k)=v+k` by default, which is **insecure**.
+This is an initial implementation for research purposes. There could be vulnerabilities or bugs, thus it should not be used in production yet.
 
-## Install
+## Dependencies
 
-First make sure to install the Java Development Kit: `openjdk-{>=8}-jdk (on debian derivatives)` and `python >= 3.7`.
+First, install the following dependencies with your system's package manager (python >= 3.7 is also required):
 
-Then set up other prerequisites using:
+#### Debian/Ubuntu
 ```bash
-./build_deps.sh
+sudo apt-get install default-jdk-headless git build-essential cmake libgmp-dev pkg-config libssl-dev libboost-dev libboost-program-options-dev
 ```
 
-### Using PIP
-
-To build the python package:
-
+#### Arch Linux
 ```bash
+sudo pacman -S --needed jdk-openjdk cmake pkgconf openssl gmp boost
+```
+
+## End-user Installation
+If you simply want to use zkay as a tool, you can install it like this.
+```bash
+git clone <zkay-repository>
+cd zkay
 python3 setup.py sdist
+pip3 install dist/zkay-{version}.tar.gz
+
+# Note: Once zkay is published this simplifies to `pip install zkay`
 ```
 
-Variant 1: Install zkay in default package location
+## Development Setup
 ```bash
-pip3 install dist/zkay-{VERSION}.tar.gz
-```
-
-Variant 2: Install zkay in new virtual environment
-
-```bash
-# Create new venv
-python3 -m venv zkay-venv
-
-# Source venv
-source zkay-venv/bin/activate
-
-# Install zkay
-(zkay-venv) pip3 install dist/zkay-{VERSION}.tar.gz
-```
-
-From now on this readme assumes that your shell is in the python environment in which you installed zkay.
-So if you used variant 2, you have to activate the venv (once per shell) before issuing any other zkay commands or using
-`contract.py` (contract interface generated during compilation):
-```bash
-source zkay-venv/bin/activate
-(zkay-venv)  ...
+git clone <zkay-repository>
+cd zkay
+pip3 install -e .
 ```
 
 ### Using Docker
@@ -71,7 +59,7 @@ This allows you to operate on files from your host machine.
 
 To run all unit tests of zkay, run:
 ```bash
-(zkay-venv) python3 -m unittest discover --verbose zkay
+python3 -m unittest discover --verbose zkay
 ```
 
 ## Type-Check Contracts
@@ -79,24 +67,26 @@ To run all unit tests of zkay, run:
 To type-check a zkay file `test.zkay` without compiling it, run:
 
 ```bash
-(zkay-venv) python3 -m zkay --type-check test.zkay
+zkay check test.zkay
 ```
 
 ## Fake solidity transformation
 
 To output a source-location-preserving public solidity
-contract which corresponds to `test.zkay` but with all privacy features removed, run:
+contract which corresponds to `test.zkay` but with all privacy features removed (useful for running analysis tools desigend for solidity), run:
 
 ```bash
-(zkay-venv) python3 -m zkay --output-fake-solidity --output "<output_dir>" test.zkay
+zkay solify test.zkay
 ```
+
+The transformed code is printed to stdout.
 
 ## Compile Contracts
 
 To compile a zkay file `test.zkay`
 
 ```bash
-(zkay-venv) python3 -m zkay --output "<output_dir>" test.zkay
+zkay compile [-o "<output_dir>"] test.zkay
 ```
 
 This performs the following steps
@@ -105,23 +95,44 @@ This performs the following steps
 - NIZK proof circuit compilation and key generation
 - Generation of `contract.py` (interface code which does automatic transaction transformation to interact with the zkay contract)
 
-## Interact with contract
+## Package Contract For Distribution
 
-Assuming you have previously compiled a file `test.zkay` with --output "output_dir"
+To package a zkay contract for distribution, run:
 
 ```bash
-(zkay-venv) cd output_dir
-(zkay-venv) python contract.py
+zkay export [-o "<output_filename>"] "<zkay_compilation_output_directory>"
+```
+
+This will create a package, which contains the zkay code, a manifest and the snark keys.
+The recommended file extension is `*.zkp`.
+
+## Unpack Packaged Contract
+
+To unpack and compile a contract package, which was previously created using `zkay export`:
+
+```bash
+zkay import [-o "<unpack_directory>"] "<contract.zkp>"
+```
+
+
+## Interact with contract
+
+Assuming you have previously compiled a file `test.zkay` with `zkay compile -o "output_dir"` or
+have imported a file `contract.zkp` using `zkay import -o "output_dir" contract.zkp`
+
+```bash
+cd output_dir
+python3 contract.py
 >>> ...
 ```
 
 You are now in a python shell where you can issue the following commands:
 - `help()`: Get a list of all contract functions with arguments
-- `user1, user2, ..., userN = create_dummy_accounts(N)`: Get addresses of pre-funded test accounts for experimentation (only supported in eth-tester backend)
+- `user1, user2, ..., userN = create_dummy_accounts(N)`: Get addresses of pre-funded test accounts for experimentation (only supported in w3-eth-tester and w3-ganache backend)
 - `handle = deploy(*constructor_args, user: str)`: Issue a deployment transaction for the contract from the account `user` (address literal).
 - `handle = connect(contract_addr: str, user: str)`: Create a handle to interact with the deployed contract at address `contract_addr` from account `user`
 - `handle.address`: Get the address of the deployed contract corresponding to this handle
 - `handle.some_func(*args[, value: int])`: The account which created handle issues a zkay transaction which calls the zkay contract function `some_func` with the given arguments.
 Encryption, transaction transformation and proof generation happen automatically. If the function is payable, the additional argument `value` can be used to set the wei amount to be transferred.
-- `handle.get_state(name: str, *indices, is_encrypted: bool=False)`: Retrieve the current value of state variable `name[indices[0]][indices[1]][...]`.
-If the state variable is not owned by @all, you can specify is_encrypted=True to get the decrypted value.
+- `handle.api.req_state_var(name: str, *indices, count=0, should_decrypt: bool=False)`: Retrieve the current value of state variable `name[indices[0]][indices[1]][...]`.
+If the state variable is owned by you, you can specify should_decrypt=True to get the decrypted value.
