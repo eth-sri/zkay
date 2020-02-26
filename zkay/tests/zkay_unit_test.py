@@ -11,9 +11,9 @@ class ZkayTestCase(TestCase, metaclass=ABCMeta):
 
     def setUp(self) -> None:
         self.old_was_unit_test = cfg.is_unit_test
-        cfg.is_unit_test = True
+        cfg._is_unit_test = True
         super().setUp()
 
     def tearDown(self) -> None:
         super().tearDown()
-        cfg.is_unit_test = self.old_was_unit_test
+        cfg._is_unit_test = self.old_was_unit_test
