@@ -17,8 +17,10 @@ from zkay.transaction.runtime import Runtime
 # get relevant paths
 from zkay.utils.helpers import without_extension
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
-output_dir = os.path.join(script_dir, 'output')
+output_dir = os.path.join(cfg.log_dir, 'transaction_tests', 'output')
+os.makedirs(output_dir, exist_ok=True)
+with open(os.path.join(output_dir, '__init__.py'), mode='w'):
+    pass
 
 
 class TestOffchainBase(TestScenarios):

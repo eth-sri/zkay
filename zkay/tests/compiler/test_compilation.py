@@ -4,14 +4,15 @@ import shutil
 from parameterized import parameterized_class
 
 from zkay.compiler.privacy.zkay_frontend import compile_zkay
+from zkay.config import cfg
 from zkay.examples.examples import all_examples, get_code_example
 from zkay.tests.utils.test_examples import TestExamples
 
 from zkay.utils.helpers import without_extension
 
 # get relevant paths
-script_dir = os.path.dirname(os.path.realpath(__file__))
-output_dir = os.path.join(script_dir, 'output')
+output_dir = os.path.join(cfg.log_dir, 'compile_tests', 'output')
+os.makedirs(output_dir, exist_ok=True)
 
 
 #@parameterized_class(('name', 'example'), get_code_example('.sol'))
