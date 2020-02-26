@@ -5,13 +5,10 @@ import os
 from logging import addLevelName
 
 # current time
+from zkay.config import cfg
 from zkay.my_logging.log_context import full_log_context
 
 timestamp = '{:%Y-%m-%d_%H-%M-%S}'.format(datetime.datetime.now())
-
-# default logging directory
-self_dir = os.path.dirname(os.path.realpath(__file__))
-default_log_dir = os.path.join(self_dir, 'logs')
 
 
 # shutdown current logger (useful for debugging, ...)
@@ -56,7 +53,7 @@ def get_log_dir(parent_dir, label):
     return d
 
 
-def get_log_file(label='default', parent_dir=default_log_dir, filename='log', include_timestamp=True):
+def get_log_file(label='default', parent_dir=cfg.log_dir, filename='log', include_timestamp=True):
     if label is None:
         log_dir = parent_dir
     else:

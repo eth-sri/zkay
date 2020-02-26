@@ -135,6 +135,7 @@ class Config:
         ]
         self.config_dir = appdirs.user_config_dir('zkay', False, None, True)
         self.data_dir = appdirs.user_data_dir('zkay', False, None, True)
+        self.log_dir = appdirs.user_log_dir('zkay')
         self.is_unit_test = False
         self.use_circuit_cache_during_testing_with_encryption = True
 
