@@ -79,6 +79,7 @@ setup(
         'py-solc-x==0.7.2',
         'pycryptodome==3.9.6',
         'appdirs==1.4.3',
+        'argcomplete>=1,<2',
 
         'pysha3>=1.0.2,<1.1', # Console script doesn't work without this even though it is not required
     ],

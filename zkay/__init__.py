@@ -5,7 +5,9 @@ The main zkay package.
 Submodules
 ==========
 * :py:mod:`.__main__`: Zkay command line interface
-* :py:mod:`.config`: Global zkay configuration (both user-configuration as well as zkay-internal configuration)
+* :py:mod:`.config`: Global zkay configuration repository for all settings \
+                     (both user-configuration as well as zkay-internal configuration)
+* :py:mod:`.config_user`: Defines options which the user can configure.
 
 ===========
 Subpackages
