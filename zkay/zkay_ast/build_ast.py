@@ -103,6 +103,8 @@ class BuildASTVisitor(SolidityVisitor):
         name: str = ctx.name.text
         if name.startswith(cfg.reserved_name_prefix) or name.startswith(f'_{cfg.reserved_name_prefix}'):
             raise SyntaxException(f'Identifiers must not start with reserved prefix _?{cfg.reserved_name_prefix}', ctx, self.code)
+        elif name.endswith(cfg.reserved_conflict_resolution_suffix):
+            raise SyntaxException(f'Identifiers must not end with reserved suffix {cfg.reserved_name_prefix}', ctx, self.code)
         return ast.Identifier(name)
 
     def visitBlock(self, ctx: SolidityParser.BlockContext):

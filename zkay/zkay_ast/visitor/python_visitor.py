@@ -10,6 +10,7 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
     EnumDefinition, EnumTypeName, StructTypeName
+from zkay.config import cfg
 
 _kwords = {kw for kw in keyword.kwlist + ['self']}
 
@@ -28,7 +29,7 @@ class PythonCodeVisitor(CodeVisitor):
         self.flatten_hybrid_args = replace_with_corresponding_private
 
     def sanitized(self, name):
-        return f'{name}_' if name in self._get_forbidden_words else name
+        return f'{name}{cfg.reserved_conflict_resolution_suffix}' if name in self._get_forbidden_words else name
 
     @property
     def _get_forbidden_words(self) -> Set[str]:
