@@ -24,6 +24,7 @@ bn128_scalar_field_bits = bn128_scalar_field.bit_length() - 1
 
 def get_pki_contract() -> str:
     """Contract of the public key infrastructure used for asymmetric cryptography"""
+    # TODO prove private key knowledge during announcePk
     return dedent(f'''\
     pragma solidity ^0.5;
 
@@ -32,6 +33,11 @@ def get_pki_contract() -> str:
         mapping(address => bool) hasAnnounced;
 
         function announcePk(uint[{cfg.key_len}] calldata pk) external {{
+            bool all_zero = true;
+            for (uint i = 0; i < {cfg.key_len}; ++i) {{
+                all_zero = all_zero && (pk[i] == 0);
+            }}
+            require(!all_zero, "ERROR: 0 is not a valid public key.");
             pks[msg.sender] = pk;
             hasAnnounced[msg.sender] = true;
         }}
