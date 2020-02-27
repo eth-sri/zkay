@@ -97,21 +97,21 @@ This performs the following steps
 
 ## Package Contract For Distribution
 
-To package a zkay contract for distribution, run:
+To package a zkay contract, which was previsouly compiled with output directory "./zkay_out" for distribution, run:
 
 ```bash
-zkay export [-o "<output_filename>"] "<zkay_compilation_output_directory>"
+zkay export [-o "<output_filename>"] ./zkay_out
 ```
 
-This will create a package, which contains the zkay code, a manifest and the snark keys.
+This will create an archive, which contains the zkay code, a manifest and the snark keys.
 The recommended file extension is `*.zkp`.
 
 ## Unpack Packaged Contract
 
-To unpack and compile a contract package, which was previously created using `zkay export`:
+To unpack and compile a contract package `contract.zkp`, which was previously created using `zkay export`:
 
 ```bash
-zkay import [-o "<unpack_directory>"] "<contract.zkp>"
+zkay import [-o "<unpack_directory>"] contract.zkp
 ```
 
 
@@ -121,8 +121,11 @@ Assuming you have previously compiled a file `test.zkay` with `zkay compile -o "
 have imported a file `contract.zkp` using `zkay import -o "output_dir" contract.zkp`
 
 ```bash
-cd output_dir
-python3 contract.py
+zkay run output_dir
+
+# Or alternatively
+# cd output_dir
+# python3 contract.py
 >>> ...
 ```
 

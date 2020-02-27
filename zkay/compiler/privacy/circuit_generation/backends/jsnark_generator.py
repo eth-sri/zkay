@@ -223,9 +223,9 @@ class JsnarkGenerator(CircuitGenerator):
         output_dir = self._get_circuit_output_dir(circuit)
         libsnark.generate_keys(output_dir, self.proving_scheme.name)
 
-    def _get_vk_and_pk_paths(self, circuit: CircuitHelper) -> Tuple[str, str]:
-        output_dir = self._get_circuit_output_dir(circuit)
-        return os.path.join(output_dir, 'verification.key'), os.path.join(output_dir, 'proving.key')
+    @classmethod
+    def get_vk_and_pk_filenames(cls) -> Tuple[str, ...]:
+        return 'verification.key', 'proving.key'
 
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         with open(self._get_vk_and_pk_paths(circuit)[0]) as f:

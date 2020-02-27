@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import uuid
 from copy import deepcopy
-from typing import Tuple, List
+from typing import Tuple, List, Type, Dict
 
 from zkay import my_logging
 from zkay.compiler.privacy import library_contracts
@@ -29,6 +29,14 @@ from zkay.utils.helpers import read_file, lines_of_code, without_extension
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.process_ast import get_processed_ast
+
+proving_scheme_classes: Dict[str, Type[ProvingScheme]] = {
+    'gm17': ProvingSchemeGm17
+}
+
+generator_classes: Dict[str, Type[CircuitGenerator]] = {
+    'jsnark': JsnarkGenerator
+}
 
 
 def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool = False):
@@ -113,7 +121,8 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     _dump_to_output(offchain_simulation_code, output_dir, 'contract.py')
 
     # Instantiate proving scheme and circuit generator
-    ps, cg = _get_proving_scheme_and_generator(output_dir, circuits)
+    ps = proving_scheme_classes[cfg.proving_scheme]()
+    cg = generator_classes[cfg.snark_backend](circuits, ps, output_dir)
 
     # Generate manifest
     if not import_keys:
@@ -147,48 +156,56 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     return cg, solidity_code_output
 
 
-def package_zkay_contract(zkay_input_filename: str, cg: CircuitGenerator):
+def package_zkay_contract(zkay_output_dir: str, output_filename: str):
     """Package zkay contract for distribution."""
+    if not output_filename.endswith('.zkp'):
+        output_filename += '.zkp'
 
     with print_step('Packaging for distribution'):
-        # create archive with zkay code + all verification and prover keys
-        root = pathlib.Path(cg.output_dir)
-        infile = pathlib.Path(zkay_input_filename)
-        manifestfile = root.joinpath("manifest.json")
-        filenames = [pathlib.Path(p) for p in cg.get_all_key_paths()]
-        for p in filenames + [infile, manifestfile]:
-            if not p.exists():
-                raise FileNotFoundError()
+        manifest = Manifest.load(zkay_output_dir)
+        with Manifest.with_manifest_config(manifest):
+            gen_cls = generator_classes[cfg.snark_backend]
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            shutil.copyfile(infile, os.path.join(tmpdir, infile.name))
-            shutil.copyfile(manifestfile, os.path.join(tmpdir, manifestfile.name))
-            for p in filenames:
-                pdir = os.path.join(tmpdir, p.relative_to(root).parent)
-                if not os.path.exists(pdir):
-                    os.makedirs(pdir)
-                shutil.copyfile(p.absolute(), os.path.join(tmpdir, p.relative_to(root)))
+            # create archive with zkay code + all verification and prover keys
+            root = pathlib.Path(zkay_output_dir)
+            infile = pathlib.Path(os.path.join(root, manifest[Manifest.zkay_contract_filename]))
+            manifestfile = root.joinpath("manifest.json")
 
-            output_basename = infile.name.replace('.sol', '')
+            key_filenames = [root.joinpath(gen_cls.get_circuit_output_dir_name(v), k)
+                             for k in gen_cls.get_vk_and_pk_filenames()
+                             for v in manifest[Manifest.verifier_names].values()]
 
-            shutil.make_archive(os.path.join(cg.output_dir, output_basename), 'zip', tmpdir)
+            for p in key_filenames + [infile, manifestfile]:
+                if not p.exists():
+                    raise FileNotFoundError(p)
 
-        os.rename(os.path.join(cg.output_dir, f'{output_basename}.zip'), os.path.join(cg.output_dir, f'{output_basename}.zkpkg'))
+            with tempfile.TemporaryDirectory() as tmpdir:
+                shutil.copyfile(infile, os.path.join(tmpdir, infile.name))
+                shutil.copyfile(manifestfile, os.path.join(tmpdir, manifestfile.name))
+                for p in key_filenames:
+                    pdir = os.path.join(tmpdir, p.relative_to(root).parent)
+                    if not os.path.exists(pdir):
+                        os.makedirs(pdir)
+                    shutil.copyfile(p.absolute(), os.path.join(tmpdir, p.relative_to(root)))
+
+                shutil.make_archive(without_extension(output_filename), 'zip', tmpdir)
+
+            os.rename(f'{without_extension(output_filename)}.zip', output_filename)
 
 
-def extract_zkay_package(zkpkg_filename: str, output_dir: str):
+def extract_zkay_package(zkp_filename: str, output_dir: str):
     """
     Unpack and compile a zkay contract.
 
-    :param zkpkg_filename: path to the packaged contract
+    :param zkp_filename: path to the packaged contract
     :param output_dir: directory where to unpack and compile the contract
     :raise RuntimeError: if expected content is missing from package
     :raise ZkayCompilerError: if compilation of the unpacked contract fails
     """
 
-    shutil.unpack_archive(zkpkg_filename, output_dir)
+    shutil.unpack_archive(zkp_filename, output_dir, format='zip')
     manifest = Manifest.load(output_dir)
-    zkay_filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.contract_filename])
+    zkay_filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.zkay_contract_filename])
     with Manifest.with_manifest_config(manifest):
         compile_zkay_file(zkay_filename, output_dir, import_keys=True)
 
@@ -207,16 +224,3 @@ def _dump_to_output(content: str, output_dir: str, filename: str, dryrun_solc=Fa
     if dryrun_solc:
         check_compilation(path, show_errors=False)
     return content
-
-
-def _get_proving_scheme_and_generator(output_dir: str, circuits: List[CircuitHelper]) -> Tuple[ProvingScheme, CircuitGenerator]:
-    """Return proving scheme and circuit generator instances based on backends selected in config."""
-    if True:
-        ps = ProvingSchemeGm17()
-
-    if cfg.snark_backend == 'jsnark':
-        cg = JsnarkGenerator(circuits, ps, output_dir)
-    else:
-        raise ValueError(f"Selected invalid backend {cfg.snark_backend}")
-
-    return ps, cg

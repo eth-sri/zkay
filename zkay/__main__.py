@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
-import argcomplete, argparse
+import argcomplete
+import argparse
 from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 import os
 from zkay.utils.helpers import read_file
@@ -37,8 +38,7 @@ def parse_arguments():
     zkay_files = ('zkay', 'sol')
     zkay_package_files = ('*.zkp', )
 
-    subparsers = main_parser.add_subparsers(title='actions', dest='cmd', required=True)
-
+    # Shared 'config' parser
     config_parser = argparse.ArgumentParser(add_help=False)
     cfg_group = config_parser.add_argument_group(title='Configuration Options', description='These parameters can be used to override settings defined (and documented) in config.py')
 
@@ -49,11 +49,14 @@ def parse_arguments():
             msg = '\n\n'.join(cfg_docs[copt])
             cfg_group.add_argument(f'--{copt}', dest=copt, metavar='<cfg_val>', help=msg)
 
+    subparsers = main_parser.add_subparsers(title='actions', dest='cmd', required=True)
+
     # 'compile' parser
     compile_parser = subparsers.add_parser('compile', parents=[config_parser], help='Compile a zkay contract.', formatter_class=ShowSuppressedInHelpFormatter)
     msg = 'The directory to output the compiled contract to. Default: Current directory'
-    a = compile_parser.add_argument('-o', '--output', default=os.getcwd(), help=msg, metavar='<output_directory>').completer = DirectoriesCompleter()
+    compile_parser.add_argument('-o', '--output', default=os.getcwd(), help=msg, metavar='<output_directory>').completer = DirectoriesCompleter()
     compile_parser.add_argument('input', help='The zkay source file', metavar='<zkay_file>').completer = FilesCompleter(zkay_files)
+    compile_parser.add_argument('--log', action='store_true', help='enable logging')
 
     # 'check' parser
     typecheck_parser = subparsers.add_parser('check', parents=[config_parser], help='Only type-check, do not compile.', formatter_class=ShowSuppressedInHelpFormatter)
@@ -79,6 +82,12 @@ def parse_arguments():
     msg = 'Contract package to unpack.'
     import_parser.add_argument('input', help=msg, metavar='<zkay_package_file>').completer = FilesCompleter(zkay_package_files)
 
+    # 'run' parser
+    run_parser = subparsers.add_parser('run', parents=[config_parser], help='Enter transaction shell for a compiled zkay contract.', formatter_class=ShowSuppressedInHelpFormatter)
+    msg = 'Directory with the compilation output of the contract with which you want to interact.'
+    run_parser.add_argument('input', help=msg, metavar='<zkay_compilation_output_dir>').completer = DirectoriesCompleter()
+    run_parser.add_argument('--log', action='store_true', help='enable logging')
+
     # parse
     argcomplete.autocomplete(main_parser, always_complete_options=False)
     a = main_parser.parse_args()
@@ -92,9 +101,9 @@ def main():
     from pathlib import Path
     from ast import literal_eval
 
+    import zkay.compiler.privacy.zkay_frontend as frontend
     from zkay import my_logging
     from zkay.config import cfg
-    from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
     from zkay.errors.exceptions import ZkayCompilerError
     from zkay.my_logging.log_context import log_context
     from zkay.utils.progress_printer import TermColor, colored_print
@@ -112,58 +121,109 @@ def main():
             override_dict[copt] = val
     cfg.override_defaults(override_dict)
 
-    if a.cmd in ['compile', 'check', 'solify']:
-        input_file = Path(a.input)
-        if not input_file.exists():
+    input_path = Path(a.input)
+    if not input_path.exists():
+        with colored_print(TermColor.FAIL):
+            print(f'Error: input file \'{input_path}\' does not exist')
+        exit(1)
+
+    if a.cmd == 'check':
+        # only type-check
+        print(f'Type checking file {input_path.name}:')
+
+        code = read_file(str(input_path))
+        try:
+            get_processed_ast(code)
+        except ZkayCompilerError as e:
             with colored_print(TermColor.FAIL):
-                print(f'Error: input file \'{input_file}\' does not exist')
-            exit(1)
+                print(f'{e}')
+            exit(3)
+    elif a.cmd == 'solify':
+        was_unit_test = cfg.is_unit_test
+        cfg._is_unit_test = True  # Suppress other output
+        try:
+            _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_path)))
+            print(fake_code)
+        finally:
+            cfg._is_unit_test = was_unit_test
+        exit(0)
+    elif a.cmd == 'compile':
+        # create output directory
+        output_dir = Path(a.output).absolute()
+        if not output_dir.exists():
+            os.makedirs(output_dir)
+        elif not output_dir.is_dir():
+            with colored_print(TermColor.FAIL):
+                print(f'Error: \'{output_dir}\' is not a directory')
+            exit(2)
 
-        if a.cmd == 'check':
-            # only type-check
-            print(f'Type checking file {input_file.name}:')
+        # Enable logging
+        if a.log:
+            log_file = my_logging.get_log_file(filename='compile', include_timestamp=False, label=None)
+            my_logging.prepare_logger(log_file)
 
-            code = read_file(str(input_file))
+        # only type-check
+        print(f'Compiling file {input_path.name}:')
+
+        # compile
+        with log_context('inputfile', os.path.basename(a.input)):
             try:
-                get_processed_ast(code)
+                frontend.compile_zkay_file(str(input_path), str(output_dir))
             except ZkayCompilerError as e:
                 with colored_print(TermColor.FAIL):
                     print(f'{e}')
                 exit(3)
-        elif a.cmd == 'solify':
-            was_unit_test = cfg.is_unit_test
-            cfg._is_unit_test = True  # Suppress other output
-            try:
-                _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_file)))
-                print(fake_code)
-            finally:
-                cfg._is_unit_test = was_unit_test
-            exit(0)
-        else:
-            # create output directory
-            output_dir = Path(a.output).absolute()
-            if not output_dir.exists():
-                os.mkdir(output_dir)
-            elif not output_dir.is_dir():
-                with colored_print(TermColor.FAIL):
-                    print(f'Error: \'{output_dir}\' is not a directory')
-                exit(2)
+    elif a.cmd == 'import':
+        # create output directory
+        output_dir = Path(a.output).absolute()
+        if not output_dir.exists():
+            os.makedirs(output_dir)
+        elif not output_dir.is_dir():
+            with colored_print(TermColor.FAIL):
+                print(f'Error: \'{output_dir}\' is not a directory')
+            exit(2)
 
-            # create log directory
-            log_file = my_logging.get_log_file(filename='compile', parent_dir=str(output_dir), include_timestamp=False, label=None)
+        try:
+            frontend.extract_zkay_package(str(input_path), str(output_dir))
+        except ZkayCompilerError as e:
+            with colored_print(TermColor.FAIL):
+                print(f"ERROR while compiling unpacked zkay contract.\n{e}")
+                exit(3)
+        except Exception as e:
+            with colored_print(TermColor.FAIL):
+                print(f"ERROR while unpacking zkay contract\n{e}")
+                exit(5)
+    elif a.cmd == 'export':
+        output_filename = Path(a.output).absolute()
+        os.makedirs(output_filename.parent, exist_ok=True)
+        try:
+            frontend.package_zkay_contract(str(input_path), str(output_filename))
+        except Exception as e:
+            with colored_print(TermColor.FAIL):
+                print(f"ERROR while exporting zkay contract\n{e}")
+                exit(4)
+    elif a.cmd == 'run':
+        import sys
+        import importlib
+
+        # Enable logging
+        if a.log:
+            log_file = my_logging.get_log_file(filename=f'transactions_{input_path.name}', include_timestamp=True, label=None)
             my_logging.prepare_logger(log_file)
 
-            # only type-check
-            print(f'Compiling file {input_file.name}:')
+        # Dynamically load module and replace globals with module globals
+        globals().clear()
+        sys.path.append(str(input_path.absolute()))
+        oc = importlib.import_module(f'contract')
+        importlib.reload(oc)
+        sys.path.pop()
+        globals().update(oc.__dict__)
 
-            # compile
-            with log_context('inputfile', os.path.basename(a.input)):
-                try:
-                    compile_zkay_file(str(input_file), str(output_dir))
-                except ZkayCompilerError as e:
-                    with colored_print(TermColor.FAIL):
-                        print(f'{e}')
-                    exit(3)
+        # Move into contract.py
+        oc.zk__init(interactive=True)
+        exit(0)
+    else:
+        raise NotImplementedError(a.cmd)
 
     with colored_print(TermColor.OKGREEN):
         print("Finished successfully")

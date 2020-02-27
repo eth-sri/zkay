@@ -82,7 +82,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             '_scope', '_function_ctx', 'cast', 'default_address', 'initialize_keys_for', 'use_config_from_manifest', 'create_dummy_accounts',
 
             # Globals
-            'os, code, inspect', 'IntEnum', 'Dict', 'List', 'Tuple', 'Optional', 'Union', 'Any',
+            'os', 'IntEnum', 'Dict', 'List', 'Tuple', 'Optional', 'Union', 'Any',
             'my_logging', 'CipherValue', 'AddressValue', 'RandomnessValue', 'PublicKeyValue',
             'ContractSimulator', 'RequireException', 'help'
         ]})
@@ -113,8 +113,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         ###########################################
 
         import os
-        import code
-        import inspect
         from enum import IntEnum
         from typing import Dict, List, Tuple, Optional, Union, Any
 
@@ -143,6 +141,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
 
         def help(val=None):
+            import inspect
             if val is None:
                 import sys
                 ContractSimulator.help(inspect.getmembers(sys.modules[__name__], inspect.isfunction),
@@ -152,15 +151,19 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 __builtins__.help(val)
 
         ''') if len(ast.contracts) == 1 else '') + dedent('''
-        if __name__ == '__main__':
-            log_file = my_logging.get_log_file(filename='transactions', parent_dir="", include_timestamp=True, label=None)
-            my_logging.prepare_logger(log_file)
+        def zk__init(interactive=False):
+            global me
             ContractSimulator.use_config_from_manifest(os.path.dirname(os.path.realpath(__file__)))
             me = ContractSimulator.default_address()
             if me is not None:
                 me = me.val
                 ContractSimulator.initialize_keys_for(me)
-            code.interact(local=locals())
+            if interactive:
+                import code
+                code.interact(local=globals())
+
+        if __name__ == '__main__':
+            zk__init(interactive=True)
         ''')
 
     def generate_constructors(self, ast: ContractDefinition) -> str:

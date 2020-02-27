@@ -108,7 +108,12 @@ class CircuitGenerator(metaclass=ABCMeta):
 
     def _get_circuit_output_dir(self, circuit: CircuitHelper):
         """Return the output directory for an individual circuit"""
-        return os.path.join(self.output_dir, f'{circuit.get_verification_contract_name()}_out')
+        return os.path.join(self.output_dir, self.get_circuit_output_dir_name(circuit.get_verification_contract_name()))
+
+    def _get_vk_and_pk_paths(self, circuit: CircuitHelper) -> Tuple[str, ...]:
+        """Return a tuple which contains the paths to the verification and prover key files."""
+        output_dir = self._get_circuit_output_dir(circuit)
+        return tuple(os.path.join(output_dir, fname) for fname in self.get_vk_and_pk_filenames())
 
     @abstractmethod
     def _generate_zkcircuit(self, circuit: CircuitHelper) -> bool:
@@ -134,10 +139,15 @@ class CircuitGenerator(metaclass=ABCMeta):
         """Generate prover and verification keys for the circuit stored in self._get_circuit_output_dir(circuit)."""
         pass
 
+    @classmethod
     @abstractmethod
-    def _get_vk_and_pk_paths(self, circuit: CircuitHelper) -> Tuple[str, str]:
-        """Return a tuple which contains the paths to the verification and prover key files."""
+    def get_vk_and_pk_filenames(cls) -> Tuple[str, ...]:
         pass
+
+    @staticmethod
+    def get_circuit_output_dir_name(verifier_name: str) -> str:
+        """Return the output directory for an individual circuit"""
+        return f'{verifier_name}_out'
 
     @abstractmethod
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
