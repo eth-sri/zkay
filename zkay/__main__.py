@@ -2,9 +2,8 @@
 # PYTHON_ARGCOMPLETE_OK
 import argcomplete
 import argparse
-from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 import os
-from zkay.utils.helpers import read_file
+from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 from zkay.config_user import UserConfig
 __ucfg = UserConfig()
 
@@ -13,16 +12,26 @@ def parse_config_doc(config_py_filename: str):
     import re
     import textwrap
 
-    config_contents = read_file(config_py_filename)
+    with open(config_py_filename, 'r') as f:
+        config_contents = f.read()
+    option_regex = re.compile(r'self\.(?P<name>\w+)\s*(?::(?P<type>[^\n=]*))?=(?P<default>(?:.|[\n\r])*?(?="""))(?:"""(?P<doc>(?:.|[\n\r])*?(?=""")))')
+    choices_regex = re.compile(r'Available Options: \[(?P<opts>.+?)\]')
+
     docs = {}
-    reg_template = r'^\s*self\.{} *(?P<type>:[^\n=]*)?=(?P<default>(?:.|[\n\r])*?(?="""))(?:"""(?P<doc>(?:.|[\n\r])*?(?=""")))'
-    for copt in vars(__ucfg):
-        if not copt.startswith('_'):
-            match = re.search(reg_template.format(copt), config_contents, re.MULTILINE)
-            match_groups = match.groupdict()
-            docs[copt] = (f"type: {textwrap.dedent(match_groups['type']).strip()}" if match_groups['type'] is not None else '',
-                          textwrap.dedent(match_groups['doc']).strip() if match_groups['doc'] is not None else '',
-                          f"Default value: {textwrap.dedent(match_groups['default']).strip()}" if match_groups['default'] is not None else '')
+    for match in option_regex.finditer(config_contents):
+        groups = match.groupdict()
+        assert groups['name'] and groups['type'] and groups['doc'], f'Value {groups["name"]} is not properly documented'
+        choices_match = choices_regex.search(groups['doc'])
+        if choices_match:
+            choices = choices_match.groupdict()['opts'].split(',')
+            choices = [c.strip() for c in choices]
+        else:
+            choices = None
+
+        docs[groups['name']] = (
+            f"type: {textwrap.dedent(groups['type']).strip()}\n\n"
+            f"{textwrap.dedent(groups['doc']).strip()}\n\n"
+            f"Default value: {textwrap.dedent(groups['default']).strip()}", choices)
     return docs
 
 
@@ -40,14 +49,14 @@ def parse_arguments():
 
     # Shared 'config' parser
     config_parser = argparse.ArgumentParser(add_help=False)
-    cfg_group = config_parser.add_argument_group(title='Configuration Options', description='These parameters can be used to override settings defined (and documented) in config.py')
+    cfg_group = config_parser.add_argument_group(title='Configuration Options', description='These parameters can be used to override settings defined (and documented) in config_user.py')
 
     # Expose config.py user options, they are supported in all parsers
     cfg_docs = parse_config_doc(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config_user.py'))
-    for copt in vars(__ucfg):
-        if not copt.startswith('_'):
-            msg = '\n\n'.join(cfg_docs[copt])
-            cfg_group.add_argument(f'--{copt}', dest=copt, metavar='<cfg_val>', help=msg)
+    for name, (doc, choices) in cfg_docs.items():
+        arg = cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc, choices=choices)
+        if name.endswith('dir'):
+            arg.completer = DirectoriesCompleter()
 
     subparsers = main_parser.add_subparsers(title='actions', dest='cmd', required=True)
 
@@ -104,6 +113,7 @@ def main():
     import zkay.compiler.privacy.zkay_frontend as frontend
     from zkay import my_logging
     from zkay.config import cfg
+    from zkay.utils.helpers import read_file
     from zkay.errors.exceptions import ZkayCompilerError
     from zkay.my_logging.log_context import log_context
     from zkay.utils.progress_printer import TermColor, colored_print

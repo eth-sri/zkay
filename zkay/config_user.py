@@ -1,3 +1,12 @@
+"""
+This module defines the zkay options which are configurable by the user via command line arguments.
+
+The argument parser in :py:mod:`.__main__` parses this file (as text) to gather help strings
+and autocompletion information from the attribute docstrings.
+
+WARNING: This is one of the only zkay modules that is imported before argcomplete.autocomplete is called. \
+For performance reasons it should thus not have any import side-effects or perform any expensive operations during import.
+"""
 from typing import Any, Union, Set
 
 import appdirs
@@ -6,21 +15,38 @@ import appdirs
 class UserConfig:
     def __init__(self):
         # User configuration
+        # Each attribute must have a type hint and a docstring for correct help strings in the commandline interface.
+        # If 'Available Options: [...]' is specified, the options are used for autocomplete suggestions.
 
         self.proving_scheme: str = 'gm17'
-        """NIZK proving scheme to use [gm17]"""
+        """
+        NIZK proving scheme to use.
+
+        Available Options: [gm17]
+        """
 
         self.snark_backend: str = 'jsnark'
-        """Snark backend to use [jsnark]"""
+        """
+        Snark backend to use.
+
+        Available Options: [jsnark]
+        """
 
         self.crypto_backend: str = 'dummy'
-        """Encryption backend to use [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey]"""
+        """
+        Encryption backend to use.
+
+        Available Options: [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey]
+        """
 
         self.blockchain_backend: str = 'w3-eth-tester'
         """
-        Backend to use when interacting with the blockchain [w3-eth-tester, w3-ganache, w3-ipc, w3-websocket, w3-http, w3-custom]
+        Backend to use when interacting with the blockchain.
+
         Running unit tests is only supported with w3-eth-tester and w3-ganache at the moment (because they need pre-funded dummy accounts).
         See https://web3py.readthedocs.io/en/stable/providers.html for more information
+
+        Available Options: [w3-eth-tester, w3-ganache, w3-ipc, w3-websocket, w3-http, w3-custom]
         """
 
         self.blockchain_node_uri: Union[Any, str, None] = 'http://localhost:7545'
