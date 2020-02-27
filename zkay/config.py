@@ -109,7 +109,7 @@ class Config(UserConfig):
 
     @property
     def cipher_payload_len(self) -> int:
-        return int(math.ceil(self.cipher_bytes_payload / self.pack_chunk_size))
+        return int(math.ceil(self.cipher_bytes_payload / self.cipher_chunk_size))
 
     @property
     def cipher_len(self) -> int:
@@ -120,11 +120,11 @@ class Config(UserConfig):
 
     @property
     def key_len(self) -> int:
-        return int(math.ceil(self.key_bytes / self.pack_chunk_size))
+        return 1 if self.is_symmetric_cipher() else int(math.ceil(self.key_bytes / self.cipher_chunk_size))
 
     @property
     def randomness_len(self) -> int:
-        return int(math.ceil(self.rnd_bytes / self.pack_chunk_size))
+        return 0 if self.is_symmetric_cipher() else int(math.ceil(self.rnd_bytes / self.rnd_chunk_size))
 
     @property
     def proof_len(self) -> int:
@@ -210,8 +210,12 @@ class Config(UserConfig):
         return 'check_verify'
 
     @property
-    def pack_chunk_size(self) -> int:
-        return 31
+    def cipher_chunk_size(self) -> int:
+        return cryptoparams[self.crypto_backend]['cipher_chunk_size']
+
+    @property
+    def rnd_chunk_size(self) -> int:
+        return cryptoparams[self.crypto_backend]['rnd_chunk_size']
 
     @property
     def is_unit_test(self) -> bool:

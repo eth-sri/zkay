@@ -13,7 +13,7 @@ class DummyCrypto(ZkayCryptoInterface):
 
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
         aint = int(address, 16)
-        return KeyPair(PublicKeyValue(self.serialize_bigint(aint, cfg.key_bytes)), PrivateKeyValue(aint))
+        return KeyPair(PublicKeyValue(self.serialize_pk(aint, cfg.key_bytes)), PrivateKeyValue(aint))
 
     def _enc(self, plain: int, _: int, target_pk: int):
         cipher = (plain + target_pk) % bn128_scalar_field

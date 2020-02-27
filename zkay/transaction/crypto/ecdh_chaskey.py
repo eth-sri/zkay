@@ -20,7 +20,7 @@ class EcdhChaskeyCrypto(EcdhBase):
                                     'zkay.ChaskeyLtsCbc', 'enc', key.hex(), iv.hex(), plain_bytes.hex()])
         iv_cipher = iv + int(iv_cipher.splitlines()[-1], 16).to_bytes(32, byteorder='big')
 
-        return self.pack_byte_array(iv_cipher), []
+        return self.pack_byte_array(iv_cipher, cfg.cipher_chunk_size), []
 
     def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, List[int]]:
         # Extract sender address from cipher metadata and request corresponding public key
@@ -32,7 +32,7 @@ class EcdhChaskeyCrypto(EcdhBase):
         key = self._ecdh_sha256(sender_pk, my_sk)
 
         # Call java implementation
-        iv_cipher = self.unpack_to_byte_array(cipher, cfg.cipher_bytes_payload)
+        iv_cipher = self.unpack_to_byte_array(cipher, cfg.cipher_chunk_size, cfg.cipher_bytes_payload)
         iv, cipher_bytes = iv_cipher[:16], iv_cipher[16:]
         plain, _ = run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}',
                                 'zkay.ChaskeyLtsCbc', 'dec', key.hex(), iv.hex(), cipher_bytes.hex()])

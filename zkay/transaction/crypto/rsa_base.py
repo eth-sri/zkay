@@ -62,4 +62,4 @@ class RSACrypto(ZkayCryptoInterface, metaclass=ABCMeta):
                 key = RSA.import_key(f.read())
 
         modulus = key.publickey().n
-        return KeyPair(PublicKeyValue(self.serialize_bigint(modulus, cfg.key_bytes)), PrivateKeyValue(key))
+        return KeyPair(PublicKeyValue(self.serialize_pk(modulus, cfg.key_bytes)), PrivateKeyValue(key))

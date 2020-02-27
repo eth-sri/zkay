@@ -486,7 +486,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
             assert len(raw_pk) == 1
             pk = raw_pk[0]
         else:
-            pk = self.deserialize_bigint(raw_pk[:])
+            pk = self.deserialize_pk(raw_pk[:])
         while True:
             # Retry until cipher text is not 0
             cipher, rnd = self._enc(int(plain), sk, pk)
@@ -518,19 +518,19 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         return ret[0] if self.is_symmetric_cipher() else ret
 
     @staticmethod
-    def serialize_bigint(key: int, total_bytes: int) -> List[int]:
-        """Serialize a large integer into an array of {cfg.pack_chunk_size}-byte ints."""
-        bin = key.to_bytes(total_bytes, byteorder='big')
-        return ZkayCryptoInterface.pack_byte_array(bin)
+    def serialize_pk(key: int, total_bytes: int) -> List[int]:
+        """Serialize a large integer into an array of {cfg.cipher_chunk_size}-byte ints."""
+        data = key.to_bytes(total_bytes, byteorder='big')
+        return ZkayCryptoInterface.pack_byte_array(data, cfg.cipher_chunk_size)
 
     @staticmethod
-    def deserialize_bigint(arr: Collection[int]) -> int:
-        """Deserialize an array of {cfg.pack_chunk_size}-byte ints into a single large int"""
-        bin = ZkayCryptoInterface.unpack_to_byte_array(arr, 0)
-        return int.from_bytes(bin, byteorder='big')
+    def deserialize_pk(arr: Collection[int]) -> int:
+        """Deserialize an array of {cfg.cipher_chunk_size}-byte ints into a single large int"""
+        data = ZkayCryptoInterface.unpack_to_byte_array(arr, cfg.cipher_chunk_size, 0)
+        return int.from_bytes(data, byteorder='big')
 
     @staticmethod
-    def pack_byte_array(bin: bytes, chunk_size=cfg.pack_chunk_size) -> List[int]:
+    def pack_byte_array(bin: bytes, chunk_size) -> List[int]:
         """Pack byte array into an array of {chunk_size}-byte ints"""
         total_bytes = len(bin)
         first_chunk_size = total_bytes % chunk_size
@@ -540,9 +540,9 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         return list(reversed(arr))
 
     @staticmethod
-    def unpack_to_byte_array(arr: Collection[int], desired_length: int) -> bytes:
+    def unpack_to_byte_array(arr: Collection[int], chunk_size: int, desired_length: int) -> bytes:
         """Unpack an array of {cfg.pack_chunk_size}-byte ints into a byte array"""
-        return b''.join(chunk.to_bytes(cfg.pack_chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
+        return b''.join(chunk.to_bytes(chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
 
     # Interface implementation
 

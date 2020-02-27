@@ -19,7 +19,7 @@ class EcdhAesCrypto(EcdhBase):
         # Pack iv and cipher
         iv_cipher = b''.join([iv, cipher_bytes])
 
-        return self.pack_byte_array(iv_cipher), []
+        return self.pack_byte_array(iv_cipher, cfg.cipher_chunk_size), []
 
     def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, List[int]]:
         # Extract sender address from cipher metadata and request corresponding public key
@@ -31,7 +31,7 @@ class EcdhAesCrypto(EcdhBase):
         key = self._ecdh_sha256(sender_pk, my_sk)
 
         # Unpack iv and cipher
-        iv_cipher = self.unpack_to_byte_array(cipher, cfg.cipher_bytes_payload)
+        iv_cipher = self.unpack_to_byte_array(cipher, cfg.cipher_chunk_size, cfg.cipher_bytes_payload)
         iv, cipher_bytes = iv_cipher[:16], iv_cipher[16:]
 
         # Decrypt
