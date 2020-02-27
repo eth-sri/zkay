@@ -58,6 +58,12 @@ def parse_arguments():
         if name.endswith('dir'):
             arg.completer = DirectoriesCompleter()
 
+    solc_version_help = 'zkay defaults to using the latest solc version of the major\n' \
+          'solidity version supported by the current zkay version.\n\n' \
+          'If you need to use a particular minor release (e.g. because \n' \
+          'the latest release is broken or you need determinism for testing)\n' \
+          'you can specify a particular solc version (e.g. v0.5.12) via this argument.'
+
     subparsers = main_parser.add_subparsers(title='actions', dest='cmd', required=True)
 
     # 'compile' parser
@@ -66,10 +72,12 @@ def parse_arguments():
     compile_parser.add_argument('-o', '--output', default=os.getcwd(), help=msg, metavar='<output_directory>').completer = DirectoriesCompleter()
     compile_parser.add_argument('input', help='The zkay source file', metavar='<zkay_file>').completer = FilesCompleter(zkay_files)
     compile_parser.add_argument('--log', action='store_true', help='enable logging')
+    compile_parser.add_argument('--solc-version', help=solc_version_help, metavar='<cfg_val>')
 
     # 'check' parser
     typecheck_parser = subparsers.add_parser('check', parents=[config_parser], help='Only type-check, do not compile.', formatter_class=ShowSuppressedInHelpFormatter)
     typecheck_parser.add_argument('input', help='The zkay source file', metavar='<zkay_file>').completer = FilesCompleter(zkay_files)
+    typecheck_parser.add_argument('--solc-version', help=solc_version_help, metavar='<cfg_val>')
 
     # 'solify' parser
     msg = 'Output solidity code which corresponds to zkay code with all privacy features and comments removed, ' \
@@ -121,7 +129,7 @@ def main():
 
     # Support for overriding any user config setting via command line
     override_dict = {}
-    for copt in vars(cfg):
+    for copt in vars(__ucfg):
         if hasattr(a, copt) and getattr(a, copt) is not None:
             v = getattr(a, copt).strip()
             try:
@@ -130,6 +138,15 @@ def main():
                 val = v  # It is a string
             override_dict[copt] = val
     cfg.override_defaults(override_dict)
+
+    # Solc version override
+    if a.solc_version is not None:
+        try:
+            cfg.override_solc(a.solc_version)
+        except ValueError as e:
+            with colored_print(TermColor.FAIL):
+                print(f'Error: {e}')
+                exit(10)
 
     input_path = Path(a.input)
     if not input_path.exists():

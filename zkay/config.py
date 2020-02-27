@@ -2,6 +2,8 @@ import math
 from contextlib import contextmanager
 from typing import Dict, Any, ContextManager
 
+from semantic_version import NpmSpec, Version
+
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.config_user import UserConfig
 from zkay.transaction.crypto.meta import cryptoparams
@@ -13,15 +15,30 @@ def debug_print(*args, **kwargs):
 
 
 def _init_solc(version):
-    if not version.startswith('v0.5'):
-        raise ValueError('Currently only solc 0.5 is supported.')
+    version_plain = version[1:] if version.startswith('v') else version
 
     import solcx
-    if version not in solcx.get_installed_solc_versions():
-        assert version in solcx.get_available_solc_versions()
-        solcx.install_solc(version, allow_osx=True)
-    solcx.set_solc_version(version)
-    assert version in solcx.get_installed_solc_versions()
+    if version == 'latest':
+        concrete_version = solcx.install_solc_pragma(cfg.zkay_solc_version_compatibility.expression, install=False)
+        if not version.startswith('v'):
+            concrete_version = f'v{concrete_version}'
+    else:
+        try:
+            semver = Version(version_plain)
+        except ValueError:
+            raise ValueError(f'Invalid version string {version}')
+
+        if semver not in cfg.zkay_solc_version_compatibility:
+            raise ValueError(f'Solidity version {version} is not supported by zkay {cfg.zkay_version} (requires solc {cfg.zkay_solc_version_compatibility.expression})')
+        concrete_version = f'v{version_plain}'
+
+    if concrete_version not in solcx.get_installed_solc_versions():
+        assert concrete_version in solcx.get_available_solc_versions()
+        solcx.install_solc(concrete_version)
+
+    assert concrete_version in solcx.get_installed_solc_versions()
+    cfg._concrete_solc_version = concrete_version
+    solcx.set_solc_version(concrete_version, silent=True)
 
 
 class Config(UserConfig):
@@ -40,6 +57,7 @@ class Config(UserConfig):
         ]
 
         self._is_unit_test = False
+        self._concrete_solc_version = None
 
     def override_defaults(self, overrides: Dict[str, Any]):
         for arg, val in overrides.items():
@@ -74,11 +92,18 @@ class Config(UserConfig):
 
     @property
     def zkay_version(self) -> str:
+        """zkay version number"""
         return '0.2'
 
     @property
+    def zkay_solc_version_compatibility(self) -> NpmSpec:
+        """Target solidity language level for the current zkay version"""
+        return NpmSpec('^0.5.0')
+
+    @property
     def solc_version(self) -> str:
-        return 'v0.5.16'
+        assert self._concrete_solc_version is not None and self._concrete_solc_version != 'latest'
+        return self._concrete_solc_version
 
     @staticmethod
     def override_solc(new_version):
@@ -237,4 +262,4 @@ class Config(UserConfig):
 
 
 cfg = Config()
-_init_solc(cfg.solc_version)
+_init_solc('latest')
