@@ -9,7 +9,7 @@ from zkay.config_user import UserConfig
 from zkay.transaction.crypto.meta import cryptoparams
 
 
-def debug_print(*args, verbose_only=False, **kwargs):
+def zk_print(*args, verbose_only=False, **kwargs):
     if (not verbose_only or cfg.verbose) and not cfg.is_unit_test:
         print(*args, **kwargs)
 

@@ -14,7 +14,7 @@ from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
-from zkay.config import cfg, debug_print
+from zkay.config import cfg, zk_print
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
@@ -102,7 +102,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :return: the public key
         """
         assert isinstance(address, AddressValue)
-        debug_print(f'Requesting public key for address "{address}"', verbose_only=True)
+        zk_print(f'Requesting public key for address "{address}"', verbose_only=True)
         return self._req_public_key(address.val)
 
     def announce_public_key(self, sender: AddressValue, pk: PublicKeyValue) -> Any:
@@ -119,7 +119,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
         assert isinstance(sender, AddressValue)
         assert isinstance(pk, PublicKeyValue)
-        debug_print(f'Announcing public key "{pk}" for address "{sender}"')
+        zk_print(f'Announcing public key "{pk}" for address "{sender}"')
         return self._announce_public_key(sender.val, pk[:])
 
     def req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str, bytes]:
@@ -133,9 +133,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :return: The value
         """
         assert contract_handle is not None
-        debug_print(f'Requesting state variable "{name}"', verbose_only=True)
+        zk_print(f'Requesting state variable "{name}"', verbose_only=True)
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)))
-        debug_print(f'Got value {val} for state variable "{name}"', verbose_only=True)
+        zk_print(f'Got value {val} for state variable "{name}"', verbose_only=True)
         return val
 
     def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, bytes, List]:
@@ -150,9 +150,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
 
         assert contract_handle is not None
-        debug_print(f'Calling contract function {name}{Value.collection_to_string(args)}', verbose_only=True)
+        zk_print(f'Calling contract function {name}{Value.collection_to_string(args)}', verbose_only=True)
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
-        debug_print(f'Got return value {val}', verbose_only=True)
+        zk_print(f'Got return value {val}', verbose_only=True)
         return val
 
     def transact(self, contract_handle, sender: AddressValue, function: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
@@ -174,7 +174,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
-        debug_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
+        zk_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
         return self._transact(contract_handle, sender.val, function, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
     def deploy(self, project_dir: str, sender: AddressValue, contract: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
@@ -198,7 +198,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
             raise BlockChainError('SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).')
 
         self.__check_args(actual_args, should_encrypt)
-        debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
+        zk_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
         return self._deploy(Manifest.load(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
     def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
@@ -247,7 +247,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         # Compile zkay file to generate main and verification contracts (but don't generate new prover/verification keys and manifest)
         compile_zkay_file(os.path.join(project_dir, manifest[Manifest.zkay_contract_filename]), project_dir, import_keys=True)
 
-        debug_print(f'Connecting to contract {contract}@{contract_address}')
+        zk_print(f'Connecting to contract {contract}@{contract_address}')
         contract_on_chain = self._connect(manifest, contract, contract_address.val)
 
         pki_verifier_addresses = {}
@@ -282,7 +282,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, manifest[Manifest.contract_filename]), pki_verifier_addresses)
 
         with colored_print(TermColor.OKGREEN):
-            debug_print(f'OK: Bytecode on blockchain matches local zkay contract')
+            zk_print(f'OK: Bytecode on blockchain matches local zkay contract')
 
         return contract_on_chain
 
@@ -419,7 +419,7 @@ class ZkayKeystoreInterface(metaclass=ABCMeta):
         :return: the public key
         """
         assert isinstance(address, AddressValue)
-        debug_print(f'Requesting public key for address {address.val}', verbose_only=True)
+        zk_print(f'Requesting public key for address {address.val}', verbose_only=True)
         if address in self.local_pk_store:
             return self.local_pk_store[address]
         else:
@@ -488,7 +488,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(my_addr, AddressValue) and isinstance(target_addr, AddressValue)
         assert int(plain) < bn128_scalar_field, f"Integer overflow, plaintext is >= field prime"
-        debug_print(f'Encrypting value {plain} for destination "{target_addr}"', verbose_only=True)
+        zk_print(f'Encrypting value {plain} for destination "{target_addr}"', verbose_only=True)
 
         sk = self.keystore.sk(my_addr).val
         raw_pk = self.keystore.getPk(target_addr)
@@ -516,7 +516,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(my_addr, AddressValue)
-        debug_print(f'Decrypting value {cipher} for {my_addr}', verbose_only=True)
+        zk_print(f'Decrypting value {cipher} for {my_addr}', verbose_only=True)
 
         if cipher == CipherValue():
             ret = 0, RandomnessValue()
@@ -596,7 +596,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
             if isinstance(arg, AddressValue):
                 priv_values[i] = int.from_bytes(arg.val, byteorder='big')
 
-        debug_print(f'Generating proof for {contract}.{function} [priv: {Value.collection_to_string(priv_values)}] '
+        zk_print(f'Generating proof for {contract}.{function} [priv: {Value.collection_to_string(priv_values)}] '
                     f'[in: {Value.collection_to_string(in_vals)}] [out: {Value.collection_to_string(out_vals)}]')
 
         priv_values, in_vals, out_vals = Value.unwrap_values(Value.flatten(priv_values)), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals)

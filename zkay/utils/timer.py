@@ -2,7 +2,7 @@ import contextlib
 import time
 
 from zkay import my_logging
-from zkay.config import debug_print
+from zkay.config import zk_print
 
 
 @contextlib.contextmanager
@@ -13,7 +13,7 @@ def time_measure(key, should_print=False):
     elapsed = end - start
 
     if should_print:
-        debug_print(f"Took {elapsed} s")
+        zk_print(f"Took {elapsed} s")
     my_logging.data(key, elapsed)
 
 

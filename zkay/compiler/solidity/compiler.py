@@ -8,7 +8,7 @@ from typing import Optional, Dict, Tuple
 from solcx import compile_standard
 from solcx.exceptions import SolcError
 
-from zkay.config import debug_print, cfg
+from zkay.config import zk_print, cfg
 from zkay.zkay_ast.ast import get_code_error_msg
 
 
@@ -105,7 +105,7 @@ def check_compilation(filename: str, show_errors: bool = False, display_code: st
 
     # if solc reported any errors or warnings, print them and throw exception
     if 'errors' in errors:
-        debug_print('')
+        zk_print('')
         errors = sorted(errors['errors'], key=get_error_order_key)
 
         fatal_error_report = ''
@@ -127,9 +127,9 @@ def check_compilation(filename: str, show_errors: bool = False, display_code: st
                 if is_error:
                     fatal_error_report += report
                 else:
-                    debug_print(report)
+                    zk_print(report)
 
-        debug_print('')
+        zk_print('')
         if had_error:
             raise SolcException(fatal_error_report)
 

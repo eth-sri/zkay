@@ -10,7 +10,7 @@ from web3 import Web3
 
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
-from zkay.config import cfg, debug_print
+from zkay.config import cfg, zk_print
 from zkay.transaction.interface import Manifest, ZkayBlockchainInterface, IntegrityError, BlockChainError, TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 from zkay.utils.helpers import get_contract_names, without_extension
@@ -111,7 +111,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         if tx_receipt['status'] == 0:
             raise TransactionFailedException("Transaction failed")
-        debug_print(f"Consumed gas: {tx_receipt['gasUsed']}")
+        zk_print(f"Consumed gas: {tx_receipt['gasUsed']}")
         return tx_receipt
 
     def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
@@ -119,7 +119,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
                                                       self._pki_verifier_addresses(sender, manifest))
         cout = self.compile_contract(filename, contract)
         handle = self.deploy_contract(sender, cout, *actual_args, wei_amount=wei_amount)
-        debug_print(f'Deployed contract "{contract}" at address "{handle.address}"')
+        zk_print(f'Deployed contract "{contract}" at address "{handle.address}"')
         return handle
 
     def _deploy_or_connect_libraries(self, sender: Union[bytes, str]):
@@ -133,7 +133,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
                     self.pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
                 else:
                     self.pki_contract = self.deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
-                    debug_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
+                    zk_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
 
                 verify_sol = os.path.join(tmpdir, 'verify_libs.sol')
                 with open(verify_sol, 'w') as f:
@@ -142,7 +142,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
                     bn256 = self._verify_contract_integrity(cfg.blockchain_bn256g2_address, verify_sol, contract_name='BN256G2', is_library=True)
                 else:
                     bn256 = self.deploy_contract(sender, self.compile_contract(verify_sol, 'BN256G2'))
-                    debug_print(f'Deployed bn256 contract at address "{bn256.address}"')
+                    zk_print(f'Deployed bn256 contract at address "{bn256.address}"')
                 self.lib_addresses = {
                     'BN256G2': bn256.address,
                 }
@@ -171,7 +171,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         if actual_byte_code != expected_byte_code:
             raise IntegrityError(f'Deployed contract at address {address} does not match local contract {sol_filename}')
-        debug_print(f'Contract@{address} matches {sol_filename[sol_filename.rfind("/")+1:]}:{contract_name}')
+        zk_print(f'Contract@{address} matches {sol_filename[sol_filename.rfind("/") + 1:]}:{contract_name}')
 
         return self.w3.eth.contract(
             address=address, abi=cout['abi']
