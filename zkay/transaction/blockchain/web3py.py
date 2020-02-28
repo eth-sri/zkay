@@ -231,6 +231,10 @@ class Web3TesterBlockchain(Web3Blockchain):
         super().__init__()
         self.next_acc_idx = 1
 
+    @classmethod
+    def is_debug_backend(cls) -> bool:
+        return True
+
     def _create_w3_instance(self) -> Web3:
         genesis_overrides = {'gas_limit': int(max_gas_limit * 1.2)}
         custom_genesis_params = PyEVMBackend._generate_genesis_params(overrides=genesis_overrides)
@@ -272,6 +276,10 @@ class Web3HttpGanacheBlockchain(Web3HttpBlockchain):
     def __init__(self) -> None:
         super().__init__()
         self.next_acc_idx = 1
+
+    @classmethod
+    def is_debug_backend(cls) -> bool:
+        return True
 
     def create_test_accounts(self, count: int) -> Tuple:
         accounts = self.w3.eth.accounts

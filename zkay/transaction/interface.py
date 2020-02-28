@@ -194,6 +194,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :raise TransactionFailedException: if the deployment transaction failed
         :return: handle for the newly created contract
         """
+        if not self.is_debug_backend() and cfg.crypto_backend == 'dummy':
+            raise BlockChainError('SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).')
+
         self.__check_args(actual_args, should_encrypt)
         debug_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
         return self._deploy(Manifest.load(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
@@ -236,6 +239,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :raise IntegrityError: if the integrity check fails (mismatch between local code and remote contract)
         :return: contract handle for the specified contract
         """
+        if not self.is_debug_backend() and cfg.crypto_backend == 'dummy':
+            raise BlockChainError('SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).')
+
         manifest = Manifest.load(project_dir)
 
         # Compile zkay file to generate main and verification contracts (but don't generate new prover/verification keys and manifest)
@@ -280,7 +286,11 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         return contract_on_chain
 
-    # INTERNAL FUNCTIONALITY
+    @classmethod
+    def is_debug_backend(cls) -> bool:
+        return False
+
+    # INTERNAL FUNCTIONALITY$
 
     @abstractmethod
     def _verify_contract_integrity(self, address: str, sol_filename: str, *,
