@@ -1,11 +1,12 @@
 from antlr4 import CommonTokenStream, InputStream
 from antlr4.error.ErrorListener import ErrorListener
 
+from zkay.errors.exceptions import ZkaySyntaxError
 from zkay.solidity_parser.generated.SolidityLexer import SolidityLexer
 from zkay.solidity_parser.generated.SolidityParser import SolidityParser
 
 
-class SyntaxException(Exception):
+class SyntaxException(ZkaySyntaxError):
     """
     Error during parsing"
     """

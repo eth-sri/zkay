@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors, SolcException
-from zkay.errors.exceptions import ZkayCompilerError, ParseExeception, PreprocessAstException, TypeCheckException
+from zkay.errors.exceptions import ZkayCompilerError, PreprocessAstException, TypeCheckException
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step
@@ -21,11 +21,7 @@ from zkay.zkay_ast.analysis.return_checker import check_return as r
 
 def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
     with print_step("Parsing"):
-        from zkay.solidity_parser.parse import SyntaxException
-        try:
-            ast = build_ast(code)
-        except SyntaxException as e:
-            raise ParseExeception(f'\n\nPARSER ERROR: {e}')
+        ast = build_ast(code) # may raise ZkaySyntaxError
 
     from zkay.compiler.solidity.fake_solidity_generator import fake_solidity_code
     fake_code = fake_solidity_code(str(code))

@@ -153,7 +153,7 @@ def main():
         except ValueError as e:
             with colored_print(TermColor.FAIL):
                 print(f'Error: {e}')
-                exit(10)
+            exit(10)
 
     input_path = Path(a.input)
     if not input_path.exists():
@@ -178,6 +178,10 @@ def main():
         try:
             _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_path)))
             print(fake_code)
+        except ZkayCompilerError as e:
+            with colored_print(TermColor.FAIL):
+                print(f'{e}')
+            exit(3)
         finally:
             cfg._is_unit_test = was_unit_test
         exit(0)
@@ -222,11 +226,11 @@ def main():
         except ZkayCompilerError as e:
             with colored_print(TermColor.FAIL):
                 print(f"ERROR while compiling unpacked zkay contract.\n{e}")
-                exit(3)
+            exit(3)
         except Exception as e:
             with colored_print(TermColor.FAIL):
                 print(f"ERROR while unpacking zkay contract\n{e}")
-                exit(5)
+            exit(5)
     elif a.cmd == 'export':
         output_filename = Path(a.output).absolute()
         os.makedirs(output_filename.parent, exist_ok=True)
@@ -235,7 +239,7 @@ def main():
         except Exception as e:
             with colored_print(TermColor.FAIL):
                 print(f"ERROR while exporting zkay contract\n{e}")
-                exit(4)
+            exit(4)
     elif a.cmd == 'run':
         import sys
         import importlib

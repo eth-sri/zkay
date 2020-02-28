@@ -31,13 +31,11 @@ sourceUnit
 
 // https://solidity.readthedocs.io/en/v0.4.24/layout-of-source-files.html#version-pragma
 pragmaDirective
-  : 'pragma' pragmaName pragmaValue ';' ;
+  : 'pragma' pragma ';' ;
 
-pragmaName
-  : identifier ;
-
-pragmaValue
-  : version | expression ;
+pragma
+  : (name=('zkay' | 'solidity') ver=version) # VersionPragma;
+//| ('other pragma' val=expression) # OtherPragma
 
 version
   : versionConstraint versionConstraint? ;

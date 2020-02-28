@@ -4,19 +4,21 @@ This module contains the definitions of all exceptions which may be publicly rai
 
 
 class ZkayCompilerError(Exception):
+    """
+    Error during compilation
+    """
     pass
 
 
-class ParseExeception(ZkayCompilerError):
+class ZkaySyntaxError(ZkayCompilerError):
     """
-    Error during parsing"
+    Error during parsing / AST construction"
     """
-    pass
 
 
 class PreprocessAstException(ZkayCompilerError):
     """
-    Error during ast preprocessing"
+    Error during ast pre-processing"
     """
     pass
 

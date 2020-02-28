@@ -1,4 +1,5 @@
 from antlr4.Token import CommonToken
+from semantic_version import NpmSpec, Version
 
 import zkay.zkay_ast.ast as ast
 
@@ -8,7 +9,6 @@ from zkay.solidity_parser.emit import Emitter
 from zkay.solidity_parser.generated.SolidityParser import SolidityParser, ParserRuleContext, CommonTokenStream
 from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
 from zkay.solidity_parser.parse import MyParser
-from zkay.type_check.type_exceptions import RequireException, ReclassifyException
 from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, NumberLiteralExpr, \
     BooleanLiteralExpr, StringLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
     ReclassifyExpr, BuiltinFunction, IndexExpr
@@ -107,31 +107,25 @@ class BuildASTVisitor(SolidityVisitor):
             raise SyntaxException(f'Identifiers must not end with reserved suffix {cfg.reserved_name_prefix}', ctx, self.code)
         return ast.Identifier(name)
 
-    def visitBlock(self, ctx: SolidityParser.BlockContext):
-        statements = [self.visit(s) for s in ctx.statements]
-        for i in range(len(statements)):
-            s = statements[i]
-
-            # handle require
-            if isinstance(s, ExpressionStatement):
-                e = s.expr
-                if isinstance(e, FunctionCallExpr):
-                    f = e.func
-                    if isinstance(f, IdentifierExpr):
-                        name = f.idf.name
-                        if name == 'require':
-                            if len(e.args) != 1:
-                                RequireException(f'Invalid number of arguments for require: {e}', e)
-                            r = ast.RequireStatement(e.args[0])
-                            statements[i] = r
-
-            statements[i].line = s.line
-            statements[i].column = s.column
-
-        return ast.Block(statements)
-
     def visitPragmaDirective(self, ctx: SolidityParser.PragmaDirectiveContext):
-        return self.emitter.visit(ctx)
+        return f'pragma {self.visit(ctx.pragma())};'
+
+    def visitVersionPragma(self, ctx: SolidityParser.VersionPragmaContext):
+        version = self.emitter.visit(ctx.ver).strip()
+        spec = NpmSpec(version)
+        name = self.handle_field(ctx.name)
+        if name == 'zkay' and Version(cfg.zkay_version) not in spec:
+            raise SyntaxException(f'Contract requires a different zkay version.\n'
+                                  f'Current version is {cfg.zkay_version} but pragma zkay mandates {version}.',
+                                  ctx.ver, self.code)
+        elif name != 'zkay' and spec != cfg.zkay_solc_version_compatibility:
+            # For backwards compatibility with older zkay versions
+            assert name == 'solidity'
+            raise SyntaxException(f'Contract requires solidity version {spec}, which is not compatible '
+                                  f'with the current zkay version (requires {cfg.zkay_solc_version_compatibility}).',
+                                  ctx.ver, self.code)
+
+        return f'solidity {cfg.zkay_solc_version_compatibility}'
 
     # Visit a parse tree produced by SolidityParser#contractDefinition.
     def visitContractDefinition(self, ctx: SolidityParser.ContractDefinitionContext):
@@ -311,7 +305,7 @@ class BuildASTVisitor(SolidityVisitor):
         if isinstance(func, IdentifierExpr):
             if func.idf.name == 'reveal':
                 if len(args) != 2:
-                    raise ReclassifyException(f'Invalid number of arguments for reveal: {args}')
+                    raise SyntaxException(f'Invalid number of arguments for reveal: {args}', ctx.args, self.code)
                 return ReclassifyExpr(args[0], args[1])
 
         return FunctionCallExpr(func, args)
@@ -404,5 +398,14 @@ class BuildASTVisitor(SolidityVisitor):
         if isinstance(e, ast.Statement):
             return e
         else:
+            # handle require
+            if isinstance(e, FunctionCallExpr):
+                f = e.func
+                if isinstance(f, IdentifierExpr):
+                    if f.idf.name == 'require':
+                        if len(e.args) != 1:
+                            raise SyntaxException(f'Invalid number of arguments for require: {e.args}', ctx.expr, self.code)
+                        return ast.RequireStatement(e.args[0])
+
             assert isinstance(e, ast.Expression)
             return ExpressionStatement(e)

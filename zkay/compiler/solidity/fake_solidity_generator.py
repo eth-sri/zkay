@@ -3,6 +3,7 @@
 
 import re
 from typing import Pattern
+from zkay.config import cfg
 
 # Declaration for me which is injected into each contract
 ME_DECL = ' address private me = msg.sender;'
@@ -39,6 +40,9 @@ ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTER
 MATCH_WORD_FSTR = f'(?P<keep>{NONID_START})(?P<repl>{{}})(?={NONID_END})'
 FINAL_PATTERN = re.compile(MATCH_WORD_FSTR.format('final'))
 ALL_PATTERN = re.compile(MATCH_WORD_FSTR.format('all'))
+
+# Pragma regex
+PRAGMA_PATTERN = re.compile(f'(?P<keep>{NONID_START}pragma\\s*)(?P<repl>zkay.*?);')
 
 # Regex to match tagged mapping declarations
 MAP_PATTERN = re.compile(
@@ -158,6 +162,9 @@ def fake_solidity_code(code: str):
 
     # Strip string literals and comments
     code = replace_with_surrogate(code, STRING_OR_COMMENT_PATTERN)
+
+    # Replace zkay pragma with solidity pragma
+    code = replace_with_surrogate(code, PRAGMA_PATTERN, f'solidity {cfg.zkay_solc_version_compatibility};')
 
     # Strip final
     code = replace_with_surrogate(code, FINAL_PATTERN)
