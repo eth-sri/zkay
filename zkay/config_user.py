@@ -44,7 +44,7 @@ class UserConfig:
         Backend to use when interacting with the blockchain.
 
         Running unit tests is only supported with w3-eth-tester and w3-ganache at the moment (because they need pre-funded dummy accounts).
-        See https://web3py.readthedocs.io/en/stable/providers.html for more information
+        See https://web3py.readthedocs.io/en/stable/providers.html for more information.
 
         Available Options: [w3-eth-tester, w3-ganache, w3-ipc, w3-websocket, w3-http, w3-custom]
         """
@@ -61,10 +61,23 @@ class UserConfig:
         """
 
         self.blockchain_pki_address: str = ''
-        """Address of the deployed pki contract, if empty, the pki contract will be deployed on startup (for debugging)"""
+        """
+        Address of the deployed pki contract.
 
-        self.blockchain_bn256g2_address: str = ''
-        """Address of the deployed bn256 contract, if empty, the library will be deployed on startup (for debugging)"""
+        Must be specified for backends other than w3-eth-tester.
+        This library can be deployed using ``zkay deploy-pki``.
+        """
+
+        self.blockchain_crypto_lib_addresses: str = ''
+        """
+        Comma separated list of the addresses of the deployed crypto library contracts required for the current proving_scheme.
+        e.g. "0xAb31...,0xec32C..."
+
+        Must be specified for backends other than w3-eth-tester.
+        The libraries can be deployed using ``zkay deploy-crypto-libs``.
+        The addresses in the list must appear in the same order as the corresponding \
+        libraries were deployed by that command.
+        """
 
         self.blockchain_default_account: Union[int, str, None] = 0
         """

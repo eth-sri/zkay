@@ -10,9 +10,11 @@ from zkay.utils.helpers import read_file
 
 def get_verify_libs_code() -> str:
     """Return all verification contract libraries combined into single string"""
-    # The bn256g2 library is in separate file because it is licensed under different terms than zkay
-    bn256_lib = read_file(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bn256g2.sol'))
-    return f'pragma solidity ^0.5.0;\n\n{bn256_lib}\n\n{pairing_lib}'
+    code = ''
+    if 'BN256G2' in cfg.external_crypto_lib_names:
+        code += f"{read_file(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bn256g2.sol'))}\n\n"\
+                f"{bn256g2_pairing_lib}"
+    return f'pragma solidity ^0.5.0;\n\n{code}'
 
 
 bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
@@ -50,7 +52,7 @@ def get_pki_contract() -> str:
     ''')
 
 
-pairing_lib = '' + '''\
+bn256g2_pairing_lib = '' + '''\
 // This library is MIT licensed
 //
 // Copyright 2017 Christian Reitwiessner

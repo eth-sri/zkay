@@ -12,7 +12,7 @@ def save_to_file(output_directory: Optional[str], filename: str, code: str):
         target = filename
     with open(target, "w") as f:
         f.write(code)
-    return filename
+    return target
 
 
 def read_file(filename: str):

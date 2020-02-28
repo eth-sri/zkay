@@ -51,11 +51,16 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
     API to interact with the blockchain.
 
     It automatically ensures that all needed library contracts are accessible.
-    If cfg.blockchain_pki_address or cfg.blockchain_bn256g2_address is not specified, the corresponding library contract will
-    be deployed automatically using ZkayBlockchainInterface.default_address as sender if cfg.blockchain_default_account is specified (useful for testing).
+    For most backends (except eth-tester), the necessary library contracts must be deployed in advance and \
+    cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
 
-    Otherwise, the integrity of the contract at the designated address on the chain is verified.
-    On success the already deployed library contract will be used, otherwise execution of the contract simulator terminates for safety reasons.
+    For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode \
+    from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+    (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by \
+    using the version/settings stored in the manifest file for the main and verification contracts)
+
+    See documentation of :py:meth:`connect` for more information.
     """
 
     # PUBLIC API
@@ -286,6 +291,20 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         return contract_on_chain
 
+    @abstractmethod
+    def deploy_solidity_contract(self, sol_filename: str, contract_name: Optional[str], sender: Union[bytes, str]) -> str:
+        """
+        Compile and deploy the specified solidity contract.
+
+        :param sol_filename: solidity file
+        :param contract_name: specifies which contract from the .sol file to compile (None -> take first contract in file)
+        :param sender: account address from which to issue the deployment transaction (keys must be hosted in node)
+        :raise BlockChainError: if there is an error in the backend
+        :raise TransactionFailedException: if the deployment transaction failed
+        :return: Address of the deployed contract
+        """
+        pass
+
     @classmethod
     def is_debug_backend(cls) -> bool:
         return False
@@ -361,10 +380,6 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
-        pass
-
-    @abstractmethod
-    def _deploy_or_connect_libraries(self, sender: Union[bytes, str]):
         pass
 
     @abstractmethod

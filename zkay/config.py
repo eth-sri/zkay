@@ -1,6 +1,6 @@
 import math
 from contextlib import contextmanager
-from typing import Dict, Any, ContextManager
+from typing import Dict, Any, ContextManager, List
 
 from semantic_version import NpmSpec, Version
 
@@ -53,7 +53,7 @@ class Config(UserConfig):
             'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs',
         ]
         self._options_with_effect_if_not_empty = [
-            'blockchain_pki_address', 'blockchain_bn256g2_address',
+            'blockchain_pki_address', 'blockchain_crypto_lib_addresses',
         ]
 
         self._is_unit_test = False
@@ -154,6 +154,11 @@ class Config(UserConfig):
     @property
     def proof_len(self) -> int:
         return provingschemeparams[self.proving_scheme]['proof_len']
+
+    @property
+    def external_crypto_lib_names(self) -> List[str]:
+        """Names of all solidity libraries in verify_libs.sol, which need to be linked against."""
+        return provingschemeparams[self.proving_scheme]['external_sol_libs']
 
     def should_use_hash(self, circuit: 'CircuitHelper') -> bool:
         """
