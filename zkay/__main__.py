@@ -55,21 +55,26 @@ def parse_arguments():
 
     # Expose config.py user options, they are supported in all parsers
     cfg_docs = parse_config_doc(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config_user.py'))
-    for name, (doc, t, defval, choices) in cfg_docs.items():
-        if t == 'bool':
-            assert defval == 'True' or defval == 'False', f"Invalid default value for {name} in config_user.py"
-            if defval == 'True':
-                cfg_group.add_argument(f'--no-{name.replace("_", "-")}', dest=name, help=doc, action='store_false')
+
+    def add_config_args(parser, arg_names):
+        for name in arg_names:
+            doc, t, defval, choices = cfg_docs[name]
+            if t == 'bool':
+                assert defval == 'True' or defval == 'False', f"Invalid default value for {name} in config_user.py"
+                if defval == 'True':
+                    parser.add_argument(f'--no-{name.replace("_", "-")}', dest=name, help=doc, action='store_false')
+                else:
+                    parser.add_argument(f'--{name.replace("_", "-")}', dest=name, help=doc, action='store_true')
+            elif t == 'int':
+                parser.add_argument(f'--{name.replace("_", "-")}', type=int, dest=name, metavar='<cfg_val>', help=doc)
+            elif t == 'str':
+                arg = parser.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc,
+                                          choices=choices)
+                if name.endswith('dir'):
+                    arg.completer = DirectoriesCompleter()
             else:
-                cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, help=doc, action='store_true')
-        elif t == 'int':
-            cfg_group.add_argument(f'--{name.replace("_", "-")}', type=int, dest=name, metavar='<cfg_val>', help=doc)
-        elif t == 'str':
-            arg = cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc, choices=choices)
-            if name.endswith('dir'):
-                arg.completer = DirectoriesCompleter()
-        else:
-            cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc)
+                parser.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc)
+    add_config_args(cfg_group, cfg_docs.keys())
 
     solc_version_help = 'zkay defaults to using the latest solc version of the major\n' \
           'solidity version supported by the current zkay version.\n\n' \
@@ -118,6 +123,27 @@ def parse_arguments():
     run_parser.add_argument('input', help=msg, metavar='<zkay_compilation_output_dir>').completer = DirectoriesCompleter()
     run_parser.add_argument('--log', action='store_true', help='enable logging')
 
+    # Common deploy libs parameters
+    deploy_libs_parser = argparse.ArgumentParser(add_help=False)
+    deploy_libs_req_group = deploy_libs_parser.add_argument_group('required arguments')
+    deploy_libs_req_group.add_argument('--node-uri', metavar='<URI>', required=True, dest='blockchain_node_uri',
+                                       help='Uri under which the local blockchain node is available '
+                                       '(e.g. http;//localhost:7545 for a local ganache noode).')
+    msg = 'Address of the account to use for deploying the library contracts. ' \
+          'Its ethereum keys must be hosted in the specified node and sufficient funds ' \
+          'to cover the deployment costs must be available.'
+    deploy_libs_req_group.add_argument('--account', metavar='<ethereum address>', help=msg, required=True)
+
+    # 'deploy-pki' parser
+    dpki_parser = subparsers.add_parser('deploy-pki', parents=[deploy_libs_parser],
+                                        help='Manually deploy global pki contract compatible with a particular crypto backend to a blockchain')
+    add_config_args(dpki_parser, {'crypto_backend', 'blockchain_backend'})
+
+    # 'deploy-crypto-libs' parser
+    dclibs_parser = subparsers.add_parser('deploy-crypto-libs', parents=[deploy_libs_parser],
+                                          help='Manually deploy proving-scheme specific crypto libraries (if any needed) to a blockchain')
+    add_config_args(dclibs_parser, {'proving_scheme', 'blockchain_backend'})
+
     # parse
     argcomplete.autocomplete(main_parser, always_complete_options=False)
     a = main_parser.parse_args()
@@ -133,7 +159,7 @@ def main():
     import zkay.compiler.privacy.zkay_frontend as frontend
     from zkay import my_logging
     from zkay.config import cfg
-    from zkay.utils.helpers import read_file
+    from zkay.utils.helpers import read_file, save_to_file
     from zkay.errors.exceptions import ZkayCompilerError
     from zkay.my_logging.log_context import log_context
     from zkay.utils.progress_printer import TermColor, colored_print
@@ -146,125 +172,141 @@ def main():
             override_dict[copt] = getattr(a, copt)
     cfg.override_defaults(override_dict)
 
-    # Solc version override
-    if hasattr(a, 'solc_version') and a.solc_version is not None:
-        try:
-            cfg.override_solc(a.solc_version)
-        except ValueError as e:
-            with colored_print(TermColor.FAIL):
-                print(f'Error: {e}')
-            exit(10)
-
-    input_path = Path(a.input)
-    if not input_path.exists():
-        with colored_print(TermColor.FAIL):
-            print(f'Error: input file \'{input_path}\' does not exist')
-        exit(1)
-
-    if a.cmd == 'check':
-        # only type-check
-        print(f'Type checking file {input_path.name}:')
-
-        code = read_file(str(input_path))
-        try:
-            get_processed_ast(code)
-        except ZkayCompilerError as e:
-            with colored_print(TermColor.FAIL):
-                print(f'{e}')
-            exit(3)
-    elif a.cmd == 'solify':
-        was_unit_test = cfg.is_unit_test
-        cfg._is_unit_test = True  # Suppress other output
-        try:
-            _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_path)))
-            print(fake_code)
-        except ZkayCompilerError as e:
-            with colored_print(TermColor.FAIL):
-                print(f'{e}')
-            exit(3)
-        finally:
-            cfg._is_unit_test = was_unit_test
-        exit(0)
-    elif a.cmd == 'compile':
-        # create output directory
-        output_dir = Path(a.output).absolute()
-        if not output_dir.exists():
-            os.makedirs(output_dir)
-        elif not output_dir.is_dir():
-            with colored_print(TermColor.FAIL):
-                print(f'Error: \'{output_dir}\' is not a directory')
-            exit(2)
-
-        # Enable logging
-        if a.log:
-            log_file = my_logging.get_log_file(filename='compile', include_timestamp=False, label=None)
-            my_logging.prepare_logger(log_file)
-
-        # only type-check
-        print(f'Compiling file {input_path.name}:')
-
-        # compile
-        with log_context('inputfile', os.path.basename(a.input)):
+    if a.cmd in ['deploy-pki', 'deploy-crypto-libs']:
+        import tempfile
+        from zkay.compiler.privacy import library_contracts
+        from zkay.transaction.runtime import Runtime
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with cfg.library_compilation_environment():
+                if a.cmd == 'deploy-pki':
+                    file = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
+                    addr = Runtime.blockchain().deploy_solidity_contract(file, cfg.pki_contract_name, a.account)
+                    print(f'Deployed pki contract at: {addr}')
+                else:
+                    file = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
+                    for lib in cfg.external_crypto_lib_names:
+                        addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
+                        print(f'Deployed crypto library {lib} at: {addr}')
+    else:
+        # Solc version override
+        if hasattr(a, 'solc_version') and a.solc_version is not None:
             try:
-                frontend.compile_zkay_file(str(input_path), str(output_dir))
+                cfg.override_solc(a.solc_version)
+            except ValueError as e:
+                with colored_print(TermColor.FAIL):
+                    print(f'Error: {e}')
+                exit(10)
+
+        input_path = Path(a.input)
+        if not input_path.exists():
+            with colored_print(TermColor.FAIL):
+                print(f'Error: input file \'{input_path}\' does not exist')
+            exit(1)
+
+        if a.cmd == 'check':
+            # only type-check
+            print(f'Type checking file {input_path.name}:')
+
+            code = read_file(str(input_path))
+            try:
+                get_processed_ast(code)
             except ZkayCompilerError as e:
                 with colored_print(TermColor.FAIL):
                     print(f'{e}')
                 exit(3)
-    elif a.cmd == 'import':
-        # create output directory
-        output_dir = Path(a.output).absolute()
-        if not output_dir.exists():
-            os.makedirs(output_dir)
-        elif not output_dir.is_dir():
-            with colored_print(TermColor.FAIL):
-                print(f'Error: \'{output_dir}\' is not a directory')
-            exit(2)
+        elif a.cmd == 'solify':
+            was_unit_test = cfg.is_unit_test
+            cfg._is_unit_test = True  # Suppress other output
+            try:
+                _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_path)))
+                print(fake_code)
+            except ZkayCompilerError as e:
+                with colored_print(TermColor.FAIL):
+                    print(f'{e}')
+                exit(3)
+            finally:
+                cfg._is_unit_test = was_unit_test
+            exit(0)
+        elif a.cmd == 'compile':
+            # create output directory
+            output_dir = Path(a.output).absolute()
+            if not output_dir.exists():
+                os.makedirs(output_dir)
+            elif not output_dir.is_dir():
+                with colored_print(TermColor.FAIL):
+                    print(f'Error: \'{output_dir}\' is not a directory')
+                exit(2)
 
-        try:
-            frontend.extract_zkay_package(str(input_path), str(output_dir))
-        except ZkayCompilerError as e:
-            with colored_print(TermColor.FAIL):
-                print(f"ERROR while compiling unpacked zkay contract.\n{e}")
-            exit(3)
-        except Exception as e:
-            with colored_print(TermColor.FAIL):
-                print(f"ERROR while unpacking zkay contract\n{e}")
-            exit(5)
-    elif a.cmd == 'export':
-        output_filename = Path(a.output).absolute()
-        os.makedirs(output_filename.parent, exist_ok=True)
-        try:
-            frontend.package_zkay_contract(str(input_path), str(output_filename))
-        except Exception as e:
-            with colored_print(TermColor.FAIL):
-                print(f"ERROR while exporting zkay contract\n{e}")
-            exit(4)
-    elif a.cmd == 'run':
-        import sys
-        import importlib
+            # Enable logging
+            if a.log:
+                log_file = my_logging.get_log_file(filename='compile', include_timestamp=False, label=None)
+                my_logging.prepare_logger(log_file)
 
-        # Enable logging
-        if a.log:
-            log_file = my_logging.get_log_file(filename=f'transactions_{input_path.name}', include_timestamp=True, label=None)
-            my_logging.prepare_logger(log_file)
+            # only type-check
+            print(f'Compiling file {input_path.name}:')
 
-        # Dynamically load module and replace globals with module globals
-        globals().clear()
-        sys.path.append(str(input_path.absolute()))
-        oc = importlib.import_module(f'contract')
-        importlib.reload(oc)
-        sys.path.pop()
-        globals().update(oc.__dict__)
+            # compile
+            with log_context('inputfile', os.path.basename(a.input)):
+                try:
+                    frontend.compile_zkay_file(str(input_path), str(output_dir))
+                except ZkayCompilerError as e:
+                    with colored_print(TermColor.FAIL):
+                        print(f'{e}')
+                    exit(3)
+        elif a.cmd == 'import':
+            # create output directory
+            output_dir = Path(a.output).absolute()
+            if not output_dir.exists():
+                os.makedirs(output_dir)
+            elif not output_dir.is_dir():
+                with colored_print(TermColor.FAIL):
+                    print(f'Error: \'{output_dir}\' is not a directory')
+                exit(2)
 
-        # Move into contract.py
-        oc.zk__init(interactive=True)
-        exit(0)
-    else:
-        raise NotImplementedError(a.cmd)
+            try:
+                frontend.extract_zkay_package(str(input_path), str(output_dir))
+            except ZkayCompilerError as e:
+                with colored_print(TermColor.FAIL):
+                    print(f"ERROR while compiling unpacked zkay contract.\n{e}")
+                exit(3)
+            except Exception as e:
+                with colored_print(TermColor.FAIL):
+                    print(f"ERROR while unpacking zkay contract\n{e}")
+                exit(5)
+        elif a.cmd == 'export':
+            output_filename = Path(a.output).absolute()
+            os.makedirs(output_filename.parent, exist_ok=True)
+            try:
+                frontend.package_zkay_contract(str(input_path), str(output_filename))
+            except Exception as e:
+                with colored_print(TermColor.FAIL):
+                    print(f"ERROR while exporting zkay contract\n{e}")
+                exit(4)
+        elif a.cmd == 'run':
+            import sys
+            import importlib
 
-    with colored_print(TermColor.OKGREEN):
-        print("Finished successfully")
+            # Enable logging
+            if a.log:
+                log_file = my_logging.get_log_file(filename=f'transactions_{input_path.name}', include_timestamp=True, label=None)
+                my_logging.prepare_logger(log_file)
+
+            # Dynamically load module and replace globals with module globals
+            globals().clear()
+            sys.path.append(str(input_path.absolute()))
+            oc = importlib.import_module(f'contract')
+            importlib.reload(oc)
+            sys.path.pop()
+            globals().update(oc.__dict__)
+
+            # Move into contract.py
+            oc.zk__init(interactive=True)
+            exit(0)
+        else:
+            raise NotImplementedError(a.cmd)
+
+        with colored_print(TermColor.OKGREEN):
+            print("Finished successfully")
 
 
 if __name__ == '__main__':

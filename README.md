@@ -84,6 +84,20 @@ zkay solify test.zkay
 
 The transformed code is printed to stdout.
 
+### Deploy library contracts
+zkay requires a crypto-backend dependent external PKI (public key infrastructure) contract and
+depending on the proving-scheme also additional library contracts on the blockchain to function.
+
+These contracts can be compiled and deployed using the commands:
+
+```bash
+zkay deploy-pki --node-uri <local eth node uri> --account <address>
+zkay deploy-crypto-libs --node-uri <local eth node uri> --account <address>
+```
+
+[//]: # (We should probably deploy official pki and library contracts on testnet [maybe mainnet],
+         to which zkay can connect by default)
+
 ### Compile Contracts
 
 To compile a zkay file `test.zkay`
