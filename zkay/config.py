@@ -93,7 +93,7 @@ class Config(UserConfig):
     @property
     def zkay_version(self) -> str:
         """zkay version number"""
-        return '0.2'
+        return '0.2.0'
 
     @property
     def zkay_solc_version_compatibility(self) -> NpmSpec:

@@ -129,7 +129,6 @@ def main():
     a = parse_arguments()
 
     from pathlib import Path
-    from ast import literal_eval
 
     import zkay.compiler.privacy.zkay_frontend as frontend
     from zkay import my_logging
@@ -148,7 +147,7 @@ def main():
     cfg.override_defaults(override_dict)
 
     # Solc version override
-    if a.solc_version is not None:
+    if hasattr(a, 'solc_version') and a.solc_version is not None:
         try:
             cfg.override_solc(a.solc_version)
         except ValueError as e:

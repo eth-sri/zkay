@@ -20,7 +20,7 @@
 project = 'zkay'
 copyright = '2020, Nick Baumann'
 author = 'Nick Baumann'
-version = '0.2'
+version = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------

@@ -60,7 +60,7 @@ class CustomDevelop(develop):
 setup(
     # Metadata
     name='zkay',
-    version='0.2',
+    version='0.2.0',
     author='nicbauma',
     author_email='nicbauma@users.noreply.gitlab.inf.ethz.ch',
     url='https://github.com/eth-sri/zkay',
