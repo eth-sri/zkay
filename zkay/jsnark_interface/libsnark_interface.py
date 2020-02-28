@@ -19,7 +19,7 @@ def generate_keys(output_dir: str, proving_scheme: str):
     :raise SubprocessError: if key generation fails
     :raise KeyError: if proving scheme name is invalid
     """
-    run_command([libsnark_runner, 'keygen', str(proving_scheme_map[proving_scheme])], cwd=output_dir, debug_output_key='libsnark')
+    run_command([libsnark_runner, 'keygen', str(proving_scheme_map[proving_scheme])], cwd=output_dir, allow_verbose=True)
 
 
 def generate_proof(output_dir: str, proving_scheme: str):
@@ -32,4 +32,4 @@ def generate_proof(output_dir: str, proving_scheme: str):
     :raise KeyError: if proving scheme name is invalid
     """
     run_command([libsnark_runner, 'proofgen', str(proving_scheme_map[proving_scheme]),
-                 str(int(cfg.libsnark_check_verify_locally_during_proof_generation))], cwd=output_dir, debug_output_key='libsnark')
+                 str(int(cfg.libsnark_check_verify_locally_during_proof_generation))], cwd=output_dir, allow_verbose=True)

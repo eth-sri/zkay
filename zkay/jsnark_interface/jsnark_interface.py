@@ -28,7 +28,7 @@ def compile_circuit(circuit_dir: str, javacode: str):
     run_command(['javac', '-cp', f'{circuit_builder_jar}', jfile], cwd=circuit_dir)
 
     # Run jsnark to generate the circuit
-    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, debug_output_key='jsnark')
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, allow_verbose=True)
 
 
 def prepare_proof(circuit_dir: str, serialized_args: List[int]):
@@ -42,7 +42,7 @@ def prepare_proof(circuit_dir: str, serialized_args: List[int]):
     serialized_arg_str = [format(arg, 'x') for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, debug_output_key='jsnark')
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, allow_verbose=True)
 
 
 _class_template_str = '' + '''\

@@ -30,7 +30,7 @@ cd zkay
 python3 setup.py sdist
 pip3 install dist/zkay-{version}.tar.gz
 
-# Note: Once zkay is published this simplifies to `pip install zkay`
+# Note: Once zkay is published this simplifies to `pip3 install zkay`
 ```
 
 ## Development Setup
@@ -55,14 +55,17 @@ within the docker container. You can run `zkay-docker.sh` also from any other di
 In this case, `d` is mounted as `/d_host` inside the container.
 This allows you to operate on files from your host machine.
 
-## Unit Tests
 
-To run all unit tests of zkay, run:
+### Unit Tests
+
+To run all unit tests, use:
 ```bash
 python3 -m unittest discover --verbose zkay
 ```
 
-## Type-Check Contracts
+## Usage
+
+### Type-Check Contracts
 
 To type-check a zkay file `test.zkay` without compiling it, run:
 
@@ -70,10 +73,10 @@ To type-check a zkay file `test.zkay` without compiling it, run:
 zkay check test.zkay
 ```
 
-## Fake solidity transformation
+### Strip zkay features from contract
 
 To output a source-location-preserving public solidity
-contract which corresponds to `test.zkay` but with all privacy features removed (useful for running analysis tools desigend for solidity), run:
+contract which corresponds to `test.zkay` but with all privacy features removed (useful for running analysis tools designed for solidity), run:
 
 ```bash
 zkay solify test.zkay
@@ -81,7 +84,7 @@ zkay solify test.zkay
 
 The transformed code is printed to stdout.
 
-## Compile Contracts
+### Compile Contracts
 
 To compile a zkay file `test.zkay`
 
@@ -95,9 +98,9 @@ This performs the following steps
 - NIZK proof circuit compilation and key generation
 - Generation of `contract.py` (interface code which does automatic transaction transformation to interact with the zkay contract)
 
-## Package Contract For Distribution
+### Package Contract For Distribution
 
-To package a zkay contract, which was previsouly compiled with output directory "./zkay_out" for distribution, run:
+To package a zkay contract which was previously compiled with output directory "./zkay_out" for distribution, run:
 
 ```bash
 zkay export [-o "<output_filename>"] ./zkay_out
@@ -106,7 +109,7 @@ zkay export [-o "<output_filename>"] ./zkay_out
 This will create an archive, which contains the zkay code, a manifest and the snark keys.
 The recommended file extension is `*.zkp`.
 
-## Unpack Packaged Contract
+### Unpack Packaged Contract
 
 To unpack and compile a contract package `contract.zkp`, which was previously created using `zkay export`:
 
@@ -115,7 +118,7 @@ zkay import [-o "<unpack_directory>"] contract.zkp
 ```
 
 
-## Interact with contract
+### Interact with contract
 
 Assuming you have previously compiled a file `test.zkay` with `zkay compile -o "output_dir"` or
 have imported a file `contract.zkp` using `zkay import -o "output_dir" contract.zkp`

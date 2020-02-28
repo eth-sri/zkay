@@ -102,7 +102,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :return: the public key
         """
         assert isinstance(address, AddressValue)
-        debug_print(f'Requesting public key for address "{address}"')
+        debug_print(f'Requesting public key for address "{address}"', verbose_only=True)
         return self._req_public_key(address.val)
 
     def announce_public_key(self, sender: AddressValue, pk: PublicKeyValue) -> Any:
@@ -133,9 +133,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :return: The value
         """
         assert contract_handle is not None
-        debug_print(f'Requesting state variable "{name}"')
+        debug_print(f'Requesting state variable "{name}"', verbose_only=True)
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(indices)))
-        debug_print(f'Got value {val} for state variable "{name}"')
+        debug_print(f'Got value {val} for state variable "{name}"', verbose_only=True)
         return val
 
     def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, bytes, List]:
@@ -150,9 +150,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
 
         assert contract_handle is not None
-        debug_print(f'Calling contract function {name}{Value.collection_to_string(args)}')
+        debug_print(f'Calling contract function {name}{Value.collection_to_string(args)}', verbose_only=True)
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
-        debug_print(f'Got return value {val}')
+        debug_print(f'Got return value {val}', verbose_only=True)
         return val
 
     def transact(self, contract_handle, sender: AddressValue, function: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
@@ -409,7 +409,7 @@ class ZkayKeystoreInterface(metaclass=ABCMeta):
         :return: the public key
         """
         assert isinstance(address, AddressValue)
-        debug_print(f'Requesting public key for address {address.val}')
+        debug_print(f'Requesting public key for address {address.val}', verbose_only=True)
         if address in self.local_pk_store:
             return self.local_pk_store[address]
         else:
@@ -478,7 +478,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert not isinstance(plain, Value), f"Tried to encrypt value of type {type(plain).__name__}"
         assert isinstance(my_addr, AddressValue) and isinstance(target_addr, AddressValue)
         assert int(plain) < bn128_scalar_field, f"Integer overflow, plaintext is >= field prime"
-        debug_print(f'Encrypting value {plain} for destination "{target_addr}"')
+        debug_print(f'Encrypting value {plain} for destination "{target_addr}"', verbose_only=True)
 
         sk = self.keystore.sk(my_addr).val
         raw_pk = self.keystore.getPk(target_addr)
@@ -506,7 +506,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(my_addr, AddressValue)
-        debug_print(f'Decrypting value {cipher} for {my_addr}')
+        debug_print(f'Decrypting value {cipher} for {my_addr}', verbose_only=True)
 
         if cipher == CipherValue():
             ret = 0, RandomnessValue()

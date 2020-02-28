@@ -8,9 +8,9 @@ from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.config_user import UserConfig
 from zkay.transaction.crypto.meta import cryptoparams
 
-__debug_print = True
-def debug_print(*args, **kwargs):
-    if __debug_print and not cfg.is_unit_test:
+
+def debug_print(*args, verbose_only=False, **kwargs):
+    if (not verbose_only or cfg.verbose) and not cfg.is_unit_test:
         print(*args, **kwargs)
 
 

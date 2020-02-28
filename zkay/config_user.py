@@ -82,15 +82,6 @@ class UserConfig:
         self.libsnark_check_verify_locally_during_proof_generation: bool = False
         """If true, the libsnark interface verifies locally whether the proof can be verified during proof generation."""
 
-        self.debug_output_whitelist: Set[str] = {
-            'jsnark',
-            'libsnark',
-        }
-        """
-        If the 'key' argument of run_command matches an entry in this list, the commands output directly goes to stdout
-        instead of being captured. -> Useful for debugging, but must not specify a key if output capturing is required.
-        """
-
         self.opt_solc_optimizer_runs: int = 50
         """SOLC: optimize for how many times to run the code"""
 
@@ -104,20 +95,20 @@ class UserConfig:
         but much higher off-chain costs (key and proof generation time, memory consumption).
         """
 
-        self.opt_eval_constexpr_in_circuit: int = True
+        self.opt_eval_constexpr_in_circuit: bool = True
         """
         If true, literal expressions are folded and the result is baked into the circuit as a constant
         (as opposed to being evaluated outside the circuit and the result being moved in as an additional circuit input)
         """
 
-        self.opt_cache_circuit_inputs: int = True
+        self.opt_cache_circuit_inputs: bool = True
         """
         If true, identifier circuit inputs will be cached (i.e. if an identifier is referenced multiple times within a private expression,
         or multiple times in different private expressions without being publicly written to in between,
         then the identifier will only be added to the circuit inputs once and all private uses will share the same input variable.
         """
 
-        self.opt_cache_circuit_outputs: int = True
+        self.opt_cache_circuit_outputs: bool = True
         """
         Normally, the value cached in the circuit for a particular identifier must be invalidated whenever the identifier is
         assigned to in public code.
@@ -138,3 +129,11 @@ class UserConfig:
 
         self.use_circuit_cache_during_testing_with_encryption: bool = True
         """If true, snark keys for the test cases are cached (i.e. they are not regenerated on every run unless the circuit was modified)"""
+
+        self.verbose: bool = False
+        """
+        If true, print additional output.
+
+        This includes for example snark key- and proof generation output and
+        information about intermediate transaction simulation steps.
+        """

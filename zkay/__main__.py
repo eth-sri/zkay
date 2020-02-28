@@ -28,10 +28,12 @@ def parse_config_doc(config_py_filename: str):
         else:
             choices = None
 
+        t = textwrap.dedent(groups['type']).strip()
+        defval = textwrap.dedent(groups['default']).strip()
         docs[groups['name']] = (
-            f"type: {textwrap.dedent(groups['type']).strip()}\n\n"
+            f"type: {t}\n\n"
             f"{textwrap.dedent(groups['doc']).strip()}\n\n"
-            f"Default value: {textwrap.dedent(groups['default']).strip()}", choices)
+            f"Default value: {defval}", t, defval, choices)
     return docs
 
 
@@ -53,10 +55,21 @@ def parse_arguments():
 
     # Expose config.py user options, they are supported in all parsers
     cfg_docs = parse_config_doc(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config_user.py'))
-    for name, (doc, choices) in cfg_docs.items():
-        arg = cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc, choices=choices)
-        if name.endswith('dir'):
-            arg.completer = DirectoriesCompleter()
+    for name, (doc, t, defval, choices) in cfg_docs.items():
+        if t == 'bool':
+            assert defval == 'True' or defval == 'False', f"Invalid default value for {name} in config_user.py"
+            if defval == 'True':
+                cfg_group.add_argument(f'--no-{name.replace("_", "-")}', dest=name, help=doc, action='store_false')
+            else:
+                cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, help=doc, action='store_true')
+        elif t == 'int':
+            cfg_group.add_argument(f'--{name.replace("_", "-")}', type=int, dest=name, metavar='<cfg_val>', help=doc)
+        elif t == 'str':
+            arg = cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc, choices=choices)
+            if name.endswith('dir'):
+                arg.completer = DirectoriesCompleter()
+        else:
+            cfg_group.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc)
 
     solc_version_help = 'zkay defaults to using the latest solc version of the major\n' \
           'solidity version supported by the current zkay version.\n\n' \
@@ -131,12 +144,7 @@ def main():
     override_dict = {}
     for copt in vars(__ucfg):
         if hasattr(a, copt) and getattr(a, copt) is not None:
-            v = getattr(a, copt).strip()
-            try:
-                val = literal_eval(v)  # Try to interpret type
-            except ValueError:
-                val = v  # It is a string
-            override_dict[copt] = val
+            override_dict[copt] = getattr(a, copt)
     cfg.override_defaults(override_dict)
 
     # Solc version override
