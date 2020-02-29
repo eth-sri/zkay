@@ -6,6 +6,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 test_package = 'zkay.tests'
 antlr_version = '4.7.2'
+zkay_libsnark_commit_hash = '2ee8465ec783176564bd36ba815c015c245650c1'
 packages = find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*'])
 
 
@@ -30,6 +31,7 @@ def build_libsnark_backend(target_dir: str):
     from tempfile import TemporaryDirectory
     with TemporaryDirectory() as d:
         subprocess.check_call(['git', 'clone', '--recursive', 'https://github.com/eth-sri/zkay-libsnark.git', 'snark'], cwd=d)
+        subprocess.check_call(['git', 'checkout', zkay_libsnark_commit_hash], cwd=os.path.join(d, 'snark'))
         subprocess.check_call(['./build.sh', str(multiprocessing.cpu_count())], cwd=os.path.join(d, 'snark'))
         shutil.copyfile(os.path.join(d, 'snark', 'build', 'libsnark', 'zkay_interface', 'run_snark'), os.path.join(target_dir, 'run_snark'))
         perms = os.stat(os.path.join(target_dir, 'run_snark'))
