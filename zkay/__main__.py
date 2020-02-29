@@ -14,7 +14,7 @@ def parse_config_doc(config_py_filename: str):
 
     with open(config_py_filename, 'r') as f:
         config_contents = f.read()
-    option_regex = re.compile(r'self\.(?P<name>\w+)\s*(?::(?P<type>[^\n=]*))?=(?P<default>(?:.|[\n\r])*?(?="""))(?:"""(?P<doc>(?:.|[\n\r])*?(?=""")))')
+    option_regex = re.compile(r'self\.(?P<name>[a-zA-Z]\w*)\s*(?::(?P<type>[^\n=]*))?=(?P<default>(?:.|[\n\r])*?(?="""))(?:"""(?P<doc>(?:.|[\n\r])*?(?=""")))')
     choices_regex = re.compile(r'Available Options: \[(?P<opts>.+?)\]')
 
     docs = {}
@@ -47,7 +47,12 @@ def parse_arguments():
 
     main_parser = argparse.ArgumentParser(prog='zkay')
     zkay_files = ('zkay', 'sol')
-    zkay_package_files = ('*.zkp', )
+    zkay_package_files = ('zkp', )
+    config_files = ('json', )
+
+    msg = 'Path to local configuration file (defaults to "config.json" in cwd). ' \
+          'This file (if it exists), overrides settings defined in the global configuration.'
+    main_parser.add_argument('--config-file', default='config.json', metavar='<config_file>', help=msg).completer = FilesCompleter(config_files)
 
     # Shared 'config' parser
     config_parser = argparse.ArgumentParser(add_help=False)
@@ -125,19 +130,16 @@ def parse_arguments():
 
     # Common deploy libs parameters
     deploy_libs_parser = argparse.ArgumentParser(add_help=False)
-    deploy_libs_req_group = deploy_libs_parser.add_argument_group('required arguments')
-    deploy_libs_req_group.add_argument('--node-uri', metavar='<URI>', required=True, dest='blockchain_node_uri',
-                                       help='Uri under which the local blockchain node is available '
-                                       '(e.g. http;//localhost:7545 for a local ganache noode).')
     msg = 'Address of the account to use for deploying the library contracts. ' \
           'Its ethereum keys must be hosted in the specified node and sufficient funds ' \
-          'to cover the deployment costs must be available.'
-    deploy_libs_req_group.add_argument('--account', metavar='<ethereum address>', help=msg, required=True)
+          'to cover the deployment costs must be available. ' \
+          'WARNING: This account will be charged with the deployment costs.'
+    deploy_libs_parser.add_argument('account', metavar='<deployer account ethereum address>', help=msg)
 
     # 'deploy-pki' parser
     dpki_parser = subparsers.add_parser('deploy-pki', parents=[deploy_libs_parser],
                                         help='Manually deploy global pki contract compatible with a particular crypto backend to a blockchain')
-    add_config_args(dpki_parser, {'crypto_backend', 'blockchain_backend'})
+    add_config_args(dpki_parser, {'crypto_backend', 'blockchain_backend', 'blockchain_node_uri'})
 
     # 'deploy-crypto-libs' parser
     dclibs_parser = subparsers.add_parser('deploy-crypto-libs', parents=[deploy_libs_parser],
@@ -165,7 +167,18 @@ def main():
     from zkay.utils.progress_printer import TermColor, colored_print
     from zkay.zkay_ast.process_ast import get_processed_ast, get_parsed_ast_and_fake_code
 
+    # Load configuration files
+    try:
+        cfg.load_configuration_from_disk(a.config_file)
+    except Exception as e:
+        with colored_print(TermColor.FAIL):
+            print(f"ERROR: Failed to load configuration files\n{e}")
+            exit(42)
+
     # Support for overriding any user config setting via command line
+    # The evaluation order for configuration loading is:
+    # Default values in config.py -> Site config.json -> user config.json -> local config.json -> cmdline arguments
+    # Settings defined at a later stage override setting values defined at an earlier stage
     override_dict = {}
     for copt in vars(__ucfg):
         if hasattr(a, copt) and getattr(a, copt) is not None:
@@ -177,16 +190,20 @@ def main():
         from zkay.compiler.privacy import library_contracts
         from zkay.transaction.runtime import Runtime
         with tempfile.TemporaryDirectory() as tmpdir:
-            with cfg.library_compilation_environment():
-                if a.cmd == 'deploy-pki':
-                    file = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
-                    addr = Runtime.blockchain().deploy_solidity_contract(file, cfg.pki_contract_name, a.account)
-                    print(f'Deployed pki contract at: {addr}')
-                else:
-                    file = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
-                    for lib in cfg.external_crypto_lib_names:
-                        addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
-                        print(f'Deployed crypto library {lib} at: {addr}')
+            try:
+                with cfg.library_compilation_environment():
+                    if a.cmd == 'deploy-pki':
+                        file = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
+                        addr = Runtime.blockchain().deploy_solidity_contract(file, cfg.pki_contract_name, a.account)
+                        print(f'Deployed pki contract at: {addr}')
+                    else:
+                        file = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
+                        for lib in cfg.external_crypto_lib_names:
+                            addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
+                            print(f'Deployed crypto library {lib} at: {addr}')
+            except Exception as e:
+                with colored_print(TermColor.FAIL):
+                    print(f"ERROR: Deployment failed\n{e}")
     else:
         # Solc version override
         if hasattr(a, 'solc_version') and a.solc_version is not None:

@@ -1,6 +1,8 @@
+import json
 import math
+import os
 from contextlib import contextmanager
-from typing import Dict, Any, ContextManager, List
+from typing import Dict, Any, ContextManager, List, Optional
 
 from semantic_version import NpmSpec, Version
 
@@ -59,7 +61,28 @@ class Config(UserConfig):
         self._is_unit_test = False
         self._concrete_solc_version = None
 
+    def load_configuration_from_disk(self, local_cfg_file: str):
+        # Load global configuration file
+        global_config_dir = self._appdirs.site_config_dir
+        global_cfg_file = os.path.join(global_config_dir, 'config.json')
+        if os.path.exists(global_cfg_file):
+            with open(global_cfg_file) as conf:
+                self.override_defaults(json.load(conf))
+
+        # Load user configuration file
+        user_config_dir = self._appdirs.user_config_dir
+        user_cfg_file = os.path.join(user_config_dir, 'config.json')
+        if os.path.exists(user_cfg_file):
+            with open(user_cfg_file) as conf:
+                self.override_defaults(json.load(conf))
+
+        # Load local configuration file
+        if os.path.exists(local_cfg_file):
+            with open(local_cfg_file) as conf:
+                self.override_defaults(json.load(conf))
+
     def override_defaults(self, overrides: Dict[str, Any]):
+        # TODO validate override values (check whether they have legal values for the respective config option)
         for arg, val in overrides.items():
             if not hasattr(self, arg):
                 raise ValueError(f'Tried to override non-existing config value {arg}')

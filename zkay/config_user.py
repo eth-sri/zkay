@@ -7,13 +7,15 @@ and autocompletion information from the attribute docstrings.
 WARNING: This is one of the only zkay modules that is imported before argcomplete.autocomplete is called. \
 For performance reasons it should thus not have any import side-effects or perform any expensive operations during import.
 """
-from typing import Any, Union, Set
+from typing import Any, Union
 
-import appdirs
+from appdirs import AppDirs
 
 
 class UserConfig:
     def __init__(self):
+        self._appdirs = AppDirs('zkay', appauthor=False, version=None, roaming=True)
+
         # User configuration
         # Each attribute must have a type hint and a docstring for correct help strings in the commandline interface.
         # If 'Available Options: [...]' is specified, the options are used for autocomplete suggestions.
@@ -131,13 +133,10 @@ class UserConfig:
         the corresponding plaintext value is already available in the circuit)
         """
 
-        self.config_dir: str = appdirs.user_config_dir('zkay', False, None, True)
-        """Path to directory where to store configuration data."""
-
-        self.data_dir: str = appdirs.user_data_dir('zkay', False, None, True)
+        self.data_dir: str = self._appdirs.user_data_dir
         """Path to directory where to store user data (e.g. generated encryption keys)."""
 
-        self.log_dir: str = appdirs.user_log_dir('zkay')
+        self.log_dir: str = self._appdirs.user_log_dir
         """Path to default log directory."""
 
         self.use_circuit_cache_during_testing_with_encryption: bool = True

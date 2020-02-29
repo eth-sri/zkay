@@ -262,7 +262,6 @@ class Web3TesterBlockchain(Web3Blockchain):
                     self._lib_addresses[lib] = out.address
                     zk_print(f'Deployed crypto lib {lib} at address "{out.address}"')
 
-
     def _create_w3_instance(self) -> Web3:
         genesis_overrides = {'gas_limit': int(max_gas_limit * 1.2)}
         custom_genesis_params = PyEVMBackend._generate_genesis_params(overrides=genesis_overrides)
