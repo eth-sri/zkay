@@ -5,35 +5,27 @@ import argparse
 import os
 from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 from zkay.config_user import UserConfig
-__ucfg = UserConfig()
 
 
-def parse_config_doc(config_py_filename: str):
-    import re
+def parse_config_doc():
     import textwrap
-
-    with open(config_py_filename, 'r') as f:
-        config_contents = f.read()
-    option_regex = re.compile(r'self\.(?P<name>[a-zA-Z]\w*)\s*(?::(?P<type>[^\n=]*))?=(?P<default>(?:.|[\n\r])*?(?="""))(?:"""(?P<doc>(?:.|[\n\r])*?(?=""")))')
-    choices_regex = re.compile(r'Available Options: \[(?P<opts>.+?)\]')
+    from typing import get_type_hints
+    __ucfg = UserConfig()
 
     docs = {}
-    for match in option_regex.finditer(config_contents):
-        groups = match.groupdict()
-        assert groups['name'] and groups['type'] and groups['doc'], f'Value {groups["name"]} is not properly documented'
-        choices_match = choices_regex.search(groups['doc'])
-        if choices_match:
-            choices = choices_match.groupdict()['opts'].split(',')
-            choices = [c.strip() for c in choices]
-        else:
-            choices = None
-
-        t = textwrap.dedent(groups['type']).strip()
-        defval = textwrap.dedent(groups['default']).strip()
-        docs[groups['name']] = (
+    for name, prop in vars(UserConfig).items():
+        if name.startswith('_') or not isinstance(prop, property):
+            continue
+        t = get_type_hints(prop.fget)['return']
+        doc = prop.__doc__
+        choices = None
+        if hasattr(__ucfg, f'_{name}_values'):
+            choices = getattr(__ucfg, f'_{name}_values')
+        default_val = getattr(__ucfg, name)
+        docs[name] = (
             f"type: {t}\n\n"
-            f"{textwrap.dedent(groups['doc']).strip()}\n\n"
-            f"Default value: {defval}", t, defval, choices)
+            f"{textwrap.dedent(doc).strip()}\n\n"
+            f"Default value: {default_val}", t, default_val, choices)
     return docs
 
 
@@ -56,29 +48,28 @@ def parse_arguments():
 
     # Shared 'config' parser
     config_parser = argparse.ArgumentParser(add_help=False)
-    cfg_group = config_parser.add_argument_group(title='Configuration Options', description='These parameters can be used to override settings defined (and documented) in config_user.py')
+    msg = 'These parameters can be used to override settings defined (and documented) in config_user.py'
+    cfg_group = config_parser.add_argument_group(title='Configuration Options', description=msg)
 
-    # Expose config.py user options, they are supported in all parsers
-    cfg_docs = parse_config_doc(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config_user.py'))
+    # Expose config_user.py options via command line arguments, they are supported in all parsers
+    cfg_docs = parse_config_doc()
 
     def add_config_args(parser, arg_names):
         for name in arg_names:
             doc, t, defval, choices = cfg_docs[name]
-            if t == 'bool':
-                assert defval == 'True' or defval == 'False', f"Invalid default value for {name} in config_user.py"
-                if defval == 'True':
+
+            if t is bool:
+                if defval:
                     parser.add_argument(f'--no-{name.replace("_", "-")}', dest=name, help=doc, action='store_false')
                 else:
                     parser.add_argument(f'--{name.replace("_", "-")}', dest=name, help=doc, action='store_true')
-            elif t == 'int':
+            elif t is int:
                 parser.add_argument(f'--{name.replace("_", "-")}', type=int, dest=name, metavar='<cfg_val>', help=doc)
-            elif t == 'str':
+            else:
                 arg = parser.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc,
                                           choices=choices)
                 if name.endswith('dir'):
                     arg.completer = DirectoriesCompleter()
-            else:
-                parser.add_argument(f'--{name.replace("_", "-")}', dest=name, metavar='<cfg_val>', help=doc)
     add_config_args(cfg_group, cfg_docs.keys())
 
     solc_version_help = 'zkay defaults to using the latest solc version of the major\n' \
@@ -144,7 +135,7 @@ def parse_arguments():
     # 'deploy-crypto-libs' parser
     dclibs_parser = subparsers.add_parser('deploy-crypto-libs', parents=[deploy_libs_parser],
                                           help='Manually deploy proving-scheme specific crypto libraries (if any needed) to a blockchain')
-    add_config_args(dclibs_parser, {'proving_scheme', 'blockchain_backend'})
+    add_config_args(dclibs_parser, {'proving_scheme', 'blockchain_backend', 'blockchain_node_uri'})
 
     # parse
     argcomplete.autocomplete(main_parser, always_complete_options=False)
@@ -180,9 +171,11 @@ def main():
     # Default values in config.py -> Site config.json -> user config.json -> local config.json -> cmdline arguments
     # Settings defined at a later stage override setting values defined at an earlier stage
     override_dict = {}
-    for copt in vars(__ucfg):
-        if hasattr(a, copt) and getattr(a, copt) is not None:
-            override_dict[copt] = getattr(a, copt)
+    for name in vars(UserConfig):
+        if name[0] != '_' and hasattr(a, name):
+            val = getattr(a, name)
+            if val is not None:
+                override_dict[name] = val
     cfg.override_defaults(override_dict)
 
     if a.cmd in ['deploy-pki', 'deploy-crypto-libs']:

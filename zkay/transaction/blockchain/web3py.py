@@ -154,6 +154,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
                 self._pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
 
                 verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
+                self._lib_addresses = {}
                 for lib, addr in zip(cfg.external_crypto_lib_names, lib_addresses):
                     out = self._verify_contract_integrity(addr, verify_sol, contract_name=lib, is_library=True)
                     self._lib_addresses[lib] = out.address

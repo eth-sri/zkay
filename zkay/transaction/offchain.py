@@ -187,7 +187,7 @@ class ContractSimulator:
         signatures = [(fname, str(inspect.signature(sig))) for fname, sig in global_fcts]
         print("Global functions:")
         print('\n'.join([f'{fname}({sig[1:]}' for fname, sig in signatures
-                         if not fname.startswith('_') and fname != 'help']))
+                         if not fname.startswith('_') and fname != 'help' and fname != 'zk__init']))
         print()
         print(f'Members for {contract_name} contract instances (either deploy or connect to create one):')
         signatures = [(fname, str(inspect.signature(sig))) for fname, sig in members]
