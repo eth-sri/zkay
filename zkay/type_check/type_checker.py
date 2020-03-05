@@ -297,6 +297,8 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert ast.target is not None
+        if ast.expr.annotated_type.is_address() and ast.expr.annotated_type.is_private():
+            raise TypeException("Cannot access members of private address variable", ast)
         ast.annotated_type = ast.target.annotated_type.clone()
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
