@@ -74,13 +74,13 @@ setup(
     # Dependencies
     python_requires='>=3.7,<4',
     install_requires=[
-        'Cython==0.29.15',
-        'web3[tester]==v5.5.1',
+        'Cython>=0.29,<0.30',
+        'web3[tester]>=v5.5,<v5.7',
         'antlr4-python3-runtime==4.7.2',
-        'parameterized==0.7.1',
-        'py-solc-x==0.7.2',
-        'pycryptodome==3.9.6',
-        'appdirs==1.4.3',
+        'parameterized>=0.7,<0.8',
+        'py-solc-x>=0.7.1,<0.9',
+        'pycryptodome>=3.9,<4',
+        'appdirs>=1.4,<1.5',
         'argcomplete>=1,<2',
         'semantic-version>=2.8.4,<2.9',
 

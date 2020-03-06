@@ -14,6 +14,7 @@ create_zkay_venv:
   script:
     - virtualenv venv
     - source venv/bin/activate
+    - pip3 install -r install/requirements.txt # Use fixed version dependencies
     - pip3 install -e .
   artifacts:
     paths:

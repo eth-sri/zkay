@@ -1,7 +1,9 @@
 Cython==0.29.15
-web3[tester]==v5.5.1
+web3[tester]==v5.6.0
 antlr4-python3-runtime==4.7.2
 parameterized==0.7.1
-py-solc-x==0.7.2
-pycryptodome==3.9.6
+py-solc-x==0.8.0
+pycryptodome==3.9.7
 appdirs==1.4.3
+argcomplete==1.11.1
+semantic-version==2.8.4
