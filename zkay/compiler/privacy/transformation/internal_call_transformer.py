@@ -21,27 +21,35 @@ def compute_transitive_circuit_io_sizes(fcts_with_verification: List[Constructor
     """
     for fct in fcts_with_verification:
         glob_keys = OrderedDict()
+        called_fcts = OrderedDict()
         circuit = cgens[fct]
-        circuit.trans_in_size, circuit.trans_out_size, circuit.trans_priv_size = _compute_transitive_circuit_io_sizes(cgens, fct, glob_keys)
+        circuit.trans_in_size, circuit.trans_out_size, circuit.trans_priv_size = _compute_transitive_circuit_io_sizes(cgens, fct, glob_keys, called_fcts)
         circuit._global_keys = glob_keys
+        circuit.transitively_called_functions = called_fcts
 
     for fct, circ in cgens.items():
         if not fct.requires_verification:
             circ.trans_out_size, circ.trans_in_size, circ.trans_priv_size = 0, 0, 0
 
 
-def _compute_transitive_circuit_io_sizes(cgens: Dict[ConstructorOrFunctionDefinition, CircuitHelper], fct, gkeys):
-    gkeys.update(cgens[fct].requested_global_keys)
+def _compute_transitive_circuit_io_sizes(cgens: Dict[ConstructorOrFunctionDefinition, CircuitHelper], fct, gkeys, called_fcts):
     circuit = cgens[fct]
-
     if circuit.trans_in_size is not None:
+        # Memoized
+        gkeys.update(cgens[fct]._global_keys)
+        called_fcts.update(cgens[fct].transitively_called_functions)
         return circuit.trans_in_size, circuit.trans_out_size, circuit.trans_priv_size
-    elif not circuit.function_calls_with_verification:
+
+    gkeys.update(cgens[fct].requested_global_keys)
+    for call in cgens[fct].function_calls_with_verification:
+        called_fcts[call.func.target] = None
+
+    if not circuit.function_calls_with_verification:
         return 0, 0, 0
     else:
         insum, outsum, psum = 0, 0, 0
         for f in circuit.function_calls_with_verification:
-            i, o, p = _compute_transitive_circuit_io_sizes(cgens, f.func.target, gkeys)
+            i, o, p = _compute_transitive_circuit_io_sizes(cgens, f.func.target, gkeys, called_fcts)
             target_circuit = cgens[f.func.target]
             insum += i + target_circuit.in_size
             outsum += o + target_circuit.out_size

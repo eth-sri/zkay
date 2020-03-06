@@ -93,6 +93,9 @@ class CircuitHelper:
         circuit generator backend.
         """
 
+        self.transitively_called_functions: OrderedDict[ConstructorOrFunctionDefinition, None] = None
+        """Set (with deterministic order) of all functions which this circuit transitively calls."""
+
         if internal_circuit:
             # Inherit metadata from internal function's circuit helper
             self.verifier_contract_filename = internal_circuit.verifier_contract_filename
@@ -106,6 +109,13 @@ class CircuitHelper:
             self.trans_out_size = internal_circuit.out_size_trans
 
             self._need_secret_key = internal_circuit._need_secret_key
+
+            if internal_circuit.fct.requires_verification:
+                self.transitively_called_functions = internal_circuit.transitively_called_functions.copy()
+                self.transitively_called_functions[internal_circuit.fct] = None
+            else:
+                assert internal_circuit.transitively_called_functions is None
+                self.transitively_called_functions = OrderedDict()
         else:
             # Set later by transform_internal_calls
             self.trans_priv_size, self.trans_in_size, self.trans_out_size = None, None, None

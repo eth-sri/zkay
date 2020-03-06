@@ -175,18 +175,18 @@ class JsnarkGenerator(CircuitGenerator):
             os.mkdir(output_dir)
 
         # Generate java code for all functions which are transitively called by the fct corresponding to this circuit
+        # (outside private expressions)
         fdefs = []
-        for fct in list(circuit.fct.called_functions.keys()):
-            if fct.requires_verification:
-                target_circuit = self.circuits[fct]
-                body_stmts = JsnarkVisitor(target_circuit.phi).visitCircuit()
+        for fct in list(circuit.transitively_called_functions.keys()):
+            target_circuit = self.circuits[fct]
+            body_stmts = JsnarkVisitor(target_circuit.phi).visitCircuit()
 
-                body = '\n'.join([f'stepIn("{fct.name}");'] +
-                                 add_function_circuit_arguments(target_circuit) + [''] +
-                                 [stmt for stmt in body_stmts] +
-                                 ['stepOut();'])
-                fdef = f'private void _{fct.name}() {{\n' + indent(body) + '\n}'
-                fdefs.append(f'{fdef}')
+            body = '\n'.join([f'stepIn("{fct.name}");'] +
+                             add_function_circuit_arguments(target_circuit) + [''] +
+                             [stmt for stmt in body_stmts] +
+                             ['stepOut();'])
+            fdef = f'private void _{fct.name}() {{\n' + indent(body) + '\n}'
+            fdefs.append(f'{fdef}')
 
         # Generate java code for the function corresponding to this circuit
         input_init_stmts = add_function_circuit_arguments(circuit)
