@@ -11,7 +11,7 @@ from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 
 from zkay.config import cfg
-from zkay.utils.progress_printer import colored_print, TermColor
+from zkay.utils.progress_printer import warn_print
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -1971,7 +1971,7 @@ def get_ast_exception_msg(ast: AST, msg: str):
 def issue_compiler_warning(ast: AST, warning_type: str, msg: str):
     if cfg.is_unit_test:
         return
-    with colored_print(TermColor.WARNING):
+    with warn_print():
         print(f'\n\nWARNING: {warning_type}{get_ast_exception_msg(ast, msg)}')
 
 

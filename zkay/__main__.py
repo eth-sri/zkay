@@ -3,8 +3,11 @@
 import argcomplete
 import argparse
 import os
+
 from argcomplete.completers import FilesCompleter, DirectoriesCompleter
+
 from zkay.config_user import UserConfig
+from zkay.utils.progress_printer import fail_print, success_print
 
 
 def parse_config_doc():
@@ -155,14 +158,13 @@ def main():
     from zkay.utils.helpers import read_file, save_to_file
     from zkay.errors.exceptions import ZkayCompilerError
     from zkay.my_logging.log_context import log_context
-    from zkay.utils.progress_printer import TermColor, colored_print
     from zkay.zkay_ast.process_ast import get_processed_ast, get_parsed_ast_and_fake_code
 
     # Load configuration files
     try:
         cfg.load_configuration_from_disk(a.config_file)
     except Exception as e:
-        with colored_print(TermColor.FAIL):
+        with fail_print():
             print(f"ERROR: Failed to load configuration files\n{e}")
             exit(42)
 
@@ -195,7 +197,7 @@ def main():
                             addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
                             print(f'Deployed crypto library {lib} at: {addr}')
             except Exception as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f"ERROR: Deployment failed\n{e}")
     else:
         # Solc version override
@@ -203,13 +205,13 @@ def main():
             try:
                 cfg.override_solc(a.solc_version)
             except ValueError as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f'Error: {e}')
                 exit(10)
 
         input_path = Path(a.input)
         if not input_path.exists():
-            with colored_print(TermColor.FAIL):
+            with fail_print():
                 print(f'Error: input file \'{input_path}\' does not exist')
             exit(1)
 
@@ -221,7 +223,7 @@ def main():
             try:
                 get_processed_ast(code)
             except ZkayCompilerError as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f'{e}')
                 exit(3)
         elif a.cmd == 'solify':
@@ -231,7 +233,7 @@ def main():
                 _, fake_code = get_parsed_ast_and_fake_code(read_file(str(input_path)))
                 print(fake_code)
             except ZkayCompilerError as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f'{e}')
                 exit(3)
             finally:
@@ -243,7 +245,7 @@ def main():
             if not output_dir.exists():
                 os.makedirs(output_dir)
             elif not output_dir.is_dir():
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f'Error: \'{output_dir}\' is not a directory')
                 exit(2)
 
@@ -260,7 +262,7 @@ def main():
                 try:
                     frontend.compile_zkay_file(str(input_path), str(output_dir))
                 except ZkayCompilerError as e:
-                    with colored_print(TermColor.FAIL):
+                    with fail_print():
                         print(f'{e}')
                     exit(3)
         elif a.cmd == 'import':
@@ -269,18 +271,18 @@ def main():
             if not output_dir.exists():
                 os.makedirs(output_dir)
             elif not output_dir.is_dir():
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f'Error: \'{output_dir}\' is not a directory')
                 exit(2)
 
             try:
                 frontend.extract_zkay_package(str(input_path), str(output_dir))
             except ZkayCompilerError as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f"ERROR while compiling unpacked zkay contract.\n{e}")
                 exit(3)
             except Exception as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f"ERROR while unpacking zkay contract\n{e}")
                 exit(5)
         elif a.cmd == 'export':
@@ -289,7 +291,7 @@ def main():
             try:
                 frontend.package_zkay_contract(str(input_path), str(output_filename))
             except Exception as e:
-                with colored_print(TermColor.FAIL):
+                with fail_print():
                     print(f"ERROR while exporting zkay contract\n{e}")
                 exit(4)
         elif a.cmd == 'run':
@@ -315,7 +317,7 @@ def main():
         else:
             raise NotImplementedError(a.cmd)
 
-        with colored_print(TermColor.OKGREEN):
+        with success_print():
             print("Finished successfully")
 
 

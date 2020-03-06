@@ -1,5 +1,6 @@
 import contextlib
 from enum import Enum
+from typing import ContextManager
 
 from zkay.config import zk_print
 
@@ -23,7 +24,19 @@ class TermColor(Enum):
 
 
 @contextlib.contextmanager
-def colored_print(color: TermColor):
+def colored_print(color: TermColor) -> ContextManager:
     print(color.value, end='')
     yield
     print(TermColor.ENDC.value, end='')
+
+
+def fail_print() -> ContextManager:
+    return fail_print()
+
+
+def warn_print() -> ContextManager:
+    return colored_print(TermColor.WARNING)
+
+
+def success_print() -> ContextManager:
+    return colored_print(TermColor.OKGREEN)

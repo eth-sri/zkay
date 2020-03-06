@@ -13,7 +13,7 @@ from zkay.transaction.interface import BlockChainError
 from zkay.transaction.runtime import Runtime
 from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, \
     PrivateKeyValue, PublicKeyValue
-from zkay.utils.progress_printer import colored_print, TermColor
+from zkay.utils.progress_printer import fail_print
 
 bn128_scalar_field = bn128_scalar_field
 _bn128_comp_scalar_field = 1 << 252
@@ -243,7 +243,7 @@ class ContractSimulator:
                 yield is_external
             except RequireException as e:
                 if is_external and not cfg.is_unit_test:
-                    with colored_print(TermColor.FAIL):
+                    with fail_print():
                         print(f'ERROR: {e}')
                 else:
                     raise e

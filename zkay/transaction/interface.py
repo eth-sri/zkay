@@ -13,14 +13,13 @@ from abc import ABCMeta, abstractmethod
 from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
-from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
-from zkay.config import cfg, zk_print
-
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
-from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, PrivateKeyValue, CipherValue, \
-    RandomnessValue, KeyPair
-from zkay.utils.progress_printer import colored_print, TermColor
+from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
+from zkay.config import cfg, zk_print
+from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, \
+    PrivateKeyValue, CipherValue, RandomnessValue, KeyPair
+from zkay.utils.progress_printer import success_print
 from zkay.utils.timer import time_measure
 
 
@@ -286,7 +285,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         # Check zkay contract integrity
         self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, manifest[Manifest.contract_filename]), pki_verifier_addresses)
 
-        with colored_print(TermColor.OKGREEN):
+        with success_print():
             zk_print(f'OK: Bytecode on blockchain matches local zkay contract')
 
         return contract_on_chain

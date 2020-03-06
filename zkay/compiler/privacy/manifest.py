@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from typing import ContextManager
 
 from zkay.config import cfg
-from zkay.utils.progress_printer import colored_print, TermColor
+from zkay.utils.progress_printer import warn_print
 
 
 class Manifest:
@@ -34,7 +34,7 @@ class Manifest:
     def import_manifest_config(manifest):
         # Check if zkay version matches
         if manifest[Manifest.zkay_version] != cfg.zkay_version:
-            with colored_print(TermColor.WARNING):
+            with warn_print():
                 print(
                     f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
                     f'Compilation or integrity check with deployed bytecode might fail due to version differences')

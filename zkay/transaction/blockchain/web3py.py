@@ -11,7 +11,8 @@ from web3 import Web3
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, zk_print
-from zkay.transaction.interface import Manifest, ZkayBlockchainInterface, IntegrityError, BlockChainError, TransactionFailedException
+from zkay.transaction.interface import Manifest, ZkayBlockchainInterface, IntegrityError, BlockChainError, \
+    TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
 from zkay.utils.helpers import get_contract_names, without_extension, save_to_file
 
@@ -22,6 +23,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def __init__(self) -> None:
         super().__init__()
         self.w3 = self._create_w3_instance()
+        if not self.w3.isConnected():
+            raise BlockChainError(f'Failed to connect to blockchain: {self.w3.provider}')
+
         self.verifiers_for_uuid: Dict[str, Dict[str, AddressValue]] = {}
         self._pki_contract = None
         self._lib_addresses = None
@@ -174,6 +178,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
         if contract_name is None:
             contract_name = get_contract_names(sol_filename)[0]
         actual_byte_code = self.__normalized_hex(self.w3.eth.getCode(address))
+        if not actual_byte_code:
+            raise IntegrityError(f'Expected contract {contract_name} is not deployed at address {address}')
+
         cout = self.compile_contract(sol_filename, contract_name, libs=libraries)
         expected_byte_code = self.__normalized_hex(cout['deployed_bin'])
 
@@ -192,6 +199,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _verify_library_integrity(self, libraries: List[Tuple[str, str]], contract_with_libs_addr: str, sol_with_libs_filename: str) -> Dict[str, str]:
         cname = get_contract_names(sol_with_libs_filename)[0]
         actual_code = self.__normalized_hex(self.w3.eth.getCode(contract_with_libs_addr))
+        if not actual_code:
+            raise IntegrityError(f'Expected contract {cname} is not deployed at address {contract_with_libs_addr}')
         code_with_placeholders = self.__normalized_hex(self.compile_contract(sol_with_libs_filename, cname)['deployed_bin'])
 
         addresses = {}
