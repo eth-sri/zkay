@@ -31,7 +31,7 @@ def colored_print(color: TermColor) -> ContextManager:
 
 
 def fail_print() -> ContextManager:
-    return fail_print()
+    return colored_print(TermColor.FAIL)
 
 
 def warn_print() -> ContextManager:
