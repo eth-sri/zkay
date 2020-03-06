@@ -44,7 +44,7 @@ class AST:
         self.line = -1
         self.column = -1
 
-        self.modified_values: Set[InstanceTarget] = set()
+        self.modified_values: OrderedDict[InstanceTarget, None] = OrderedDict()
         self.read_values: Set[InstanceTarget] = set()
 
     def children(self) -> List[AST]:

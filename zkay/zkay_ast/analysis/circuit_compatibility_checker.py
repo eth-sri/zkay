@@ -137,7 +137,7 @@ class CircuitComplianceChecker(FunctionVisitor):
     def visitIfStatement(self, ast: IfStatement):
         old_in_privif_stmt = self.inside_privif_stmt
         if ast.condition.annotated_type.is_private():
-            mod_vals = ast.then_branch.modified_values
+            mod_vals = set(ast.then_branch.modified_values.keys())
             if ast.else_branch is not None:
                 mod_vals = mod_vals.union(ast.else_branch.modified_values)
             for val in mod_vals:

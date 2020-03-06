@@ -128,7 +128,7 @@ class ZkayStatementTransformer(AstTransformerVisitor):
         """Rule (2)"""
         ast.lhs = self.expr_trafo.visit(ast.lhs)
         ast.rhs = self.expr_trafo.visit(ast.rhs)
-        modvals = ast.modified_values
+        modvals = list(ast.modified_values.keys())
         if cfg.opt_cache_circuit_outputs and isinstance(ast.lhs, IdentifierExpr) and isinstance(ast.rhs, MemberAccessExpr):
             # Skip invalidation if rhs is circuit output
             if isinstance(ast.rhs.member, HybridArgumentIdf) and ast.rhs.member.arg_type == HybridArgType.PUB_CIRCUIT_ARG:

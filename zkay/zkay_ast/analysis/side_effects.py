@@ -58,7 +58,7 @@ class DirectModificationDetector(FunctionVisitor):
             mod_value = InstanceTarget(expr)
             if mod_value in target.modified_values:
                 raise TypeException(f'Undefined behavior due multiple different assignments to the same target in tuple assignment', expr)
-            target.modified_values.add(mod_value)
+            target.modified_values[mod_value] = None
 
     def visitLocationExpr(self, ast: LocationExpr):
         self.visitAST(ast)
@@ -66,7 +66,7 @@ class DirectModificationDetector(FunctionVisitor):
             ast.read_values.add(InstanceTarget(ast))
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
-        ast.modified_values.add(InstanceTarget(ast))
+        ast.modified_values[InstanceTarget(ast)] = None
 
     def visitAST(self, ast: AST):
         ast.modified_values.clear()
@@ -101,7 +101,9 @@ class IndirectModificationDetector(FunctionVisitor):
 
             # update modified values if any
             mlen = len(ast.modified_values)
-            ast.modified_values.update({v for v in fdef.modified_values if isinstance(v.target, StateVariableDeclaration)})
+            for v in fdef.modified_values:
+                if isinstance(v.target, StateVariableDeclaration):
+                    ast.modified_values[v] = None
             self.fixed_point_reached &= mlen == len(ast.modified_values)
 
     def visitAST(self, ast: AST):
@@ -119,7 +121,7 @@ class EvalOrderUBChecker(AstVisitor):
     @staticmethod
     def visit_child_expressions(parent: AST, exprs: List[AST]):
         if len(exprs) > 1:
-            modset = exprs[0].modified_values.copy()
+            modset = set(exprs[0].modified_values.keys())
             for arg in exprs[1:]:
                 diffset = modset.intersection(arg.modified_values)
                 if diffset:
@@ -131,7 +133,7 @@ class EvalOrderUBChecker(AstVisitor):
                     modset.update(diffset)
 
             for arg in exprs:
-                modset = arg.modified_values.copy()
+                modset = set(arg.modified_values.keys())
                 other_args = [e for e in exprs if e != arg]
                 for arg2 in other_args:
                     diffset = modset.intersection(arg2.read_values)
