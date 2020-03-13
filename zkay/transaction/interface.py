@@ -14,7 +14,7 @@ from builtins import type
 from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
-from zkay.compiler.privacy.manifest import Manifest
+from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
 from zkay.config import cfg, zk_print
 from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, \
@@ -203,7 +203,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         self.__check_args(actual_args, should_encrypt)
         zk_print(f'Deploying contract {contract}{Value.collection_to_string(actual_args)}')
-        return self._deploy(Manifest.load(project_dir), sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
+        return self._deploy(project_dir, sender.val, contract, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
     def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
         """
@@ -246,13 +246,13 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         if not self.is_debug_backend() and cfg.crypto_backend == 'dummy':
             raise BlockChainError('SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).')
 
-        manifest = Manifest.load(project_dir)
-
         # Compile zkay file to generate main and verification contracts (but don't generate new prover/verification keys and manifest)
-        compile_zkay_file(os.path.join(project_dir, manifest[Manifest.zkay_contract_filename]), project_dir, import_keys=True)
+        verifier_names = []
+        compile_zkay_file(os.path.join(project_dir, 'contract.zkay'), project_dir, import_keys=True,
+                          verifier_names=verifier_names)
 
         zk_print(f'Connecting to contract {contract}@{contract_address}')
-        contract_on_chain = self._connect(manifest, contract, contract_address.val)
+        contract_on_chain = self._connect(project_dir, contract, contract_address.val)
 
         pki_verifier_addresses = {}
 
@@ -260,13 +260,12 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pki_address = self._req_state_var(contract_on_chain, f'{cfg.pki_contract_name}_inst')
         pki_verifier_addresses[cfg.pki_contract_name] = AddressValue(pki_address)
         with cfg.library_compilation_environment():
-            self._verify_contract_integrity(pki_address, os.path.join(project_dir, manifest[Manifest.pki_lib]))
+            self._verify_contract_integrity(pki_address, os.path.join(project_dir, f'{cfg.pki_contract_name}.sol'))
 
         # Check verifier contract and library integrity
-        verifier_names = manifest[Manifest.verifier_names].values()
         if verifier_names:
-            some_vname = next(iter(verifier_names))
-            libraries = [('BN256G2', os.path.join(project_dir, manifest[Manifest.verify_lib]))]
+            some_vname = verifier_names[0]
+            libraries = [('BN256G2', os.path.join(project_dir, ProvingScheme.verify_libs_contract_filename))]
             some_vcontract = self._req_state_var(contract_on_chain, f'{some_vname}_inst')
             libs = self._verify_library_integrity(libraries, some_vcontract, os.path.join(project_dir, f'{some_vname}.sol'))
 
@@ -278,12 +277,12 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
                 # Verify prover key
                 expected_hash = self._req_state_var(vcontract, cfg.prover_key_hash_name)
                 from zkay.transaction.runtime import Runtime
-                actual_hash = Runtime.prover().get_prover_key_hash(os.path.join(project_dir, f'{verifier}_out'))
+                actual_hash = Runtime.prover().get_prover_key_hash(os.path.join(project_dir, cfg.get_circuit_output_dir_name(verifier)))
                 if expected_hash != actual_hash:
                     raise IntegrityError(f'Prover key hash in deployed verification contract does not match local prover key file for "{verifier}"')
 
         # Check zkay contract integrity
-        self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, manifest[Manifest.contract_filename]), pki_verifier_addresses)
+        self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, 'contract.sol'), pki_verifier_addresses)
 
         with success_print():
             zk_print(f'OK: Bytecode on blockchain matches local zkay contract')
@@ -358,7 +357,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _pki_verifier_addresses(self, sender: str, manifest) -> Dict[str, AddressValue]:
+    def _deploy_dependencies(self, sender: Union[bytes, str], project_dir: str, verifier_names: List[str]) -> Dict[str, AddressValue]:
         pass
 
     @abstractmethod
@@ -378,11 +377,11 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _deploy(self, manifest, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
+    def _deploy(self, project_dir: str, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:
         pass
 
     @abstractmethod
-    def _connect(self, manifest, contract: str, address: Union[bytes, str]) -> Any:
+    def _connect(self, project_dir: str, contract: str, address: Union[bytes, str]) -> Any:
         pass
 
     @staticmethod
@@ -619,10 +618,9 @@ class ZkayProverInterface(metaclass=ABCMeta):
         for arg in priv_values + in_vals + out_vals:
             assert int(arg) < bn128_scalar_field, 'argument overflow'
 
-        manifest = Manifest.load(project_dir)
         with time_measure(f'generate_proof_{contract}.{function}', True):
-            return self._generate_proof(os.path.join(project_dir, f"{manifest[Manifest.verifier_names][f'{contract}.{function}']}_out"),
-                                        priv_values, in_vals, out_vals)
+            verify_dir = cfg.get_circuit_output_dir_name(cfg.get_verification_contract_name(contract, function))
+            return self._generate_proof(os.path.join(project_dir, verify_dir), priv_values, in_vals, out_vals)
 
     @abstractmethod
     def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:

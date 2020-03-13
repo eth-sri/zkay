@@ -43,7 +43,7 @@ class TestOffchainBase(TestScenarios):
         d = self.get_directory(suffix, use_cache)
 
         # Compile contract
-        cg, code = compile_zkay(c, d, without_extension(self.scenario.filename))
+        cg, code = compile_zkay(c, d)
         self.assertIsNotNone(cg)
         self.assertIsNotNone(code)
 

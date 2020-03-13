@@ -1,6 +1,7 @@
-from typing import Tuple
+from typing import Tuple, List
 
 from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors, SolcException
+from zkay.config import cfg
 from zkay.errors.exceptions import ZkayCompilerError, PreprocessAstException, TypeCheckException
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
@@ -10,13 +11,13 @@ from zkay.zkay_ast.analysis.call_graph import call_graph_analysis
 from zkay.zkay_ast.analysis.circuit_compatibility_checker import check_circuit_compliance
 from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functions
 from zkay.zkay_ast.analysis.loop_checker import check_loops
+from zkay.zkay_ast.analysis.return_checker import check_return as r
 from zkay.zkay_ast.analysis.side_effects import compute_modified_sets, check_for_undefined_behavior_due_to_eval_order
-from zkay.zkay_ast.ast import AST
+from zkay.zkay_ast.ast import AST, SourceUnit
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers as link
-from zkay.zkay_ast.analysis.return_checker import check_return as r
 
 
 def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
@@ -69,3 +70,19 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
                 check_loops(ast)
             except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
                 raise TypeCheckException(f'\n\nCOMPILER ERROR: {e}')
+
+
+def get_verification_contract_names(code_or_ast) -> List[str]:
+    if isinstance(code_or_ast, str):
+        ast = get_processed_ast(code_or_ast)
+    else:
+        ast = code_or_ast
+    if not isinstance(ast, SourceUnit):
+        raise ZkayCompilerError('Invalid AST (no source unit at root)')
+
+    vc_names = []
+    for contract in ast.contracts:
+        cname = contract.idf.name
+        fcts = [fct for fct in contract.function_definitions + contract.constructor_definitions if fct.requires_verification_when_external]
+        vc_names += [cfg.get_verification_contract_name(cname, fct.name) for fct in fcts]
+    return vc_names

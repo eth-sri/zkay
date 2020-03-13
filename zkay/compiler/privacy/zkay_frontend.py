@@ -8,7 +8,6 @@ import pathlib
 import re
 import shutil
 import tempfile
-import uuid
 from copy import deepcopy
 from typing import Tuple, List, Type, Dict
 
@@ -24,11 +23,10 @@ from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformation.zkay_contract_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation
 from zkay.config import cfg
-from zkay.errors.exceptions import ZkayCompilerError
 from zkay.utils.helpers import read_file, lines_of_code, without_extension
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
-from zkay.zkay_ast.process_ast import get_processed_ast
+from zkay.zkay_ast.process_ast import get_processed_ast, get_verification_contract_names
 
 proving_scheme_classes: Dict[str, Type[ProvingScheme]] = {
     'gm17': ProvingSchemeGm17
@@ -39,7 +37,7 @@ generator_classes: Dict[str, Type[CircuitGenerator]] = {
 }
 
 
-def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool = False):
+def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool = False, **kwargs):
     """
     Parse, type-check and compile the given zkay contract file.
 
@@ -65,10 +63,10 @@ def compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool =
 
     # compile
     with time_measure('compileFull'):
-        cg, _ = compile_zkay(code, output_dir, without_extension(filename), import_keys)
+        cg, _ = compile_zkay(code, output_dir, import_keys, **kwargs)
 
 
-def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, import_keys: bool = False) -> Tuple[CircuitGenerator, str]:
+def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs) -> Tuple[CircuitGenerator, str]:
     """
     Parse, type-check and compile the given zkay code.
 
@@ -77,7 +75,6 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
 
     :param code: zkay code to compile
     :param output_dir: path to a directory where the compilation output should be generated
-    :param output_filename_without_ext: stem of the desired output solidity contract filename
     :param import_keys: | if false, zk-snark of all modified circuits will be generated during compilation
                         | if true, zk-snark keys for all circuits are expected to be already present in the output directory, \
                           and the compilation will use the provided keys to generate the verification contracts
@@ -87,18 +84,18 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     """
 
     # Copy zkay code to output
-    zkay_filename = f'{output_filename_without_ext}.zkay'
+    zkay_filename = 'contract.zkay'
     if import_keys and not os.path.exists(os.path.join(output_dir, zkay_filename)):
         raise RuntimeError('Zkay file is expected to already be in the output directory when importing keys')
     elif not import_keys:
         _dump_to_output(code, output_dir, zkay_filename)
 
     # Type checking
-    ast = get_processed_ast(code)
+    zkay_ast = get_processed_ast(code)
 
     # Contract transformation
     with print_step("Transforming zkay -> public contract"):
-        ast, circuits = transform_ast(deepcopy(ast))
+        ast, circuits = transform_ast(deepcopy(zkay_ast))
 
     # Dump libraries
     with print_step("Write library contract files"):
@@ -110,7 +107,7 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
 
     # Write public contract file
     with print_step('Write public solidity code'):
-        output_filename = f'{output_filename_without_ext}.sol'
+        output_filename = 'contract.sol'
         solidity_code_output = _dump_to_output(ast.code(), output_dir, output_filename)
 
     # Get all circuit helpers for the transformed contract
@@ -124,22 +121,19 @@ def compile_zkay(code: str, output_dir: str, output_filename_without_ext: str, i
     ps = proving_scheme_classes[cfg.proving_scheme]()
     cg = generator_classes[cfg.snark_backend](circuits, ps, output_dir)
 
+    if 'verifier_names' in kwargs:
+        assert isinstance(kwargs['verifier_names'], list)
+        verifier_names = get_verification_contract_names(zkay_ast)
+        assert sorted(verifier_names) == sorted([cc.verifier_contract_type.code() for cc in cg.circuits_to_prove])
+        kwargs['verifier_names'][:] = verifier_names[:]
+
     # Generate manifest
     if not import_keys:
         with print_step("Writing manifest file"):
             manifest = {
-                Manifest.uuid: uuid.uuid1().hex,
                 Manifest.zkay_version: cfg.zkay_version,
                 Manifest.solc_version: cfg.solc_version,
                 Manifest.zkay_options: cfg.export_compiler_settings(),
-                Manifest.zkay_contract_filename: zkay_filename,
-                Manifest.contract_filename: output_filename,
-                Manifest.pki_lib: f'{cfg.pki_contract_name}.sol',
-                Manifest.verify_lib: ProvingScheme.verify_libs_contract_filename,
-                Manifest.verifier_names: {
-                    f'{cc.fct.parent.idf.name}.{cc.fct.name}': cc.verifier_contract_type.code() for cc in
-                    cg.circuits_to_prove
-                }
             }
             _dump_to_output(json.dumps(manifest), output_dir, 'manifest.json')
     elif not os.path.exists(os.path.join(output_dir, 'manifest.json')):
@@ -163,17 +157,20 @@ def package_zkay_contract(zkay_output_dir: str, output_filename: str):
 
     with print_step('Packaging for distribution'):
         manifest = Manifest.load(zkay_output_dir)
+        with open(os.path.join(zkay_output_dir, 'contract.zkay')) as f:
+            verifier_names = get_verification_contract_names(f.read())
+
         with Manifest.with_manifest_config(manifest):
             gen_cls = generator_classes[cfg.snark_backend]
 
             # create archive with zkay code + all verification and prover keys
             root = pathlib.Path(zkay_output_dir)
-            infile = pathlib.Path(os.path.join(root, manifest[Manifest.zkay_contract_filename]))
+            infile = pathlib.Path(os.path.join(root, 'contract.zkay'))
             manifestfile = root.joinpath("manifest.json")
 
-            key_filenames = [root.joinpath(gen_cls.get_circuit_output_dir_name(v), k)
+            key_filenames = [root.joinpath(cfg.get_circuit_output_dir_name(v), k)
                              for k in gen_cls.get_vk_and_pk_filenames()
-                             for v in manifest[Manifest.verifier_names].values()]
+                             for v in verifier_names]
 
             for p in key_filenames + [infile, manifestfile]:
                 if not p.exists():
@@ -205,7 +202,7 @@ def extract_zkay_package(zkp_filename: str, output_dir: str):
 
     shutil.unpack_archive(zkp_filename, output_dir, format='zip')
     manifest = Manifest.load(output_dir)
-    zkay_filename = os.path.join(manifest[Manifest.project_dir], manifest[Manifest.zkay_contract_filename])
+    zkay_filename = os.path.join(output_dir, 'contract.zkay')
     with Manifest.with_manifest_config(manifest):
         compile_zkay_file(zkay_filename, output_dir, import_keys=True)
 

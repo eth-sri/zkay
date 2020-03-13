@@ -108,7 +108,7 @@ class CircuitGenerator(metaclass=ABCMeta):
 
     def _get_circuit_output_dir(self, circuit: CircuitHelper):
         """Return the output directory for an individual circuit"""
-        return os.path.join(self.output_dir, self.get_circuit_output_dir_name(circuit.get_verification_contract_name()))
+        return os.path.join(self.output_dir, cfg.get_circuit_output_dir_name(circuit.get_verification_contract_name()))
 
     def _get_vk_and_pk_paths(self, circuit: CircuitHelper) -> Tuple[str, ...]:
         """Return a tuple which contains the paths to the verification and prover key files."""
@@ -143,11 +143,6 @@ class CircuitGenerator(metaclass=ABCMeta):
     @abstractmethod
     def get_vk_and_pk_filenames(cls) -> Tuple[str, ...]:
         pass
-
-    @staticmethod
-    def get_circuit_output_dir_name(verifier_name: str) -> str:
-        """Return the output directory for an individual circuit"""
-        return f'{verifier_name}_out'
 
     @abstractmethod
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:

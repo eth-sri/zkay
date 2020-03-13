@@ -226,6 +226,13 @@ class Config(UserConfig):
         else:
             return fct.name
 
+    def get_verification_contract_name(self, contract: str, fct: str):
+        return f'{cfg.reserved_name_prefix}Verify_{contract}_{fct}'
+
+    def get_circuit_output_dir_name(self, verifier_name: str) -> str:
+        """Return the output directory for an individual circuit"""
+        return f'{verifier_name}_out'
+
     @staticmethod
     def get_contract_var_name(type_name: str) -> str:
         """

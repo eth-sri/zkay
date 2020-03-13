@@ -9,25 +9,15 @@ from zkay.utils.progress_printer import warn_print
 
 class Manifest:
     """Static class, which holds the string keys of all supported zkay manifest keys """
-    uuid = 'uuid'
     zkay_version = 'zkay-version'
     solc_version = 'solc-version'
     zkay_options = 'zkay-options'
-    zkay_contract_filename = 'zkay-contract-file'
-    contract_filename = 'contract-file'
-    pki_lib = 'pki-lib'
-    verify_lib = 'verify-lib'
-    verifier_names = 'verifier-names'
-
-    project_dir = 'project-dir'
-    """This key is dynamically set at runtime, not part of the manifest file"""
 
     @staticmethod
     def load(project_dir):
         """Returned parsed manifest json file located in project dir."""
         with open(os.path.join(project_dir, 'manifest.json')) as f:
             j = json.loads(f.read())
-            j[Manifest.project_dir] = project_dir
         return j
 
     @staticmethod

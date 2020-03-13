@@ -32,7 +32,7 @@ class TestCompiler(TestExamples):
         c = self.example.code()
         d = self.get_directory()
 
-        cg, code = compile_zkay(c, d, without_extension(self.example.filename))
+        cg, code = compile_zkay(c, d)
 
         self.assertIsNotNone(cg)
         self.assertIsNotNone(code)
