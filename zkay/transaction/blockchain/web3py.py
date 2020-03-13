@@ -203,6 +203,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
             raise IntegrityError(f'Expected contract {cname} is not deployed at address {contract_with_libs_addr}')
         code_with_placeholders = self.__normalized_hex(self.compile_contract(sol_with_libs_filename, cname)['deployed_bin'])
 
+        if len(actual_code) != len(code_with_placeholders):
+            raise IntegrityError(f'Local code of contract {cname} has different length than remote contract')
+
         addresses = {}
         for lib_name, lib_sol in libraries:
             # Compute placeholder according to
