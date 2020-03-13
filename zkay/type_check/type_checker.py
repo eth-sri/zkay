@@ -446,6 +446,6 @@ class TypeCheckVisitor(AstVisitor):
                 # no action necessary, this is the case: mapping(address!x => uint@x)
                 pass
             elif not t.is_final:
-                raise TypeException('Privacy annotations must be "final", if they are expressions', ast)
+                raise TypeException('Privacy annotations must be "final", if they are expressions', p)
             elif t.annotated_type != AnnotatedTypeName.address_all():
-                raise TypeException(f'Privacy type is not a public address, but {str(t.annotated_type)}', ast)
+                raise TypeException(f'Privacy type is not a public address, but {str(t.annotated_type)}', p)

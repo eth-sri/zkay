@@ -61,7 +61,8 @@ class PythonCodeVisitor(CodeVisitor):
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         params = self.handle_function_params(ast, ast.parameters)
         body = self.handle_function_body(ast)
-        return f'def {self.sanitized(ast.name)}({params}):\n{indent(body)}'
+        name = self.sanitized(ast.name)
+        return f'def {name}({params}):\n{indent(body)}\n{name}._can_be_external = {ast.can_be_external}'
 
     def visitStatementList(self, ast: StatementList):
         b = self.visit_list(ast.statements)

@@ -180,7 +180,12 @@ class ContractSimulator:
             return trunc_val
 
     @staticmethod
-    def help(global_fcts, members, contract_name):
+    def help(module, contract, contract_name):
+        def pred(obj):
+            return inspect.isfunction(obj) and (not hasattr(obj, '_can_be_external') or obj._can_be_external)
+        global_fcts = inspect.getmembers(module, inspect.isfunction)
+        members = inspect.getmembers(contract, pred)
+
         """Display help for contract functions."""
         global_fcts = [(name, sig) for name, sig in global_fcts if not name.startswith('int') and not name.startswith('uint')]
 

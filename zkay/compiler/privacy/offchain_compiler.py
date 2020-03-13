@@ -103,6 +103,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         val_param = ', wei_amount=0' if is_payable else ''
         val_arg = ', wei_amount=wei_amount' if is_payable else ''
 
+        c_name = self.visit(ast.contracts[0].idf)
         c_args, c_params = self.get_constructor_args_and_params(ast.contracts[0])
 
         # Create skeleton with global functions and main method
@@ -128,12 +129,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         def deploy({c_params}user: Union[None, bytes, str] = None{val_param}):
             user = me if user is None else user
-            return {self.visit(ast.contracts[0].idf)}.deploy({c_args}user=user{val_arg})
+            return {c_name}.deploy({c_args}user=user{val_arg})
 
 
         def connect(address: Union[bytes, str], user: Union[None, bytes, str] = None):
             user = me if user is None else user
-            return {self.visit(ast.contracts[0].idf)}.connect(address, user=user)
+            return {c_name}.connect(address, user=user)
 
 
         def create_dummy_accounts(count: int) -> Tuple:
@@ -141,12 +142,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
 
         def help(val=None):
-            import inspect
             if val is None:
                 import sys
-                ContractSimulator.help(inspect.getmembers(sys.modules[__name__], inspect.isfunction),
-                                       inspect.getmembers({self.visit(ast.contracts[0].idf)}, inspect.isfunction),
-                                       '{self.visit(ast.contracts[0].idf)}')
+                ContractSimulator.help(sys.modules[__name__], {c_name}, '{c_name}')
             else:
                 __builtins__.help(val)
 
