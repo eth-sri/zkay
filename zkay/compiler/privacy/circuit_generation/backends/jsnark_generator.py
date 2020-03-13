@@ -168,7 +168,7 @@ class JsnarkGenerator(CircuitGenerator):
     def __init__(self, circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str):
         super().__init__(circuits, proving_scheme, output_dir, False)
 
-    def _generate_zkcircuit(self, circuit: CircuitHelper) -> bool:
+    def _generate_zkcircuit(self, import_keys: bool, circuit: CircuitHelper) -> bool:
         # Create output directory
         output_dir = self._get_circuit_output_dir(circuit)
         if not os.path.exists(output_dir):
@@ -206,10 +206,11 @@ class JsnarkGenerator(CircuitGenerator):
 
         # Invoke jsnark compilation if either the jsnark-wrapper or the current circuit was modified (based on hash comparison)
         if oldhash != digest or not os.path.exists(os.path.join(output_dir, 'circuit.arith')):
-            # Remove old keys
-            for f in self._get_vk_and_pk_paths(circuit):
-                if os.path.exists(f):
-                    os.remove(f)
+            if not import_keys:
+                # Remove old keys
+                for f in self._get_vk_and_pk_paths(circuit):
+                    if os.path.exists(f):
+                        os.remove(f)
             jsnark.compile_circuit(output_dir, code)
             with open(hashfile, 'w') as f:
                 f.write(digest)

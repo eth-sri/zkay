@@ -1,3 +1,4 @@
+import functools
 import os
 from abc import ABCMeta, abstractmethod
 from multiprocessing import Pool, Value
@@ -42,21 +43,25 @@ class CircuitGenerator(metaclass=ABCMeta):
         :param import_keys: if false, new verification and prover keys will be generated, otherwise key files for all verifiers
                             are expected to be already present in the respective output directories
         """
+        # Generate proof circuit code
+
+        # Compile circuits
+        c_count = len(self.circuits_to_prove)
+        zk_print(f'Compiling {c_count} circuits...')
+
+        gen_circs = functools.partial(self._generate_zkcircuit, import_keys)
+        with time_measure('circuit_compilation', True):
+            if cfg.is_unit_test:
+                modified = list(map(gen_circs, self.circuits_to_prove))
+            else:
+                with Pool(processes=self.p_count) as pool:
+                    modified = pool.map(gen_circs, self.circuits_to_prove)
+
         if import_keys:
             for path in self.get_all_key_paths():
                 if not os.path.exists(path):
                     raise RuntimeError("Zkay contract import failed: Missing keys")
         else:
-            # Generate proof circuit code
-            c_count = len(self.circuits_to_prove)
-            zk_print(f'Compiling {c_count} circuits...')
-            with time_measure('circuit_compilation', True):
-                if cfg.is_unit_test:
-                    modified = list(map(self._generate_zkcircuit, self.circuits_to_prove))
-                else:
-                    with Pool(processes=self.p_count) as pool:
-                        modified = pool.map(self._generate_zkcircuit, self.circuits_to_prove)
-
             modified_circuits_to_prove = [circ for t, circ in zip(modified, self.circuits_to_prove)
                                           if t or not all(map(os.path.exists, self._get_vk_and_pk_paths(circ)))]
 
@@ -116,7 +121,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         return tuple(os.path.join(output_dir, fname) for fname in self.get_vk_and_pk_filenames())
 
     @abstractmethod
-    def _generate_zkcircuit(self, circuit: CircuitHelper) -> bool:
+    def _generate_zkcircuit(self, import_keys: bool, circuit: CircuitHelper) -> bool:
         """
         Generate code and compile a single circuit.
 
