@@ -17,7 +17,7 @@ class ParentSetterVisitor(AstVisitor):
         ast.namespace = ([] if ast.parent is None else ast.parent.namespace) + [ast.idf]
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
-        ast.namespace = ([] if ast.parent is None else ast.parent.namespace) + [Identifier(ast.name)]
+        ast.namespace = ([] if ast.parent is None else ast.parent.namespace) + [ast.idf]
 
     def visitChildren(self, ast: AST):
         for c in ast.children():

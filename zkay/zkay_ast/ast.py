@@ -1631,7 +1631,9 @@ class NamespaceDefinition(AST):
 class ConstructorOrFunctionDefinition(NamespaceDefinition):
 
     def __init__(self, idf: Optional[Identifier], parameters: List[Parameter], modifiers: List[str], return_parameters: Optional[List[Parameter]], body: Block):
-        assert idf is not None or not return_parameters
+        assert (idf is not None and idf.name != 'constructor') or not return_parameters
+        if idf is None:
+            idf = Identifier('constructor')
         super().__init__(idf)
         self.parameters = parameters
         self.modifiers = modifiers
@@ -1666,39 +1668,39 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         self.requires_verification_when_external = False
 
     @property
-    def has_side_effects(self):
+    def has_side_effects(self) -> bool:
         return not ('pure' in self.modifiers or 'view' in self.modifiers)
 
     @property
-    def can_be_external(self):
+    def can_be_external(self) -> bool:
         return not ('private' in self.modifiers or 'internal' in self.modifiers)
 
     @property
-    def is_external(self):
+    def is_external(self) -> bool:
         return 'external' in self.modifiers
 
     @property
-    def is_payable(self):
+    def is_payable(self) -> bool:
         return 'payable' in self.modifiers
 
     @property
-    def name(self):
-        return 'constructor' if self.idf is None else self.idf.name
+    def name(self) -> str:
+        return self.idf.name
 
     @property
-    def return_type(self):
+    def return_type(self) -> TupleType:
         return TupleType([p.annotated_type for p in self.return_parameters])
 
     @property
-    def parameter_types(self):
+    def parameter_types(self) -> TupleType:
         return TupleType([p.annotated_type for p in self.parameters])
 
     @property
-    def is_constructor(self):
-        return self.idf is None
+    def is_constructor(self) -> bool:
+        return self.idf.name == 'constructor'
 
     @property
-    def is_function(self):
+    def is_function(self) -> bool:
         return not self.is_constructor
 
     def _update_fct_type(self):
@@ -2264,16 +2266,16 @@ class CodeVisitor(AstVisitor):
 
     def function_definition_to_str(
             self,
-            idf: Optional[Identifier],
+            idf: Identifier,
             parameters: List[Union[Parameter, str]],
             modifiers: List[str],
             return_parameters: List[Parameter],
             body: str):
-        if idf:
+        if idf.name != 'constructor':
             i = self.visit(idf)
             definition = f'function {i}'
         else:
-            definition = f'constructor'
+            definition = 'constructor'
         p = self.visit_list(parameters, ', ')
         m = ' '.join(modifiers)
         if m != '':
