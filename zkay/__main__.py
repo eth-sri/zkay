@@ -268,11 +268,9 @@ def main():
         elif a.cmd == 'import':
             # create output directory
             output_dir = Path(a.output).absolute()
-            if not output_dir.exists():
-                os.makedirs(output_dir)
-            elif not output_dir.is_dir():
+            if output_dir.exists():
                 with fail_print():
-                    print(f'Error: \'{output_dir}\' is not a directory')
+                    print(f'Error: \'{output_dir}\' already exists')
                 exit(2)
 
             try:

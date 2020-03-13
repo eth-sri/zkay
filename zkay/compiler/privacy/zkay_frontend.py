@@ -150,44 +150,57 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     return cg, solidity_code_output
 
 
+def collect_package_contents(contract_dir: str) -> List[str]:
+    """
+    Return list of relative paths of all files which should be part of the package for the contract in contract_dir.
+
+    Raises an exception if contract.zkay, manifest.json or any of the files required by contract.zkay is missing.
+
+    :param contract_dir: path to directory containing manifest and zkay file
+    :raise FileNotFoundError: if any of the expected files is not present
+    :return: list of relative paths (relative to contract_dir)
+    """
+
+    zkay_filename = os.path.join(contract_dir, 'contract.zkay')
+    if not os.path.exists(zkay_filename):
+        raise FileNotFoundError('contract.zkay not found in package')
+
+    manifest_filename = os.path.join(contract_dir, 'manifest.json')
+    if not os.path.exists(manifest_filename):
+        raise FileNotFoundError('manifest.json not found in package')
+    manifest = Manifest.load(contract_dir)
+
+    files = ['contract.zkay', 'manifest.json']
+    with open(zkay_filename) as f:
+        verifier_names = get_verification_contract_names(f.read())
+    with Manifest.with_manifest_config(manifest):
+        gen_cls = generator_classes[cfg.snark_backend]
+        files += [os.path.join(cfg.get_circuit_output_dir_name(v), k)
+                  for k in gen_cls.get_vk_and_pk_filenames() for v in verifier_names]
+
+    for f in files:
+        path = os.path.join(contract_dir, f)
+        if not os.path.exists(path) or not os.path.isfile(path):
+            raise FileNotFoundError(f)
+    return files
+
+
 def package_zkay_contract(zkay_output_dir: str, output_filename: str):
     """Package zkay contract for distribution."""
     if not output_filename.endswith('.zkp'):
         output_filename += '.zkp'
 
     with print_step('Packaging for distribution'):
-        manifest = Manifest.load(zkay_output_dir)
-        with open(os.path.join(zkay_output_dir, 'contract.zkay')) as f:
-            verifier_names = get_verification_contract_names(f.read())
+        files = collect_package_contents(zkay_output_dir)
 
-        with Manifest.with_manifest_config(manifest):
-            gen_cls = generator_classes[cfg.snark_backend]
-
-            # create archive with zkay code + all verification and prover keys
-            root = pathlib.Path(zkay_output_dir)
-            infile = pathlib.Path(os.path.join(root, 'contract.zkay'))
-            manifestfile = root.joinpath("manifest.json")
-
-            key_filenames = [root.joinpath(cfg.get_circuit_output_dir_name(v), k)
-                             for k in gen_cls.get_vk_and_pk_filenames()
-                             for v in verifier_names]
-
-            for p in key_filenames + [infile, manifestfile]:
-                if not p.exists():
-                    raise FileNotFoundError(p)
-
-            with tempfile.TemporaryDirectory() as tmpdir:
-                shutil.copyfile(infile, os.path.join(tmpdir, infile.name))
-                shutil.copyfile(manifestfile, os.path.join(tmpdir, manifestfile.name))
-                for p in key_filenames:
-                    pdir = os.path.join(tmpdir, p.relative_to(root).parent)
-                    if not os.path.exists(pdir):
-                        os.makedirs(pdir)
-                    shutil.copyfile(p.absolute(), os.path.join(tmpdir, p.relative_to(root)))
-
-                shutil.make_archive(without_extension(output_filename), 'zip', tmpdir)
-
-            os.rename(f'{without_extension(output_filename)}.zip', output_filename)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for file in files:
+                src = os.path.join(zkay_output_dir, file)
+                dest = os.path.join(tmpdir, file)
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                shutil.copyfile(src, dest)
+            shutil.make_archive(without_extension(output_filename), 'zip', tmpdir)
+        os.rename(f'{without_extension(output_filename)}.zip', output_filename)
 
 
 def extract_zkay_package(zkp_filename: str, output_dir: str):
@@ -196,15 +209,31 @@ def extract_zkay_package(zkp_filename: str, output_dir: str):
 
     :param zkp_filename: path to the packaged contract
     :param output_dir: directory where to unpack and compile the contract
-    :raise RuntimeError: if expected content is missing from package
-    :raise ZkayCompilerError: if compilation of the unpacked contract fails
+    :raise Exception: if import fails
     """
+    os.makedirs(output_dir)
+    try:
+        shutil.unpack_archive(zkp_filename, output_dir, format='zip')
 
-    shutil.unpack_archive(zkp_filename, output_dir, format='zip')
-    manifest = Manifest.load(output_dir)
-    zkay_filename = os.path.join(output_dir, 'contract.zkay')
-    with Manifest.with_manifest_config(manifest):
-        compile_zkay_file(zkay_filename, output_dir, import_keys=True)
+        # Check if required files exist in package
+        files = collect_package_contents(output_dir)
+
+        # Check that no other files exist in package
+        whitelist = {os.path.join(output_dir, file) for file in files}
+        for dirpath, _, filenames in os.walk(output_dir):
+            for file in filenames:
+                if os.path.join(dirpath, file) not in whitelist:
+                    raise ValueError(f'package contains illegal unexpected file {file}')
+
+        zkay_filename = os.path.join(output_dir, 'contract.zkay')
+        manifest = Manifest.load(output_dir)
+        with Manifest.with_manifest_config(manifest):
+            compile_zkay_file(zkay_filename, output_dir, import_keys=True)
+    except Exception as e:
+        # If there was an exception, the archive is not safe -> remove extracted contents
+        print(f'Package {zkp_filename} is either corrupt or incompatible with this zkay version.')
+        shutil.rmtree(output_dir)
+        raise e
 
 
 def _dump_to_output(content: str, output_dir: str, filename: str, dryrun_solc=False) -> str:
