@@ -1,15 +1,15 @@
 """
 This module exposes functionality to compile and package zkay code
 """
-
+import importlib
 import json
 import os
-import pathlib
 import re
 import shutil
+import sys
 import tempfile
 from copy import deepcopy
-from typing import Tuple, List, Type, Dict
+from typing import Tuple, List, Type, Dict, Optional, Any
 
 from zkay import my_logging
 from zkay.compiler.privacy import library_contracts
@@ -148,6 +148,86 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
         check_compilation(f, show_errors=False)
 
     return cg, solidity_code_output
+
+
+def load_transaction_interface_from_directory(contract_dir: str) -> Any:
+    """
+    Load transaction interface module for contracts in contract_dir
+
+    :param contract_dir: directory with zkay contract compilation output
+    :return: module object
+    """
+    sys.path.append(str(os.path.realpath(contract_dir)))
+    contract_mod = importlib.import_module(f'contract')
+    importlib.reload(contract_mod)
+    sys.path.pop()
+    return contract_mod
+
+
+def load_contract_transaction_interface_from_module(contract_mod: Any,
+                                                    contract_name: Optional[str] = None) -> Type:
+    """
+    Load contract class from transaction interface module
+
+    :param contract_mod: loaded transaction interface module
+    :param contract_name: contract name, only required if file contains multiple contracts
+    :return: Contract class
+    """
+
+    contracts = {}
+    for name, cls in contract_mod.__dict__.items():
+        if isinstance(cls, type) and 'ContractSimulator' in [b.__name__ for b in cls.__bases__]:
+            contracts[cls.__name__] = cls
+
+    if contract_name is None:
+        if len(contracts) != 1:
+            raise ValueError('If file contains multiple contracts, contract name must be specified')
+        return next(iter(contracts.values()))
+    else:
+        return contracts[contract_name]
+
+
+def load_contract_transaction_interface_from_directory(contract_dir: str, contract_name: Optional[str] = None) -> Type:
+    """
+    Load contract class from transaction interface stored in contract_dir
+
+    :param contract_dir: directory with contract compilation output
+    :param contract_name: contract name, only required if file contains multiple contracts
+    :return: Contract class
+    """
+    contract_mod = load_transaction_interface_from_directory(contract_dir)
+    return load_contract_transaction_interface_from_module(contract_mod, contract_name)
+
+
+def deploy_contract(contract_dir: str, account, *args, contract_name: Optional[str] = None):
+    """
+    Deploy zkay contract in contract_dir using the given account and with specified constructor arguments.
+
+    :param contract_dir: contract's compilation output directory
+    :param account: Account from which to deploy the contract
+    :param args: constructor arguments
+    :param contract_name: contract name, only required if file contains multiple contracts
+    :raise BlockChainError: if deployment fails
+    :return: contract instance
+    """
+    c = load_contract_transaction_interface_from_directory(contract_dir, contract_name)
+    return c.deploy(*args, user=account, project_dir=contract_dir)
+
+
+def connect_to_contract_at(contract_dir: str, contract_address, account, contract_name: Optional[str] = None):
+    """
+    Connect with account to zkay contract at contract_address, with local files in contract_dir.
+
+    :param contract_dir: contract's compilation output directory
+    :param contract_address: blockchain address of the deployed contract
+    :param account: account from which to connect (will be used as msg.sender for transactions)
+    :param contract_name: contract name, only required if file contains multiple contracts
+    :raise BlockChainError: if connection fails
+    :raise IntegrityError: if integrity check fails
+    :return: contract instance
+    """
+    c = load_contract_transaction_interface_from_directory(contract_dir, contract_name)
+    return c.connect(address=contract_address, user=account, project_dir=contract_dir)
 
 
 def collect_package_contents(contract_dir: str) -> List[str]:

@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
+from enum import IntEnum
+
 import argcomplete
 import argparse
 import os
 
 from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 
+from zkay.compiler.privacy.zkay_frontend import load_transaction_interface_from_directory, \
+    load_contract_transaction_interface_from_module
 from zkay.config_user import UserConfig
+from zkay.transaction.interface import BlockChainError, IntegrityError
+from zkay.transaction.offchain import ContractSimulator
 from zkay.utils.progress_printer import fail_print, success_print
 
 
@@ -116,11 +122,26 @@ def parse_arguments():
     msg = 'Contract package to unpack.'
     import_parser.add_argument('input', help=msg, metavar='<zkay_package_file>').completer = FilesCompleter(zkay_package_files)
 
-    # 'run' parser
-    run_parser = subparsers.add_parser('run', parents=[config_parser], help='Enter transaction shell for a compiled zkay contract.', formatter_class=ShowSuppressedInHelpFormatter)
+    # 'run, deploy and connect' parsers
+    interact_parser = argparse.ArgumentParser(add_help=False)
     msg = 'Directory with the compilation output of the contract with which you want to interact.'
-    run_parser.add_argument('input', help=msg, metavar='<zkay_compilation_output_dir>').completer = DirectoriesCompleter()
-    run_parser.add_argument('--log', action='store_true', help='enable logging')
+    interact_parser.add_argument('input', help=msg, metavar='<zkay_compilation_output_dir>').completer = DirectoriesCompleter()
+    interact_parser.add_argument('--log', action='store_true', help='enable logging')
+    interact_parser.add_argument('--account', help='Sender blockchain address', metavar='<address>')
+
+    subparsers.add_parser('run', parents=[interact_parser, config_parser],
+                          help='Enter transaction shell for a compiled zkay contract.',
+                          formatter_class=ShowSuppressedInHelpFormatter)
+
+    deploy_parser = subparsers.add_parser('deploy', parents=[interact_parser, config_parser],
+                                          help='Deploy contract with arguments and enter shell.',
+                                          formatter_class=ShowSuppressedInHelpFormatter)
+    deploy_parser.add_argument('constructor_args', nargs='*', help='Constructor arguments', metavar='<args>...')
+
+    connect_parser = subparsers.add_parser('connect', parents=[interact_parser, config_parser],
+                                          help='Connect to contract at address and enter shell.',
+                                          formatter_class=ShowSuppressedInHelpFormatter)
+    connect_parser.add_argument('address', help='Blockchain address of deployed contract', metavar='<address>')
 
     # Common deploy libs parameters
     deploy_libs_parser = argparse.ArgumentParser(add_help=False)
@@ -292,25 +313,80 @@ def main():
                 with fail_print():
                     print(f"ERROR while exporting zkay contract\n{e}")
                 exit(4)
-        elif a.cmd == 'run':
-            import sys
-            import importlib
+        elif a.cmd in ['run', 'deploy', 'connect']:
+            def echo_only_simple_expressions(e):
+                if isinstance(e, (bool, int, str, list, IntEnum)):
+                    print(e)
 
             # Enable logging
             if a.log:
                 log_file = my_logging.get_log_file(filename=f'transactions_{input_path.name}', include_timestamp=True, label=None)
                 my_logging.prepare_logger(log_file)
 
-            # Dynamically load module and replace globals with module globals
-            globals().clear()
-            sys.path.append(str(input_path.absolute()))
-            oc = importlib.import_module(f'contract')
-            importlib.reload(oc)
-            sys.path.pop()
-            globals().update(oc.__dict__)
+            contract_dir = str(input_path.absolute())
+            ContractSimulator.use_config_from_manifest(contract_dir)
+            if a.account is not None:
+                me = a.account
+            else:
+                me = ContractSimulator.default_address()
+                if me is not None:
+                    me = me.val
 
-            # Move into contract.py
-            oc.zk__init(interactive=True)
+            import code
+            import sys
+            if a.cmd == 'run':
+                # Dynamically load module and replace globals with module globals
+                contract_mod = load_transaction_interface_from_directory(contract_dir)
+                contract_mod.me = me
+                sys.displayhook = echo_only_simple_expressions
+                code.interact(local=contract_mod.__dict__)
+            else:
+                cmod = load_transaction_interface_from_directory(contract_dir)
+                c = load_contract_transaction_interface_from_module(cmod)
+                if a.cmd == 'deploy':
+                    from ast import literal_eval
+                    cargs = a.constructor_args
+                    args = []
+                    for arg in cargs:
+                        try:
+                            val = literal_eval(arg)
+                        except Exception:
+                            val = arg
+                        args.append(val)
+                    try:
+                        c_inst = c.deploy(*args, user=me, project_dir=contract_dir)
+                    except (ValueError, TypeError) as e:
+                        with fail_print():
+                            print(f'ERROR invalid arguments.\n{e}\n\nExpected contructor signature: ', end='')
+                            if hasattr(c, 'constructor'):
+                                from inspect import signature
+                                sig = str(signature(c.constructor))
+                                sig = sig[5:] if not sig[5:].startswith(",") else sig[7:] # without self
+                                print(f'({sig}')
+                            else:
+                                print('()')
+                            exit(11)
+                    except Exception as e:
+                        with fail_print():
+                            print(f'ERROR: failed to deploy contract\n{e}')
+                            exit(12)
+                elif a.cmd == 'connect':
+                    try:
+                        c_inst = c.connect(address=a.address, user=me, project_dir=contract_dir)
+                    except Exception as e:
+                        with fail_print():
+                            print(f'ERROR: failed to connect to contract\n{e}')
+                            exit(13)
+                else:
+                    raise ValueError(f'unexpected command {a.cmd}')
+
+                contract_scope = {name: getattr(c_inst, name) for name in dir(c_inst)
+                                  if (name != 'constructor' and hasattr(getattr(c_inst, name), '_can_be_external') and getattr(c_inst, name)._can_be_external)
+                                      or name == 'api'}
+                contract_scope['me'] = me
+                contract_scope['help'] = lambda o=None: help(o) if o is not None else ContractSimulator.reduced_help(c)
+                sys.displayhook = echo_only_simple_expressions
+                code.interact(local=contract_scope)
             exit(0)
         else:
             raise NotImplementedError(a.cmd)

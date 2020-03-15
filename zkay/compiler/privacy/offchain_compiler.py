@@ -127,7 +127,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         ''') + contracts + (dedent(f'''
 
-        def deploy({c_params}user: Union[None, bytes, str] = None{val_param}):
+        def deploy({c_params}*, user: Union[None, bytes, str] = None{val_param}):
             user = me if user is None else user
             return {c_name}.deploy({c_args}user=user{val_arg})
 
@@ -149,19 +149,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 __builtins__.help(val)
 
         ''') if len(ast.contracts) == 1 else '') + dedent('''
-        def zk__init(interactive=False):
-            global me
+        if __name__ == '__main__':
             ContractSimulator.use_config_from_manifest(os.path.dirname(os.path.realpath(__file__)))
             me = ContractSimulator.default_address()
             if me is not None:
                 me = me.val
-                ContractSimulator.initialize_keys_for(me)
-            if interactive:
-                import code
-                code.interact(local=globals())
-
-        if __name__ == '__main__':
-            zk__init(interactive=True)
+            import code
+            code.interact(local=globals())
         ''')
 
     def generate_constructors(self, ast: ContractDefinition) -> str:
@@ -208,7 +202,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 return c
 
             @staticmethod
-            def deploy({c_params}user: Union[str, bytes]{val_param}, project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
+            def deploy({c_params}*, user: Union[str, bytes]{val_param}, project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
                 if not {api("keystore", "c")}.has_initialized_keys_for(AddressValue(user)):
                     ContractSimulator.initialize_keys_for(user)

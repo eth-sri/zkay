@@ -201,6 +201,18 @@ class ContractSimulator:
                          if sig.startswith('(self') and not fname.endswith('_check_proof') and not fname.startswith('_')]))
 
     @staticmethod
+    def reduced_help(contract):
+        def pred(obj):
+            return inspect.isfunction(obj) and (not hasattr(obj, '_can_be_external') or obj._can_be_external) and obj.__name__ != 'constructor'
+        members = inspect.getmembers(contract, pred)
+
+        print(f'Externally callable functions:')
+        signatures = [(fname, str(inspect.signature(sig))) for fname, sig in members]
+        print('\n'.join([f'{fname}({sig[5:] if not sig[5:].startswith(",") else sig[7:]}'
+                         for fname, sig in signatures
+                         if sig.startswith('(self') and not fname.endswith('_check_proof') and not fname.startswith('_')]))
+
+    @staticmethod
     def default_address() -> AddressValue:
         """Return default wallet address (if supported by backend, otherwise empty address is returned)."""
         return Runtime.blockchain().default_address
@@ -364,7 +376,7 @@ class ApiWrapper:
     def clear_special_variables(self):
         self.__current_msg, self.__current_block, self.__current_tx = None, None, None
 
-    def req_state_var(self, name: str, *indices, count=0, should_decrypt=False):
+    def req_state_var(self, name: str, *indices, count=0, should_decrypt=False) -> Any:
         if should_decrypt:
             count = cfg.cipher_len
 

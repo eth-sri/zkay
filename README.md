@@ -156,3 +156,18 @@ You are now in a python shell where you can issue the following commands:
 Encryption, transaction transformation and proof generation happen automatically. If the function is payable, the additional argument `value` can be used to set the wei amount to be transferred.
 - `handle.api.req_state_var(name: str, *indices, count=0, should_decrypt: bool=False)`: Retrieve the current value of state variable `name[indices[0]][indices[1]][...]`.
 If the state variable is owned by you, you can specify should_decrypt=True to get the decrypted value.
+
+There are also two more specific commands for deploying or connecting to a single contract instance.
+The contract instance functions are then available as global functions in the shell.
+
+#### Deploy and interact with contract instance
+
+```bash
+zkay deploy output_dir <constructor_args...>
+```
+
+#### Connect to and interact with contract instance
+
+```bash
+zkay connect output_dir contract_address
+```

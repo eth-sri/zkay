@@ -178,7 +178,8 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
         assert contract_handle is not None
         self.__check_args(actual_args, should_encrypt)
-        zk_print(f'Issuing transaction for function "{function}"{Value.collection_to_string(actual_args)})')
+        zk_print(f'Issuing transaction for function "{function}"')
+        zk_print(Value.collection_to_string(actual_args), verbose_only=True)
         return self._transact(contract_handle, sender.val, function, *Value.unwrap_values(actual_args), wei_amount=wei_amount)
 
     def deploy(self, project_dir: str, sender: AddressValue, contract: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
