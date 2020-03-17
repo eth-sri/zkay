@@ -69,7 +69,7 @@ class PythonCodeVisitor(CodeVisitor):
         return b if b else 'pass'
 
     def visitIndentBlock(self, ast: IndentBlock):
-        return f'### BEGIN {ast.name}\n{self.visit_list(ast.statements)}\n###  END  {ast.name}'
+        return self.visitStatementList(ast)
 
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)

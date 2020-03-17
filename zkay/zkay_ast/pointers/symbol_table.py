@@ -1,7 +1,9 @@
+from typing import Tuple
+
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
-    StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, EnumValue, \
-    NamespaceDefinition, Expression, VariableDeclarationStatement, Statement
+    StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, \
+    EnumValue, NamespaceDefinition, TargetDefinition, DataTargetDefinition
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -37,8 +39,12 @@ def merge_dicts(*dict_args):
 
 
 def collect_children_names(ast: AST):
-    names = [c.names for c in ast.children() if not isinstance(c, Block)]
-    return merge_dicts(*names)
+    children = [c for c in ast.children() if not isinstance(c, Block)]
+    names = [c.names for c in children]
+    ret = merge_dicts(*names)
+    for c in children: # declared names are not available within the declaration statements
+        c.names.clear()
+    return ret
 
 
 def get_builtin_globals():
@@ -80,7 +86,7 @@ class SymbolTableFiller(AstVisitor):
         ast.names = {v.idf.name: v.idf for v in ast.values}
 
     def visitEnumValue(self, ast: EnumValue):
-        ast.names = {ast.idf.name: ast.idf}
+        pass
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.names = {ast.idf.name: ast.idf}
@@ -100,30 +106,52 @@ class SymbolTableFiller(AstVisitor):
 class SymbolTableLinker(AstVisitor):
 
     @staticmethod
-    def find_identifier_declaration(ast: AST, name: str):
-        def find_parent_which_is_immediate_child_of(a: AST, target: Block):
-            while a is not None and a.parent != target:
-                a = a.parent
-            return a
-
-        ref_stmt = ast.statement if isinstance(ast, Expression) else None
+    def _find_next_decl(ast: AST, name: str) -> Tuple[AST, TargetDefinition]:
         ancestor = ast.parent
-        while ancestor:
-            if name in ancestor.names and not isinstance(ancestor, VariableDeclarationStatement):
-                decl = ancestor.names[name].parent
-                if isinstance(ancestor, Block) and isinstance(decl, VariableDeclaration):
-                    rs = find_parent_which_is_immediate_child_of(ref_stmt, ancestor)
-                    if rs is not None:
-                        decl = decl.parent
-                        assert isinstance(decl, VariableDeclarationStatement) and decl in ancestor.statements
-                        if ancestor.statements.index(rs) <= ancestor.statements.index(decl):
-                            # identifier occurs before definition 'ancestor' -> refers to decl higher up in tree
-                            ancestor = ancestor.parent
-                            continue
-                # found name
-                return ancestor.names[name]
+        while ancestor is not None:
+            if name in ancestor.names:
+                return ancestor, ancestor.names[name].parent
             ancestor = ancestor.parent
         raise UnknownIdentifierException(f'Undefined identifier {name}', ast)
+
+    @staticmethod
+    def _find_lca(ast1: AST, ast2: AST, root: AST) -> Tuple[StatementList, AST, AST]:
+        assert ast1 != ast2
+
+        # Gather ast1's ancestors + immediate child towards ast1 (for each)
+        ancs = {}
+        while True:
+            assert ast1.parent is not None
+            ancs[ast1.parent] = ast1
+            ast1 = ast1.parent
+            if ast1 == root:
+                break
+
+        # Find least common ancestor with ast2 + immediate child towards ast2
+        while True:
+            assert ast2.parent is not None
+            old_ast = ast2
+            ast2 = ast2.parent
+            if ast2 in ancs:
+                assert isinstance(ast2, StatementList)
+                return ast2, ancs[ast2], old_ast
+
+    @staticmethod
+    def find_type_declaration(t: UserDefinedTypeName) -> NamespaceDefinition:
+        return SymbolTableLinker._find_next_decl(t, t.names[0].name)[1]
+
+    @staticmethod
+    def find_identifier_declaration(ast: IdentifierExpr) -> DataTargetDefinition:
+        name = ast.idf.name
+        while True:
+            anc, decl = SymbolTableLinker._find_next_decl(ast, name)
+            if isinstance(anc, Block) and isinstance(decl, VariableDeclaration):
+                # Check if identifier really references this declaration (does not come before declaration)
+                lca, ref_anchor, decl_anchor = SymbolTableLinker._find_lca(ast, decl, anc)
+                if lca.statements.index(ref_anchor) <= lca.statements.index(decl_anchor):
+                    ast = anc
+                    continue
+            return decl
 
     @staticmethod
     def in_scope_at(target_idf: Identifier, ast: AST) -> bool:
@@ -136,17 +164,17 @@ class SymbolTableLinker(AstVisitor):
         return False
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        idf = self.find_identifier_declaration(ast, ast.idf.name)
-        ast.target = idf.parent
+        decl = self.find_identifier_declaration(ast)
+        ast.target = decl
         assert (ast.target is not None)
 
     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
         try:
-            type_def = self.find_identifier_declaration(ast, ast.names[0].name).parent
+            type_def = self.find_type_declaration(ast)
             for idf in ast.names[1:]:
                 type_def = type_def.names[idf.name].parent
             ast.target = type_def
-        except UnknownIdentifierException as e:
+        except UnknownIdentifierException:
             pass
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):

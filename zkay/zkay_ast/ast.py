@@ -114,15 +114,7 @@ class Comment(AST):
     def comment_wrap_block(text: str, block: List[AST]) -> List[AST]:
         if not block:
             return block
-        return [
-                   Comment('-' * 31),
-                   Comment(text),
-                   Comment('-' * 31),
-               ] + block + [
-                   Comment('-' * 31),
-                   BlankLine(),
-               ]
-
+        return [Comment(f'{text}'), Comment('{'), IndentBlock(block), Comment('}'), BlankLine()]
 
 class BlankLine(Comment):
     def __init__(self):
@@ -898,9 +890,8 @@ class Block(StatementList):
 
 
 class IndentBlock(StatementList):
-    def __init__(self, name: str, statements: List[Statement]):
+    def __init__(self, statements: List[Statement]):
         super().__init__(statements)
-        self.name = name
 
 
 class TypeName(AST):
@@ -2177,8 +2168,7 @@ class CodeVisitor(AstVisitor):
             return f'{{\n{b}\n}}'
 
     def visitIndentBlock(self, ast: IndentBlock):
-        fstr = f"//{'<' * 12} {{}}{ast.name} {{}} {'>' * 12}\n"
-        return f"{fstr.format('', 'BEGIN')}{self.handle_block(ast)}\n{fstr.format(' ', 'END ')}"
+        return self.handle_block(ast)
 
     def visitElementaryTypeName(self, ast: ElementaryTypeName):
         return ast.name
