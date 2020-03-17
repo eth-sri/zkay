@@ -15,7 +15,7 @@ from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
-from zkay.compiler.privacy.zkay_frontend import compile_zkay_file
+from zkay.zkay_frontend import compile_zkay_file
 from zkay.config import cfg, zk_print
 from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, \
     PrivateKeyValue, CipherValue, RandomnessValue, KeyPair

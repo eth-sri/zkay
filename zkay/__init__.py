@@ -8,6 +8,7 @@ Submodules
 * :py:mod:`.config`: Global zkay configuration repository for all settings \
                      (both user-configuration as well as zkay-internal configuration)
 * :py:mod:`.config_user`: Defines options which the user can configure.
+* :py:mod:`.zkay_frontend`: Programmatic access to zkay compilation, transaction and packaging facilities.
 
 ===========
 Subpackages

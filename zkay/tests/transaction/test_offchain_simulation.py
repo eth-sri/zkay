@@ -7,7 +7,7 @@ from contextlib import nullcontext
 
 from parameterized import parameterized_class
 
-from zkay.compiler.privacy.zkay_frontend import compile_zkay
+from zkay.zkay_frontend import compile_zkay
 from zkay.config import cfg
 from zkay.examples.scenario import TransactionAssertion, Transaction
 from zkay.examples.example_scenarios import all_scenarios, enc_scenarios, get_scenario
@@ -15,7 +15,6 @@ from zkay.tests.utils.test_examples import TestScenarios
 from zkay.transaction.runtime import Runtime
 
 # get relevant paths
-from zkay.utils.helpers import without_extension
 
 output_dir = os.path.join(cfg.log_dir, 'transaction_tests', 'output')
 os.makedirs(output_dir, exist_ok=True)
