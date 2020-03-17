@@ -12,6 +12,7 @@ from zkay import my_logging
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, zk_print, zk_print_banner
+from zkay.my_logging.log_context import log_context
 from zkay.transaction.interface import ZkayBlockchainInterface, IntegrityError, BlockChainError, \
     TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
@@ -84,7 +85,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
         return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address))
 
     def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]) -> Any:
-        return self._transact(self.pki_contract, address, 'announcePk', pk)
+        with log_context('transaction', f'announcePk'):
+            return self._transact(self.pki_contract, address, 'announcePk', pk)
 
     def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
         try:
@@ -143,9 +145,10 @@ class Web3Blockchain(ZkayBlockchainInterface):
         # Deploy verification contracts if not already done
         vf = {}
         for verifier_name in verifier_names:
-            filename = os.path.join(project_dir, f'{verifier_name}.sol')
-            cout = self.compile_contract(filename, verifier_name, self.lib_addresses)
-            vf[verifier_name] = AddressValue(self._deploy_contract(sender, cout).address)
+            with log_context('transaction', f'deploy_{verifier_name}'):
+                filename = os.path.join(project_dir, f'{verifier_name}.sol')
+                cout = self.compile_contract(filename, verifier_name, self.lib_addresses)
+                vf[verifier_name] = AddressValue(self._deploy_contract(sender, cout).address)
         vf[cfg.pki_contract_name] = AddressValue(self.pki_contract.address)
         return vf
 
@@ -271,16 +274,18 @@ class Web3TesterBlockchain(Web3Blockchain):
         # Since eth-tester is not persistent -> always automatically deploy libraries
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
-                pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
-                self._pki_contract = self._deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
-                zk_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
+                with log_context('transaction', 'deploy_pki'):
+                    pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
+                    self._pki_contract = self._deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
+                    zk_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
 
-                verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
-                self._lib_addresses = {}
-                for lib in cfg.external_crypto_lib_names:
-                    out = self._deploy_contract(sender, self.compile_contract(verify_sol, lib))
-                    self._lib_addresses[lib] = out.address
-                    zk_print(f'Deployed crypto lib {lib} at address "{out.address}"')
+                with log_context('transaction', 'deploy_verify_libs'):
+                    verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
+                    self._lib_addresses = {}
+                    for lib in cfg.external_crypto_lib_names:
+                        out = self._deploy_contract(sender, self.compile_contract(verify_sol, lib))
+                        self._lib_addresses[lib] = out.address
+                        zk_print(f'Deployed crypto lib {lib} at address "{out.address}"')
 
     def _create_w3_instance(self) -> Web3:
         genesis_overrides = {'gas_limit': int(max_gas_limit * 1.2)}
