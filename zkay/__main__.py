@@ -319,7 +319,7 @@ def main():
                 my_logging.prepare_logger(log_file)
 
             contract_dir = str(input_path.absolute())
-            ContractSimulator.use_config_from_manifest(contract_dir)
+            frontend.use_configuration_from_manifest(contract_dir)
             if a.account is not None:
                 me = a.account
             else:

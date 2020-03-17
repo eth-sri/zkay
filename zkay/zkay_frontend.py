@@ -150,6 +150,13 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     return cg, solidity_code_output
 
 
+def use_configuration_from_manifest(contract_dir: str) -> Any:
+    from zkay.transaction.runtime import Runtime
+    manifest = Manifest.load(contract_dir)
+    Manifest.import_manifest_config(manifest)
+    Runtime.reset()
+
+
 def load_transaction_interface_from_directory(contract_dir: str) -> Any:
     """
     Load transaction interface module for contracts in contract_dir
@@ -162,6 +169,15 @@ def load_transaction_interface_from_directory(contract_dir: str) -> Any:
     importlib.reload(contract_mod)
     sys.path.pop()
     return contract_mod
+
+
+def load_transaction_interface_for_benchmark(contract_dir: str) -> Any:
+    use_configuration_from_manifest(contract_dir)
+    cfg.verbosity = 0
+    cfg.log_dir = contract_dir
+    log_file = my_logging.get_log_file(filename='log', include_timestamp=False, label=None)
+    my_logging.prepare_logger(log_file)
+    return load_transaction_interface_from_directory(contract_dir)
 
 
 def load_contract_transaction_interface_from_module(contract_mod: Any,
