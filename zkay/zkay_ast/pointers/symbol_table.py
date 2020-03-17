@@ -3,7 +3,7 @@ from typing import Tuple
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
     StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, \
-    EnumValue, NamespaceDefinition, TargetDefinition, DataTargetDefinition
+    EnumValue, NamespaceDefinition, TargetDefinition, DataTargetDefinition, VariableDeclarationStatement
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -110,7 +110,9 @@ class SymbolTableLinker(AstVisitor):
         ancestor = ast.parent
         while ancestor is not None:
             if name in ancestor.names:
-                return ancestor, ancestor.names[name].parent
+                decl = ancestor.names[name].parent
+                if not isinstance(decl.parent, VariableDeclarationStatement) or not decl.parent.is_parent_of(ast):
+                    return ancestor, decl
             ancestor = ancestor.parent
         raise UnknownIdentifierException(f'Undefined identifier {name}', ast)
 

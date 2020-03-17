@@ -2,7 +2,7 @@ import json
 import math
 import os
 from contextlib import contextmanager
-from typing import Dict, Any, ContextManager, List, Optional
+from typing import Dict, Any, ContextManager, List
 
 from semantic_version import NpmSpec, Version
 
@@ -202,10 +202,7 @@ class Config(UserConfig):
         """
 
         pub_arg_size = circuit.trans_in_size + circuit.trans_out_size
-        if self.is_unit_test:
-            return pub_arg_size > self.opt_hash_threshold
-        else:
-            return True
+        return pub_arg_size > self.opt_hash_threshold
 
     @property
     def reserved_name_prefix(self) -> str:

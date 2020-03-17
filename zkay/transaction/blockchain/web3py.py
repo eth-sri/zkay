@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Tuple, List, Union
 from eth_tester import PyEVMBackend, EthereumTester
 from web3 import Web3
 
+from zkay import my_logging
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, zk_print, zk_print_banner
@@ -105,7 +106,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         if tx_receipt['status'] == 0:
             raise TransactionFailedException("Transaction failed")
-        zk_print(f"Consumed gas: {tx_receipt['gasUsed']}")
+        gas = tx_receipt['gasUsed']
+        zk_print(f"Consumed gas: {gas}")
+        my_logging.data('gas', gas)
         return tx_receipt
 
     def _deploy(self, project_dir: str, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None) -> Any:

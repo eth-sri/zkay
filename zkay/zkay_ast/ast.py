@@ -52,6 +52,12 @@ class AST:
         self.process_children(cb.add_child)
         return cb.children
 
+    def is_parent_of(self, child: AST) -> bool:
+        e = child
+        while e != self and e.parent is not None:
+            e = e.parent
+        return e == self
+
     def override(self: T, **kwargs) -> T:
         for key, val in kwargs.items():
             if not hasattr(self, key):
@@ -200,12 +206,6 @@ class Expression(AST):
 
     def ite(self, e_true: Expression, e_false: Expression) -> FunctionCallExpr:
         return FunctionCallExpr(BuiltinFunction('ite').override(is_private=self.annotated_type.is_private), [self, e_true, e_false])
-
-    def is_parent_of(self, child):
-        e = child
-        while e != self and isinstance(e.parent, Expression):
-            e = e.parent
-        return e == self
 
     def instanceof(self, expected):
         """
