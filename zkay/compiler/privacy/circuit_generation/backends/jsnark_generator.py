@@ -12,7 +12,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
     CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
 from zkay.compiler.privacy.proving_scheme.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
-from zkay.config import cfg
+from zkay.config import cfg, zk_print
 from zkay.utils.helpers import hash_file, hash_string
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
     IndexExpr, NumberLiteralExpr, MemberAccessExpr, TypeName, indent, PrimitiveCastExpr, EnumDefinition, Expression
@@ -216,7 +216,7 @@ class JsnarkGenerator(CircuitGenerator):
                 f.write(digest)
             return True
         else:
-            print(f'Circuit \'{circuit.get_verification_contract_name()}\' not modified, skipping compilation')
+            zk_print(f'Circuit \'{circuit.get_verification_contract_name()}\' not modified, skipping compilation')
             return False
 
     def _generate_keys(self, circuit: CircuitHelper):

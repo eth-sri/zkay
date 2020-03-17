@@ -10,7 +10,7 @@ from web3 import Web3
 
 from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
-from zkay.config import cfg, zk_print
+from zkay.config import cfg, zk_print, zk_print_banner
 from zkay.transaction.interface import ZkayBlockchainInterface, IntegrityError, BlockChainError, \
     TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
@@ -262,6 +262,8 @@ class Web3TesterBlockchain(Web3Blockchain):
         return True
 
     def _connect_libraries(self):
+        zk_print_banner(f'Deploying Libraries')
+
         sender = self.w3.eth.accounts[0]
         # Since eth-tester is not persistent -> always automatically deploy libraries
         with cfg.library_compilation_environment():

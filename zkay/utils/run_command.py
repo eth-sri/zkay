@@ -12,13 +12,13 @@ def run_command(cmd: List[str], cwd=None, allow_verbose: bool = False) -> Tuple[
     :param cmd: the command to run (list of command and arguments)
     :param cwd: if specified, use this path as working directory (otherwise current working directory is used)
     :param allow_verbose: if true, redirect command output to stdout (WARNING, causes return values to be None)
-    :return: command output and error output (if not (allow_verbose and cfg.verbose))
+    :return: command output and error output (if not (allow_verbose and cfg.verbosity))
     """
 
     if cwd is not None:
         cwd = os.path.abspath(cwd)
 
-    if allow_verbose and cfg.verbose and not cfg.is_unit_test:
+    if allow_verbose and cfg.verbosity >= 2 and not cfg.is_unit_test:
         process = subprocess.Popen(cmd, cwd=cwd)
         output, error = process.communicate() # will be None
     else:

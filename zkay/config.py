@@ -11,9 +11,14 @@ from zkay.config_user import UserConfig
 from zkay.transaction.crypto.meta import cryptoparams
 
 
-def zk_print(*args, verbose_only=False, **kwargs):
-    if (not verbose_only or cfg.verbose) and not cfg.is_unit_test:
+def zk_print(*args, verbosity_level=1, **kwargs):
+    if (verbosity_level <= cfg.verbosity) and not cfg.is_unit_test:
         print(*args, **kwargs)
+
+
+def zk_print_banner(title: str):
+    l = len(title) + 4
+    zk_print(f'{"#"*l}\n# {title} #\n{"#"*l}\n')
 
 
 def _init_solc(version):

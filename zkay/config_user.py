@@ -60,7 +60,7 @@ class UserConfig:
         self._data_dir: str = self._appdirs.user_data_dir
         self._log_dir: str = self._appdirs.user_log_dir
         self._use_circuit_cache_during_testing_with_encryption: bool = True
-        self._verbose: bool = False
+        self._verbosity: int = 1
 
     @property
     def proving_scheme(self) -> str:
@@ -324,16 +324,18 @@ class UserConfig:
         self._use_circuit_cache_during_testing_with_encryption = val
 
     @property
-    def verbose(self) -> bool:
+    def verbosity(self) -> int:
         """
-        If true, print additional output.
+        If 0, no output
+        If 1, normal output
+        If 2, verbose output
 
         This includes for example snark key- and proof generation output and
         information about intermediate transaction simulation steps.
         """
-        return self._verbose
+        return self._verbosity
 
-    @verbose.setter
-    def verbose(self, val: bool):
-        _type_check(val, bool)
-        self._verbose = val
+    @verbosity.setter
+    def verbosity(self, val: int):
+        _type_check(val, int)
+        self._verbosity = val
