@@ -53,7 +53,9 @@ def get_log_dir(parent_dir, label):
     return d
 
 
-def get_log_file(label='default', parent_dir=cfg.log_dir, filename='log', include_timestamp=True):
+def get_log_file(label='default', parent_dir=None, filename='log', include_timestamp=True):
+    if parent_dir is None:
+        parent_dir = os.path.realpath(cfg.log_dir)
     if label is None:
         log_dir = parent_dir
     else:
