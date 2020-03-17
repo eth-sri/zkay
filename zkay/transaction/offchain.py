@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import inspect
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from enum import Enum, IntEnum
 from typing import Dict, Union, Callable, Any, Optional, List, Tuple, Type, ContextManager
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
-from zkay.config import cfg
+from zkay.config import cfg, zk_print_banner
+from zkay.my_logging.log_context import log_context
 from zkay.transaction.int_casts import __convert as int_cast
 from zkay.transaction.interface import BlockChainError
 from zkay.transaction.runtime import Runtime
@@ -130,6 +131,8 @@ class LocalsDict:
 
 
 class ContractSimulator:
+    tidx: Dict[str, int] = {}
+
     def __init__(self, project_dir: str, user_addr: AddressValue, contract_name: str):
         """
         Create new contract simulator instance.
@@ -247,27 +250,31 @@ class ContractSimulator:
             return accounts
 
     @contextmanager
-    def _function_ctx(self, trans_sec_size=-1, *, wei_amount: int = 0):
+    def _function_ctx(self, trans_sec_size=-1, *, wei_amount: int = 0, name: str = '?'):
         with self.api.api_function_ctx(trans_sec_size, wei_amount) as is_external:
             if is_external:
+                zk_print_banner(f'Calling {name}')
                 assert self.locals is None
                 self.state.clear()
+                t_idx = self.tidx.get(name, 0)
+                self.tidx[name] = t_idx + 1
 
-            prev_locals = self.locals
-            self.locals = LocalsDict()
+            with nullcontext() if not is_external else log_context('transaction', f'{name}_{t_idx}'):
+                prev_locals = self.locals
+                self.locals = LocalsDict()
 
-            try:
-                yield is_external
-            except RequireException as e:
-                if is_external and not cfg.is_unit_test:
-                    with fail_print():
-                        print(f'ERROR: {e}')
-                else:
-                    raise e
-            finally:
-                self.locals = prev_locals
-                if is_external:
-                    self.state.clear()
+                try:
+                    yield is_external
+                except RequireException as e:
+                    if is_external and not cfg.is_unit_test:
+                        with fail_print():
+                            print(f'ERROR: {e}')
+                    else:
+                        raise e
+                finally:
+                    self.locals = prev_locals
+                    if is_external:
+                        self.state.clear()
 
 
 class ApiWrapper:

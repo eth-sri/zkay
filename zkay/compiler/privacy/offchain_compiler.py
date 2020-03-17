@@ -416,9 +416,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         # Add proof to actual argument list (when required)
         generate_proof_str = ''
+        fname = f"'{ast.name}'"
         if ast.can_be_external and circuit:
             generate_proof_str += '\n'.join(['\n#Generate proof',
-                                             f"proof = {api('gen_proof')}('{ast.name}', {cfg.zk_in_name}, {cfg.zk_out_name})",
+                                             f"proof = {api('gen_proof')}({fname}, {cfg.zk_in_name}, {cfg.zk_out_name})",
                                              'actual_params.append(proof)'])
 
         should_encrypt = ", ".join([str(p.annotated_type.declared_type is not None and p.annotated_type.declared_type.is_private()) for p in self.current_f.parameters])
@@ -430,7 +431,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         elif circuit or ast.has_side_effects:
             invoke_transact_str = f'''
             # Invoke public transaction
-            return {api("transact")}('{ast.name}', actual_params, [{should_encrypt}]{", wei_amount=wei_amount" if ast.is_payable else ""})
+            return {api("transact")}({fname}, actual_params, [{should_encrypt}]{", wei_amount=wei_amount" if ast.is_payable else ""})
             '''
         elif ast.return_parameters:
             constructors = []
@@ -449,7 +450,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
             invoke_transact_str = f'''
             # Call pure/view function and return value
-            return {api('call')}('{ast.name}', actual_params, {constructors})
+            return {api('call')}({fname}, actual_params, {constructors})
             '''
         else:
             invoke_transact_str = ''
@@ -468,8 +469,14 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             post_body_code
         ] if s)
 
-        func_circ_params = f'{circuit.priv_in_size_trans}' if circuit else ''
-        return f'with self._function_ctx({func_circ_params}{", wei_amount=wei_amount" if ast.is_payable else ""}) as {IS_EXTERNAL_CALL}:\n' + indent(code)
+        func_ctx_params = []
+        if circuit:
+            func_ctx_params.append(str(circuit.priv_in_size_trans))
+        if ast.is_payable:
+            func_ctx_params.append('wei_amount=wei_amount')
+        if ast.can_be_external:
+            func_ctx_params.append(f'name={fname}')
+        return f'with self._function_ctx({", ".join(func_ctx_params)}) as {IS_EXTERNAL_CALL}:\n' + indent(code)
 
     def visitStatementList(self, ast: StatementList):
         if ast.excluded_from_simulation:

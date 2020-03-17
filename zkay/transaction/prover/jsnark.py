@@ -15,10 +15,10 @@ class JsnarkProver(ZkayProverInterface):
         args = list(map(int, in_vals + out_vals + priv_values))
 
         try:
-            with time_measure("jsnark_prepare_proof_" + Path(verifier_dir).name):
+            with time_measure("jsnark_prepare_proof"):
                 jsnark.prepare_proof(verifier_dir, args)
 
-            with time_measure("libsnark_gen_proof_" + Path(verifier_dir).name):
+            with time_measure("libsnark_gen_proof"):
                 libsnark.generate_proof(verifier_dir, self.proving_scheme)
         except SubprocessError as e:
             raise ProofGenerationError(e.args)
