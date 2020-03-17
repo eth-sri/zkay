@@ -1,19 +1,11 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
-from enum import IntEnum
-
-import argcomplete
-import argparse
+import argcomplete, argparse
 import os
 
 from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 
-from zkay.compiler.privacy.zkay_frontend import load_transaction_interface_from_directory, \
-    load_contract_transaction_interface_from_module
 from zkay.config_user import UserConfig
-from zkay.transaction.interface import BlockChainError, IntegrityError
-from zkay.transaction.offchain import ContractSimulator
-from zkay.utils.progress_printer import fail_print, success_print
 
 
 def parse_config_doc():
@@ -173,12 +165,13 @@ def main():
 
     from pathlib import Path
 
-    import zkay.compiler.privacy.zkay_frontend as frontend
+    import zkay.zkay_frontend as frontend
     from zkay import my_logging
     from zkay.config import cfg
     from zkay.utils.helpers import read_file, save_to_file
     from zkay.errors.exceptions import ZkayCompilerError
     from zkay.my_logging.log_context import log_context
+    from zkay.utils.progress_printer import fail_print, success_print
     from zkay.zkay_ast.process_ast import get_processed_ast, get_parsed_ast_and_fake_code
 
     # Load configuration files
@@ -314,6 +307,8 @@ def main():
                     print(f"ERROR while exporting zkay contract\n{e}")
                 exit(4)
         elif a.cmd in ['run', 'deploy', 'connect']:
+            from enum import IntEnum
+            from zkay.transaction.offchain import ContractSimulator
             def echo_only_simple_expressions(e):
                 if isinstance(e, (bool, int, str, list, IntEnum)):
                     print(e)
@@ -336,13 +331,13 @@ def main():
             import sys
             if a.cmd == 'run':
                 # Dynamically load module and replace globals with module globals
-                contract_mod = load_transaction_interface_from_directory(contract_dir)
+                contract_mod = frontend.load_transaction_interface_from_directory(contract_dir)
                 contract_mod.me = me
                 sys.displayhook = echo_only_simple_expressions
                 code.interact(local=contract_mod.__dict__)
             else:
-                cmod = load_transaction_interface_from_directory(contract_dir)
-                c = load_contract_transaction_interface_from_module(cmod)
+                cmod = frontend.load_transaction_interface_from_directory(contract_dir)
+                c = frontend.load_contract_transaction_interface_from_module(cmod)
                 if a.cmd == 'deploy':
                     from ast import literal_eval
                     cargs = a.constructor_args
