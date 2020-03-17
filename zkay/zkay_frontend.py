@@ -8,8 +8,9 @@ import re
 import shutil
 import sys
 import tempfile
+from contextlib import contextmanager
 from copy import deepcopy
-from typing import Tuple, List, Type, Dict, Optional, Any
+from typing import Tuple, List, Type, Dict, Optional, Any, ContextManager
 
 from zkay import my_logging
 from zkay.compiler.privacy import library_contracts
@@ -171,13 +172,16 @@ def load_transaction_interface_from_directory(contract_dir: str) -> Any:
     return contract_mod
 
 
-def load_transaction_interface_for_benchmark(contract_dir: str) -> Any:
+@contextmanager
+def transaction_benchmark_ctx(contract_dir: str) -> ContextManager[Any]:
     use_configuration_from_manifest(contract_dir)
     cfg.verbosity = 0
     cfg.log_dir = contract_dir
     log_file = my_logging.get_log_file(filename='log', include_timestamp=False, label=None)
     my_logging.prepare_logger(log_file)
-    return load_transaction_interface_from_directory(contract_dir)
+    with time_measure('all_transactions', should_print=True):
+        yield load_transaction_interface_from_directory(contract_dir)
+        pass
 
 
 def load_contract_transaction_interface_from_module(contract_mod: Any,

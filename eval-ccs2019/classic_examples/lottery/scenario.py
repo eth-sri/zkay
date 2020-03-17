@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 import sys
-from zkay.zkay_frontend import load_transaction_interface_for_benchmark
-g = load_transaction_interface_for_benchmark(sys.argv[1])
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
 # Scenario
-master_addr, x_addr, y_addr = g.create_dummy_accounts(3)
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	master_addr, x_addr, y_addr = g.create_dummy_accounts(3)
 
-master = g.deploy(1234, user=master_addr)
-x = g.connect(master.address, user=x_addr)
-y = g.connect(master.address, user=y_addr)
+	master = g.deploy(1234, user=master_addr)
+	x = g.connect(master.address, user=x_addr)
+	y = g.connect(master.address, user=y_addr)
 
-x.bet(1234)
-y.bet(1235)
-master.publish_secret()
-x.claim_winner()
+	x.bet(1234)
+	y.bet(1235)
+	master.publish_secret()
+	x.claim_winner()
