@@ -7,7 +7,7 @@ import sys
 import shutil
 clean=False
 base_dir = sys.argv[2]
-backends = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey']
+backends = ['dummy', 'ecdh-chaskey', 'ecdh-aes', 'rsa-pkcs1.5', 'rsa-oaep']
 
 if sys.argv[1] == 'compile':
     for dirname in os.listdir(base_dir):

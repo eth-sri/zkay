@@ -44,6 +44,7 @@ def _init_solc(version):
         concrete_version = solcx.install_solc_pragma(cfg.zkay_solc_version_compatibility.expression, install=False)
 
         # Store time when last checked for new version + currently latest version
+        os.makedirs(os.path.realpath(os.path.dirname(update_file)), exist_ok=True)
         with open(update_file, 'w') as f:
             f.write(f"{datetime.now().strftime('%Y-%m-%d, %H:%M:%S')}\n{concrete_version}")
 
