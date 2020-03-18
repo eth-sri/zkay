@@ -8,7 +8,7 @@ contract EncTest {
         owner = msg.sender;
     }
 
-    function test(uint val) public {
+    function test(uint@me val) public {
         require(owner == me);
         v = v + val + 2;
     }
