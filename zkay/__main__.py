@@ -126,7 +126,7 @@ def parse_arguments():
                           formatter_class=ShowSuppressedInHelpFormatter)
 
     deploy_parser = subparsers.add_parser('deploy', parents=[interact_parser, config_parser],
-                                          help='Deploy contract with arguments and enter shell.',
+                                          help='Deploy contract with given constructor arguments',
                                           formatter_class=ShowSuppressedInHelpFormatter)
     deploy_parser.add_argument('constructor_args', nargs='*', help='Constructor arguments', metavar='<args>...')
 
@@ -349,7 +349,7 @@ def main():
                             val = arg
                         args.append(val)
                     try:
-                        c_inst = c.deploy(*args, user=me, project_dir=contract_dir)
+                        c.deploy(*args, user=me, project_dir=contract_dir)
                     except (ValueError, TypeError) as e:
                         with fail_print():
                             print(f'ERROR invalid arguments.\n{e}\n\nExpected contructor signature: ', end='')
@@ -372,16 +372,17 @@ def main():
                         with fail_print():
                             print(f'ERROR: failed to connect to contract\n{e}')
                             exit(13)
+
+                    # Open interactive shell in context of contract object
+                    contract_scope = {name: getattr(c_inst, name) for name in dir(c_inst)
+                                      if (name != 'constructor' and hasattr(getattr(c_inst, name), '_can_be_external')
+                                          and getattr(c_inst, name)._can_be_external) or name == 'api'}
+                    contract_scope['me'] = me
+                    contract_scope['help'] = lambda o=None: help(o) if o is not None else ContractSimulator.reduced_help(c)
+                    sys.displayhook = echo_only_simple_expressions
+                    code.interact(local=contract_scope)
                 else:
                     raise ValueError(f'unexpected command {a.cmd}')
-
-                contract_scope = {name: getattr(c_inst, name) for name in dir(c_inst)
-                                  if (name != 'constructor' and hasattr(getattr(c_inst, name), '_can_be_external') and getattr(c_inst, name)._can_be_external)
-                                      or name == 'api'}
-                contract_scope['me'] = me
-                contract_scope['help'] = lambda o=None: help(o) if o is not None else ContractSimulator.reduced_help(c)
-                sys.displayhook = echo_only_simple_expressions
-                code.interact(local=contract_scope)
             exit(0)
         else:
             raise NotImplementedError(a.cmd)

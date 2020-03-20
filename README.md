@@ -160,7 +160,7 @@ If the state variable is owned by you, you can specify should_decrypt=True to ge
 There are also two more specific commands for deploying or connecting to a single contract instance.
 The contract instance functions are then available as global functions in the shell.
 
-#### Deploy and interact with contract instance
+#### Deploy a zkay contract
 
 ```bash
 zkay deploy output_dir <constructor_args...>
