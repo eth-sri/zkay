@@ -37,7 +37,7 @@ class UserConfig:
         self._snark_backend: str = 'jsnark'
         self._snark_backend_values = ['jsnark']
 
-        self._crypto_backend: str = 'dummy'
+        self._crypto_backend: str = 'ecdh-aes'
         self._crypto_backend_values = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey']
 
         self._blockchain_backend: str = 'w3-eth-tester'
@@ -52,7 +52,7 @@ class UserConfig:
         self._libsnark_check_verify_locally_during_proof_generation: bool = False
 
         self._opt_solc_optimizer_runs: int = 50
-        self._opt_hash_threshold: int = 70
+        self._opt_hash_threshold: int = 1
         self._opt_eval_constexpr_in_circuit: bool = True
         self._opt_cache_circuit_inputs: bool = True
         self._opt_cache_circuit_outputs: bool = True

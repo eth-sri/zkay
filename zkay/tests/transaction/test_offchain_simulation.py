@@ -3,7 +3,7 @@ import os
 import shutil
 import sys
 import unittest
-from contextlib import nullcontext
+from contextlib import nullcontext, contextmanager
 
 from parameterized import parameterized_class
 
@@ -107,76 +107,60 @@ class TestOffchainBase(TestScenarios):
             shutil.rmtree(d)
 
 
+@contextmanager
+def _mock_config(crypto: str, hash_opt, blockchain: str = 'w3-eth-tester'):
+    old_c, old_h, old_b = cfg.crypto_backend, cfg.should_use_hash, cfg.blockchain_backend
+    cfg.crypto_backend = crypto
+    cfg.should_use_hash = (lambda _: hash_opt) if isinstance(hash_opt, bool) else hash_opt
+    cfg.blockchain_backend = blockchain
+    yield
+    cfg.crypto_backend, cfg.should_use_hash, cfg.blockchain_backend = old_c, old_h, old_b
+
+
 #@parameterized_class(('name', 'scenario'), get_scenario('.py'))
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainDummyEnc(TestOffchainBase):
     @unittest.skipIf(False, "No reason")
     def test_offchain_simulation_dummy(self):
-        old = cfg.crypto_backend
-        cfg.crypto_backend = 'dummy'
-        self.run_scenario()
-        cfg.crypto_backend = old
+        with _mock_config('dummy', False):
+            self.run_scenario()
 
 
 @parameterized_class(('name', 'scenario'), get_scenario('enctest.py'))
 class TestOffchainWithHashing(TestOffchainBase):
     @unittest.skipIf(False, "No reason")
     def test_offchain_simulation_dummy_with_hashing(self):
-        old = cfg.crypto_backend
-        old_sh = cfg.should_use_hash
-        cfg.crypto_backend = 'dummy'
-        cfg.should_use_hash = lambda _: True
-        self.run_scenario(suffix='WithHashing')
-        cfg.should_use_hash = old_sh
-        cfg.crypto_backend = old
+        with _mock_config('dummy', True):
+            self.run_scenario(suffix='WithHashing')
 
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainEcdhChaskeyEnc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_ecdh_chaskey(self):
-        old = cfg.crypto_backend
-        old_sh = cfg.should_use_hash
-        cfg.crypto_backend = 'ecdh-chaskey'
-        cfg.should_use_hash = lambda _: True
-        self.run_scenario(suffix='EcdhChaskey', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
-        cfg.crypto_backend = old
-        cfg.should_use_hash = old_sh
+        with _mock_config('ecdh-chaskey', True):
+            self.run_scenario(suffix='EcdhChaskey', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainEcdhAesEnc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_ecdh_aes(self):
-        old = cfg.crypto_backend
-        old_sh = cfg.should_use_hash
-        cfg.crypto_backend = 'ecdh-aes'
-        cfg.should_use_hash = lambda _: True
-        self.run_scenario(suffix='EcdhAes', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
-        cfg.crypto_backend = old
-        cfg.should_use_hash = old_sh
+        with _mock_config('ecdh-aes', True):
+            self.run_scenario(suffix='EcdhAes', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
 @parameterized_class(('name', 'scenario'), enc_scenarios)
 class TestOffchainRsaPkcs15Enc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_rsa_pkcs_15(self):
-        old = cfg.crypto_backend
-        old_sh = cfg.should_use_hash
-        cfg.crypto_backend = 'rsa-pkcs1.5'
-        cfg.should_use_hash = lambda _: True
-        self.run_scenario(suffix='RsaPkcs15', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
-        cfg.crypto_backend = old
-        cfg.should_use_hash = old_sh
+        with _mock_config('rsa-pkcs1.5', True):
+            self.run_scenario(suffix='RsaPkcs15', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
-# @parameterized_class(('name', 'scenario'), enc_scenarios)
-# class TestOffchainRsaOaepEnc(TestOffchainBase):
-#     def test_offchain_simulation_rsa_oaep(self):
-#         old = cfg.crypto_backend
-#         old_sh = cfg.should_use_hash
-#         cfg.crypto_backend = 'rsa-oaep'
-#         cfg.should_use_hash = lambda _: True
-#         self.run_scenario(suffix='RsaOaep', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
-#         cfg.crypto_backend = old
-#         cfg.should_use_hash = old_sh
+@parameterized_class(('name', 'scenario'), enc_scenarios)
+class TestOffchainRsaOaepEnc(TestOffchainBase):
+    @unittest.skipIf(True or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
+    def test_offchain_simulation_rsa_oaep(self):
+        with _mock_config('rsa-oaep', True):
+            self.run_scenario(suffix='RsaOaep', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
