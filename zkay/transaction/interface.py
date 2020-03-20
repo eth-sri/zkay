@@ -62,6 +62,26 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
     See documentation of :py:meth:`connect` for more information.
     """
 
+    def __init__(self):
+        self._pki_contract = None
+        self._lib_addresses = None
+
+    @property
+    def pki_contract(self):
+        if self._pki_contract is None:
+            self._connect_libraries()
+        return self._pki_contract
+
+    @property
+    def lib_addresses(self) -> Dict:
+        if self._lib_addresses is None:
+            self._connect_libraries()
+        return self._lib_addresses
+
+    @abstractmethod
+    def _connect_libraries(self):
+        pass
+
     # PUBLIC API
 
     @property
@@ -212,7 +232,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         zk_print()
         return ret
 
-    def connect(self, project_dir: str, contract: str, contract_address: AddressValue) -> Any:
+    def connect(self, project_dir: str, contract: str, contract_address: AddressValue, user_address: AddressValue) -> Any:
         """
         Create a handle which can be used to interact with an existing contract on the chain after verifying its integrity.
 
@@ -247,6 +267,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :param project_dir: directory where the zkay file, manifest and snark keys reside
         :param contract: name of the contract to connect to
         :param contract_address: address of the deployed contract
+        :param user_address: account which connects to the contract
         :raise IntegrityError: if the integrity check fails (mismatch between local code and remote contract)
         :return: contract handle for the specified contract
         """
@@ -269,14 +290,16 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pki_address = self._req_state_var(contract_on_chain, f'{cfg.pki_contract_name}_inst')
         pki_verifier_addresses[cfg.pki_contract_name] = AddressValue(pki_address)
         with cfg.library_compilation_environment():
-            self._verify_contract_integrity(pki_address, os.path.join(project_dir, f'{cfg.pki_contract_name}.sol'))
+            self._pki_contract = self._verify_contract_integrity(pki_address, os.path.join(project_dir, f'{cfg.pki_contract_name}.sol'))
 
         # Check verifier contract and library integrity
         if verifier_names:
             some_vname = verifier_names[0]
-            libraries = [('BN256G2', os.path.join(project_dir, ProvingScheme.verify_libs_contract_filename))]
+
+            libraries = [(lib_name, os.path.join(project_dir, ProvingScheme.verify_libs_contract_filename)) for lib_name in cfg.external_crypto_lib_names]
             some_vcontract = self._req_state_var(contract_on_chain, f'{some_vname}_inst')
             libs = self._verify_library_integrity(libraries, some_vcontract, os.path.join(project_dir, f'{some_vname}.sol'))
+            self._lib_addresses = libs
 
             for verifier in verifier_names:
                 v_address = self._req_state_var(contract_on_chain, f'{verifier}_inst')
@@ -295,7 +318,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         with success_print():
             zk_print(f'OK: Bytecode on blockchain matches local zkay contract')
-        zk_print()
+        zk_print(f'Connection from account 0x{user_address} established\n')
 
         return contract_on_chain
 

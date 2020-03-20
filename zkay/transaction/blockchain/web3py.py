@@ -29,22 +29,6 @@ class Web3Blockchain(ZkayBlockchainInterface):
         if not self.w3.isConnected():
             raise BlockChainError(f'Failed to connect to blockchain: {self.w3.provider}')
 
-        self.verifiers_for_uuid: Dict[str, Dict[str, AddressValue]] = {}
-        self._pki_contract = None
-        self._lib_addresses = None
-
-    @property
-    def pki_contract(self):
-        if self._pki_contract is None:
-            self._connect_libraries()
-        return self._pki_contract
-
-    @property
-    def lib_addresses(self) -> Dict:
-        if self._lib_addresses is None:
-            self._connect_libraries()
-        return self._lib_addresses
-
     @staticmethod
     def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
         solp = Path(sol_filename)

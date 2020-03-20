@@ -360,7 +360,7 @@ class ApiWrapper:
                                                     actual_args, should_encrypt, wei_amount=wei_amount)
 
     def connect(self, address: AddressValue):
-        self.__contract_handle = self.__conn.connect(self.__project_dir, self.__contract_name, address)
+        self.__contract_handle = self.__conn.connect(self.__project_dir, self.__contract_name, address, self.user_address)
 
     def transact(self, fname: str, args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
         return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)

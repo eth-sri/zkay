@@ -196,9 +196,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             @staticmethod
             def connect(address: Union[bytes, str], user: Union[str, bytes], project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
                 c = {name}(project_dir, AddressValue(user))
+                {api("connect", "c")}(AddressValue(address))
                 if not {api("keystore", "c")}.has_initialized_keys_for(AddressValue(user)):
                     ContractSimulator.initialize_keys_for(user)
-                {api("connect", "c")}(AddressValue(address))
                 return c
 
             @staticmethod

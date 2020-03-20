@@ -80,9 +80,6 @@ class Config(UserConfig):
             'opt_solc_optimizer_runs', 'opt_hash_threshold',
             'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs',
         ]
-        self._options_with_effect_if_not_empty = [
-            'blockchain_pki_address', 'blockchain_crypto_lib_addresses',
-        ]
 
         self._is_unit_test = False
         self._concrete_solc_version = None
@@ -122,14 +119,11 @@ class Config(UserConfig):
         out = {}
         for k in self._options_with_effect_on_circuit_output:
             out[k] = getattr(self, k)
-        for k in self._options_with_effect_if_not_empty:
-            if getattr(self, k):
-                out[k] = getattr(self, k)
         return out
 
     def import_compiler_settings(self, vals: dict):
         for k in vals:
-            if k not in self._options_with_effect_on_circuit_output and k not in self._options_with_effect_if_not_empty:
+            if k not in self._options_with_effect_on_circuit_output:
                 raise KeyError(f'vals contains unknown option "{k}"')
             setattr(self, k, vals[k])
 
