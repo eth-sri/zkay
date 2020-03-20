@@ -88,8 +88,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         """Return paths of all key files for this contract."""
         paths = []
         for circuit in self.circuits_to_prove:
-            vk, pk = self._get_vk_and_pk_paths(circuit)
-            paths += [vk, pk]
+            paths += list(self._get_vk_and_pk_paths(circuit))
         return paths
 
     def get_verification_contract_filenames(self) -> List[str]:

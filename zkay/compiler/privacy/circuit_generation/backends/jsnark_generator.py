@@ -226,7 +226,7 @@ class JsnarkGenerator(CircuitGenerator):
 
     @classmethod
     def get_vk_and_pk_filenames(cls) -> Tuple[str, ...]:
-        return 'verification.key', 'proving.key'
+        return 'verification.key', 'proving.key', 'verification.key.bin'
 
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         with open(self._get_vk_and_pk_paths(circuit)[0]) as f:
