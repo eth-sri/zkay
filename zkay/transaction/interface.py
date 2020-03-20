@@ -15,6 +15,7 @@ from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
+from zkay.zkay_ast.process_ast import get_verification_contract_names
 from zkay.zkay_frontend import compile_zkay_file
 from zkay.config import cfg, zk_print, zk_print_banner
 from zkay.transaction.types import AddressValue, MsgStruct, BlockStruct, TxStruct, PublicKeyValue, Value, \
@@ -276,10 +277,16 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         zk_print_banner(f'Connect to {contract}@{contract_address}')
 
-        # Compile zkay file to generate main and verification contracts (but don't generate new prover/verification keys and manifest)
+        # If not already done, compile zkay file to generate main and verification contracts (but don't generate new prover/verification keys and manifest)
+        zk_file = os.path.join(project_dir, 'contract.zkay')
+        if not os.path.exists(zk_file):
+            raise IntegrityError('No zkay contract found in specified directory')
         verifier_names = []
-        compile_zkay_file(os.path.join(project_dir, 'contract.zkay'), project_dir, import_keys=True,
-                          verifier_names=verifier_names)
+        if not os.path.exists(os.path.join(project_dir, 'contract.sol')):
+            compile_zkay_file(zk_file, project_dir, import_keys=True, verifier_names=verifier_names)
+        else:
+            with open(zk_file) as f:
+                verifier_names = get_verification_contract_names(f.read())
 
         zk_print(f'Connecting to contract {contract}@{contract_address}')
         contract_on_chain = self._connect(project_dir, contract, contract_address.val)
@@ -314,7 +321,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
                     raise IntegrityError(f'Prover key hash in deployed verification contract does not match local prover key file for "{verifier}"')
 
         # Check zkay contract integrity
-        self._verify_zkay_contract_integrity(contract_on_chain.address, os.path.join(project_dir, 'contract.sol'), pki_verifier_addresses)
+        self._verify_zkay_contract_integrity(contract_on_chain.address, project_dir, pki_verifier_addresses)
 
         with success_print():
             zk_print(f'OK: Bytecode on blockchain matches local zkay contract')
@@ -370,12 +377,12 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _verify_zkay_contract_integrity(self, address: str, sol_file: str, pki_verifier_addresses: dict):
+    def _verify_zkay_contract_integrity(self, address: str, project_dir: str, pki_verifier_addresses: dict):
         """
         Check if the zkay main contract at address matches the local file
 
         :param address: address of the remote main contract
-        :param sol_file: path to the local contract code file
+        :param project_dir: path to the zkay contract directory
         :param pki_verifier_addresses: dictionary which maps pki and verification contract names to the corresponding remote addresses
         :raise IntegrityError: if there is a mismatch
         """

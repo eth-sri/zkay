@@ -1,7 +1,9 @@
 import json
 import os
+import shutil
 import tempfile
 from abc import abstractmethod
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, List, Union
 
@@ -103,9 +105,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         # Deploy verification contracts if not already done
         external_contract_addresses =  self._deploy_dependencies(sender, project_dir, verifier_names)
-        filename = self.__hardcode_external_contracts(os.path.join(project_dir, 'contract.sol'),
-                                                      external_contract_addresses)
-        cout = self.compile_contract(filename, contract)
+        with self.__hardcoded_external_contracts_ctx(project_dir, external_contract_addresses) as filename:
+            cout = self.compile_contract(filename, contract)
         handle = self._deploy_contract(sender, cout, *actual_args, wei_amount=wei_amount)
         zk_print(f'Deployed contract "{contract}" at address "{handle.address}"')
         return handle
@@ -214,20 +215,28 @@ class Web3Blockchain(ZkayBlockchainInterface):
                 addresses[lib_name] = lib_address
         return addresses
 
-    def _verify_zkay_contract_integrity(self, address: str, sol_file: str, pki_verifier_addresses: Dict):
-        sol_file = self.__hardcode_external_contracts(sol_file, pki_verifier_addresses)
-        self._verify_contract_integrity(address, sol_file)
+    def _verify_zkay_contract_integrity(self, address: str, project_dir: str, pki_verifier_addresses: Dict):
+        with self.__hardcoded_external_contracts_ctx(project_dir, pki_verifier_addresses) as sol_file:
+            self._verify_contract_integrity(address, sol_file)
 
-    def __hardcode_external_contracts(self, input_filename, pki_verifier_addresses):
-        with open(input_filename) as f:
-            c = f.read()
-        for key, val in pki_verifier_addresses.items():
-            c = c.replace(f'{key}(0)', f'{key}({self.w3.toChecksumAddress(val.val)})')
+    @contextmanager
+    def __hardcoded_external_contracts_ctx(self, contract_dir: str, pki_verifier_addresses):
+        with tempfile.TemporaryDirectory() as tempd:
+            # Hardcode contract addresses in temporary file
+            with open(os.path.join(contract_dir, 'contract.sol')) as f:
+                c = f.read()
+            for key, val in pki_verifier_addresses.items():
+                c = c.replace(f'{key}(0)', f'{key}({self.w3.toChecksumAddress(val.val)})')
+            output_filename = os.path.join(tempd, "contract.inst.sol")
+            with open(output_filename, 'w') as f:
+                f.write(c)
 
-        output_filename = f'{without_extension(input_filename)}.inst.sol'
-        with open(output_filename, 'w') as f:
-            f.write(c)
-        return output_filename
+            # Symlink all other sol files to temp directory (to allow compilation)
+            for file in os.listdir(contract_dir):
+                if file.endswith('.sol') and file not in ['contract.sol', 'contract.inst.sol']:
+                    os.symlink(os.path.join(contract_dir, file), os.path.join(tempd, file))
+            yield output_filename
+            pass
 
     def __normalized_hex(self, val: Union[str, bytes]) -> str:
         if not isinstance(val, str):
