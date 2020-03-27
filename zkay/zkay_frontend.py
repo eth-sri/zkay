@@ -8,6 +8,7 @@ import re
 import shutil
 import sys
 import tempfile
+import zipfile
 from contextlib import contextmanager
 from copy import deepcopy
 from typing import Tuple, List, Type, Dict, Optional, Any, ContextManager
@@ -100,11 +101,12 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
 
     # Dump libraries
     with print_step("Write library contract files"):
-        # Write pki contract
-        _dump_to_output(library_contracts.get_pki_contract(), output_dir, f'{cfg.pki_contract_name}.sol', dryrun_solc=True)
+        with cfg.library_compilation_environment():
+            # Write pki contract
+            _dump_to_output(library_contracts.get_pki_contract(), output_dir, f'{cfg.pki_contract_name}.sol', dryrun_solc=True)
 
-        # Write library contract
-        _dump_to_output(library_contracts.get_verify_libs_code(), output_dir, ProvingScheme.verify_libs_contract_filename, dryrun_solc=True)
+            # Write library contract
+            _dump_to_output(library_contracts.get_verify_libs_code(), output_dir, ProvingScheme.verify_libs_contract_filename, dryrun_solc=True)
 
     # Write public contract file
     with print_step('Write public solidity code'):
@@ -250,13 +252,14 @@ def connect_to_contract_at(contract_dir: str, contract_address, account, contrac
     return c.connect(address=contract_address, user=account, project_dir=contract_dir)
 
 
-def collect_package_contents(contract_dir: str) -> List[str]:
+def _collect_package_contents(contract_dir: str, check_all_files: bool) -> List[str]:
     """
     Return list of relative paths of all files which should be part of the package for the contract in contract_dir.
 
     Raises an exception if contract.zkay, manifest.json or any of the files required by contract.zkay is missing.
 
     :param contract_dir: path to directory containing manifest and zkay file
+    :param check_all_files: if true, checks whether all expected files are present
     :raise FileNotFoundError: if any of the expected files is not present
     :return: list of relative paths (relative to contract_dir)
     """
@@ -278,10 +281,11 @@ def collect_package_contents(contract_dir: str) -> List[str]:
         files += [os.path.join(cfg.get_circuit_output_dir_name(v), k)
                   for k in gen_cls.get_vk_and_pk_filenames() for v in verifier_names]
 
-    for f in files:
-        path = os.path.join(contract_dir, f)
-        if not os.path.exists(path) or not os.path.isfile(path):
-            raise FileNotFoundError(f)
+    if check_all_files:
+        for f in files:
+            path = os.path.join(contract_dir, f)
+            if not os.path.exists(path) or not os.path.isfile(path):
+                raise FileNotFoundError(f)
     return files
 
 
@@ -291,7 +295,7 @@ def package_zkay_contract(zkay_output_dir: str, output_filename: str):
         output_filename += '.zkp'
 
     with print_step('Packaging for distribution'):
-        files = collect_package_contents(zkay_output_dir)
+        files = _collect_package_contents(zkay_output_dir, True)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             for file in files:
@@ -313,18 +317,23 @@ def extract_zkay_package(zkp_filename: str, output_dir: str):
     """
     os.makedirs(output_dir)
     try:
-        shutil.unpack_archive(zkp_filename, output_dir, format='zip')
+        with zipfile.ZipFile(zkp_filename) as zkp:
+            with print_step('Checking zip file integrity'):
+                if zkp.testzip() is not None:
+                    raise ValueError('Corrupt archive')
 
-        # Check if required files exist in package
-        files = collect_package_contents(output_dir)
+            with print_step('Checking for correct file structure'):
+                zkp.extract('contract.zkay', output_dir)
+                zkp.extract('manifest.json', output_dir)
+                expected_files = sorted(_collect_package_contents(output_dir, False))
+                contained_files = sorted([d.filename for d in zkp.infolist() if not d.is_dir()])
+                if expected_files != contained_files:
+                    raise ValueError(f'Package is invalid, does not match expected contents')
 
-        # Check that no other files exist in package
-        whitelist = {os.path.join(output_dir, file) for file in files}
-        for dirpath, _, filenames in os.walk(output_dir):
-            for file in filenames:
-                if os.path.join(dirpath, file) not in whitelist:
-                    raise ValueError(f'package contains illegal unexpected file {file}')
+            with print_step('Extracting archive'):
+                zkp.extractall(output_dir)
 
+        # Compile extracted contract
         zkay_filename = os.path.join(output_dir, 'contract.zkay')
         manifest = Manifest.load(output_dir)
         with Manifest.with_manifest_config(manifest):
