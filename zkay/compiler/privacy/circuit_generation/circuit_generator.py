@@ -151,7 +151,7 @@ class CircuitGenerator(metaclass=ABCMeta):
     @abstractmethod
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         """Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme"""
-        return self.proving_scheme.dummy_vk()
+        return self.proving_scheme.VerifyingKey.create_dummy_key()
 
     @abstractmethod
     def _get_prover_key_hash(self, circuit: CircuitHelper) -> bytes:

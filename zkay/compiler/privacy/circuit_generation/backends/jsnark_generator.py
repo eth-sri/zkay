@@ -10,7 +10,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircCom
 from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGenerator
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
-from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17, VerifyingKeyGm17
+from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17
 from zkay.compiler.privacy.proving_scheme.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.config import cfg, zk_print
 from zkay.utils.helpers import hash_file, hash_string
@@ -197,7 +197,7 @@ class JsnarkGenerator(CircuitGenerator):
 
         # Compute combined hash of the current jsnark interface jar and of the contents of the java file
         hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.hash')
-        digest = hash_string((jsnark.circuit_builder_jar_hash + code).encode('utf-8')).hex()
+        digest = hash_string((jsnark.circuit_builder_jar_hash + code + cfg.proving_scheme).encode('utf-8')).hex()
         if os.path.exists(hashfile):
             with open(hashfile, 'r') as f:
                 oldhash = f.read()
@@ -222,7 +222,7 @@ class JsnarkGenerator(CircuitGenerator):
     def _generate_keys(self, circuit: CircuitHelper):
         # Invoke the custom libsnark interface to generate keys
         output_dir = self._get_circuit_output_dir(circuit)
-        libsnark.generate_keys(output_dir, self.proving_scheme.name)
+        libsnark.generate_keys(output_dir, output_dir, self.proving_scheme.name)
 
     @classmethod
     def get_vk_and_pk_filenames(cls) -> Tuple[str, ...]:
@@ -232,16 +232,16 @@ class JsnarkGenerator(CircuitGenerator):
         with open(self._get_vk_and_pk_paths(circuit)[0]) as f:
             data = iter(f.read().splitlines())
         if isinstance(self.proving_scheme, ProvingSchemeGm17):
-            h = G2Point(next(data), next(data), next(data), next(data))
-            g_alpha = G1Point(next(data), next(data))
-            h_beta = G2Point(next(data), next(data), next(data), next(data))
-            g_gamma = G1Point(next(data), next(data))
-            h_gamma = G2Point(next(data), next(data), next(data), next(data))
+            h = G2Point.from_it(data)
+            g_alpha = G1Point.from_it(data)
+            h_beta = G2Point.from_it(data)
+            g_gamma = G1Point.from_it(data)
+            h_gamma = G2Point.from_it(data)
             query_len = int(next(data))
             query: List[Optional[G1Point]] = [None for _ in range(query_len)]
             for idx in range(query_len):
-                query[idx] = G1Point(next(data), next(data))
-            return VerifyingKeyGm17(h, g_alpha, h_beta, g_gamma, h_gamma, query)
+                query[idx] = G1Point.from_it(data)
+            return ProvingSchemeGm17.VerifyingKey(h, g_alpha, h_beta, g_gamma, h_gamma, query)
         else:
             raise NotImplementedError()
 
