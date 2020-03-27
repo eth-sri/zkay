@@ -19,7 +19,7 @@ class SolcException(Exception):
 
 def compile_solidity_json(sol_filename: str, libs: Optional[Dict[str, str]] = None, optimizer_runs: int = -1,
                           output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode'),
-                          output_dir: str = None) -> Dict:
+                          cwd: str = None) -> Dict:
     """
     Compile the given solidity file using solc json interface with the provided options.
 
@@ -27,7 +27,7 @@ def compile_solidity_json(sol_filename: str, libs: Optional[Dict[str, str]] = No
     :param libs: [OPTIONAL] dictionary containing <LibraryContractName, LibraryContractAddress> pairs, used for linking
     :param optimizer_runs: controls the optimize-runs flag, negative values disable the optimizer
     :param output_selection: determines which fields are included in the compiler output dict
-    :param output_dir: compiler output directory
+    :param cwd: working directory
     :return: dictionary with the compilation results according to output_selection
     """
     solp = pathlib.Path(sol_filename)
@@ -58,10 +58,12 @@ def compile_solidity_json(sol_filename: str, libs: Optional[Dict[str, str]] = No
             solp.name: libs
         }
 
-    cwd = os.getcwd()
-    os.chdir(solp.absolute().parent)
-    ret = compile_standard(json_in, allow_paths='.', output_dir=output_dir)
+    if cwd is None:
+        cwd = solp.absolute().parent
+    old_cwd = os.getcwd()
     os.chdir(cwd)
+    ret = compile_standard(json_in, allow_paths='.')
+    os.chdir(old_cwd)
     return ret
 
 
@@ -151,20 +153,22 @@ def check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str):
         check_compilation(f.name, True, display_code=zkay_code)
 
 
-def compile_solidity_code(code: str, output_directory: str, optimizer_runs=cfg.opt_solc_optimizer_runs) -> Dict:
+def compile_solidity_code(code: str, working_directory: Optional[str] = None, optimizer_runs=cfg.opt_solc_optimizer_runs) -> Dict:
     """
     Compile the given solidity code with default settings.
 
     :param code: code to compile
-    :param output_directory: compiler output directory
+    :param working_directory: (Optional) compiler working directory
     :param optimizer_runs: solc optimizer argument "runs", a negative value disables the optimizer
     :return: json compilation output
     """
 
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
-
     with tempfile.NamedTemporaryFile('w', suffix='.sol') as f:
+        if working_directory is None:
+            working_directory = os.path.dirname(f.name)
+        elif not os.path.exists(working_directory):
+            os.makedirs(working_directory)
+
         f.write(code)
         f.flush()
-        return compile_solidity_json(f.name, output_dir=output_directory, optimizer_runs=optimizer_runs)
+        return compile_solidity_json(f.name, cwd=working_directory, optimizer_runs=optimizer_runs)

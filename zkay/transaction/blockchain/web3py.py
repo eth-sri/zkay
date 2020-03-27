@@ -32,9 +32,9 @@ class Web3Blockchain(ZkayBlockchainInterface):
             raise BlockChainError(f'Failed to connect to blockchain: {self.w3.provider}')
 
     @staticmethod
-    def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None):
+    def compile_contract(sol_filename: str, contract_name: str, libs: Optional[Dict] = None, cwd=None):
         solp = Path(sol_filename)
-        jout = compile_solidity_json(sol_filename, libs, optimizer_runs=cfg.opt_solc_optimizer_runs)['contracts'][solp.name][contract_name]
+        jout = compile_solidity_json(sol_filename, libs, optimizer_runs=cfg.opt_solc_optimizer_runs, cwd=cwd)['contracts'][solp.name][contract_name]
         return {
             'abi': json.loads(jout['metadata'])['output']['abi'],
             'bin': jout['evm']['bytecode']['object'],
@@ -106,7 +106,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         # Deploy verification contracts if not already done
         external_contract_addresses =  self._deploy_dependencies(sender, project_dir, verifier_names)
         with self.__hardcoded_external_contracts_ctx(project_dir, external_contract_addresses) as filename:
-            cout = self.compile_contract(filename, contract)
+            cout = self.compile_contract(filename, contract, cwd=project_dir)
         handle = self._deploy_contract(sender, cout, *actual_args, wei_amount=wei_amount)
         zk_print(f'Deployed contract "{contract}" at address "{handle.address}"')
         return handle
@@ -138,12 +138,15 @@ class Web3Blockchain(ZkayBlockchainInterface):
         return vf
 
     def _connect_libraries(self):
-        if not cfg.blockchain_pki_address or not cfg.blockchain_crypto_lib_addresses:
-            raise BlockChainError('Must specify pki and all crypto library addresses in config.')
-        lib_addresses = [addr.strip() for addr in cfg.blockchain_crypto_lib_addresses.split(',')]
-        if len(lib_addresses) != len(cfg.external_crypto_lib_names):
-            raise BlockChainError('Must specify all crypto library addresses in config\n'
-                                  f'Expected {len(cfg.external_crypto_lib_names)} was {len(lib_addresses)}')
+        if not cfg.blockchain_pki_address:
+            raise BlockChainError('Must specify pki address in config.')
+
+        lib_addresses = []
+        if cfg.external_crypto_lib_names:
+            lib_addresses = [addr.strip() for addr in cfg.blockchain_crypto_lib_addresses.split(',')] if cfg.blockchain_crypto_lib_addresses else []
+            if len(lib_addresses) != len(cfg.external_crypto_lib_names):
+                raise BlockChainError('Must specify all crypto library addresses in config\n'
+                                      f'Expected {len(cfg.external_crypto_lib_names)} was {len(lib_addresses)}')
 
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -164,7 +167,8 @@ class Web3Blockchain(ZkayBlockchainInterface):
         )
 
     def _verify_contract_integrity(self, address: Union[bytes, str], sol_filename: str, *,
-                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False) -> Any:
+                                   libraries: Dict = None, contract_name: str = None, is_library: bool = False,
+                                   cwd=None) -> Any:
         if isinstance(address, bytes):
             address = self.w3.toChecksumAddress(address)
 
@@ -174,7 +178,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         if not actual_byte_code:
             raise IntegrityError(f'Expected contract {contract_name} is not deployed at address {address}')
 
-        cout = self.compile_contract(sol_filename, contract_name, libs=libraries)
+        cout = self.compile_contract(sol_filename, contract_name, libs=libraries, cwd=cwd)
         expected_byte_code = self.__normalized_hex(cout['deployed_bin'])
 
         if is_library:
@@ -217,24 +221,21 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
     def _verify_zkay_contract_integrity(self, address: str, project_dir: str, pki_verifier_addresses: Dict):
         with self.__hardcoded_external_contracts_ctx(project_dir, pki_verifier_addresses) as sol_file:
-            self._verify_contract_integrity(address, sol_file)
+            self._verify_contract_integrity(address, sol_file, cwd=project_dir)
 
     @contextmanager
     def __hardcoded_external_contracts_ctx(self, contract_dir: str, pki_verifier_addresses):
+        # Hardcode contract addresses
+        with open(os.path.join(contract_dir, 'contract.sol')) as f:
+            c = f.read()
+        for key, val in pki_verifier_addresses.items():
+            c = c.replace(f'{key}(0)', f'{key}({self.w3.toChecksumAddress(val.val)})')
+
         with tempfile.TemporaryDirectory() as tempd:
-            # Hardcode contract addresses in temporary file
-            with open(os.path.join(contract_dir, 'contract.sol')) as f:
-                c = f.read()
-            for key, val in pki_verifier_addresses.items():
-                c = c.replace(f'{key}(0)', f'{key}({self.w3.toChecksumAddress(val.val)})')
+            # Save in temporary file to compile
             output_filename = os.path.join(tempd, "contract.inst.sol")
             with open(output_filename, 'w') as f:
                 f.write(c)
-
-            # Symlink all other sol files to temp directory (to allow compilation)
-            for file in os.listdir(contract_dir):
-                if file.endswith('.sol') and file not in ['contract.sol', 'contract.inst.sol']:
-                    os.symlink(os.path.join(contract_dir, file), os.path.join(tempd, file))
             yield output_filename
             pass
 
