@@ -13,8 +13,10 @@ def get_verify_libs_code() -> str:
     code = ''
     if 'BN256G2' in cfg.external_crypto_lib_names:
         code += f"{read_file(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bn256g2.sol'))}\n\n"\
-                f"{bn256g2_pairing_lib}"
-    return f'pragma solidity ^0.5.0;\n\n{code}'
+                f"{alt_bn128_pairing_lib}"
+    else:
+        code += f'{alt_bn128_pairing_lib_simple}'
+    return f'pragma solidity {cfg.zkay_solc_version_compatibility.expression};\n\n{code}'
 
 
 bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
@@ -28,7 +30,7 @@ def get_pki_contract() -> str:
     """Contract of the public key infrastructure used for asymmetric cryptography"""
     # TODO prove private key knowledge during announcePk
     return dedent(f'''\
-    pragma solidity ^0.5;
+    pragma solidity {cfg.zkay_solc_version_compatibility.expression};
 
     contract {cfg.pki_contract_name} {{
         mapping(address => uint[{cfg.key_len}]) pks;
@@ -52,14 +54,14 @@ def get_pki_contract() -> str:
     ''')
 
 
-bn256g2_pairing_lib = '' + '''\
+alt_bn128_pairing_lib_simple = '' + '''\
 // This library is MIT licensed
 //
 // Copyright 2017 Christian Reitwiessner
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 // The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//pragma experimental ABIEncoderV2;
+
 library Pairing {
     struct G1Point {
         uint X;
@@ -70,6 +72,7 @@ library Pairing {
         uint[2] X;
         uint[2] Y;
     }
+
     /// @return the generator of G1
     function P1() pure internal returns (G1Point memory) {
         return G1Point(1, 2);
@@ -83,7 +86,7 @@ library Pairing {
              8495653923123431417604973247489272438418190587263600148770280649306958101930]
         );
     }
-    /// @return the negation of p, i.e. p.addition(p.negate()) should be zero.
+    /// @return the negation of p, i.e. p.add(p.negate()) should be zero.
     function negate(G1Point memory p) pure internal returns (G1Point memory) {
         // The prime q in the base field F_q for G1
         uint q = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -91,8 +94,8 @@ library Pairing {
             return G1Point(0, 0);
         return G1Point(p.X, q - (p.Y % q));
     }
-    /// @return the sum of two points of G1
-    function addition(G1Point memory p1, G1Point memory p2) internal returns (G1Point memory r) {
+    /// @return r the sum of two points of G1
+    function add(G1Point memory p1, G1Point memory p2) internal returns (G1Point memory r) {
         uint[4] memory input;
         input[0] = p1.X;
         input[1] = p1.Y;
@@ -100,18 +103,14 @@ library Pairing {
         input[3] = p2.Y;
         bool success;
         assembly {
-            success := call(sub(gas, 2000), 6, 0, input, 0xc0, r, 0x60)
+            success := call(sub(gas(), 2000), 6, 0, input, 0xc0, r, 0x60)
             // Use "invalid" to make gas estimation work
             switch success case 0 { invalid() }
         }
         require(success);
     }
-    /// @return the sum of two points of G2
-    function addition(G2Point memory p1, G2Point memory p2) internal view returns (G2Point memory r) {
-        (r.X[1], r.X[0], r.Y[1], r.Y[0]) = BN256G2.ECTwistAdd(p1.X[1],p1.X[0],p1.Y[1],p1.Y[0],p2.X[1],p2.X[0],p2.Y[1],p2.Y[0]);
-    }
-    /// @return the product of a point on G1 and a scalar, i.e.
-    /// p == p.scalar_mul(1) and p.addition(p) == p.scalar_mul(2) for all points p.
+    /// @return r the product of a point on G1 and a scalar, i.e.
+    /// p == p.scalar_mul(1) and p.add(p) == p.scalar_mul(2) for all points p.
     function scalar_mul(G1Point memory p, uint s) internal returns (G1Point memory r) {
         uint[3] memory input;
         input[0] = p.X;
@@ -119,7 +118,7 @@ library Pairing {
         input[2] = s;
         bool success;
         assembly {
-            success := call(sub(gas, 2000), 7, 0, input, 0x80, r, 0x60)
+            success := call(sub(gas(), 2000), 7, 0, input, 0x80, r, 0x60)
             // Use "invalid" to make gas estimation work
             switch success case 0 { invalid() }
         }
@@ -146,7 +145,7 @@ library Pairing {
         uint[1] memory out;
         bool success;
         assembly {
-            success := call(sub(gas, 2000), 8, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+            success := call(sub(gas(), 2000), 8, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
             // Use "invalid" to make gas estimation work
             switch success case 0 { invalid() }
         }
@@ -198,10 +197,25 @@ library Pairing {
         p2[3] = d2;
         return pairing(p1, p2);
     }
-}\
+}
 '''
 """
-Solidity library for alt_bn128 and twisted alt_bn128 pairing.
+Solidity library for alt_bn128 without twist point addition
+
+:Source: https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L397
+ - (g2 addition removed)
+:License: MIT
+"""
+
+alt_bn128_pairing_lib = alt_bn128_pairing_lib_simple[:alt_bn128_pairing_lib_simple.rfind('}')] + '''\
+    /// @return r the sum of two points of G2
+    function add(G2Point memory p1, G2Point memory p2) internal view returns (G2Point memory r) {
+        (r.X[1], r.X[0], r.Y[1], r.Y[0]) = BN256G2.ECTwistAdd(p1.X[1],p1.X[0],p1.Y[1],p1.Y[0],p2.X[1],p2.X[0],p2.Y[1],p2.Y[0]);
+    }
+}
+'''
+"""
+Solidity library for alt_bn128 with twist point addition
 
 :Source: https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L397
 :License: MIT

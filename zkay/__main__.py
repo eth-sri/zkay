@@ -206,10 +206,13 @@ def main():
                         addr = Runtime.blockchain().deploy_solidity_contract(file, cfg.pki_contract_name, a.account)
                         print(f'Deployed pki contract at: {addr}')
                     else:
-                        file = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
-                        for lib in cfg.external_crypto_lib_names:
-                            addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
-                            print(f'Deployed crypto library {lib} at: {addr}')
+                        if not cfg.external_crypto_lib_names:
+                            print('Current proving scheme does not require library deployment')
+                        else:
+                            file = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
+                            for lib in cfg.external_crypto_lib_names:
+                                addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
+                                print(f'Deployed crypto library {lib} at: {addr}')
             except Exception as e:
                 with fail_print():
                     print(f"ERROR: Deployment failed\n{e}")

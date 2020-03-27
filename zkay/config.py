@@ -131,11 +131,16 @@ class Config(UserConfig):
     def library_compilation_environment(self) -> ContextManager:
         """Use this fixed configuration compiling libraries to get reproducible output."""
         old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
-        self.override_solc('v0.5.16')
+        self.override_solc(self.library_solc_version)
         self.opt_solc_optimizer_runs = 1000
         yield
         self.opt_solc_optimizer_runs = old_opt_runs
         self.override_solc(old_solc)
+
+    @property
+    def library_solc_version(self) -> str:
+        # Note: Changing this version breaks compatibility with already deployed library contracts
+        return '0.5.17'
 
     @property
     def zkay_version(self) -> str:
