@@ -347,7 +347,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
     def is_debug_backend(cls) -> bool:
         return False
 
-    # INTERNAL FUNCTIONALITY$
+    # INTERNAL FUNCTIONALITY
 
     @abstractmethod
     def _verify_contract_integrity(self, address: str, sol_filename: str, *,
@@ -625,8 +625,8 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
 class ZkayProverInterface(metaclass=ABCMeta):
     """API to generate zero knowledge proofs for a particular circuit and arguments."""
 
-    def __init__(self, proving_scheme: str = cfg.proving_scheme):
-        self.proving_scheme = proving_scheme
+    def __init__(self, proving_scheme: str = None):
+        self.proving_scheme = cfg.proving_scheme if proving_scheme is None else proving_scheme
 
     def generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List, in_vals: List, out_vals: List[Union[int, CipherValue]]) -> List[int]:
         """

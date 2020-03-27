@@ -11,6 +11,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_generator import CircuitGe
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, CircuitStatement, \
     CircVarDecl, CircEqConstraint, CircEncConstraint, HybridArgumentIdf
 from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17
+from zkay.compiler.privacy.proving_scheme.backends.groth16 import ProvingSchemeGroth16
 from zkay.compiler.privacy.proving_scheme.proving_scheme import VerifyingKey, G2Point, G1Point, ProvingScheme
 from zkay.config import cfg, zk_print
 from zkay.utils.helpers import hash_file, hash_string
@@ -231,7 +232,17 @@ class JsnarkGenerator(CircuitGenerator):
     def _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey:
         with open(self._get_vk_and_pk_paths(circuit)[0]) as f:
             data = iter(f.read().splitlines())
-        if isinstance(self.proving_scheme, ProvingSchemeGm17):
+        if isinstance(self.proving_scheme, ProvingSchemeGroth16):
+            a = G1Point.from_it(data)
+            b = G2Point.from_it(data)
+            gamma = G2Point.from_it(data)
+            delta = G2Point.from_it(data)
+            query_len = int(next(data))
+            gamma_abc: List[Optional[G1Point]] = [None for _ in range(query_len)]
+            for idx in range(query_len):
+                gamma_abc[idx] = G1Point.from_it(data)
+            return ProvingSchemeGroth16.VerifyingKey(a, b, gamma, delta, gamma_abc)
+        elif isinstance(self.proving_scheme, ProvingSchemeGm17):
             h = G2Point.from_it(data)
             g_alpha = G1Point.from_it(data)
             h_beta = G2Point.from_it(data)

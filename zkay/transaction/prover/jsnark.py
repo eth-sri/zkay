@@ -5,7 +5,6 @@ from typing import List
 
 import zkay.jsnark_interface.jsnark_interface as jsnark
 import zkay.jsnark_interface.libsnark_interface as libsnark
-from zkay.config import cfg
 from zkay.transaction.interface import ZkayProverInterface, ProofGenerationError
 from zkay.utils.helpers import hash_file
 from zkay.utils.timer import time_measure
@@ -17,21 +16,17 @@ class JsnarkProver(ZkayProverInterface):
 
         # Generate proof in temporary directory
         with TemporaryDirectory() as tempd:
-            # Symlink circuit and key files into the directory
-            files = [f'{cfg.jsnark_circuit_classname}.class', 'proving.key', 'verification.key.bin']
-            for file in files:
-                os.symlink(os.path.join(verifier_dir, file), os.path.join(tempd, file))
-
+            proof_path = os.path.join(tempd, 'proof.out')
             try:
                 with time_measure("jsnark_prepare_proof"):
-                    jsnark.prepare_proof(tempd, args)
+                    jsnark.prepare_proof(verifier_dir, tempd, args)
 
                 with time_measure("libsnark_gen_proof"):
-                    libsnark.generate_proof(tempd, self.proving_scheme)
+                    libsnark.generate_proof(verifier_dir, tempd, proof_path, self.proving_scheme)
             except SubprocessError as e:
                 raise ProofGenerationError(e.args)
 
-            with open(os.path.join(tempd, 'proof.out')) as f:
+            with open(proof_path) as f:
                 proof_lines = f.read().splitlines()
         proof = list(map(lambda x: int(x, 0), proof_lines))
         return proof

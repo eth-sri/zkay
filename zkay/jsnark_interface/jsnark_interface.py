@@ -31,18 +31,19 @@ def compile_circuit(circuit_dir: str, javacode: str):
     run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, allow_verbose=True)
 
 
-def prepare_proof(circuit_dir: str, serialized_args: List[int]):
+def prepare_proof(circuit_dir: str, output_dir: str, serialized_args: List[int]):
     """
     Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
 
     :param circuit_dir: directory where the compiled circuit is located
+    :param output_dir: directory, where to store the jsnark output files
     :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
     :raise SubprocessError: if circuit evaluation fails
     """
     serialized_arg_str = [format(arg, 'x') for arg in serialized_args]
 
     # Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=circuit_dir, allow_verbose=True)
+    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'prove', *serialized_arg_str], cwd=output_dir, allow_verbose=True)
 
 
 _class_template_str = '' + '''\

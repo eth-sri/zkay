@@ -31,8 +31,8 @@ class UserConfig:
         # If 'Available Options: [...]' is specified, the options are used for autocomplete suggestions.
 
         # Global defaults
-        self._proving_scheme: str = 'gm17'
-        self._proving_scheme_values = ['gm17']
+        self._proving_scheme: str = 'groth16'
+        self._proving_scheme_values = ['groth16', 'gm17']
 
         self._snark_backend: str = 'jsnark'
         self._snark_backend_values = ['jsnark']

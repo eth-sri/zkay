@@ -21,6 +21,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelpe
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.compiler.privacy.offchain_compiler import PythonOffchainVisitor
 from zkay.compiler.privacy.proving_scheme.backends.gm17 import ProvingSchemeGm17
+from zkay.compiler.privacy.proving_scheme.backends.groth16 import ProvingSchemeGroth16
 from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
 from zkay.compiler.privacy.transformation.zkay_contract_transformer import transform_ast
 from zkay.compiler.solidity.compiler import check_compilation
@@ -31,6 +32,7 @@ from zkay.utils.timer import time_measure
 from zkay.zkay_ast.process_ast import get_processed_ast, get_verification_contract_names
 
 proving_scheme_classes: Dict[str, Type[ProvingScheme]] = {
+    'groth16': ProvingSchemeGroth16,
     'gm17': ProvingSchemeGm17
 }
 

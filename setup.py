@@ -6,7 +6,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 test_package = 'zkay.tests'
 antlr_version = '4.7.2'
-zkay_libsnark_commit_hash = '2ee8465ec783176564bd36ba815c015c245650c1'
+zkay_libsnark_commit_hash = '4e3c7a53ec333f52fe27ff45ff836102bcdb8e28'
 packages = find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*'])
 
 
