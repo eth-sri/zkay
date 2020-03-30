@@ -91,9 +91,16 @@ depending on the proving-scheme also additional library contracts on the blockch
 These contracts can be compiled and deployed using the commands:
 
 ```bash
-zkay deploy-pki --node-uri <local eth node uri> --account <address>
-zkay deploy-crypto-libs --node-uri <local eth node uri> --account <address>
+zkay deploy-pki <account>
+zkay deploy-crypto-libs <account>
 ```
+The 'account' parameter is used to specify the wallet address from which the deployment transaction should be issued.
+
+**Note**: The `groth16` proving scheme, which is enabled by default, does not need any additional libraries,
+so the `zkay deploy-crypto-libs` command is not needed unless you manually select a different proving scheme.
+
+**Note**: With the debug 'eth-tester' blockchain backend which zkay uses by default, it is not necessary to manually deploy
+these contracts. So those commands are not needed in that case.
 
 [//]: # (We should probably deploy official pki and library contracts on testnet [maybe mainnet],
          to which zkay can connect by default)
@@ -120,7 +127,7 @@ To package a zkay contract which was previously compiled with output directory "
 zkay export [-o "<output_filename>"] ./zkay_out
 ```
 
-This will create an archive, which contains the zkay code, a manifest and the snark keys.
+This will create an archive, which contains the zkay code, a manifest and the zk-SNARK keys.
 The recommended file extension is `*.zkp`.
 
 ### Unpack Packaged Contract
@@ -148,26 +155,40 @@ zkay run output_dir
 
 You are now in a python shell where you can issue the following commands:
 - `help()`: Get a list of all contract functions with arguments
-- `user1, user2, ..., userN = create_dummy_accounts(N)`: Get addresses of pre-funded test accounts for experimentation (only supported in w3-eth-tester and w3-ganache backend)
+- `user1, user2, ..., userN = create_dummy_accounts(N)`: Get addresses of pre-funded test accounts for experimentation (only supported in `eth-tester` and `ganache` backends)
 - `handle = deploy(*constructor_args, user: str)`: Issue a deployment transaction for the contract from the account `user` (address literal).
-- `handle = connect(contract_addr: str, user: str)`: Create a handle to interact with the deployed contract at address `contract_addr` from account `user`
+- `handle = connect(contract_addr: str, user: str)`: Create a handle to interact with the deployed contract at address `contract_addr` from account `user`.
+Fails if remote contract does not match local files.
 - `handle.address`: Get the address of the deployed contract corresponding to this handle
 - `handle.some_func(*args[, value: int])`: The account which created handle issues a zkay transaction which calls the zkay contract function `some_func` with the given arguments.
-Encryption, transaction transformation and proof generation happen automatically. If the function is payable, the additional argument `value` can be used to set the wei amount to be transferred.
+Encryption, transaction transformation and proof generation happen automatically. If the function is payable, the additional argument `wei_amount` can be used to set the wei amount to be transferred.
 - `handle.api.req_state_var(name: str, *indices, count=0, should_decrypt: bool=False)`: Retrieve the current value of state variable `name[indices[0]][indices[1]][...]`.
 If the state variable is owned by you, you can specify should_decrypt=True to get the decrypted value.
 
 There are also two more specific commands for deploying or connecting to a single contract instance.
-The contract instance functions are then available as global functions in the shell.
+
+**Note**: The following two commands should not be used with the `eth-tester` backend, as the `eth-tester` blockchain only exists
+in memory and does not persist across multiple zkay invocations. Use `zkay run` instead.
 
 #### Deploy a zkay contract
 
 ```bash
-zkay deploy output_dir <constructor_args...>
+zkay deploy [--account <addr>] [--blockchain-pki-address <addr>] [--blockchain-crypto-lib-addresses <addr>] output_dir <constructor_args...>
 ```
+Deploy a contract from the specified wallet account and make it use the specified PKI and library contracts, which were
+previously deployed using the `zkay deploy-pki` and `zaky deploy-crypto-libs` commands.
 
 #### Connect to and interact with contract instance
 
 ```bash
-zkay connect output_dir contract_address
+zkay connect [--account <addr>] <output_dir> <contract_address>
 ```
+
+Open an interactive transaction shell for the contract at `contract_address` using the local files in `output_dir`
+using `account` as the sender account from which to issue transactions.
+
+Integrity of the on-chain contract is automatically checked against the local files.
+
+In contrast to the `zkay run` command, the transaction shell starts in the context of the interface object, rather
+than in the context of the off-chain transaction simulator module. This means that the contract functions are
+available in the global scope of the shell.
