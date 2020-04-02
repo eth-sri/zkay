@@ -649,8 +649,9 @@ class ZkayProverInterface(metaclass=ABCMeta):
             if isinstance(arg, AddressValue):
                 priv_values[i] = int.from_bytes(arg.val, byteorder='big')
 
-        zk_print(f'Generating proof for {contract}.{function} [priv: {Value.collection_to_string(priv_values)}] '
-                    f'[in: {Value.collection_to_string(in_vals)}] [out: {Value.collection_to_string(out_vals)}]')
+        zk_print(f'Generating proof for {contract}.{function}')
+        zk_print(f'[priv: {Value.collection_to_string(priv_values)}] '
+                 f'[in: {Value.collection_to_string(in_vals)}] [out: {Value.collection_to_string(out_vals)}]', verbosity_level=2)
 
         priv_values, in_vals, out_vals = Value.unwrap_values(Value.flatten(priv_values)), Value.unwrap_values(in_vals), Value.unwrap_values(out_vals)
 

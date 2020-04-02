@@ -146,7 +146,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 import sys
                 ContractSimulator.help(sys.modules[__name__], {c_name}, '{c_name}')
             else:
-                __builtins__.help(val)
+                import builtins
+                builtins.help(val)
 
         ''') if len(ast.contracts) == 1 else '') + dedent('''
         if __name__ == '__main__':

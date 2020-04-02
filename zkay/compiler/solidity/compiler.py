@@ -124,7 +124,7 @@ def check_compilation(filename: str, show_errors: bool = False, display_code: st
                         had_error |= is_error
                     else:
                         report = f"In imported file '{file}' idx: {error['sourceLocation']['start']}\n"
-                report = f'\n{error["severity"].upper()}: {error["type"] if is_error else ""}\n{report}\n{error["message"]}'
+                report = f'\n{error["severity"].upper()}: {error["type"] if is_error else ""}\n{report}\n{error["message"]}\n'
 
                 if is_error:
                     fatal_error_report += report
