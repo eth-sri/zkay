@@ -790,6 +790,10 @@ class ForStatement(Statement):
         self.update = f(self.update)
         self.body = f(self.body)
 
+    @property
+    def statements(self) -> List[Statement]:
+        return [self.init, self.condition, self.body, self.update]
+
 
 class BreakStatement(Statement):
     pass

@@ -36,8 +36,8 @@ contract PublicLoops {
 
         value = 3;
         i = 0;
-        for (value = 0; i < x; ) {
-            i = i + 1;
+        for (uint i2 = 0; i2 < x; ++i2) {
+            i += 1;
             inc();
         }
         require(i == x && ret == x);

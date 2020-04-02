@@ -101,16 +101,22 @@ class AliasAnalysisVisitor(AstVisitor):
             ast.after_analysis = ast.body.after_analysis.copy()
 
     def visitForStatement(self, ast: ForStatement):
+        last = ast.before_analysis.copy()
+
+        # add fresh names from this block
+        for name in ast.names.values():
+            last.insert(name)
+
         if ast.init is not None:
-            ast.init.before_analysis = ast.before_analysis.copy()
+            ast.init.before_analysis = last.copy()
             self.visit(ast.init)
             ast.before_analysis = ast.init.after_analysis.copy() # init should be taken into account when looking up things in the condition
 
         if has_side_effects(ast.condition) or has_side_effects(ast.body) or (ast.update is not None and has_side_effects(ast.update)):
-            ast.before_analysis = ast.before_analysis.separate_all()
+            ast.before_analysis = last.separate_all()
 
         self.visit(ast.condition)
-        ast.body.before_analysis = ast.before_analysis.copy()
+        ast.body.before_analysis = last.copy()
         self.visit(ast.body)
         if ast.update is not None:
             # Update is always executed after the body (if it is executed)
@@ -118,7 +124,9 @@ class AliasAnalysisVisitor(AstVisitor):
             self.visit(ast.update)
 
         # Imprecise join (don't know if there was a loop iteration)
-        ast.after_analysis = ast.before_analysis.copy()
+        ast.after_analysis = last.copy()
+        for name in ast.names.values():
+            ast.after_analysis.remove(name)
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         e = ast.expr

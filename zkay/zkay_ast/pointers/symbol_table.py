@@ -3,7 +3,7 @@ from typing import Tuple
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
     StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, \
-    EnumValue, NamespaceDefinition, TargetDefinition, DataTargetDefinition, VariableDeclarationStatement
+    EnumValue, NamespaceDefinition, TargetDefinition, DataTargetDefinition, VariableDeclarationStatement, ForStatement
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -39,7 +39,7 @@ def merge_dicts(*dict_args):
 
 
 def collect_children_names(ast: AST):
-    children = [c for c in ast.children() if not isinstance(c, Block)]
+    children = [c for c in ast.children() if not isinstance(c, (Block, ForStatement))]
     names = [c.names for c in children]
     ret = merge_dicts(*names)
     for c in children: # declared names are not available within the declaration statements
@@ -97,6 +97,9 @@ class SymbolTableFiller(AstVisitor):
     def visitSimpleStatement(self, ast: SimpleStatement):
         ast.names = collect_children_names(ast)
 
+    def visitForStatement(self, ast: ForStatement):
+        ast.names = collect_children_names(ast)
+
     def visitMapping(self, ast: Mapping):
         ast.names = {}
         if isinstance(ast.key_label, Identifier):
@@ -135,7 +138,7 @@ class SymbolTableLinker(AstVisitor):
             old_ast = ast2
             ast2 = ast2.parent
             if ast2 in ancs:
-                assert isinstance(ast2, StatementList)
+                assert isinstance(ast2, (ForStatement, StatementList))
                 return ast2, ancs[ast2], old_ast
 
     @staticmethod
@@ -147,7 +150,7 @@ class SymbolTableLinker(AstVisitor):
         name = ast.idf.name
         while True:
             anc, decl = SymbolTableLinker._find_next_decl(ast, name)
-            if isinstance(anc, Block) and isinstance(decl, VariableDeclaration):
+            if isinstance(anc, (ForStatement, Block)) and isinstance(decl, VariableDeclaration):
                 # Check if identifier really references this declaration (does not come before declaration)
                 lca, ref_anchor, decl_anchor = SymbolTableLinker._find_lca(ast, decl, anc)
                 if lca.statements.index(ref_anchor) <= lca.statements.index(decl_anchor):
