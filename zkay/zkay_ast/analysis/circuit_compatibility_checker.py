@@ -32,12 +32,14 @@ class DirectCanBePrivateDetector(FunctionVisitor):
                 if ast.func.is_eq() or ast.func.is_ite():
                     can_be_private &= ast.args[1].annotated_type.type_name.can_be_private()
                 ast.statement.function.can_be_private &= can_be_private
+                # TODO to relax this for public expressions,
+                #  public identifiers must use SSA remapped values (since the function is inlined)
         for arg in ast.args:
             self.visit(arg)
 
     def visitLocationExpr(self, ast: LocationExpr):
         t = ast.annotated_type.type_name
-        ast.statement.function.can_be_private &= (t == t.uint_type() or t == t.bool_type())
+        ast.statement.function.can_be_private &= t.can_be_private()
         self.visitChildren(ast)
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
