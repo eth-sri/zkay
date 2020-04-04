@@ -84,7 +84,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             # Globals
             'os', 'IntEnum', 'Dict', 'List', 'Tuple', 'Optional', 'Union', 'Any',
             'my_logging', 'CipherValue', 'AddressValue', 'RandomnessValue', 'PublicKeyValue',
-            'ContractSimulator', 'RequireException', 'help'
+            'ContractSimulator', 'RequireException', 'help', 'annotations'
         ]})
 
     def get_constructor_args_and_params(self, ast: ContractDefinition):
@@ -112,6 +112,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         ## THIS CODE WAS GENERATED AUTOMATICALLY ##
         ## Creation Time: {datetime.now().strftime('%H:%M:%S %d-%b-%Y')}   ##
         ###########################################
+        from __future__ import annotations
 
         import os
         from enum import IntEnum
@@ -127,17 +128,17 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         ''') + contracts + (dedent(f'''
 
-        def deploy({c_params}*, user: Union[None, bytes, str] = None{val_param}):
+        def deploy({c_params}*, user: Union[None, bytes, str] = None{val_param}) -> {c_name}:
             user = me if user is None else user
             return {c_name}.deploy({c_args}user=user{val_arg})
 
 
-        def connect(address: Union[bytes, str], user: Union[None, bytes, str] = None):
+        def connect(address: Union[bytes, str], user: Union[None, bytes, str] = None) -> {c_name}:
             user = me if user is None else user
             return {c_name}.connect(address, user=user)
 
 
-        def create_dummy_accounts(count: int) -> Tuple:
+        def create_dummy_accounts(count: int) -> Union[str, Tuple[str, ...]]:
             return ContractSimulator.create_dummy_accounts(count)
 
 
@@ -195,7 +196,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 f"super().__init__(project_dir, user_addr, '{ast.idf.name}')" * sv_constr // f'''\
 
             @staticmethod
-            def connect(address: Union[bytes, str], user: Union[str, bytes], project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
+            def connect(address: Union[bytes, str], user: Union[str, bytes], project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> {name}:
                 c = {name}(project_dir, AddressValue(user))
                 {api("connect", "c")}(AddressValue(address))
                 if not {api("keystore", "c")}.has_initialized_keys_for(AddressValue(user)):
@@ -203,7 +204,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                 return c
 
             @staticmethod
-            def deploy({c_params}*, user: Union[str, bytes]{val_param}, project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> '{name}':
+            def deploy({c_params}*, user: Union[str, bytes]{val_param}, project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> {name}:
                 c = {name}(project_dir, AddressValue(user))
                 if not {api("keystore", "c")}.has_initialized_keys_for(AddressValue(user)):
                     ContractSimulator.initialize_keys_for(user)

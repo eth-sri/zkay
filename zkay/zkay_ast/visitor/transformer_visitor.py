@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, TypeVar
 
 from zkay.zkay_ast.ast import AST
 
+T = TypeVar('T')
 
 class AstTransformerVisitor:
     """
@@ -21,7 +22,7 @@ class AstTransformerVisitor:
     def visit_list(self, ast_list: List[AST]):
         return list(filter(None.__ne__, map(self.visit, ast_list)))
 
-    def visit_children(self, ast: AST):
+    def visit_children(self, ast: T) -> T:
         ast.process_children(self.visit)
         return ast
 

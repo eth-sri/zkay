@@ -234,7 +234,7 @@ class ContractSimulator:
         Runtime.reset()
 
     @staticmethod
-    def create_dummy_accounts(count: int) -> Union[str, Tuple]:
+    def create_dummy_accounts(count: int) -> Union[str, Tuple[str, ...]]:
         """
         Create count pre-funded dummy accounts (if supported by backend)
 
