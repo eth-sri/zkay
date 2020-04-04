@@ -49,9 +49,9 @@ contract FuncCalls {
     }
 
     // Function usable within private expression
-    function priv_inlined(uint@me v1, uint@me v2) pure internal returns (uint@me) {
-        return v1 * v2 - priv_inlined_nested(v2, v1) * priv_inlined_nested(v1, v2);
-    }
+    function priv_inlined(uint@me v1, uint@me v2) pure internal returns (uint@me) { // 5, 84
+        return -(v1 * v2 - priv_inlined_nested(v2, v1) * priv_inlined_nested(v1, v2));
+    } // 420 - (-3100 * -105168)
 
     // Nested function within private expression
     function priv_inlined_nested(uint@me v1, uint@me v2) pure internal returns (uint@me) {
@@ -59,13 +59,21 @@ contract FuncCalls {
         uint@me sum = v1 + 234 - v2;
         sum = sum - 5 * sum;
         return larger ? v1 * sum : v2 - v1;
+        // v1 * ((-4)* (v1 + 234 - v2))
+    }
+
+    function priv_return(uint v) pure internal returns(uint@me) {
+        return ((v + 5) / 10) * 5;
     }
 
     function compute(uint@me v, uint v2) public {
         recursive_se(v2);
         pub_with_privcall(v2);
         require(owner == me);
+        require(pubval == 0);
+        uint@me asdf = priv_return(v2);
+        v2 = reveal(asdf, all);
         res = priv_inlined(v2, v + v) - v;
-        res = res + v + recursive(v2);
+        res += v + recursive(v2);
     }
 }
