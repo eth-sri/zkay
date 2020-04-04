@@ -40,6 +40,10 @@ class StateDict:
         assert name not in self.__constructors
         self.__constructors[name] = constructor
 
+    @property
+    def names(self) -> List[str]:
+        return list(self.__constructors.keys())
+
     def __getitem__(self, key: Union[str, Tuple]):
         """
         Return value of the state variable (or index of state variable) key
@@ -366,7 +370,7 @@ class ApiWrapper:
         return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)
 
     def call(self, fname: str, args: List, ret_val_constructors: List[Optional[Callable]]):
-        retvals = self.__conn.call(self.__contract_handle, fname, args)
+        retvals = self.__conn.call(self.__contract_handle, fname, *args)
         assert len(retvals) == len(ret_val_constructors)
         wrapped_retvals = []
         for retval, retval_constr in zip(retvals, ret_val_constructors):

@@ -11,8 +11,8 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
-    CircuitComputationStatement, VariableDeclaration, Block, KeyLiteralExpr, BoolTypeName, \
-    VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
+    CircuitComputationStatement, VariableDeclaration, Block, KeyLiteralExpr, VariableDeclarationStatement, LocationExpr, \
+    PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
     StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
@@ -419,7 +419,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         # Add proof to actual argument list (when required)
         generate_proof_str = ''
         fname = f"'{ast.name}'"
-        if ast.can_be_external and circuit:
+        if ast.can_be_external and circuit and ast.has_side_effects:
             generate_proof_str += '\n'.join(['\n#Generate proof',
                                              f"proof = {api('gen_proof')}({fname}, {cfg.zk_in_name}, {cfg.zk_out_name})",
                                              'actual_params.append(proof)'])
@@ -430,7 +430,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             # Deploy contract
             {api("deploy")}(actual_params, [{should_encrypt}]{", wei_amount=wei_amount" if ast.is_payable else ""})
             '''
-        elif circuit or ast.has_side_effects:
+        elif ast.has_side_effects:
             invoke_transact_str = f'''
             # Invoke public transaction
             return {api("transact")}({fname}, actual_params, [{should_encrypt}]{", wei_amount=wei_amount" if ast.is_payable else ""})

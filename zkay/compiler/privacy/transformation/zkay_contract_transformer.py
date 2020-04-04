@@ -395,6 +395,11 @@ class ZkayTransformer(AstTransformerVisitor):
             new_modifiers = ['public']
         if f.is_payable:
             new_modifiers.append('payable')
+
+        requires_proof = True
+        if not f.has_side_effects:
+            requires_proof = False
+            new_modifiers.append('view')
         new_f = ConstructorOrFunctionDefinition(f.idf, original_params, new_modifiers, f.return_parameters, Block([]))
 
         # Make original function internal
@@ -413,18 +418,20 @@ class ZkayTransformer(AstTransformerVisitor):
         new_f.requires_verification_when_external = True
         new_f.called_functions = f.called_functions
         new_f.called_functions[f] = None
-        new_f.body = self.create_external_wrapper_body(f, circuit, original_params)
+        new_f.body = self.create_external_wrapper_body(f, circuit, original_params, requires_proof)
 
         # Add out and proof parameter to external wrapper
         storage_loc = 'calldata' if new_f.is_function else 'memory'
         new_f.add_param(Array(AnnotatedTypeName.uint_all()), Identifier(cfg.zk_out_name), storage_loc)
-        new_f.add_param(AnnotatedTypeName.proof_type(), Identifier(cfg.proof_param_name), storage_loc)
+
+        if requires_proof:
+            new_f.add_param(AnnotatedTypeName.proof_type(), Identifier(cfg.proof_param_name), storage_loc)
 
         return new_f, f
 
     @staticmethod
     def create_external_wrapper_body(int_fct: ConstructorOrFunctionDefinition, ext_circuit: CircuitHelper,
-                                     original_params: List[Parameter]) -> Block:
+                                     original_params: List[Parameter], requires_proof: bool) -> Block:
         """
         Return Block with external wrapper function body.
 
@@ -532,10 +539,11 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(Comment())
 
         # Call verifier
-        verifier = IdentifierExpr(cfg.get_contract_var_name(ext_circuit.verifier_contract_type.code()))
-        verifier_args = [IdentifierExpr(cfg.proof_param_name), IdentifierExpr(cfg.zk_in_name), IdentifierExpr(cfg.zk_out_name)]
-        verify = ExpressionStatement(verifier.call(cfg.verification_function_name, verifier_args))
-        stmts.append(StatementList([Comment('Verify zk proof of execution'), verify], excluded_from_simulation=True))
+        if requires_proof:
+            verifier = IdentifierExpr(cfg.get_contract_var_name(ext_circuit.verifier_contract_type.code()))
+            verifier_args = [IdentifierExpr(cfg.proof_param_name), IdentifierExpr(cfg.zk_in_name), IdentifierExpr(cfg.zk_out_name)]
+            verify = ExpressionStatement(verifier.call(cfg.verification_function_name, verifier_args))
+            stmts.append(StatementList([Comment('Verify zk proof of execution'), verify], excluded_from_simulation=True))
 
         # Add return statement at the end if necessary
         if int_fct.return_parameters:
