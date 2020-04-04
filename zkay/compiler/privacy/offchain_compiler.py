@@ -9,12 +9,11 @@ from zkay.utils.multiline_formatter import MultiLineFormatter
 from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
-    ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Key, Array, \
+    ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Array, \
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
-    CircuitComputationStatement, \
+    CircuitComputationStatement, VariableDeclaration, Block, KeyLiteralExpr, BoolTypeName, \
     VariableDeclarationStatement, LocationExpr, PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
-    VariableDeclaration, Block, \
-    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr, KeyLiteralExpr
+    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -278,12 +277,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitParameter(self, ast: Parameter):
         if ast.parent.is_external:
-            if ast.original_type is None:
+            ot = ast.annotated_type.zkay_type
+            if ot is None:
                 t = 'Any'
-            elif ast.original_type.is_address():
+            elif ot.is_address():
                 t = 'str'
             else:
-                t = self.visit(ast.original_type.type_name)
+                t = self.visit(ot.type_name)
         elif ast.annotated_type is None:
             t = 'Any'
         else:
@@ -351,21 +351,21 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if ast.can_be_external:
             # Wrap address strings in AddressValue object for external calls
             address_params = [self.visit(param.idf) for param in self.current_params if
-                              param.original_type.is_address()]
+                              param.annotated_type.zkay_type.is_address()]
             if address_params:
                 assign_addr_str = f"{', '.join(address_params)} = {', '.join([f'AddressValue({p})' for p in address_params])}"
                 preamble_str += f'\n{self.do_if_external(ast, [assign_addr_str])}\n'
 
         if ast.can_be_external and circuit:
-
             # Encrypt parameters and add private circuit inputs (plain + randomness)
             enc_param_str = ''
             for arg in self.current_params:
-                if arg.original_type is not None and arg.original_type.is_private():
+                if arg.annotated_type.is_cipher():
                     pname = self.visit(arg.idf)
                     plain_val = pname
-                    if arg.original_type.type_name.is_signed_numeric:
-                        plain_val = self.handle_cast(pname, UintTypeName(f'uint{arg.original_type.type_name.elem_bitwidth}'))
+                    plain_t = arg.annotated_type.type_name.plain_type.type_name
+                    if plain_t.is_signed_numeric:
+                        plain_val = self.handle_cast(pname, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
                     if cfg.is_symmetric_cipher():
                         my_pk = f'{api("get_my_pk")}()[0]'
@@ -424,7 +424,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                                              f"proof = {api('gen_proof')}({fname}, {cfg.zk_in_name}, {cfg.zk_out_name})",
                                              'actual_params.append(proof)'])
 
-        should_encrypt = ", ".join([str(p.annotated_type.declared_type is not None and p.annotated_type.declared_type.is_private()) for p in self.current_f.parameters])
+        should_encrypt = ", ".join([str(p.annotated_type.is_cipher()) for p in self.current_f.parameters])
         if ast.is_constructor:
             invoke_transact_str = f'''
             # Deploy contract
@@ -443,8 +443,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     constr = 'AddressValue'
                 elif isinstance(t, CipherText):
                     constr = 'CipherValue'
-                elif isinstance(t, Key):
-                    constr = 'PublicKeyValue'
                 else:
                     constr = 'None'
                 constructors.append(constr)
@@ -541,7 +539,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
         with self.circuit_computation(flatten_hybrid_args=True):
             rhs = self.visit(out_val)
-        if not isinstance(out_idf.t, CipherText):
+        if not out_idf.t.is_cipher():
             rhs = self.handle_cast(rhs, out_idf.t)
         elif cfg.is_symmetric_cipher():
             my_pk = f'{api("get_my_pk")}()[0]'
@@ -707,7 +705,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def handle_var_decl_expr(self, ast: VariableDeclarationStatement) -> str:
         ret = super().handle_var_decl_expr(ast)
-        if TypeName.cipher_type() == ast.variable_declaration.annotated_type.type_name and isinstance(ast.expr, ArrayLiteralExpr):
+        decl_type = ast.variable_declaration.annotated_type.type_name
+        if decl_type.is_cipher() and isinstance(ast.expr, ArrayLiteralExpr):
             ret = f'CipherValue({ret})'
         return ret
 

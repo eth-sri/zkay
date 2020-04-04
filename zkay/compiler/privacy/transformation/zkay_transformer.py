@@ -13,9 +13,11 @@ from zkay.zkay_ast.analysis.contains_private_checker import contains_private_exp
 from zkay.zkay_ast.ast import ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, \
     IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, \
     VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, \
-    Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, NumberLiteralExpr, \
+    Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, \
+    NumberLiteralExpr, \
     MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, \
-    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr, EnumDefinition, EncryptionExpression
+    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr, EnumDefinition, EncryptionExpression, \
+    TypeName
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 
 
@@ -24,10 +26,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
     Transformer for types, which was left out in the paper.
 
     This removes all privacy labels and converts the types of non-public variables (not @all)
-    to cipher_type. A copy of the original type (pre-transformation) is stored in the AnnotatedTypeName's declared_type field.
-
-    If the declared_type is different from the actual type, code generation will insert an inline block comment with the original
-    privacy label and/or type (whatever is different from the actual type).
+    to cipher_type.
     """
 
     def __init__(self):
@@ -35,9 +34,11 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         self.expr_trafo = ZkayExpressionTransformer(None)
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
-        new_t = AnnotatedTypeName.cipher_type() if ast.is_private() else AnnotatedTypeName(self.visit(ast.type_name.clone()))
-        new_t.declared_type = ast.clone()
-        return new_t
+        if ast.is_private():
+            t = TypeName.cipher_type(ast)
+        else:
+            t = self.visit(ast.type_name.clone())
+        return AnnotatedTypeName(t)
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
         ast.keywords = [k for k in ast.keywords if k != 'final']
@@ -47,10 +48,10 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
 
     def visitParameter(self, ast: Parameter):
         ast.keywords = [k for k in ast.keywords if k != 'final']
-        ast.original_type = ast.annotated_type
-        if ast.annotated_type.is_private():
+        ast = self.visit_children(ast)
+        if not ast.annotated_type.type_name.is_primitive_type():
             ast.storage_location = 'memory'
-        return self.visit_children(ast)
+        return ast
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
         ast.keywords = [k for k in ast.keywords if k != 'final' and k != 'public']

@@ -19,7 +19,7 @@ class BaseNameFactory:
         """
         if t == TypeName.key_type():
             postfix = 'key'
-        elif t == TypeName.cipher_type():
+        elif t.is_cipher():
             postfix = 'cipher'
         else:
             postfix = 'plain'

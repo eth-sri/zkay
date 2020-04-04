@@ -433,7 +433,7 @@ class ZkayTransformer(AstTransformerVisitor):
         :param original_params: list of transformed function parameters without additional parameters added due to transformation
         :return: body with wrapper code
         """
-        has_priv_args = any([p.original_type.is_private() for p in original_params])
+        has_priv_args = any([p.annotated_type.is_cipher() for p in original_params])
         stmts = []
 
         if has_priv_args:
@@ -482,7 +482,7 @@ class ZkayTransformer(AstTransformerVisitor):
         param_stmts = []
         for p in original_params:
             """ * of T_e rule 8 """
-            if p.original_type.is_private():
+            if p.annotated_type.is_cipher():
                 assign_stmt = in_arr_var.slice(offset, cfg.cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_payload_len))
                 ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 
@@ -494,11 +494,11 @@ class ZkayTransformer(AstTransformerVisitor):
             # Populate sender field of encrypted parameters
             copy_stmts = []
             for p in original_params:
-                if p.original_type.is_private():
+                if p.annotated_type.is_cipher():
                     sender_key = in_arr_var.index(0)
-                    idf = IdentifierExpr(p.idf.clone())
-                    lit = ArrayLiteralExpr([idf.clone().as_type(TypeName.cipher_type()).index(i) for i in range(cfg.cipher_payload_len)] + [sender_key])
-                    copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], AnnotatedTypeName.cipher_type(), p.idf.clone(), 'memory'), lit))
+                    idf = IdentifierExpr(p.idf.clone()).as_type(p.annotated_type.clone())
+                    lit = ArrayLiteralExpr([idf.clone().index(i) for i in range(cfg.cipher_payload_len)] + [sender_key])
+                    copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], p.annotated_type.clone(), p.idf.clone(), 'memory'), lit))
             if copy_stmts:
                 param_stmts += [Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts
 

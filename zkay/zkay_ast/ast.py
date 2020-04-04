@@ -708,7 +708,7 @@ class EncryptionExpression(ReclassifyExpr):
         if isinstance(privacy, Identifier):
             privacy = IdentifierExpr(privacy)
         super().__init__(expr, privacy)
-        self.annotated_type = AnnotatedTypeName.cipher_type()
+        self.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type)
 
 
 class Statement(AST):
@@ -922,8 +922,8 @@ class TypeName(AST):
         return AddressPayableTypeName()
 
     @staticmethod
-    def cipher_type():
-        return CipherText()
+    def cipher_type(plain_type: AnnotatedTypeName):
+        return CipherText(plain_type)
 
     @staticmethod
     def rnd_type():
@@ -960,6 +960,9 @@ class TypeName(AST):
 
     def is_primitive_type(self) -> bool:
         return isinstance(self, (ElementaryTypeName, EnumTypeName, AddressTypeName, AddressPayableTypeName))
+
+    def is_cipher(self) -> bool:
+        return isinstance(self, CipherText)
 
     @property
     def is_numeric(self) -> bool:
@@ -1313,15 +1316,20 @@ class Array(TypeName):
 
 
 class CipherText(Array):
-    def __init__(self):
+    def __init__(self, plain_type: AnnotatedTypeName):
+        assert not plain_type.type_name.is_cipher()
         super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.cipher_len))
+        self.plain_type = plain_type.clone()
 
     @property
     def size_in_uints(self):
         return cfg.cipher_payload_len
 
+    def clone(self) -> CipherText:
+        return CipherText(self.plain_type)
+
     def __eq__(self, other):
-        return isinstance(other, CipherText)
+        return isinstance(other, CipherText) and (self.plain_type is None or self.plain_type == other.plain_type)
 
 
 class Randomness(Array):
@@ -1450,11 +1458,10 @@ class FunctionTypeName(TypeName):
 
 class AnnotatedTypeName(AST):
 
-    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None, declared_type: AnnotatedTypeName = None):
+    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None):
         super().__init__()
         self.type_name = type_name
         self.had_privacy_annotation = privacy_annotation is not None
-        self.declared_type = declared_type
         if self.had_privacy_annotation:
             self.privacy_annotation = privacy_annotation
         else:
@@ -1466,16 +1473,16 @@ class AnnotatedTypeName(AST):
 
     def clone(self) -> AnnotatedTypeName:
         assert self.privacy_annotation is not None
-        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.declared_type)
+        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone())
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
 
     @property
     def zkay_type(self) -> AnnotatedTypeName:
-        if self.declared_type is None:
-            return self
+        if isinstance(self.type_name, CipherText):
+            return self.type_name.plain_type
         else:
-            return self.declared_type
+            return self
 
     def __eq__(self, other):
         if isinstance(other, AnnotatedTypeName):
@@ -1507,6 +1514,9 @@ class AnnotatedTypeName(AST):
     def is_address(self) -> bool:
         return isinstance(self.type_name, (AddressTypeName, AddressPayableTypeName))
 
+    def is_cipher(self) -> bool:
+        return isinstance(self.type_name, CipherText)
+
     @staticmethod
     def uint_all():
         return AnnotatedTypeName(TypeName.uint_type())
@@ -1520,8 +1530,8 @@ class AnnotatedTypeName(AST):
         return AnnotatedTypeName(TypeName.address_type())
 
     @staticmethod
-    def cipher_type():
-        return AnnotatedTypeName(TypeName.cipher_type())
+    def cipher_type(plain_type: AnnotatedTypeName):
+        return AnnotatedTypeName(TypeName.cipher_type(plain_type))
 
     @staticmethod
     def key_type():
@@ -1587,20 +1597,17 @@ class Parameter(AST):
             keywords: List[str],
             annotated_type: AnnotatedTypeName,
             idf: Identifier,
-            storage_location: Optional[str] = None,
-            original_type: Optional[AnnotatedTypeName] = None):
+            storage_location: Optional[str] = None):
         super().__init__()
         self.keywords = keywords
         self.annotated_type = annotated_type
         self.idf = idf
         self.storage_location = storage_location
-        self.original_type = original_type
 
         self.is_final = 'final' in self.keywords
 
     def copy(self) -> Parameter:
-        return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location,
-                         self.original_type)
+        return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location)
 
     def with_changed_storage(self, match_storage: str, new_storage: str) -> Parameter:
         if self.storage_location == match_storage:
@@ -1712,7 +1719,6 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
         storage_loc = '' if t.type_name.is_primitive_type() else ref_storage_loc
         self.parameters.append(Parameter([], t, idf, storage_loc))
-        self.parameters[-1].original_type = t
         self._update_fct_type()
 
 
@@ -2188,19 +2194,10 @@ class CodeVisitor(AstVisitor):
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         t = self.visit(ast.type_name)
-        if ast.declared_type is not None:
-            assert not ast.had_privacy_annotation
-            if ast.declared_type.type_name == ast.type_name:
-                if ast.declared_type.had_privacy_annotation:
-                    t = f'{t}/*@{ast.declared_type.privacy_annotation.code()}*/'
-            elif ast.declared_type.type_name.is_primitive_type():
-                t = f'{t}/*{self.visit(ast.declared_type)}*/'
-            return t
-        else:
-            p = self.visit(ast.privacy_annotation)
-            if ast.had_privacy_annotation:
-                return f'{t}@{p}'
-            return t
+        p = self.visit(ast.privacy_annotation)
+        if ast.had_privacy_annotation:
+            return f'{t}@{p}'
+        return t
 
     def visitMapping(self, ast: Mapping):
         k = self.visit(ast.key_type)
@@ -2218,6 +2215,10 @@ class CodeVisitor(AstVisitor):
         else:
             e = ''
         return f'{t}[{e}]'
+
+    def visitCipherText(self, ast: CipherText):
+        e = self.visitArray(ast)
+        return f'{e}/*{ast.plain_type.code()}*/'
 
     def visitTupleType(self, ast: TupleType):
         s = self.visit_list(ast.types, ', ')

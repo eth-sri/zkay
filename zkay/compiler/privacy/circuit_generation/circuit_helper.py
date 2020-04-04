@@ -244,9 +244,9 @@ class CircuitHelper:
         """
         Make circuit prove that the encryption of the specified parameter is correct.
         """
-        assert param.original_type.is_private()
+        assert param.annotated_type.is_cipher()
 
-        plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.original_type.type_name)
+        plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.zkay_type.type_name)
         name = f'{self._in_name_factory.get_new_name(param.annotated_type.type_name)}_{param.idf.name}'
         cipher_idf = self._in_name_factory.add_idf(name, param.annotated_type.type_name)
         self._ensure_encryption(insert_loc_stmt, plain_idf, Expression.me_expr(), cipher_idf, True, False)
@@ -366,7 +366,7 @@ class CircuitHelper:
         return idf, idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy_label_expr)]))
 
     def request_private_key(self) -> List[Statement]:
-        assert self._need_secret_key or any(p.original_type.is_private() for p in self.fct.parameters)
+        assert self._need_secret_key or any(p.annotated_type.is_cipher() for p in self.fct.parameters)
         self._secret_input_name_factory.add_idf(self.get_own_secret_key_name(), TypeName.key_type())
         return [EnterPrivateKeyStatement()]
 
@@ -422,8 +422,9 @@ class CircuitHelper:
             # Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
             tname = f'{self._secret_input_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
             locally_decrypted_idf = self._secret_input_name_factory.add_idf(tname, expr.annotated_type.type_name)
-            tname = f'{self._in_name_factory.get_new_name(TypeName.cipher_type())}{t_suffix}'
-            input_idf = self._in_name_factory.add_idf(tname, TypeName.cipher_type(), IdentifierExpr(locally_decrypted_idf))
+            cipher_t = TypeName.cipher_type(input_expr.annotated_type)
+            tname = f'{self._in_name_factory.get_new_name(cipher_t)}{t_suffix}'
+            input_idf = self._in_name_factory.add_idf(tname, cipher_t, IdentifierExpr(locally_decrypted_idf))
 
         # Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         # but also signals the offchain simulator to perform decryption if necessary
@@ -639,8 +640,9 @@ class CircuitHelper:
             # is equal to the correctly encrypted circuit evaluation result
             new_privacy = self._get_canonical_privacy_label(expr.analysis, new_privacy)
             privacy_label_expr = get_privacy_expr_from_label(new_privacy)
-            tname = f'{self._out_name_factory.get_new_name(TypeName.cipher_type())}{t_suffix}'
-            new_out_param = self._out_name_factory.add_idf(tname, TypeName.cipher_type(), EncryptionExpression(private_expr, privacy_label_expr))
+            cipher_t = TypeName.cipher_type(expr.annotated_type)
+            tname = f'{self._out_name_factory.get_new_name(cipher_t)}{t_suffix}'
+            new_out_param = self._out_name_factory.add_idf(tname, cipher_t, EncryptionExpression(private_expr, privacy_label_expr))
             self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
             out_var = new_out_param.get_loc_expr()
 

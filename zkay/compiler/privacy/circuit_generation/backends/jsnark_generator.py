@@ -65,7 +65,7 @@ class JsnarkVisitor(AstVisitor):
         return f'checkEq("{stmt.tgt.name}", "{stmt.val.name}");'
 
     def visitCircEncConstraint(self, stmt: CircEncConstraint):
-        assert stmt.cipher.t == TypeName.cipher_type()
+        assert stmt.cipher.t.is_cipher()
         assert stmt.pk.t == TypeName.key_type()
         assert stmt.rnd.t == TypeName.rnd_type()
         if stmt.is_dec:
@@ -74,7 +74,7 @@ class JsnarkVisitor(AstVisitor):
             return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
 
     def visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint):
-        assert stmt.iv_cipher.t == TypeName.cipher_type()
+        assert stmt.iv_cipher.t.is_cipher()
         assert stmt.other_pk.t == TypeName.key_type()
         if stmt.is_dec:
             return f'checkDec("{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
