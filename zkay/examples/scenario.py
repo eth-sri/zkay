@@ -40,9 +40,10 @@ class StateValueAssertion(TransactionAssertion):
         indices = [user_terminals[user].api.user_address if user in user_terminals else user for user in self.indices]
 
         user = next(iter(user_terminals.values())) if self.user is None else user_terminals[self.user]
-        actual_val = user.api.req_state_var(self.name, *indices, should_decrypt=self.should_decrypt)
-        if self.should_decrypt and self.plain_type is not None and self.plain_type.is_signed_numeric:
-            actual_val = ContractSimulator.cast(actual_val, self.plain_type.elem_bitwidth, signed=True)
+        if self.should_decrypt:
+            actual_val = user.state.get_plain(self.name, *indices)
+        else:
+            actual_val = user.state.get_raw(self.name, *indices)
         ind_str = f"[{', '.join([str(i) for i in self.indices])}]" if self.indices else ''
         test.assertEqual(self.expected, actual_val, f"Assertion {self.name}{ind_str} == {self.expected}")
 

@@ -171,9 +171,8 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         :param name: name of the function to call
         :param args: argument values
         :raise BlockChainError: if request fails
-        :return: function return value
+        :return: function return value (single value if one return value, list if multiple return values)
         """
-
         assert contract_handle is not None
         zk_print(f'Calling contract function {name}{Value.collection_to_string(args)}', verbosity_level=2)
         val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
@@ -527,14 +526,14 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         """
         self.keystore.add_keypair(address, self._generate_or_load_key_pair(address.val.hex()))
 
-    def enc(self, plain: Union[int, AddressValue], my_addr: AddressValue, target_addr: AddressValue) -> Union[CipherValue, Tuple[CipherValue, RandomnessValue]]:
+    def enc(self, plain: Union[int, AddressValue], my_addr: AddressValue, target_addr: AddressValue) -> Tuple[CipherValue, Optional[RandomnessValue]]:
         """
         Encrypt plain for receiver with target_addr.
 
         :param plain: plain text to encrypt
         :param my_addr: address of the sender who encrypts
         :param target_addr: address of the receiver for whom to encrypt
-        :return: if symmetric -> cipher text, if asymmetric Tuple(cipher text, randomness which was used to encrypt plain)
+        :return: if symmetric -> (iv_cipher, None), if asymmetric (cipher, randomness which was used to encrypt plain)
         """
         if isinstance(plain, AddressValue):
             plain = int.from_bytes(plain.val, byteorder='big')
@@ -553,32 +552,32 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         while True:
             # Retry until cipher text is not 0
             cipher, rnd = self._enc(int(plain), sk, pk)
-            cipher, rnd = CipherValue(cipher), RandomnessValue(rnd)
+            cipher, rnd = CipherValue(cipher), RandomnessValue(rnd) if rnd is not None else None
             if cipher != CipherValue():
                 break
 
-        return cipher if self.is_symmetric_cipher() else (cipher, rnd)
+        return cipher, rnd
 
-    def dec(self, cipher: CipherValue, my_addr: AddressValue) -> Union[int, Tuple[int, RandomnessValue]]:
+    def dec(self, cipher: CipherValue, my_addr: AddressValue) -> Tuple[int, Optional[RandomnessValue]]:
         """
         Decrypt cipher encrypted for my_addr.
 
         :param cipher: encrypted value
         :param my_addr: cipher is encrypted for this address
-        :return: if symmetric -> plain text, if asymmetric Tuple(plain text, randomness which was used to encrypt plain)
+        :return: if symmetric -> (plain, None), if asymmetric (plain, randomness which was used to encrypt plain)
         """
         assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         assert isinstance(my_addr, AddressValue)
         zk_print(f'Decrypting value {cipher} for {my_addr}', verbosity_level=2)
 
         if cipher == CipherValue():
-            ret = 0, RandomnessValue()
+            ret = 0, None if cfg.is_symmetric_cipher() else RandomnessValue()
         else:
             sk = self.keystore.sk(my_addr)
             plain, rnd = self._dec(cipher[:], sk.val)
-            ret = plain, RandomnessValue(rnd)
+            ret = plain, RandomnessValue(rnd) if rnd is not None else None
 
-        return ret[0] if self.is_symmetric_cipher() else ret
+        return ret
 
     @staticmethod
     def serialize_pk(key: int, total_bytes: int) -> List[int]:

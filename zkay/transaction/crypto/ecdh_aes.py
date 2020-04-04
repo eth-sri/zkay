@@ -7,7 +7,7 @@ from zkay.transaction.crypto.ecdh_base import EcdhBase
 
 
 class EcdhAesCrypto(EcdhBase):
-    def _enc(self, plain: int, my_sk: int, target_pk: int) -> Tuple[List[int], List[int]]:
+    def _enc(self, plain: int, my_sk: int, target_pk: int) -> Tuple[List[int], None]:
         key = self._ecdh_sha256(target_pk, my_sk)
         plain_bytes = plain.to_bytes(32, byteorder='big')
 
@@ -19,9 +19,9 @@ class EcdhAesCrypto(EcdhBase):
         # Pack iv and cipher
         iv_cipher = b''.join([iv, cipher_bytes])
 
-        return self.pack_byte_array(iv_cipher, cfg.cipher_chunk_size), []
+        return self.pack_byte_array(iv_cipher, cfg.cipher_chunk_size), None
 
-    def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, List[int]]:
+    def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, None]:
         # Extract sender address from cipher metadata and request corresponding public key
         sender_pk = cipher[-1]
         cipher = cipher[:-1]
@@ -40,4 +40,4 @@ class EcdhAesCrypto(EcdhBase):
 
         plain = int.from_bytes(plain_bytes, byteorder='big')
 
-        return plain, []
+        return plain, None

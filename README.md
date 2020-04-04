@@ -162,8 +162,8 @@ Fails if remote contract does not match local files.
 - `handle.address`: Get the address of the deployed contract corresponding to this handle
 - `handle.some_func(*args[, value: int])`: The account which created handle issues a zkay transaction which calls the zkay contract function `some_func` with the given arguments.
 Encryption, transaction transformation and proof generation happen automatically. If the function is payable, the additional argument `wei_amount` can be used to set the wei amount to be transferred.
-- `handle.api.req_state_var(name: str, *indices, count=0, should_decrypt: bool=False)`: Retrieve the current value of state variable `name[indices[0]][indices[1]][...]`.
-If the state variable is owned by you, you can specify should_decrypt=True to get the decrypted value.
+- `handle.state.get_raw('varname', *indices): Retrieve the current raw value of state variable `name[indices[0]][indices[1]][...]`.
+- `handle.state.get_plain('varname', *indices): Retrieve the current plaintext value (decrypted with @me key if necessary) of state variable `name[indices[0]][indices[1]][...]`.
 
 There are also two more specific commands for deploying or connecting to a single contract instance.
 

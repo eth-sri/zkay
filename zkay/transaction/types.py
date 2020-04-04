@@ -91,6 +91,8 @@ class AddressValue(Value):
     get_balance: Optional[Callable[['AddressValue'], int]] = None
 
     def __new__(cls, val: Union[str, int, bytes]):
+        if isinstance(val, AddressValue):
+            val = val.val
         if not isinstance(val, bytes):
             if isinstance(val, str):
                 val = int(val, 16)

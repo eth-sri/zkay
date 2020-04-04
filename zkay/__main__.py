@@ -313,7 +313,7 @@ def main():
             from enum import IntEnum
             from zkay.transaction.offchain import ContractSimulator
             def echo_only_simple_expressions(e):
-                if isinstance(e, (bool, int, str, list, IntEnum)):
+                if isinstance(e, (bool, int, str, list, tuple, IntEnum)):
                     print(e)
 
             # Enable logging

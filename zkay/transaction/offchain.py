@@ -35,14 +35,26 @@ class StateDict:
     def clear(self):
         self.__state.clear()
 
-    def decl(self, name, constructor: Callable = lambda x: x):
+    def decl(self, name, constructor: Callable = lambda x: x, *, cipher: bool = False):
         """Define the wrapper constructor for a state variable."""
         assert name not in self.__constructors
-        self.__constructors[name] = constructor
+        self.__constructors[name] = (cipher, constructor)
 
     @property
     def names(self) -> List[str]:
         return list(self.__constructors.keys())
+
+    def get_plain(self, name: str, *indices):
+        is_cipher, constr = self.__constructors[name]
+        val = self.__get((name, *indices), cache=False)
+        if is_cipher:
+            ret, _ = self.api.dec(val, constr)
+            return ret
+        else:
+            return val
+
+    def get_raw(self, name: str, *indices):
+        return self.__get((name, *indices), cache=False)
 
     def __getitem__(self, key: Union[str, Tuple]):
         """
@@ -52,22 +64,7 @@ class StateDict:
         :raise KeyError: if location does not exist on the chain
         :return: The requested value
         """
-        if not isinstance(key, Tuple):
-            key = (key, )
-        var, indices = key[0], key[1:]
-        loc = var + ''.join(f'[{k}]' for k in key[1:])
-
-        # Retrieve from state scope
-        if loc in self.__state:
-            return self.__state[loc]
-        else:
-            constr = self.__constructors[var]
-            try:
-                val = constr(self.api.req_state_var(var, *indices, count=(cfg.cipher_len if constr == CipherValue else 0)))
-            except BlockChainError:
-                raise KeyError(key)
-            self.__state[loc] = val
-            return val
+        return self.__get(key, cache=True)
 
     def __setitem__(self, key, value):
         """
@@ -84,6 +81,28 @@ class StateDict:
 
         # Write to state
         self.__state[loc] = value
+
+    def __get(self, key: Union[str, Tuple], cache: bool):
+        if not isinstance(key, Tuple):
+            key = (key, )
+        var, indices = key[0], key[1:]
+        loc = var + ''.join(f'[{k}]' for k in key[1:])
+
+        # Retrieve from state scope
+        if cache and loc in self.__state:
+            return self.__state[loc]
+        else:
+            is_cipher, constr = self.__constructors[var]
+            try:
+                if is_cipher:
+                    val = CipherValue(self.api._req_state_var(var, *indices, count=cfg.cipher_len))
+                else:
+                    val = constr(self.api._req_state_var(var, *indices))
+            except BlockChainError:
+                raise KeyError(key)
+            if cache:
+                self.__state[loc] = val
+            return val
 
 
 class LocalsDict:
@@ -168,23 +187,6 @@ class ContractSimulator:
         self.locals.push_scope()
         yield
         self.locals.pop_scope()
-
-    @staticmethod
-    def cast(val: Union[int, Enum, AddressValue], nbits: Optional[int], *, signed: bool = False, constr: Optional[Type] = None):
-        """
-        Convert primitive type value to a different primitive type
-
-        :param val: value to convert (either int, enum or address)
-        :param nbits: bitcount of the target type, if None -> target type is a field value / private uint256 (overflow at FIELD_PRIME)
-        :param signed: signedness of the target type
-        :param constr: value constructor for the target type (for enums and address only)
-        :return: converted value
-        """
-        trunc_val = int_cast(val, nbits, signed)
-        if constr is not None:
-            return constr(trunc_val)
-        else:
-            return trunc_val
 
     @staticmethod
     def help(module, contract, contract_name):
@@ -369,13 +371,11 @@ class ApiWrapper:
     def transact(self, fname: str, args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
         return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)
 
-    def call(self, fname: str, args: List, ret_val_constructors: List[Optional[Callable]]):
+    def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Callable]]):
         retvals = self.__conn.call(self.__contract_handle, fname, *args)
-        assert len(retvals) == len(ret_val_constructors)
-        wrapped_retvals = []
-        for retval, retval_constr in zip(retvals, ret_val_constructors):
-            wrapped_retvals.append(retval if retval_constr is None else retval_constr(retval))
-        return wrapped_retvals
+        wrapped_retvals = [self.dec(CipherValue(retval), constr)[0] if is_cipher else constr(retval)
+                           for retval, (is_cipher, constr) in zip(retvals, ret_val_constructors)]
+        return wrapped_retvals[0] if len(ret_val_constructors) == 1 else tuple(wrapped_retvals)
 
     def get_special_variables(self) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         assert self.__current_msg is not None and self.__current_block is not None and self.__current_tx is not None
@@ -387,27 +387,20 @@ class ApiWrapper:
     def clear_special_variables(self):
         self.__current_msg, self.__current_block, self.__current_tx = None, None, None
 
-    def req_state_var(self, name: str, *indices, count=0, should_decrypt=False) -> Any:
-        if should_decrypt:
-            count = cfg.cipher_len
+    def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None) -> Tuple[CipherValue, Optional[RandomnessValue]]:
+        target_addr = self.__user_addr if target_addr is None else target_addr
+        return self.__crypto.enc(plain, self.__user_addr, target_addr)
 
+    def dec(self, cipher: CipherValue, constr: Callable[[int], Any]) -> Tuple[Any, Optional[RandomnessValue]]:
+        res = self.__crypto.dec(cipher, self.__user_addr)
+        return constr(res[0]), res[1]
+
+    def _req_state_var(self, name: str, *indices, count=0) -> Any:
         if count == 0:
             val = self.__conn.req_state_var(self.__contract_handle, name, *indices)
         else:
             val = [self.__conn.req_state_var(self.__contract_handle, name, *indices, i) for i in range(count)]
-
-        if should_decrypt:
-            val = self.__crypto.dec(CipherValue(val), self.__user_addr)
-            if not cfg.is_symmetric_cipher():
-                val = val[0]
         return val
-
-    def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None) -> Union[CipherValue, Tuple[CipherValue, RandomnessValue]]:
-        target_addr = self.__user_addr if target_addr is None else target_addr
-        return self.__crypto.enc(plain, self.__user_addr, target_addr)
-
-    def dec(self, cipher: CipherValue) -> Union[int, Tuple[int, RandomnessValue]]:
-        return self.__crypto.dec(cipher, self.__user_addr)
 
     @staticmethod
     def __serialize_val(val: Any, bitwidth: int):
@@ -419,7 +412,7 @@ class ApiWrapper:
             val = int(val)
         elif isinstance(val, int):
             if val < 0:
-                val = ContractSimulator.cast(val, bitwidth, signed=False)
+                val = int_cast(val, bitwidth, signed=False)
             elif bitwidth == 256:
                 val %= bn128_scalar_field
         return val

@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import tempfile
 from abc import abstractmethod
 from contextlib import contextmanager
@@ -18,7 +17,7 @@ from zkay.my_logging.log_context import log_context
 from zkay.transaction.interface import ZkayBlockchainInterface, IntegrityError, BlockChainError, \
     TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
-from zkay.utils.helpers import get_contract_names, without_extension, save_to_file
+from zkay.utils.helpers import get_contract_names, save_to_file
 from zkay.zkay_ast.process_ast import get_verification_contract_names
 
 max_gas_limit = 10000000

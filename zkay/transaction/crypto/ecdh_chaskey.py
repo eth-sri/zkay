@@ -9,7 +9,7 @@ from zkay.utils.run_command import run_command
 
 class EcdhChaskeyCrypto(EcdhBase):
 
-    def _enc(self, plain: int, my_sk: int, target_pk: int) -> Tuple[List[int], List[int]]:
+    def _enc(self, plain: int, my_sk: int, target_pk: int) -> Tuple[List[int], None]:
         # Compute shared key
         key = self._ecdh_sha256(target_pk, my_sk)
         plain_bytes = plain.to_bytes(32, byteorder='big')
@@ -20,9 +20,9 @@ class EcdhChaskeyCrypto(EcdhBase):
                                     'zkay.ChaskeyLtsCbc', 'enc', key.hex(), iv.hex(), plain_bytes.hex()])
         iv_cipher = iv + int(iv_cipher.splitlines()[-1], 16).to_bytes(32, byteorder='big')
 
-        return self.pack_byte_array(iv_cipher, cfg.cipher_chunk_size), []
+        return self.pack_byte_array(iv_cipher, cfg.cipher_chunk_size), None
 
-    def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, List[int]]:
+    def _dec(self, cipher: Tuple[int, ...], my_sk: Any) -> Tuple[int, None]:
         # Extract sender address from cipher metadata and request corresponding public key
         sender_pk = cipher[-1]
         cipher = cipher[:-1]
@@ -38,4 +38,4 @@ class EcdhChaskeyCrypto(EcdhBase):
                                 'zkay.ChaskeyLtsCbc', 'dec', key.hex(), iv.hex(), cipher_bytes.hex()])
         plain = int(plain.splitlines()[-1], 16)
 
-        return plain, []
+        return plain, None

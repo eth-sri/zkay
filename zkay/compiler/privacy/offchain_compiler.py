@@ -13,7 +13,8 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName, \
     CircuitComputationStatement, VariableDeclaration, Block, KeyLiteralExpr, VariableDeclarationStatement, LocationExpr, \
     PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
-    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr
+    StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr, \
+    BoolTypeName
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -78,13 +79,31 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             'api', 'locals', 'state',
 
             # base class functions
-            '_scope', '_function_ctx', 'cast', 'default_address', 'initialize_keys_for', 'use_config_from_manifest', 'create_dummy_accounts',
+            '_scope', '_function_ctx', 'default_address', 'initialize_keys_for', 'use_config_from_manifest', 'create_dummy_accounts',
 
             # Globals
             'os', 'IntEnum', 'Dict', 'List', 'Tuple', 'Optional', 'Union', 'Any',
             'my_logging', 'CipherValue', 'AddressValue', 'RandomnessValue', 'PublicKeyValue',
             'ContractSimulator', 'RequireException', 'help', 'annotations'
         ]})
+
+    def _get_type_constr(self, t: TypeName):
+        if isinstance(t, BoolTypeName):
+            constr = 'bool'
+        elif isinstance(t, EnumTypeName):
+            constr = self.visit_list(t.target.qualified_name, sep='.')
+        elif isinstance(t, NumberTypeName):
+            if self.inside_circuit and t.elem_bitwidth == 256:
+                constr = f'uint'
+            else:
+                constr = f'int{t.elem_bitwidth}'
+                if not t.signed:
+                    constr = f'u{constr}'
+        elif isinstance(t, (AddressTypeName, AddressPayableTypeName)):
+            constr = 'AddressValue'
+        else:
+            raise NotImplementedError(f'No python constructor for type {t}')
+        return constr
 
     def get_constructor_args_and_params(self, ast: ContractDefinition):
         if not ast.constructor_definitions:
@@ -183,11 +202,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             while not isinstance(t, CipherText) and hasattr(t, 'value_type'):
                 t = t.value_type.type_name
             if isinstance(t, CipherText):
-                constr = ', CipherValue'
-            elif t.is_address():
-                constr = ', AddressValue'
+                constr = f', {self._get_type_constr(t.plain_type.type_name)}, cipher=True'
             else:
-                constr = ''
+                constr = f', {self._get_type_constr(t)}'
             sv_constr.append(f'self.state.decl("{svd.idf.name}"{constr})')
 
         mf = MultiLineFormatter() * \
@@ -369,7 +386,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
                     if cfg.is_symmetric_cipher():
                         my_pk = f'{api("get_my_pk")}()[0]'
-                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[:-1] + ({my_pk}, ))\n'
+                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[0][:-1] + ({my_pk}, ))\n'
                     else:
                         enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)})\n'
 
@@ -439,12 +456,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             constructors = []
             for retparam in ast.return_parameters:
                 t = retparam.annotated_type.type_name
-                if isinstance(t, AddressTypeName) or isinstance(t, AddressPayableTypeName):
-                    constr = 'AddressValue'
-                elif isinstance(t, CipherText):
-                    constr = 'CipherValue'
+                if isinstance(t, CipherText):
+                    constr = f'(True, {self._get_type_constr(t.plain_type.type_name)})'
                 else:
-                    constr = 'None'
+                    constr = f'(False, {self._get_type_constr(t)})'
                 constructors.append(constr)
             constructors = f"[{', '.join(constructors)}]"
 
@@ -507,15 +522,12 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         assert isinstance(in_idf, HybridArgumentIdf)
         if in_idf.corresponding_priv_expression is not None:
             plain_idf_name = self.get_priv_value(in_idf.corresponding_priv_expression.idf.name)
+            constr = self._get_type_constr(in_idf.t.plain_type.type_name)
+            dec_call = f'{api("dec")}({self.visit(in_idf.get_loc_expr())}, {constr})'
             if cfg.is_symmetric_cipher():
-                in_decrypt += f'\n{plain_idf_name} = {api("dec")}({self.visit(in_idf.get_loc_expr())})'
+                in_decrypt += f'\n{plain_idf_name}, _ = {dec_call}'
             else:
-                in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")} = {api("dec")}({self.visit(in_idf.get_loc_expr())})'
-            plain_idf = IdentifierExpr(plain_idf_name).as_type(TypeName.uint_type())
-            with self.circuit_computation(flatten_hybrid_args=False):
-                conv = self.visit(plain_idf.explicitly_converted(in_idf.corresponding_priv_expression.idf.t))
-            if conv != plain_idf_name:
-                in_decrypt += f'\n{plain_idf_name} = {conv}'
+                in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")} = {dec_call}'
         return self.visitAssignmentStatement(ast) + in_decrypt
 
     def visitCircuitComputationStatement(self, ast: CircuitComputationStatement):
@@ -543,7 +555,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             rhs = self.handle_cast(rhs, out_idf.t)
         elif cfg.is_symmetric_cipher():
             my_pk = f'{api("get_my_pk")}()[0]'
-            rhs += f'[:-1] + ({my_pk}, )'
+            rhs += f'[0][:-1] + ({my_pk}, )'
             rhs = f'CipherValue({rhs})'
         s = f'{s} = {rhs}'
         out_initializations += f'{s}\n'
@@ -600,32 +612,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
     def visitKeyLiteralExpr(self, ast: KeyLiteralExpr):
         return f'PublicKeyValue({super().visitArrayLiteralExpr(ast)})'
 
-    def int_cast(self, expr: str, t: NumberTypeName) -> str:
-        assert isinstance(t, NumberTypeName)
-        if self.inside_circuit and t.elem_bitwidth == 256:
-            return f'uint({expr})'
-        elif t.is_signed_numeric:
-            return f'int{t.elem_bitwidth}({expr})'
-        else:
-            return f'uint{t.elem_bitwidth}({expr})'
-
     def handle_cast(self, expr: str, t: TypeName) -> str:
         """Return python expr which corresponds to expr converted to type t."""
-
-        if isinstance(t, NumberTypeName):
-            return self.int_cast(expr, t)
-        elif isinstance(t, EnumTypeName):
-            constr = self.visit_list(t.target.qualified_name, sep='.')
-        elif isinstance(t, (AddressPayableTypeName, AddressTypeName)):
-            constr = 'AddressValue'
-        else:
-            assert t.is_boolean
-            return f'self.cast({expr}, 1)'
-
-        num_bits = t.elem_bitwidth
-        if self.inside_circuit and num_bits == 256:
-            num_bits = None
-        return f'self.cast({expr}, {num_bits}, constr={constr})'
+        constr = self._get_type_constr(t)
+        return f'{constr}({expr})'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
         assert not isinstance(ast.target, StateVariableDeclaration), "State member accesses not handled"
