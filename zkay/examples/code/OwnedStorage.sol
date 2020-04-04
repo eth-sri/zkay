@@ -14,7 +14,8 @@ contract OwnedStorage {
         storedData = x;
     }
 
-    function get() public returns (uint@owner) {
+    function get() public returns (uint@me) {
+        require(owner == me);
         return storedData;
     }
 }

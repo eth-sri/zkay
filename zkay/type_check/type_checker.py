@@ -1,14 +1,12 @@
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
-from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, \
-    AnnotatedTypeName, Expression, TypeName, \
-    StateVariableDeclaration, Mapping, \
-    AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
-    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, Identifier, IndexExpr, Array, \
+from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, AnnotatedTypeName, Expression, TypeName, \
+    StateVariableDeclaration, Mapping, AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
+    BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
-    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, UserDefinedTypeName, \
-    get_privacy_expr_from_label, issue_compiler_warning
+    BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, \
+    UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -394,13 +392,15 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeException('Indexing into non-mapping', ast)
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
-        # TODO why not for constructor?
         for t in ast.parameter_types:
-            ann = t.privacy_annotation
-            if ann.is_all_expr() or ann.is_me_expr():
-                continue
-            else:
-                raise TypeException(f'Only me/all accepted as privacy type of function parameters', ast)
+            if not isinstance(t.privacy_annotation, (MeExpr, AllExpr)):
+                raise TypeException('Only me/all accepted as privacy type of function parameters', ast)
+
+        if ast.can_be_external:
+            for t in ast.return_type:
+                if not isinstance(t.privacy_annotation, (MeExpr, AllExpr)):
+                    raise TypeException('Only me/all accepted as privacy type of return values for public functions', ast)
+
 
     def visitEnumDefinition(self, ast: EnumDefinition):
         ast.annotated_type = AnnotatedTypeName(EnumTypeName(ast.qualified_name).override(target=ast))
