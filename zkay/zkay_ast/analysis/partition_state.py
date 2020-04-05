@@ -1,4 +1,5 @@
-from typing import Set, Dict
+from __future__ import annotations
+from typing import Set, Dict, Optional
 
 
 class PartitionState:
@@ -22,7 +23,7 @@ class PartitionState:
         self._partitions[self._next_unused] = p
         self._next_unused += 1
 
-    def get_index(self, x):
+    def get_index(self, x) -> Optional[int]:
         """
         Return index for element x.
 
@@ -34,10 +35,10 @@ class PartitionState:
                 return k
         return None
 
-    def has(self, x):
+    def has(self, x) -> bool:
         return self.get_index(x) is not None
 
-    def same_partition(self, x, y):
+    def same_partition(self, x, y) -> bool:
         if x == y:
             return True
 
@@ -77,6 +78,7 @@ class PartitionState:
 
         # locate
         xp_key = self.get_index(x)
+        assert xp_key is not None, f'element {x} not found'
 
         # remove x
         self._partitions[xp_key].remove(x)
@@ -118,7 +120,7 @@ class PartitionState:
         # insert
         self.insert(x)
 
-    def separate_all(self):
+    def separate_all(self) -> PartitionState:
         s = PartitionState()
         for p in self._partitions.values():
             # Side effects do not affect the aliasing of final values
@@ -130,6 +132,35 @@ class PartitionState:
                     s.insert(x)
             if final_vals:
                 s._insert_partition(final_vals)
+        return s
+
+    def join(self, other: PartitionState) -> PartitionState:
+        """
+        Combine two states.
+        Overlaps in partitions between self and other will be preserved.
+        e.g. if self contains (a, b, c), (x) and other contains (a, b), (c, x), new state will contain (a, b), (c), (x)
+
+        :param other: other state, must contain the same values as self (partitions can be different)
+        :return: joined state
+        """
+        s = PartitionState()
+
+        # Collect all values
+        my_vals = frozenset([item for subset in self._partitions.values() for item in subset])
+        other_vals = frozenset([item for subset in other._partitions.values() for item in subset])
+        assert not my_vals.symmetric_difference(other_vals), 'joined branches do not contain the same values'
+        values_in_both = my_vals.intersection(other_vals)
+
+        new_parts = set()
+        for val in values_in_both:
+            my_part = self._partitions[self.get_index(val)]
+            other_part = other._partitions[other.get_index(val)]
+
+            shared_elems = my_part.intersection(other_part)
+            new_parts.add(frozenset(shared_elems))
+
+        for part in new_parts:
+            s._insert_partition(set(part))
         return s
 
     def copy(self, project=None):

@@ -2102,9 +2102,9 @@ class CodeVisitor(AstVisitor):
         return ret
 
     def visitForStatement(self, ast: ForStatement):
-        i = ';' if ast.init is None else f'{self.visit(ast.init)}'
+        i = ';' if ast.init is None else f'{self.visit_single_or_list(ast.init)}'
         c = self.visit(ast.condition)
-        u = '' if ast.update is None else f' {self.visit(ast.update)[:-1]}'
+        u = '' if ast.update is None else f' {self.visit_single_or_list(ast.update).replace(";", "")}'
         b = self.visit_single_or_list(ast.body)
         ret = f'for ({i} {c};{u}) {b}'
         return ret

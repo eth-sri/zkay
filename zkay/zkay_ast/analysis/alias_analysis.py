@@ -1,9 +1,12 @@
+from contextlib import contextmanager
+from typing import ContextManager
+
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.analysis.side_effects import has_side_effects
 from zkay.zkay_ast.ast import VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
-    ContinueStatement, BreakStatement, DoWhileStatement
+    ContinueStatement, BreakStatement, DoWhileStatement, LocationExpr, TupleExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -16,6 +19,7 @@ class AliasAnalysisVisitor(AstVisitor):
 
     def __init__(self, log=False):
         super().__init__('node-or-children', log)
+        self.cond_analyzer = GuardConditionAnalyzer()
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
         s = PartitionState()
@@ -28,8 +32,19 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.body.before_analysis = s
         return self.visit(ast.body)
 
+    def propagate(self, statements, before_analysis: PartitionState) -> PartitionState:
+        last = before_analysis.copy()
+        # push state through each statement
+        for statement in statements:
+            statement.before_analysis = last
+            # print('before', statement, last)
+            self.visit(statement)
+            last = statement.after_analysis
+        # print('after', statement, last)
+        return last.copy()
+
     def visitStatementList(self, ast: StatementList):
-        return self.visitChildren(ast)
+        ast.after_analysis = self.propagate(ast.statements, ast.before_analysis)
 
     def visitBlock(self, ast: Block):
         last = ast.before_analysis.copy()
@@ -38,52 +53,57 @@ class AliasAnalysisVisitor(AstVisitor):
         for name in ast.names.values():
             last.insert(name)
 
-        # push state through each statement
-        for statement in ast.statements:
-            statement.before_analysis = last
-            # print('before', statement, last)
-            self.visit(statement)
-            last = statement.after_analysis
-        # print('after', statement, last)
+        ast.after_analysis = self.propagate(ast.statements, last)
 
         # remove names falling out of scope
-        ast.after_analysis = last.copy()
         for name in ast.names.values():
             ast.after_analysis.remove(name)
 
     def visitIfStatement(self, ast: IfStatement):
-        if has_side_effects(ast.condition):
-            ast.before_analysis = ast.before_analysis.separate_all()
-        before = ast.before_analysis
-
         # condition
-        self.visit(ast.condition)
+        before_then = self.cond_analyzer.analyze(ast.condition, ast.before_analysis)
 
         # then
-        ast.then_branch.before_analysis = before
+        ast.then_branch.before_analysis = before_then
         self.visit(ast.then_branch)
+        after_then = ast.then_branch.after_analysis
 
         # else
         if ast.else_branch:
-            ast.else_branch.before_analysis = before
+            before_else = self.cond_analyzer.analyze(ast.condition.unop('!'), ast.before_analysis)
+            ast.else_branch.before_analysis = before_else
             self.visit(ast.else_branch)
+            after_else = ast.else_branch.after_analysis
+        else:
+            after_else = ast.before_analysis
 
-        # imprecise join (relation between the branches is unclear, so we are conservative)
-        ast.after_analysis = before.separate_all()
+        # join branches
+        ast.after_analysis = after_then.join(after_else)
 
     def visitWhileStatement(self, ast: WhileStatement):
+        # Body always executes after the condition, but it is also possible that it is not executed at all
+        # Condition is true before the body
+        # After the loop, the condition is false
+
         if has_side_effects(ast.condition) or has_side_effects(ast.body):
             ast.before_analysis = ast.before_analysis.separate_all()
 
-        self.visit(ast.condition)
-
-        ast.body.before_analysis = ast.before_analysis.copy()
+        before_body = self.cond_analyzer.analyze(ast.condition, ast.before_analysis)
+        ast.body.before_analysis = before_body
         self.visit(ast.body)
 
-        # Imprecise join (don't know if there was a loop iteration)
-        ast.after_analysis = ast.before_analysis.separate_all()
+        # Either no loop iteration or at least one loop iteration
+        skip_loop = self.cond_analyzer.analyze(ast.condition.unop('!'), ast.before_analysis)
+        did_loop = self.cond_analyzer.analyze(ast.condition.unop('!'), ast.body.after_analysis)
+
+        # join
+        ast.after_analysis = skip_loop.join(did_loop)
 
     def visitDoWhileStatement(self, ast: DoWhileStatement):
+        # Body either executes with or without condition, but it is also possible that it is not executed at all
+        # No information about condition before the body
+        # After the loop, the condition is false
+
         # Could be subsequent loop iteration after condition with side effect
         cond_se = has_side_effects(ast.condition)
         if cond_se or has_side_effects(ast.body):
@@ -94,16 +114,12 @@ class AliasAnalysisVisitor(AstVisitor):
 
         # ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
         ast.before_analysis = ast.body.after_analysis.copy()
-        self.visit(ast.condition)
-        if cond_se:
-            ast.after_analysis = ast.body.after_analysis.separate_all()
-        else:
-            ast.after_analysis = ast.body.after_analysis.copy()
+        ast.after_analysis = self.cond_analyzer.analyze(ast.condition.unop('!'), ast.before_analysis)
 
     def visitForStatement(self, ast: ForStatement):
         last = ast.before_analysis.copy()
 
-        # add fresh names from this block
+        # add names introduced in init
         for name in ast.names.values():
             last.insert(name)
 
@@ -115,16 +131,20 @@ class AliasAnalysisVisitor(AstVisitor):
         if has_side_effects(ast.condition) or has_side_effects(ast.body) or (ast.update is not None and has_side_effects(ast.update)):
             ast.before_analysis = last.separate_all()
 
-        self.visit(ast.condition)
-        ast.body.before_analysis = last.copy()
+        ast.body.before_analysis = self.cond_analyzer.analyze(ast.condition, ast.before_analysis)
         self.visit(ast.body)
         if ast.update is not None:
             # Update is always executed after the body (if it is executed)
             ast.update.before_analysis = ast.body.after_analysis.copy()
             self.visit(ast.update)
 
-        # Imprecise join (don't know if there was a loop iteration)
-        ast.after_analysis = last.copy()
+        skip_loop = self.cond_analyzer.analyze(ast.condition.unop('!'), ast.init.after_analysis)
+        did_loop = self.cond_analyzer.analyze(ast.condition.unop('!'), ast.update.after_analysis if ast.update else ast.body.after_analysis)
+
+        # join
+        ast.after_analysis = skip_loop.join(did_loop)
+
+        # drop names introduced in init
         for name in ast.names.values():
             ast.after_analysis.remove(name)
 
@@ -181,10 +201,7 @@ class AliasAnalysisVisitor(AstVisitor):
 
         # state after assignment
         after = ast.before_analysis.copy()
-        lhs = lhs.privacy_annotation_label()
-        rhs = rhs.privacy_annotation_label()
-        if lhs and rhs:
-            after.move_to(lhs, rhs)
+        recursive_assign(lhs, rhs, after)
 
         # save state
         ast.after_analysis = after
@@ -210,3 +227,61 @@ class AliasAnalysisVisitor(AstVisitor):
 
     def visitStatement(self, _):
         raise NotImplementedError()
+
+
+class GuardConditionAnalyzer(AstVisitor):
+    def __init__(self, log=False):
+        super().__init__('node-or-children', log)
+        self._neg = False
+        self._analysis = None
+
+    def analyze(self, cond, before_analysis: PartitionState) -> PartitionState:
+        if has_side_effects(cond):
+            return before_analysis.copy().separate_all()
+        else:
+            self._neg = False
+            self._analysis = before_analysis.copy()
+            self.visit(cond)
+            return self._analysis
+
+    @contextmanager
+    def _negated(self) -> ContextManager:
+        self._neg = not self._neg
+        yield
+        self._neg = not self._neg
+
+    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
+        if isinstance(ast.func, BuiltinFunction):
+            op = ast.func.op
+            if op == '!':
+                with self._negated():
+                    self.visit(ast.args[0])
+            elif (op == '&&' and not self._neg) or (op == '||' and self._neg):
+                self.visit(ast.args[0])
+                self.visit(ast.args[1])
+            elif op == 'parenthesis':
+                self.visit(ast.args[0])
+            elif (op == '==' and not self._neg) or (op == '!=' and self._neg):
+                recursive_merge(ast.args[0], ast.args[1], self._analysis)
+
+
+def _recursive_update(lhs, rhs, analysis: PartitionState, merge: bool):
+    if isinstance(lhs, TupleExpr) and isinstance(rhs, TupleExpr):
+        for l, r in zip(lhs.elements, rhs.elements):
+            _recursive_update(l, r, analysis, merge)
+    else:
+        lhs = lhs.privacy_annotation_label()
+        rhs = rhs.privacy_annotation_label()
+        if lhs and rhs:
+            if merge:
+                analysis.merge(lhs, rhs)
+            else:
+                analysis.move_to(lhs, rhs)
+
+
+def recursive_merge(lhs, rhs, analysis: PartitionState):
+    _recursive_update(lhs, rhs, analysis, True)
+
+
+def recursive_assign(lhs, rhs, analysis: PartitionState):
+    _recursive_update(lhs, rhs, analysis, False)
