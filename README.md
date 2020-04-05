@@ -42,19 +42,13 @@ pip3 install -e .
 
 ### Using Docker
 
-Alternatively you can also use docker to install and run zkay.
-First install docker, then you can run the image as follows:
+Alternatively, you can also set up zkay in a docker container using the provided Dockerfile in the `install` subdirectory.
+
+To build and run the image, you can simply use:
 
 ```bash
-/path/to/zkay$ ./zkay-docker.sh
-(base) root@ae09e165bd19:/zkay_host$
+/path/to/zkay$ make -C ./install run
 ```
-
-This command mounts the directory `zkay` from your host as `/zkay_host`
-within the docker container. You can run `zkay-docker.sh` also from any other directory `d` on your host.
-In this case, `d` is mounted as `/d_host` inside the container.
-This allows you to operate on files from your host machine.
-
 
 ### Unit Tests
 
