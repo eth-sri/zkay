@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract funccall {
+contract FuncCalls2 {
     final address owner;
     uint@owner res;
     uint pubval;
@@ -66,7 +66,7 @@ contract funccall {
         return val + priv_inc2(42 * val);
     }
 
-    function get_res() public view returns(uint@owner) {
+    function get_res() internal view returns(uint@owner) {
         return res;
     }
 
