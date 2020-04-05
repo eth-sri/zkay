@@ -2351,8 +2351,11 @@ class CodeVisitor(AstVisitor):
             enums,
             structs)
 
+    def handle_pragma(self, pragma: str) -> str:
+        return pragma
+
     def visitSourceUnit(self, ast: SourceUnit):
-        p = ast.pragma_directive
+        p = self.handle_pragma(ast.pragma_directive)
         contracts = self.visit_list(ast.contracts)
         lfstr = 'import "{}";'
         return '\n\n'.join(filter(''.__ne__, [p, linesep.join([lfstr.format(uc) for uc in ast.used_contracts]), contracts]))

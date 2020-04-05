@@ -30,6 +30,7 @@ from zkay.utils.helpers import read_file, lines_of_code, without_extension
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
 from zkay.zkay_ast.process_ast import get_processed_ast, get_verification_contract_names
+from zkay.zkay_ast.visitor.solidity_visitor import to_solidity
 
 proving_scheme_classes: Dict[str, Type[ProvingScheme]] = {
     'groth16': ProvingSchemeGroth16,
@@ -113,7 +114,7 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     # Write public contract file
     with print_step('Write public solidity code'):
         output_filename = 'contract.sol'
-        solidity_code_output = _dump_to_output(ast.code(), output_dir, output_filename)
+        solidity_code_output = _dump_to_output(to_solidity(ast), output_dir, output_filename)
 
     # Get all circuit helpers for the transformed contract
     circuits: List[CircuitHelper] = list(circuits.values())

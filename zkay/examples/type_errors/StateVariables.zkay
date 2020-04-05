@@ -1,0 +1,9 @@
+pragma zkay >=0.2.0;
+
+contract StateVariables {
+
+    address super_owner;
+	address@super_owner owner;
+	uint@owner x;
+
+}

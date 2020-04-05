@@ -1,0 +1,14 @@
+pragma zkay >=0.2.0;
+
+contract ModifyFinalStateVar {
+
+	final uint@all x;
+
+	constructor() public{
+	    x = 0;
+	}
+
+	function f() public {
+		x = 10;
+	}
+}

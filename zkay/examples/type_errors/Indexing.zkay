@@ -1,0 +1,13 @@
+pragma zkay >=0.2.0;
+
+contract Indexing {
+
+    mapping(address!x => uint@x) values;
+	uint@all x;
+
+
+	function f() public {
+		x = values[me];
+	}
+
+}

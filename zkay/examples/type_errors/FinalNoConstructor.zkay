@@ -1,0 +1,7 @@
+pragma zkay >=0.2.0;
+
+contract FinalNoConstructor {
+
+	final uint x;
+
+}

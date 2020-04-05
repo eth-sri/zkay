@@ -1,0 +1,13 @@
+pragma zkay >=0.2.0;
+
+contract Eq {
+
+	uint@all x;
+
+	function f(uint@all a, uint@all b) public{
+		if (a == b) {
+		    x = a;
+		}
+	}
+}
+

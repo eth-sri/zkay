@@ -3,7 +3,7 @@ from zkay.transaction.types import AddressValue
 from zkay.zkay_ast.ast import IntTypeName
 
 a = 'a'
-sb = ScenarioBuilder('Casting', 'code/Cast.sol').set_users(a)
+sb = ScenarioBuilder('Casting', 'code/Cast.zkay').set_users(a)
 sb.set_deployment_transaction(owner=a)
 sb.add_balance_assertion(0)
 

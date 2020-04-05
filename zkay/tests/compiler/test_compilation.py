@@ -23,7 +23,7 @@ def _mock_config(crypto: str, hash_opt):
     cfg.crypto_backend, cfg.should_use_hash = old_c, old_h
 
 
-#@parameterized_class(('name', 'example'), get_code_example('.sol'))
+#@parameterized_class(('name', 'example'), get_code_example('.zkay'))
 @parameterized_class(('name', 'example'), all_examples)
 class TestCompiler(TestExamples):
 

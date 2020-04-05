@@ -40,20 +40,20 @@ class Example:
             return None
 
 
-simple_storage = Example(os.path.join(code_dir, 'SimpleStorage.sol'))
-functions = Example(os.path.join(code_dir, 'Functions.sol'))
-addition = Example(os.path.join(code_dir, 'Addition.sol'))
-empty = Example(os.path.join(code_dir, 'Empty.sol'))
-simple = Example(os.path.join(code_dir, 'Simple.sol'))
-control_flow = Example(os.path.join(code_dir, 'ControlFlow.sol'))
-analysis = Example(os.path.join(code_dir, 'Analysis.sol'))
-private_addition = Example(os.path.join(code_dir, 'PrivateAddition.sol'))
-power_grid = Example(os.path.join(code_dir, 'PowerGrid.sol'))
-final_use_before_write = Example(os.path.join(others_dir, 'FinalUseBeforeWrite.sol'))
+simple_storage = Example(os.path.join(code_dir, 'SimpleStorage.zkay'))
+functions = Example(os.path.join(code_dir, 'Functions.zkay'))
+addition = Example(os.path.join(code_dir, 'Addition.zkay'))
+empty = Example(os.path.join(code_dir, 'Empty.zkay'))
+simple = Example(os.path.join(code_dir, 'Simple.zkay'))
+control_flow = Example(os.path.join(code_dir, 'ControlFlow.zkay'))
+analysis = Example(os.path.join(code_dir, 'Analysis.zkay'))
+private_addition = Example(os.path.join(code_dir, 'PrivateAddition.zkay'))
+power_grid = Example(os.path.join(code_dir, 'PowerGrid.zkay'))
+final_use_before_write = Example(os.path.join(others_dir, 'FinalUseBeforeWrite.zkay'))
 add_user = Example(os.path.join(others_dir, 'AddUser.sol'))
 
-empty_normalized = 'pragma solidity ^ 0.5.0 ; contract Empty { } '
-simple_storage_normalized = 'pragma solidity ^ 0.5.0 ; contract SimpleStorage { ' \
+empty_normalized = 'pragma zkay >= 0.2.0 ; contract Empty { } '
+simple_storage_normalized = 'pragma zkay >= 0.2.0 ; contract SimpleStorage { ' \
                             'uint @ all storedData ; ' \
                             'function set ( uint @ all x ) public { storedData = x ; } ' \
                             'function get ( ) public returns ( uint @ all ) { return storedData ; } } '
@@ -62,7 +62,7 @@ simple_storage_normalized = 'pragma solidity ^ 0.5.0 ; contract SimpleStorage { 
 def collect_examples(directory: str):
     examples: List[Tuple[str, Example]] = []
     for f in os.listdir(directory):
-        if f.endswith(".sol"):
+        if f.endswith('.zkay'):
             e = Example(os.path.join(directory, f))
             examples.append((e.name(), e))
     return examples

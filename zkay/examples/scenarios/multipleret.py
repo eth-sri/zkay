@@ -1,6 +1,6 @@
 from zkay.examples.scenario import ScenarioBuilder
 a = 'a'
-sb = ScenarioBuilder('MultipleReturnValues', 'code/MultipleReturnValues.sol').set_users(a)
+sb = ScenarioBuilder('MultipleReturnValues', 'code/MultipleReturnValues.zkay').set_users(a)
 sb.set_deployment_transaction(owner=a)
 
 sb.add_balance_assertion(0)

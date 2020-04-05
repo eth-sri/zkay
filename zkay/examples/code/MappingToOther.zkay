@@ -1,0 +1,12 @@
+pragma zkay >=0.2.0;
+
+contract MappingToOther {
+
+    mapping(address!x => uint@x) values;
+
+
+	function f(address a, uint value) public{
+		values[a] = value;
+	}
+
+}

@@ -1,6 +1,6 @@
 from zkay.examples.scenario import ScenarioBuilder
 a = 'a'
-sb = ScenarioBuilder('FuncCalls', 'code/FuncCalls.sol').set_users(a)
+sb = ScenarioBuilder('FuncCalls', 'code/FuncCalls.zkay').set_users(a)
 sb.set_deployment_transaction(owner=a)
 sb.add_balance_assertion(0)
 sb.add_transaction('compute', [42, 5], user=a)

@@ -91,7 +91,7 @@ setup(
     packages=packages,
     package_data={
         'zkay.compiler.privacy': ['bn256g2.sol'],
-        'zkay.examples': ['**/*.sol', 'scenarios/*.py'],
+        'zkay.examples': ['**/*.zkay', '**/*.sol', 'scenarios/*.py'],
         'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'bcprov-jdk15on-1.64.jar', 'run_snark'],
     },
     entry_points={

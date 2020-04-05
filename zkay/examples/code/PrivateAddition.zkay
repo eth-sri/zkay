@@ -1,0 +1,21 @@
+pragma zkay >=0.2.0;
+
+contract PrivateAddition {
+
+    final address a;
+	uint@a x;
+
+	constructor() public{
+	    a = me;
+	}
+
+	function set(uint v) public {
+	    x = v;
+	}
+
+	function f(uint@all y) public returns (uint@me) {
+		require(a == me);
+		return x + y;
+	}
+}
+

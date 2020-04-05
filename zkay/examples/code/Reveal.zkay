@@ -1,0 +1,10 @@
+pragma zkay >=0.2.0;
+
+contract Reveal {
+
+	uint@all x;
+
+	function f(uint@me a) public{
+		x = reveal(a,all);
+	}
+}

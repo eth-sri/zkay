@@ -1,0 +1,15 @@
+pragma zkay >=0.2.0;
+
+// simple getter/setter contract
+contract SimpleStorage {
+    uint@all storedData;
+
+    function set(uint@all x) public {
+        storedData = x;
+    }
+
+    function get() public returns (uint@all) {
+        return storedData;
+    }
+}
+

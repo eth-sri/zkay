@@ -1,0 +1,11 @@
+pragma zkay >=0.2.0;
+
+contract Constructor {
+
+    final address owner;
+
+    constructor() public{
+        owner = me;
+    }
+
+}

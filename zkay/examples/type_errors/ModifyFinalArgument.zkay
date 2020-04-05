@@ -1,0 +1,8 @@
+pragma zkay >=0.2.0;
+
+contract ModifyFinalArgument {
+
+	function f(final uint x) public {
+		x = 10;
+	}
+}

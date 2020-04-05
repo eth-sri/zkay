@@ -1,6 +1,6 @@
 from zkay.examples.scenario import ScenarioBuilder
 a = 'a'
-sb = ScenarioBuilder('NestedIfStatements', 'code/NestedIfCond.sol').set_users(a)
+sb = ScenarioBuilder('NestedIfStatements', 'code/NestedIfCond.zkay').set_users(a)
 sb.set_deployment_transaction(owner=a)
 sb.add_balance_assertion(0)
 sb.add_state_assertion('val', user=a, should_decrypt=True, expected_value=False)

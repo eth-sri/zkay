@@ -2,7 +2,7 @@ from zkay.examples.scenario import ScenarioBuilder
 from zkay.transaction.offchain import RequireException
 
 raiser, backer1, backer2 = 'hospital', 'patient1', 'patient2'
-sb = ScenarioBuilder('CrowdFundingSuccess', 'code/CrowdFunding.sol').set_users(raiser, backer1, backer2)
+sb = ScenarioBuilder('CrowdFundingSuccess', 'code/CrowdFunding.zkay').set_users(raiser, backer1, backer2)
 # Set hospital as owner
 sb.set_deployment_transaction(100, 3600, amount=20, owner=raiser)
 sb.add_balance_assertion(20)

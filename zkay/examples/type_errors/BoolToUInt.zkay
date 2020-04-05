@@ -1,0 +1,10 @@
+pragma zkay >=0.2.0;
+
+contract BoolToUInt {
+
+	function f() public {
+		uint x;
+		x = false;
+	}
+
+}

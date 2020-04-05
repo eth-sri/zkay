@@ -1,0 +1,6 @@
+pragma zkay >=0.2.0;
+
+contract MappingNameConflict {
+    uint x;
+    mapping(address!x => uint@x) values;
+}

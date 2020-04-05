@@ -1,0 +1,14 @@
+pragma zkay >=0.2.0;
+
+contract ImplicitDeclassification {
+
+    address owner;
+
+    uint@owner a;
+    uint@all b;
+
+	function f() public {
+	    require(owner == me);
+		b = a;
+	}
+}

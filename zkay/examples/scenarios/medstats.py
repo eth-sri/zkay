@@ -2,7 +2,7 @@ from zkay.examples.scenario import ScenarioBuilder
 from zkay.transaction.offchain import RequireException
 
 hospital, patient1, patient2 = 'hospital', 'patient1', 'patient2'
-sb = ScenarioBuilder('MedStats', 'code/MedStats.sol').set_users(hospital, patient1, patient2)
+sb = ScenarioBuilder('MedStats', 'code/MedStats.zkay').set_users(hospital, patient1, patient2)
 # Set hospital as owner
 sb.set_deployment_transaction(owner=hospital)
 

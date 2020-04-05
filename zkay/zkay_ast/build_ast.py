@@ -125,7 +125,7 @@ class BuildASTVisitor(SolidityVisitor):
                                   f'with the current zkay version (requires {cfg.zkay_solc_version_compatibility}).',
                                   ctx.ver, self.code)
 
-        return f'solidity {cfg.zkay_solc_version_compatibility}'
+        return f'{name} {version}'
 
     # Visit a parse tree produced by SolidityParser#contractDefinition.
     def visitContractDefinition(self, ctx: SolidityParser.ContractDefinitionContext):

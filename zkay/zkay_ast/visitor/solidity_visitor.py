@@ -1,4 +1,5 @@
 from zkay.zkay_ast.ast import MeExpr, AnnotatedTypeName, CodeVisitor, AST
+from zkay.config import cfg
 
 
 def to_solidity(ast: AST):
@@ -20,3 +21,6 @@ class SolidityVisitor(CodeVisitor):
 
     def visitMeExpr(self, _: MeExpr):
         return 'msg.sender'
+
+    def handle_pragma(self, pragma: str) -> str:
+        return f'pragma solidity {cfg.zkay_solc_version_compatibility};'

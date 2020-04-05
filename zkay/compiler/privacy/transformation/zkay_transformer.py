@@ -41,20 +41,18 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
         return AnnotatedTypeName(t)
 
     def visitVariableDeclaration(self, ast: VariableDeclaration):
-        ast.keywords = [k for k in ast.keywords if k != 'final']
         if ast.annotated_type.is_private():
             ast.storage_location = 'memory'
         return self.visit_children(ast)
 
     def visitParameter(self, ast: Parameter):
-        ast.keywords = [k for k in ast.keywords if k != 'final']
         ast = self.visit_children(ast)
         if not ast.annotated_type.type_name.is_primitive_type():
             ast.storage_location = 'memory'
         return ast
 
     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
-        ast.keywords = [k for k in ast.keywords if k != 'final' and k != 'public']
+        ast.keywords = [k for k in ast.keywords if k != 'public']
         # make sure every state var gets a public getter (required for simulation)
         ast.keywords.append('public')
         ast.expr = self.expr_trafo.visit(ast.expr)

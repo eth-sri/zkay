@@ -1,0 +1,9 @@
+pragma zkay >=0.2.0;
+
+contract ModifyFinalArgumentInConstructor {
+
+	constructor() public {
+		final uint x = 10;
+		x = 20;
+	}
+}
