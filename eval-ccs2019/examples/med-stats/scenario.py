@@ -1,16 +1,16 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	hospital_addr, patient1_addr, patient2_addr = g.create_dummy_accounts(3)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	hospital = g.deploy(user=hospital_addr)
+	patient1 = g.connect(hospital.address, user=patient1_addr)
+	patient2 = g.connect(hospital.address, user=patient2_addr)
 
-g = ScenarioGenerator(script_dir, 'med-stats.sol', {'hospital': 10, 'patient1': 20, 'patient2': 30})
-
-# run functions
-g.run_function('constructor', 'hospital', [])
-g.run_function('record', 'hospital', ['patient1', True])
-g.run_function('record', 'hospital', ['patient2', False])
-g.run_function('check', 'patient1', [True])
-g.run_function('check', 'patient2', [False])
-
-g.finalize()
+	hospital.record(patient1_addr, True)
+	hospital.record(patient2_addr, False)
+	patient1.check(True)
+	patient2.check(False)

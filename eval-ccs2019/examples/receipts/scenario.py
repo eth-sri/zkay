@@ -1,18 +1,18 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	business_addr, customer1_addr, customer2_addr = g.create_dummy_accounts(3)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	business = g.deploy(user=business_addr)
+	customer1 = g.connect(business.address, user=customer1_addr)
+	customer2 = g.connect(business.address, user=customer2_addr)
 
-g = ScenarioGenerator(script_dir, 'receipts.sol', {'business': 10, 'customer1': 20, 'customer2': 30})
-
-# run functions
-g.run_function('constructor', 'business', [])
-g.run_function('give_receipt', 'business', [1234, 20])
-g.run_function('give_receipt', 'business', [1235, 50])
-g.run_function('receive_receipt', 'customer1', [1234, 20])
-g.run_function('receive_receipt', 'customer2', [1235, 50])
-g.run_function('check', 'business', [1234])
-g.run_function('check', 'business', [1235])
-
-g.finalize()
+	business.give_receipt(1234, 20)
+	business.give_receipt(1235, 50)
+	customer1.receive_receipt(1234, 20)
+	customer2.receive_receipt(1235, 50)
+	business.check(1234)
+	business.check(1235)

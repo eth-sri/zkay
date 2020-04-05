@@ -1,16 +1,16 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	master_addr, x_addr, y_addr = g.create_dummy_accounts(3)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	master = g.deploy(1234, user=master_addr)
+	x = g.connect(master.address, user=x_addr)
+	y = g.connect(master.address, user=y_addr)
 
-g = ScenarioGenerator(script_dir, 'lottery.sol', {'master': 10, 'x': 20, 'y': 30})
-
-# run functions
-g.run_function('constructor', 'master', [1234])
-g.run_function('bet', 'x', [1234])
-g.run_function('bet', 'y', [1235])
-g.run_function('publish_secret', 'master', [])
-g.run_function('claim_winner', 'x', [])
-
-g.finalize()
+	x.bet(1234)
+	y.bet(1235)
+	master.publish_secret()
+	x.claim_winner()

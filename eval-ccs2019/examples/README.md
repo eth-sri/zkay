@@ -1,14 +1,14 @@
 # Evaluated Contracts
 
-This directory contains the example contracts evaluated for CCS'19.
+This directory contains the example contracts evaluated for CCS'19, adjusted for zkay 2.0.
 
-- Exam: [./exam/exam.sol](./exam/exam.sol)
-- Income: [./income/income.sol](./income/income.sol)
-- Insurance: [./insurance/insurance.sol](./insurance/insurance.sol)
-- Lottery: [./lottery/lottery.sol](./lottery/lottery.sol)
-- MedStats: [./med-stats/med-stats.sol](./med-stats/med-stats.sol)
-- PowerGrid: [./power-grid/power-grid.sol](./power-grid/power-grid.sol)
-- Receipt: [./receipts/receipts.sol](./receipts/receipts.sol)
-- Reviews: [./reviews/reviews.sol](./reviews/reviews.sol)
-- SumRing: [./sum-ring/sum-ring.sol](./sum-ring/sum-ring.sol)
-- Token: [./token/token.sol](./token/token.sol)
+- Exam: [./exam/exam.zkay](./exam/exam.zkay)
+- Income: [./income/income.zkay](./income/income.zkay)
+- Insurance: [./insurance/insurance.zkay](./insurance/insurance.zkay)
+- Lottery: [./lottery/lottery.zkay](./lottery/lottery.zkay)
+- MedStats: [./med-stats/med-stats.zkay](./med-stats/med-stats.zkay)
+- PowerGrid: [./power-grid/power-grid.zkay](./power-grid/power-grid.zkay)
+- Receipt: [./receipts/receipts.zkay](./receipts/receipts.zkay)
+- Reviews: [./reviews/reviews.zkay](./reviews/reviews.zkay)
+- SumRing: [./sum-ring/sum-ring.zkay](./sum-ring/sum-ring.zkay)
+- Token: [./token/token.zkay](./token/token.zkay)

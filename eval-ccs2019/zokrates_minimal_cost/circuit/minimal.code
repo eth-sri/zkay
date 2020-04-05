@@ -1,5 +1,0 @@
-// implementation of == 0 (very simple function)
-
-def main(private field a) -> (field):
-	field ret = if a == 0 then 1 else 0 fi
-	return ret

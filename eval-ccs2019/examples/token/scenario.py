@@ -1,17 +1,17 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	sender_addr, receiver_addr = g.create_dummy_accounts(2)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	sender = g.deploy(user=sender_addr)
+	receiver = g.connect(sender.address, user=receiver_addr)
 
-g = ScenarioGenerator(script_dir, 'token.sol', {'sender': 10, 'receiver': 20})
+	sender.register()
+	receiver.register()
+	sender.buy(1000)
+	sender.send_tokens(100, receiver_addr)
+	receiver.receive_tokens(sender_addr)
 
-# run functions
-g.run_function('constructor', 'sender', [])
-g.run_function('register', 'sender', [])
-g.run_function('register', 'receiver', [])
-g.run_function('buy', 'sender', [1000])
-g.run_function('send_tokens', 'sender', [100, 'receiver'])
-g.run_function('receive_tokens', 'receiver', ['sender'])
-
-g.finalize()

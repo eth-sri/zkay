@@ -1,15 +1,15 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	master_addr, consumer_addr = g.create_dummy_accounts(2)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	master = g.deploy(user=master_addr)
+	consumer = g.connect(master.address, user=consumer_addr)
 
-g = ScenarioGenerator(script_dir, 'power-grid.sol', {'master': 10, 'consumer': 30})
+	consumer.init()
+	consumer.register_consumed(17)
+	consumer.declare_total()
 
-# run functions
-g.run_function('constructor', 'master', [])
-g.run_function('init', 'consumer', [])
-g.run_function('register_consumed', 'consumer', [17])
-g.run_function('declare_total', 'consumer', [])
-
-g.finalize()

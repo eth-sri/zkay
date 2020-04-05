@@ -1,16 +1,16 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	p1_addr, p2_addr, p3_addr = g.create_dummy_accounts(3)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	p1 = g.deploy(12345, user=p1_addr)
+	p2 = g.connect(p1.address, user=p2_addr)
+	p3 = g.connect(p1.address, user=p3_addr)
 
-g = ScenarioGenerator(script_dir, 'sum-ring.sol', {'p1': 10, 'p2': 20, 'p3': 30})
-
-# run functions
-g.run_function('constructor', 'p1', [12345])
-g.run_function('addVal', 'p1', [100, 'p2'])
-g.run_function('addVal', 'p2', [200, 'p3'])
-g.run_function('addVal', 'p3', [300, 'p1'])
-g.run_function('evaluateSum', 'p1', [])
-
-g.finalize()
+	p1.addVal(100, p2_addr)
+	p2.addVal(200, p3_addr)
+	p3.addVal(300, p1_addr)
+	p1.evaluateSum()

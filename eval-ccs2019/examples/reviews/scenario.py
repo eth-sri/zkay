@@ -1,17 +1,19 @@
-import os
+#!/usr/bin/env python3
+import sys
+from zkay.zkay_frontend import transaction_benchmark_ctx
 
-from zkay.examples.scenarios import ScenarioGenerator
+# Scenario
+with transaction_benchmark_ctx(sys.argv[1]) as g:
+	pc_addr, r1_addr, r2_addr, r3_addr, author_addr = g.create_dummy_accounts(5)
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+	pc = g.deploy(r1_addr, r2_addr, r3_addr, user=pc_addr)
+	r1 = g.connect(pc.address, user=r1_addr)
+	r2 = g.connect(pc.address, user=r2_addr)
+	r3 = g.connect(pc.address, user=r3_addr)
+	author = g.connect(pc.address, user=author_addr)
 
-g = ScenarioGenerator(script_dir, 'reviews.sol', {'pc': 10, 'r1': 20, 'r2': 30, 'r3': 40, 'author': 100})
-
-# run functions
-g.run_function('constructor', 'pc', ['r1', 'r2', 'r3'])
-g.run_function('registerPaper', 'author', [1234])
-g.run_function('recordReview', 'r1', [1234, 4])
-g.run_function('recordReview', 'r2', [1234, 2])
-g.run_function('recordReview', 'r3', [1234, 1])
-g.run_function('decideAcceptance', 'pc', ['author'])
-
-g.finalize()
+	author.registerPaper(1234)
+	r1.recordReview(1234, 4)
+	r2.recordReview(1234, 2)
+	r3.recordReview(1234, 1)
+	pc.decideAcceptance(author_addr)
