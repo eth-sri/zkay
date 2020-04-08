@@ -5,7 +5,7 @@ from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 test_package = 'zkay.tests'
-antlr_version = '4.7.2'
+antlr_version = '4.8'
 zkay_libsnark_commit_hash = '4e3c7a53ec333f52fe27ff45ff836102bcdb8e28'
 packages = find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*'])
 
@@ -75,8 +75,8 @@ setup(
     python_requires='>=3.7,<4',
     install_requires=[
         'Cython>=0.29,<0.30',
-        'web3[tester]>=v5.5,<v5.7',
-        'antlr4-python3-runtime==4.7.2',
+        'web3[tester]>=v5.5,<v5.8',
+        f'antlr4-python3-runtime=={antlr_version}',
         'parameterized>=0.7,<0.8',
         'py-solc-x>=0.7.1,<0.9',
         'pycryptodome>=3.9,<4',
