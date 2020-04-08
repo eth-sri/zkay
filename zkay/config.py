@@ -33,7 +33,7 @@ def _init_solc(version):
             with open(update_file) as f:
                 t, v = tuple(f.read().splitlines())
                 t = datetime.strptime(t, '%Y-%m-%d, %H:%M:%S')
-            if t > datetime.now() - timedelta(hours=1):
+            if t > datetime.now() - timedelta(hours=1) and Version(v) in cfg.zkay_solc_version_compatibility:
                 version = v
         except Exception:
             pass
@@ -140,7 +140,7 @@ class Config(UserConfig):
     @property
     def library_solc_version(self) -> str:
         # Note: Changing this version breaks compatibility with already deployed library contracts
-        return '0.5.17'
+        return '0.6.5'
 
     @property
     def zkay_version(self) -> str:
@@ -150,7 +150,7 @@ class Config(UserConfig):
     @property
     def zkay_solc_version_compatibility(self) -> NpmSpec:
         """Target solidity language level for the current zkay version"""
-        return NpmSpec('^0.5.0')
+        return NpmSpec('^0.6.0')
 
     @property
     def solc_version(self) -> str:

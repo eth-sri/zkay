@@ -5,7 +5,7 @@ from zkay.compiler.solidity.compiler import compile_solidity_code, compile_solid
 from zkay.examples.examples import others_dir
 
 simple_storage = """
-pragma solidity ^0.5.0;
+pragma solidity ^0.6.0;
 
 contract SimpleStorage {
     uint storedData;

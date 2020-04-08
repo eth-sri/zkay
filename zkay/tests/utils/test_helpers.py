@@ -1,7 +1,7 @@
 from zkay.tests.zkay_unit_test import ZkayTestCase
 from zkay.utils.helpers import lines_of_code
 
-example_code = """pragma solidity ^0.5.0;
+example_code = """pragma solidity ^0.6.0;
 
 // Description: Record medical statistics on patients
 // Domain: Healthcare
