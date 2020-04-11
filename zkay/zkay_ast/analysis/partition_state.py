@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import Set, Dict, Optional
+from typing import Set, Dict, Optional, Generic, TypeVar
+
+T = TypeVar('T')
 
 
-class PartitionState:
+class PartitionState(Generic[T]):
     """
     Supports operations on partitions
 
@@ -12,7 +14,7 @@ class PartitionState:
     """
 
     def __init__(self):
-        self._partitions: Dict[int, Set[object]] = {}
+        self._partitions: Dict[int, Set[T]] = {}
         self._next_unused = 0
 
     def insert(self, x):
@@ -23,7 +25,7 @@ class PartitionState:
         self._partitions[self._next_unused] = p
         self._next_unused += 1
 
-    def get_index(self, x) -> Optional[int]:
+    def get_index(self, x: T) -> Optional[int]:
         """
         Return index for element x.
 
@@ -35,10 +37,10 @@ class PartitionState:
                 return k
         return None
 
-    def has(self, x) -> bool:
+    def has(self, x: T) -> bool:
         return self.get_index(x) is not None
 
-    def same_partition(self, x, y) -> bool:
+    def same_partition(self, x: T, y: T) -> bool:
         if x == y:
             return True
 
@@ -53,7 +55,7 @@ class PartitionState:
         # compare
         return xp == yp
 
-    def merge(self, x, y):
+    def merge(self, x: T, y: T):
         # locate
         xp_key = self.get_index(x)
         yp_key = self.get_index(y)
@@ -68,7 +70,7 @@ class PartitionState:
         # insert y
         self._partitions[xp_key].update(yp)
 
-    def remove(self, x):
+    def remove(self, x: T):
         """
         Removes x from its partition
 
@@ -87,7 +89,7 @@ class PartitionState:
         if len(self._partitions[xp_key]) == 0:
             del self._partitions[xp_key]
 
-    def move_to(self, x, y):
+    def move_to(self, x: T, y: T):
         """
         Moves x to the partition of y
 
@@ -107,7 +109,7 @@ class PartitionState:
         # insert x
         self._partitions[yp_key].add(x)
 
-    def move_to_separate(self, x):
+    def move_to_separate(self, x: T):
         """
         Moves x to a fresh partition
 
@@ -120,7 +122,7 @@ class PartitionState:
         # insert
         self.insert(x)
 
-    def separate_all(self) -> PartitionState:
+    def separate_all(self) -> PartitionState[T]:
         s = PartitionState()
         for p in self._partitions.values():
             # Side effects do not affect the aliasing of final values
@@ -134,7 +136,7 @@ class PartitionState:
                 s._insert_partition(final_vals)
         return s
 
-    def join(self, other: PartitionState) -> PartitionState:
+    def join(self, other: PartitionState[T]) -> PartitionState[T]:
         """
         Combine two states.
         Overlaps in partitions between self and other will be preserved.
@@ -163,7 +165,7 @@ class PartitionState:
             s._insert_partition(set(part))
         return s
 
-    def copy(self, project=None):
+    def copy(self, project=None) -> PartitionState[T]:
         """
         Create a shallow copy of the partition state.
 

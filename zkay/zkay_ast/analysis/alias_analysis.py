@@ -6,7 +6,7 @@ from zkay.zkay_ast.analysis.side_effects import has_side_effects
 from zkay.zkay_ast.ast import VariableDeclarationStatement, IfStatement, \
     Block, ExpressionStatement, MeExpr, AssignmentStatement, RequireStatement, AllExpr, ReturnStatement, \
     FunctionCallExpr, BuiltinFunction, ConstructorOrFunctionDefinition, StatementList, WhileStatement, ForStatement, \
-    ContinueStatement, BreakStatement, DoWhileStatement, LocationExpr, TupleExpr
+    ContinueStatement, BreakStatement, DoWhileStatement, LocationExpr, TupleExpr, PrivacyLabelExpr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -22,7 +22,7 @@ class AliasAnalysisVisitor(AstVisitor):
         self.cond_analyzer = GuardConditionAnalyzer()
 
     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
-        s = PartitionState()
+        s: PartitionState[PrivacyLabelExpr] = PartitionState()
         s.insert(MeExpr().privacy_annotation_label())
         s.insert(AllExpr().privacy_annotation_label())
         for d in ast.parent.state_variable_declarations:
@@ -32,7 +32,7 @@ class AliasAnalysisVisitor(AstVisitor):
         ast.body.before_analysis = s
         return self.visit(ast.body)
 
-    def propagate(self, statements, before_analysis: PartitionState) -> PartitionState:
+    def propagate(self, statements, before_analysis: PartitionState[PrivacyLabelExpr]) -> PartitionState[PrivacyLabelExpr]:
         last = before_analysis.copy()
         # push state through each statement
         for statement in statements:

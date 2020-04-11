@@ -31,7 +31,7 @@ class ChildListBuilder:
 class AST:
     def __init__(self):
         # set later by parent setter
-        self.parent: AST = None
+        self.parent: Optional[AST] = None
         self.namespace: Optional[List[Identifier]] = None
 
         # Names accessible by AST nodes below this node.
@@ -39,7 +39,7 @@ class AST:
         # Maps strings (names) to Identifiers.
         #
         # set later by symbol table
-        self.names: Dict[str, AST] = {}
+        self.names: Dict[str, Identifier] = {}
 
         self.line = -1
         self.column = -1
@@ -65,7 +65,7 @@ class AST:
             setattr(self, key, val)
         return self
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         pass
 
     def code(self) -> str:
@@ -122,6 +122,7 @@ class Comment(AST):
             return block
         return [Comment(f'{text}'), Comment('{'), IndentBlock(block), Comment('}'), BlankLine()]
 
+
 class BlankLine(Comment):
     def __init__(self):
         super().__init__()
@@ -170,9 +171,9 @@ class Expression(AST):
     def __init__(self):
         super().__init__()
         # set later by type checker
-        self.annotated_type: AnnotatedTypeName = None
+        self.annotated_type: Optional[AnnotatedTypeName] = None
         # set by expression to statement
-        self.statement: Statement = None
+        self.statement: Optional[Statement] = None
 
         self.evaluate_privately = False
 
@@ -402,7 +403,7 @@ class FunctionCallExpr(Expression):
     def is_cast(self):
         return isinstance(self.func, LocationExpr) and isinstance(self.func.target, (ContractDefinition, EnumDefinition))
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.func = f(self.func)
         self.args[:] = map(f, self.args)
 
@@ -413,7 +414,7 @@ class NewExpr(FunctionCallExpr):
         super().__init__(Identifier(f'new {annotated_type.code()}'), args)
         self.annotated_type = annotated_type
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.annotated_type = f(self.annotated_type)
         self.args[:] = map(f, self.args)
 
@@ -425,7 +426,7 @@ class PrimitiveCastExpr(Expression):
         self.expr = expr
         self.is_implicit = is_implicit
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.elem_type = f(self.elem_type)
         self.expr = f(self.expr)
 
@@ -464,7 +465,7 @@ class ArrayLiteralExpr(LiteralExpr):
         super().__init__()
         self.values = values
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.values[:] = map(f, self.values)
 
 
@@ -493,7 +494,7 @@ class TupleExpr(TupleOrLocationExpr):
         super().__init__()
         self.elements = elements
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.elements[:] = map(f, self.elements)
 
     def assign(self, val: Expression) -> AssignmentStatement:
@@ -537,7 +538,7 @@ class IdentifierExpr(LocationExpr):
     def get_annotated_type(self):
         return self.target.annotated_type
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.idf = f(self.idf)
 
     def slice(self, offset: int, size: int, base: Optional[Expression] = None) -> SliceExpr:
@@ -556,7 +557,7 @@ class MemberAccessExpr(LocationExpr):
         self.expr = expr
         self.member = member
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.expr = f(self.expr)
         self.member = f(self.member)
 
@@ -568,7 +569,7 @@ class IndexExpr(LocationExpr):
         self.arr = arr
         self.key = key
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.arr = f(self.arr)
         self.key = f(self.key)
 
@@ -617,10 +618,7 @@ class ReclassifyExpr(Expression):
         self.expr = expr
         self.privacy = privacy
 
-        # TODO FIXME? this is violated because privacy_annotation_label returns idf, not idfexpr
-        # assert privacy is None or isinstance(privacy, MeExpr) or isinstance(privacy, AllExpr) or isinstance(privacy, IdentifierExpr)
-
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.expr = f(self.expr)
         self.privacy = f(self.privacy)
 
@@ -716,10 +714,10 @@ class Statement(AST):
     def __init__(self):
         super().__init__()
         # set by alias analysis
-        self.before_analysis: PartitionState = None
-        self.after_analysis: PartitionState = None
+        self.before_analysis: Optional[PartitionState[PrivacyLabelExpr]] = None
+        self.after_analysis: Optional[PartitionState[PrivacyLabelExpr]] = None
         # set by parent setter
-        self.function: ConstructorOrFunctionDefinition = None
+        self.function: Optional[ConstructorOrFunctionDefinition] = None
 
         # set by circuit helper
         self.pre_statements = []
@@ -748,7 +746,7 @@ class IfStatement(Statement):
         self.then_branch = then_branch
         self.else_branch = else_branch
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.condition = f(self.condition)
         self.then_branch = f(self.then_branch)
         self.else_branch = f(self.else_branch)
@@ -760,7 +758,7 @@ class WhileStatement(Statement):
         self.condition = condition
         self.body = body
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.condition = f(self.condition)
         self.body = f(self.body)
 
@@ -771,7 +769,7 @@ class DoWhileStatement(Statement):
         self.body = body
         self.condition = condition
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.body = f(self.body)
         self.condition = f(self.condition)
 
@@ -784,7 +782,7 @@ class ForStatement(Statement):
         self.update = update
         self.body = body
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.init = f(self.init)
         self.condition = f(self.condition)
         self.update = f(self.update)
@@ -809,7 +807,7 @@ class ReturnStatement(Statement):
         super().__init__()
         self.expr = expr
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.expr = f(self.expr)
 
 
@@ -823,7 +821,7 @@ class ExpressionStatement(SimpleStatement):
         super().__init__()
         self.expr = expr
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.expr = f(self.expr)
 
 
@@ -834,7 +832,7 @@ class RequireStatement(SimpleStatement):
         self.condition = condition
         self.unmodified_code = self.code() if unmodified_code is None else unmodified_code
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.condition = f(self.condition)
 
 
@@ -846,7 +844,7 @@ class AssignmentStatement(SimpleStatement):
         self.rhs = rhs
         self.op = '' if op is None else op
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.lhs = f(self.lhs)
         self.rhs = f(self.rhs)
 
@@ -864,7 +862,7 @@ class StatementList(Statement):
         # Special case, if processing a statement returns a list of statements,
         # all statements will be integrated into this block
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         new_stmts = []
         for idx, stmt in enumerate(self.statements):
             new_stmt = f(stmt)
@@ -1170,7 +1168,7 @@ class UintTypeName(NumberTypeName):
 
 
 class UserDefinedTypeName(TypeName):
-    def __init__(self, names: List[Identifier], target: Optional[Union[ContractDefinition, StructDefinition]] = None):
+    def __init__(self, names: List[Identifier], target: Optional[NamespaceDefinition] = None):
         super().__init__()
         self.names = names
         self.target = target
@@ -1255,9 +1253,9 @@ class Mapping(TypeName):
         self.key_label: Union[str, Optional[Identifier]] = key_label
         self.value_type = value_type
         # set by type checker: instantiation of the key by IndexExpr
-        self.instantiated_key: Expression = None
+        self.instantiated_key: Optional[Expression] = None
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.key_type = f(self.key_type)
         if isinstance(self.key_label, Identifier):
             self.key_label = f(self.key_label)
@@ -1285,7 +1283,7 @@ class Array(TypeName):
         self.value_type = value_type
         self.expr = NumberLiteralExpr(expr) if isinstance(expr, int) else expr
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.value_type = f(self.value_type)
         self.expr = f(self.expr)
 
@@ -1443,7 +1441,7 @@ class FunctionTypeName(TypeName):
         self.modifiers = modifiers
         self.return_parameters = return_parameters
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.parameters[:] = map(f, self.parameters)
         self.return_parameters[:] = map(f, self.return_parameters)
 
@@ -1467,7 +1465,7 @@ class AnnotatedTypeName(AST):
         else:
             self.privacy_annotation = AllExpr()
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.type_name = f(self.type_name)
         self.privacy_annotation = f(self.privacy_annotation)
 
@@ -1490,7 +1488,7 @@ class AnnotatedTypeName(AST):
         else:
             return False
 
-    def combined_privacy(self, analysis: PartitionState, other: AnnotatedTypeName):
+    def combined_privacy(self, analysis: PartitionState[PrivacyLabelExpr], other: AnnotatedTypeName):
         if isinstance(self.type_name, TupleType):
             assert isinstance(other.type_name, TupleType) and len(self.type_name.types) == len(other.type_name.types)
             return [e1.combined_privacy(analysis, e2) for e1, e2 in zip(self.type_name.types, other.type_name.types)]
@@ -1557,7 +1555,7 @@ class AnnotatedTypeName(AST):
         return t
 
 
-class VariableDeclaration(AST):
+class IdentifierDeclaration(AST):
 
     def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
         super().__init__()
@@ -1568,9 +1566,15 @@ class VariableDeclaration(AST):
 
         self.is_final = 'final' in self.keywords
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.annotated_type = f(self.annotated_type)
         self.idf = f(self.idf)
+
+
+class VariableDeclaration(IdentifierDeclaration):
+
+    def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
+        super().__init__(keywords, annotated_type, idf, storage_location)
 
 
 class VariableDeclarationStatement(SimpleStatement):
@@ -1585,12 +1589,12 @@ class VariableDeclarationStatement(SimpleStatement):
         self.variable_declaration = variable_declaration
         self.expr = expr
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.variable_declaration = f(self.variable_declaration)
         self.expr = f(self.expr)
 
 
-class Parameter(AST):
+class Parameter(IdentifierDeclaration):
 
     def __init__(
             self,
@@ -1598,13 +1602,7 @@ class Parameter(AST):
             annotated_type: AnnotatedTypeName,
             idf: Identifier,
             storage_location: Optional[str] = None):
-        super().__init__()
-        self.keywords = keywords
-        self.annotated_type = annotated_type
-        self.idf = idf
-        self.storage_location = storage_location
-
-        self.is_final = 'final' in self.keywords
+        super().__init__(keywords, annotated_type, idf, storage_location)
 
     def copy(self) -> Parameter:
         return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location)
@@ -1614,17 +1612,13 @@ class Parameter(AST):
             self.storage_location = new_storage
         return self
 
-    def process_children(self, f: Callable[[AST], AST]):
-        self.annotated_type = f(self.annotated_type)
-        self.idf = f(self.idf)
-
 
 class NamespaceDefinition(AST):
     def __init__(self, idf: Identifier):
         super().__init__()
         self.idf = idf
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         oldidf = self.idf
         self.idf = f(self.idf)
         assert oldidf == self.idf # must be readonly
@@ -1650,7 +1644,7 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
             vd.idf.parent = vd
 
         # specify parent type
-        self.parent: ContractDefinition = None
+        self.parent: Optional[ContractDefinition] = None
         self.original_body: Optional[Block] = None
 
         # Set function type
@@ -1708,7 +1702,7 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
     def _update_fct_type(self):
         self.annotated_type = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         super().process_children(f)
         self.parameters[:] = map(f, self.parameters)
         self.return_parameters[:] = map(f, self.return_parameters)
@@ -1722,20 +1716,14 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         self._update_fct_type()
 
 
-class StateVariableDeclaration(AST):
+class StateVariableDeclaration(IdentifierDeclaration):
 
     def __init__(self, annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression]):
-        super().__init__()
-        self.annotated_type = annotated_type
-        self.keywords = keywords
-        self.idf = idf
+        super().__init__(keywords, annotated_type, idf)
         self.expr = expr
 
-        self.is_final = 'final' in self.keywords
-
-    def process_children(self, f: Callable[[AST], AST]):
-        self.annotated_type = f(self.annotated_type)
-        self.idf = f(self.idf)
+    def process_children(self, f: Callable[[T], T]):
+        super().process_children(f)
         self.expr = f(self.expr)
 
 
@@ -1745,7 +1733,7 @@ class EnumValue(AST):
         self.idf = idf
         self.annotated_type: Optional[AnnotatedTypeName] = None
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.idf = f(self.idf)
 
 
@@ -1756,7 +1744,7 @@ class EnumDefinition(NamespaceDefinition):
 
         self.annotated_type: Optional[AnnotatedTypeName] = None
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         super().process_children(f)
         self.values[:] = map(f, self.values)
 
@@ -1766,7 +1754,7 @@ class StructDefinition(NamespaceDefinition):
         super().__init__(idf)
         self.members = members
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         super().process_children(f)
         self.members[:] = map(f, self.members)
 
@@ -1788,7 +1776,7 @@ class ContractDefinition(NamespaceDefinition):
         self.enum_definitions = enum_definitions
         self.struct_definitions = [] if struct_definitions is None else struct_definitions
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         super().process_children(f)
         self.enum_definitions[:] = map(f, self.enum_definitions)
         self.struct_definitions[:] = map(f, self.struct_definitions)
@@ -1822,7 +1810,7 @@ class SourceUnit(AST):
 
         self.original_code: List[str] = []
 
-    def process_children(self, f: Callable[[AST], AST]):
+    def process_children(self, f: Callable[[T], T]):
         self.contracts[:] = map(f, self.contracts)
 
     def __getitem__(self, key: str):

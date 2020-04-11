@@ -117,7 +117,7 @@ class DeepCopyVisitor(AstVisitor):
             new_fields[arg_name] = self.copy_field(old_field)
 
         for k in ast.__dict__.keys():
-            if k not in new_fields and k not in self.setting_later:
+            if k not in new_fields and k not in self.setting_later and k not in inspect.getfullargspec(c.__bases__[0].__init__).args[1:]:
                 raise ValueError("Not copying", k)
         ast_copy = c(**new_fields)
         self.copy_ast_fields(ast, ast_copy)

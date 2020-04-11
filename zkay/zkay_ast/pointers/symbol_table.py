@@ -1,9 +1,9 @@
-from typing import Tuple
+from typing import Tuple, Dict, Union
 
 from zkay.zkay_ast.ast import AST, SourceUnit, ContractDefinition, VariableDeclaration, \
     SimpleStatement, IdentifierExpr, Block, Mapping, Identifier, Comment, MemberAccessExpr, IndexExpr, LocationExpr, \
     StructDefinition, UserDefinedTypeName, StatementList, Array, ConstructorOrFunctionDefinition, EnumDefinition, \
-    EnumValue, NamespaceDefinition, TargetDefinition, DataTargetDefinition, VariableDeclarationStatement, ForStatement
+    EnumValue, NamespaceDefinition, TargetDefinition, VariableDeclarationStatement, ForStatement, IdentifierDeclaration
 from zkay.zkay_ast.global_defs import GlobalDefs, GlobalVars, array_length_member
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -38,7 +38,7 @@ def merge_dicts(*dict_args):
     return result
 
 
-def collect_children_names(ast: AST):
+def collect_children_names(ast: AST) -> Dict[str, Identifier]:
     children = [c for c in ast.children() if not isinstance(c, (Block, ForStatement))]
     names = [c.names for c in children]
     ret = merge_dicts(*names)
@@ -146,7 +146,7 @@ class SymbolTableLinker(AstVisitor):
         return SymbolTableLinker._find_next_decl(t, t.names[0].name)[1]
 
     @staticmethod
-    def find_identifier_declaration(ast: IdentifierExpr) -> DataTargetDefinition:
+    def find_identifier_declaration(ast: IdentifierExpr) -> Union[TargetDefinition, Mapping]:
         name = ast.idf.name
         while True:
             anc, decl = SymbolTableLinker._find_next_decl(ast, name)

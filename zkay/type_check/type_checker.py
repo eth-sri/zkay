@@ -134,7 +134,7 @@ class TypeCheckVisitor(AstVisitor):
                     raise TypeMismatchException(t, arg.annotated_type.type_name, arg)
 
         t1 = ast.args[0].annotated_type.type_name
-        t2 = t1 if len(ast.args) == 1 else ast.args[1].annotated_type.type_name
+        t2 = None if len(ast.args) == 1 else ast.args[1].annotated_type.type_name
 
         if len(ast.args) == 1:
             arg_t = 'lit' if ast.args[0].annotated_type.type_name.is_literal else t1
@@ -401,7 +401,6 @@ class TypeCheckVisitor(AstVisitor):
                 if not isinstance(t.privacy_annotation, (MeExpr, AllExpr)):
                     raise TypeException('Only me/all accepted as privacy type of return values for public functions', ast)
 
-
     def visitEnumDefinition(self, ast: EnumDefinition):
         ast.annotated_type = AnnotatedTypeName(EnumTypeName(ast.qualified_name).override(target=ast))
 
@@ -433,6 +432,8 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         if type(ast.type_name) == UserDefinedTypeName:
+            if not isinstance(ast.type_name.target, EnumDefinition):
+                raise NotImplementedError('For now enums are the only supported user defined types')
             ast.type_name = ast.type_name.target.annotated_type.type_name.clone()
 
         if ast.privacy_annotation != Expression.all_expr():
