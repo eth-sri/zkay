@@ -231,7 +231,7 @@ class ZkayTransformer(AstTransformerVisitor):
         # Get list of static owner labels for this contract
         global_owners = [Expression.me_expr()]
         for var in c.state_variable_declarations:
-            if var.annotated_type.is_address() and 'final' in var.keywords:
+            if var.annotated_type.is_address() and (var.is_final or var.is_constant):
                 global_owners.append(var.idf)
 
         # Backup untransformed function bodies

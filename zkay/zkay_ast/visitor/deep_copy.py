@@ -88,7 +88,6 @@ class DeepCopyVisitor(AstVisitor):
         'return_var_decls',
 
         'pre_statements',
-        'is_final',
         'excluded_from_simulation',
 
         # For array children (ciphertext, key etc.)

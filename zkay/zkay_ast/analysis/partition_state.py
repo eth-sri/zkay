@@ -126,14 +126,14 @@ class PartitionState(Generic[T]):
         s = PartitionState()
         for p in self._partitions.values():
             # Side effects do not affect the aliasing of final values
-            final_vals = set()
+            immutable_vals = set()
             for x in p:
-                if x.is_final:
-                    final_vals.add(x)
+                if x.is_immutable:
+                    immutable_vals.add(x)
                 else:
                     s.insert(x)
-            if final_vals:
-                s._insert_partition(final_vals)
+            if immutable_vals:
+                s._insert_partition(immutable_vals)
         return s
 
     def join(self, other: PartitionState[T]) -> PartitionState[T]:

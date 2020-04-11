@@ -93,8 +93,8 @@ class Identifier(AST):
         self.name = name
 
     @property
-    def is_final(self):
-        return isinstance(self.parent, StateVariableDeclaration) and self.parent.is_final
+    def is_immutable(self):
+        return isinstance(self.parent, StateVariableDeclaration) and (self.parent.is_final or self.parent.is_constant)
 
     def clone(self) -> Identifier:
         return Identifier(self.name)
@@ -585,7 +585,10 @@ class SliceExpr(LocationExpr):
 
 class MeExpr(Expression):
     name = 'me'
-    is_final = True
+
+    @property
+    def is_immutable(self) -> bool:
+        return True
 
     def clone(self) -> MeExpr:
         return MeExpr()
@@ -599,7 +602,10 @@ class MeExpr(Expression):
 
 class AllExpr(Expression):
     name = 'all'
-    is_final = True
+
+    @property
+    def is_immutable(self) -> bool:
+        return True
 
     def clone(self) -> AllExpr:
         return AllExpr()
@@ -1564,7 +1570,13 @@ class IdentifierDeclaration(AST):
         self.idf = idf
         self.storage_location = storage_location
 
-        self.is_final = 'final' in self.keywords
+    @property
+    def is_final(self) -> bool:
+        return 'final' in self.keywords
+
+    @property
+    def is_constant(self) -> bool:
+        return 'constant' in self.keywords
 
     def process_children(self, f: Callable[[T], T]):
         self.annotated_type = f(self.annotated_type)
@@ -1821,8 +1833,7 @@ class SourceUnit(AST):
 
 
 PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
-DataTargetDefinition = Union[VariableDeclaration, Parameter, StateVariableDeclaration]
-TargetDefinition = Union[DataTargetDefinition, ConstructorOrFunctionDefinition, StructDefinition, ContractDefinition]
+TargetDefinition = Union[IdentifierDeclaration, NamespaceDefinition]
 
 
 def get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
@@ -1862,7 +1873,7 @@ class InstanceTarget(tuple):
         return hash(self[:])
 
     @property
-    def target(self) -> DataTargetDefinition:
+    def target(self) -> IdentifierDeclaration:
         return self[0]
 
     @property
