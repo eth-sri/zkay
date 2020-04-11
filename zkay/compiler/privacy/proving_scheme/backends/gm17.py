@@ -51,37 +51,37 @@ class ProvingSchemeGm17(ProvingScheme):
         x = MultiLineFormatter() * f'''\
         pragma solidity {cfg.zkay_solc_version_compatibility};
 
-        import {{ Pairing as P }} from "{ProvingScheme.verify_libs_contract_filename}";
+        import {{ Pairing, G1Point as G1, G2Point as G2 }} from "{ProvingScheme.verify_libs_contract_filename}";
 
         contract {circuit.get_verification_contract_name()} {{''' / f'''\
-            using P for P.G1Point;
-            using P for P.G2Point;
+            using Pairing for G1;
+            using Pairing for G2;
 
             bytes32 public constant {cfg.prover_key_hash_name} = 0x{prover_key_hash.hex()};
             uint256 constant {self.snark_scalar_field_var_name} = {bn128_scalar_field};
 
             struct Proof {{
-                P.G1Point a;
-                P.G2Point b;
-                P.G1Point c;
+                G1 a;
+                G2 b;
+                G1 c;
             }}
 
             struct Vk {{
-                P.G2Point h;
-                P.G1Point g_alpha;
-                P.G2Point h_beta;
-                P.G1Point g_gamma_neg;
-                P.G2Point h_gamma;
-                P.G1Point[{query_length}] query;
+                G2 h;
+                G1 g_alpha;
+                G2 h_beta;
+                G1 g_gamma_neg;
+                G2 h_gamma;
+                G1[{query_length}] query;
             }}
 
             function getVk() pure internal returns(Vk memory vk) {{''' / f'''\
-                vk.h = P.G2Point({vk.h});
-                vk.g_alpha = P.G1Point({vk.g_alpha});
-                vk.h_beta = P.G2Point({vk.h_beta});
-                vk.g_gamma_neg = P.G1Point({vk.g_gamma.negated()});
-                vk.h_gamma = P.G2Point({vk.h_gamma});''' * [
-                f'vk.query[{idx}] = P.G1Point({q});''' for idx, q in enumerate(vk.query)] // f'''\
+                vk.h = G2({vk.h});
+                vk.g_alpha = G1({vk.g_alpha});
+                vk.h_beta = G2({vk.h_beta});
+                vk.g_gamma_neg = G1({vk.g_gamma.negated()});
+                vk.h_gamma = G2({vk.h_gamma});''' * [
+                f'vk.query[{idx}] = G1({q});''' for idx, q in enumerate(vk.query)] // f'''\
             }}
 
             function {cfg.verification_function_name}(uint[8] memory proof_, uint[] memory {cfg.zk_in_name}, uint[] memory {cfg.zk_out_name}) public {{''' / f'''\
@@ -95,24 +95,24 @@ class ProvingSchemeGm17(ProvingScheme):
                 [f'require({pi} < {self.snark_scalar_field_var_name});' for pi in potentially_overflowing_pi] + ['\n']) if potentially_overflowing_pi else '') * f'''\
                 // Create proof and vk data structures
                 Proof memory proof;
-                proof.a = P.G1Point(proof_[0], proof_[1]);
-                proof.b = P.G2Point([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
-                proof.c = P.G1Point(proof_[6], proof_[7]);
+                proof.a = G1(proof_[0], proof_[1]);
+                proof.b = G2([proof_[2], proof_[3]], [proof_[4], proof_[5]]);
+                proof.c = G1(proof_[6], proof_[7]);
                 Vk memory vk = getVk();
 
                 // Compute linear combination of public inputs''' * (
                 f'uint256 {self.hash_var_name} = uint256(sha256(abi.encodePacked({cfg.zk_in_name}, {cfg.zk_out_name})) >> {256 - bn128_scalar_field_bits});' if should_hash else '') * \
-                f"P.G1Point memory lc = {(f'vk.query[1].scalar_mul({first_pi})' if first_pi != '1' else f'vk.query[1]')};" * [
+                f"G1 memory lc = {(f'vk.query[1].scalar_mul({first_pi})' if first_pi != '1' else f'vk.query[1]')};" * [
                 f"lc = lc.add({(f'vk.query[{idx + 2}].scalar_mul({pi})' if pi != '1' else f'vk.query[{idx + 2}]')});" for idx, pi in enumerate(primary_inputs[1:])] * '''\
                 lc = lc.add(vk.query[0]);
 
                 // Verify proof
-                require(P.pairingProd2(proof.a, vk.h_gamma,
-                                       vk.g_gamma_neg, proof.b), "invalid proof 1/2");
-                require(P.pairingProd4(vk.g_alpha, vk.h_beta,
-                                       lc, vk.h_gamma,
-                                       proof.c, vk.h,
-                                       proof.a.add(vk.g_alpha).negate(), proof.b.add(vk.h_beta)), "invalid proof 2/2");''' // \
+                require(Pairing.pairingProd2(proof.a, vk.h_gamma,
+                                             vk.g_gamma_neg, proof.b), "invalid proof 1/2");
+                require(Pairing.pairingProd4(vk.g_alpha, vk.h_beta,
+                                             lc, vk.h_gamma,
+                                             proof.c, vk.h,
+                                             proof.a.add(vk.g_alpha).negate(), proof.b.add(vk.h_beta)), "invalid proof 2/2");''' // \
             '}' // \
         '}'
 
