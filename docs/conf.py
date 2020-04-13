@@ -41,6 +41,13 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+import sys
+import os
+sys.path.append(str(os.path.realpath('custom_highlighting')))
+from sphinx.highlighting import lexers
+from zkay_lexer import ZkayLexer
+lexers['zkay'] = ZkayLexer(startinline=True)
+
 
 # -- Options for HTML output -------------------------------------------------
 
