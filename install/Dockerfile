@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y \
 ###################
 RUN if [ "$INSTALL_ZKAY" = "1" ]; then \
 		git clone https://github.com/eth-sri/zkay.git && \
-    		cd zkay && \
-    		python3 setup.py sdist && \
-    		pip3 install dist/*.tar.gz; \
+			cd zkay && \
+			python3 setup.py sdist && \
+			pip3 install --no-binary zkay dist/zkay-*.tar.gz; \
 	fi

@@ -26,7 +26,7 @@ You can then install the most recent zkay version via a simple:
 
 .. code-block:: bash
 	
-	pip3 install zkay
+	pip3 install --no-binary zkay zkay
 
 
 **Note**: zkay requires Python >= 3.7.
