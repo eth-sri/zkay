@@ -5,5 +5,3 @@ include zkay/examples/**/*.sol
 include zkay/examples/scenarios/*.py
 include zkay/jsnark_interface/*.jar
 include zkay/jsnark_interface/run_snark
-
-exclude zkay/tests/**

@@ -3,8 +3,7 @@ build/
 libsnark/
 
 # Ignoring Python virtual environments
-.venv/
-venv
+*venv*
 
 # Misc
 .idea
