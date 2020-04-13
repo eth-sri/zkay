@@ -9,7 +9,8 @@ import datetime
 import sys
 import shutil
 clean=False
-base_dir = 'examples' if len(sys.argv) < 2 else sys.argv[1]
+file_dir = os.path.realpath(os.path.dirname(__file__))
+base_dir = os.path.join(file_dir, 'examples') if len(sys.argv) < 2 else os.path.realpath(sys.argv[1])
 backends = ['dummy', 'ecdh-chaskey', 'ecdh-aes'] #, 'rsa-pkcs1.5', 'rsa-oaep'] # rsa consumes >100 GB hdd space
 
 for backend in backends:
