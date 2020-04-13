@@ -4,10 +4,19 @@ from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist
 from setuptools.command.install import install
 from setuptools.command.develop import develop
-test_package = 'zkay.tests'
+
+
+def _read_file(path: str) -> str:
+    with open(path) as f:
+        return f.read().strip()
+
+
+# Versions
 antlr_version = '4.8'
+file_dir = os.path.dirname(os.path.realpath(__file__))
+zkay_version = _read_file(os.path.join(file_dir, 'zkay', 'VERSION'))
 zkay_libsnark_commit_hash = '4e3c7a53ec333f52fe27ff45ff836102bcdb8e28'
-packages = find_packages(exclude=[f'{test_package}.compiler.output.*', f'{test_package}.transaction.output.*'])
+packages = find_packages()
 
 
 def build_grammar():
@@ -62,7 +71,7 @@ class CustomDevelop(develop):
 setup(
     # Metadata
     name='zkay',
-    version='0.2.0',
+    version=zkay_version,
     author='nicbauma',
     author_email='nicbauma@users.noreply.gitlab.inf.ethz.ch',
     url='https://github.com/eth-sri/zkay',
@@ -89,11 +98,7 @@ setup(
 
     # Contents
     packages=packages,
-    package_data={
-        'zkay.compiler.privacy': ['bn256g2.sol'],
-        'zkay.examples': ['**/*.zkay', '**/*.sol', 'scenarios/*.py'],
-        'zkay.jsnark_interface': ['JsnarkCircuitBuilder.jar', 'bcprov-jdk15on-1.64.jar', 'run_snark'],
-    },
+    include_package_data=True,
     entry_points={
         "console_scripts": [
             "zkay=zkay.__main__:main"

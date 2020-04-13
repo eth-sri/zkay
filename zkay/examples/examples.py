@@ -52,8 +52,8 @@ power_grid = Example(os.path.join(code_dir, 'PowerGrid.zkay'))
 final_use_before_write = Example(os.path.join(others_dir, 'FinalUseBeforeWrite.zkay'))
 add_user = Example(os.path.join(others_dir, 'AddUser.sol'))
 
-empty_normalized = 'pragma zkay >= 0.2.0 ; contract Empty { } '
-simple_storage_normalized = 'pragma zkay >= 0.2.0 ; contract SimpleStorage { ' \
+empty_normalized = f'pragma zkay >= {cfg.zkay_version} ; contract Empty {{ }} '
+simple_storage_normalized = f'pragma zkay >= {cfg.zkay_version} ; contract SimpleStorage {{ ' \
                             'uint @ all storedData ; ' \
                             'function set ( uint @ all x ) public { storedData = x ; } ' \
                             'function get ( ) public returns ( uint @ all ) { return storedData ; } } '

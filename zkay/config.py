@@ -11,6 +11,11 @@ from zkay.config_user import UserConfig
 from zkay.transaction.crypto.meta import cryptoparams
 
 
+# Read zkay version from VERSION file
+with open(os.path.join(os.path.realpath(os.path.dirname(__file__)), 'VERSION')) as f:
+    _zkay_version = f.read().strip()
+
+
 def zk_print(*args, verbosity_level=1, **kwargs):
     if (verbosity_level <= cfg.verbosity) and not cfg.is_unit_test:
         print(*args, **kwargs)
@@ -145,7 +150,7 @@ class Config(UserConfig):
     @property
     def zkay_version(self) -> str:
         """zkay version number"""
-        return '0.2.0'
+        return _zkay_version
 
     @property
     def zkay_solc_version_compatibility(self) -> NpmSpec:

@@ -1,0 +1,9 @@
+include zkay/VERSION
+include zkay/compiler/privacy/bn256g2.sol
+include zkay/examples/**/*.zkay
+include zkay/examples/**/*.sol
+include zkay/examples/scenarios/*.py
+include zkay/jsnark_interface/*.jar
+include zkay/jsnark_interface/run_snark
+
+exclude zkay/tests/**
