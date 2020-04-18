@@ -47,6 +47,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
     def get_special_variables(self, sender: AddressValue, wei_amount: int = 0) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         block = self.w3.eth.getBlock('pending')
+        zk_print(f'Current block timestamp: {block["timestamp"]}')
         return MsgStruct(sender, wei_amount), \
                BlockStruct(AddressValue(self.w3.eth.coinbase), block['difficulty'], block['gasLimit'], block['number'], block['timestamp']),\
                TxStruct(self.w3.eth.gasPrice, sender)

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import inspect
 from contextlib import contextmanager, nullcontext
-from enum import Enum, IntEnum
-from typing import Dict, Union, Callable, Any, Optional, List, Tuple, Type, ContextManager
+from enum import IntEnum
+from typing import Dict, Union, Callable, Any, Optional, List, Tuple, ContextManager
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
@@ -373,9 +373,14 @@ class ApiWrapper:
 
     def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Callable]]):
         retvals = self.__conn.call(self.__contract_handle, fname, *args)
-        wrapped_retvals = [self.dec(CipherValue(retval), constr)[0] if is_cipher else constr(retval)
-                           for retval, (is_cipher, constr) in zip(retvals, ret_val_constructors)]
-        return wrapped_retvals[0] if len(ret_val_constructors) == 1 else tuple(wrapped_retvals)
+        if len(ret_val_constructors) == 1:
+            return self.__get_decrypted_retval(retvals, *ret_val_constructors[0])
+        else:
+            return tuple([self.__get_decrypted_retval(retval, is_cipher, constr)
+                          for retval, (is_cipher, constr) in zip(retvals, ret_val_constructors)])
+
+    def __get_decrypted_retval(self, raw_value, is_cipher, constructor):
+        return self.dec(CipherValue(raw_value), constructor)[0] if is_cipher else constructor(raw_value)
 
     def get_special_variables(self) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         assert self.__current_msg is not None and self.__current_block is not None and self.__current_tx is not None
