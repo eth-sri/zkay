@@ -231,7 +231,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     @staticmethod
     def is_special_var(idf: Identifier):
-        return idf.name.startswith(cfg.reserved_name_prefix) or idf.name in ['msg', 'block', 'tx', '_tmp_key']
+        return idf.name.startswith(cfg.reserved_name_prefix) or idf.name in ['msg', 'block', 'tx', '_tmp_key', 'now']
 
     @staticmethod
     def get_priv_value(idf: str):
@@ -250,15 +250,6 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             idxvals = ''.join([f'[{idx}]' for idx in indices])
             return f'{self.visit(arr)}{idxvals}'
 
-    @staticmethod
-    def _is_builtin_var(idf: IdentifierExpr):
-        """Return true if idf is one of the builtin variables (msg, block, tx, etc...)"""
-        if idf.target is None or idf.target.annotated_type is None:
-            return False
-        else:
-            t = idf.target.annotated_type.type_name
-            return isinstance(t, StructTypeName) and t.names[0].name.startswith('<')
-
     def get_value(self, idf: IdentifierExpr, indices: List[str]):
         """
         Get code corresponding to the rvalue location of an identifier or index expression.
@@ -266,13 +257,15 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         e.g. idf = x and indices = [some_addr, 5] corresponds to x[some_addr][5]
         State variable values are downloaded from the chain if their value is not yet present in the local state variable dict.
         """
-        if isinstance(idf.target, StateVariableDeclaration) and not self._is_builtin_var(idf):
+        if self.is_special_var(idf.idf):
+            return self.get_loc_value(idf.idf, indices)
+        elif isinstance(idf.target, StateVariableDeclaration):
             # If a state variable appears as an rvalue, the value may need to be requested from the blockchain
             indices = f', {", ".join(indices)}' if indices else ''
             return f'self.state["{idf.idf.name}"{indices}]'
         else:
             name = idf.idf
-            if isinstance(idf.target, VariableDeclaration) and not self.inside_circuit and not self.is_special_var(idf.idf):
+            if isinstance(idf.target, VariableDeclaration) and not self.inside_circuit:
                 # Local variables are stored in locals dict
                 name = Identifier(f'self.locals["{idf.idf.name}"]')
             return self.get_loc_value(name, indices)
@@ -357,7 +350,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         preamble_str = ''
         if ast.is_external:
             preamble_str += f'assert {IS_EXTERNAL_CALL}\n'
-        preamble_str += f'msg, block, tx = {api("get_special_variables")}()\n'
+        preamble_str += f'msg, block, tx = {api("get_special_variables")}()\n' \
+                        f'now = block.timestamp\n'
         circuit = self.current_circ
 
         if circuit and circuit.sec_idfs:
