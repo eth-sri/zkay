@@ -644,6 +644,8 @@ class HybridArgumentIdf(Identifier):
             self.t = TypeName.bool_type()
         elif isinstance(t, NumberLiteralType):
             self.t = t.to_abstract_type()
+        elif isinstance(t, EnumValueTypeName):
+            self.t = t.to_abstract_type()
         self.arg_type = arg_type
         self.corresponding_priv_expression = corresponding_priv_expression
         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
@@ -957,13 +959,13 @@ class TypeName(AST):
 
     @property
     def is_literal(self) -> bool:
-        return isinstance(self, (NumberLiteralType, BooleanLiteralType))
+        return isinstance(self, (NumberLiteralType, BooleanLiteralType, EnumValueTypeName))
 
     def is_address(self) -> bool:
         return isinstance(self, (AddressTypeName, AddressPayableTypeName))
 
     def is_primitive_type(self) -> bool:
-        return isinstance(self, (ElementaryTypeName, EnumTypeName, AddressTypeName, AddressPayableTypeName))
+        return isinstance(self, (ElementaryTypeName, EnumTypeName, EnumValueTypeName, AddressTypeName, AddressPayableTypeName))
 
     def is_cipher(self) -> bool:
         return isinstance(self, CipherText)
@@ -1202,6 +1204,9 @@ class EnumValueTypeName(UserDefinedTypeName):
 
     def clone(self) -> EnumValueTypeName:
         return EnumValueTypeName(self.names.copy(), self.target)
+
+    def to_abstract_type(self):
+        return EnumTypeName(self.names[:-1], self.target.parent)
 
     def implicitly_convertible_to(self, expected: TypeName) -> bool:
         return super().implicitly_convertible_to(expected) or (isinstance(expected, EnumTypeName) and expected.names == self.names[:-1])

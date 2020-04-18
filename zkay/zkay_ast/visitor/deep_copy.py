@@ -1,7 +1,7 @@
 import inspect
 from typing import TypeVar
 
-from zkay.zkay_ast.ast import AST, Expression, Statement
+from zkay.zkay_ast.ast import AST, Expression, Statement, UserDefinedTypeName
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -125,6 +125,11 @@ class DeepCopyVisitor(AstVisitor):
     def visitAnnotatedTypeName(self, ast):
         ast_copy = self.visitChildren(ast)
         ast_copy.had_privacy_annotation = ast.had_privacy_annotation
+        return ast_copy
+
+    def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
+        ast_copy = self.visitChildren(ast)
+        ast_copy.target = ast.target
         return ast_copy
 
     def visitBuiltinFunction(self, ast):
