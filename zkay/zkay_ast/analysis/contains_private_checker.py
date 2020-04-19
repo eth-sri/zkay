@@ -18,7 +18,7 @@ class ContainsPrivVisitor(AstVisitor):
         self.contains_private = False
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, LocationExpr):
+        if isinstance(ast.func, LocationExpr) and not ast.is_cast:
             self.contains_private |= ast.func.target.requires_verification
         self.visitExpression(ast)
 
