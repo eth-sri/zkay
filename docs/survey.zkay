@@ -1,0 +1,109 @@
+pragma zkay ^0.2.0;
+
+contract Survey {
+    enum Choice {
+        None, a, b, c
+    }
+
+    final address organizer;
+
+    // Time when vote closes
+    uint end_time;
+
+    // Votes of the individual users (only readable by the respective user)
+    mapping(address!x => Choice@x) current_votes;
+
+    // Current vote to be processed by organizer
+    bool pending_vote;
+    Choice@organizer new_vote;
+
+    // Encrypted counts
+    uint64@organizer a_count;
+    uint64@organizer b_count;
+    uint64@organizer c_count;
+
+    // Total number of votes
+    uint vote_count;
+
+    // Published results (after vote is closed and result published by organizer),
+    // packed into a single uint
+    uint packed_results;
+
+    constructor(uint survey_open_duration) public {
+        require(survey_open_duration > 0);
+        organizer = me;
+        end_time = now + survey_open_duration;
+    }
+
+    // State altering functions
+
+    function vote(Choice@me votum) public {
+        require(!pending_vote);
+        require(reveal(votum != Choice.None && current_votes[me] == Choice.None, all));
+        require(!is_closed());
+
+        current_votes[me] = votum;
+        new_vote = reveal(votum, organizer);
+        pending_vote = true;
+    }
+
+    function count_vote() public {
+        require(me == organizer);
+        require(pending_vote);
+
+        if (new_vote == Choice.a) {
+            a_count++;
+        } else if (new_vote == Choice.b) {
+            b_count++;
+        } else {
+            c_count++;
+        }
+
+        pending_vote = false;
+        vote_count++;
+    }
+
+    function publish_results() public {
+        require(me == organizer);
+        require(!pending_vote && is_closed());
+        packed_results = reveal((uint192(c_count) << 128) | (uint192(b_count) << 64) | uint192(a_count), all);
+    }
+
+    // Queries
+
+    function get_result_for(Choice option) public view returns(uint64) {
+        require(is_result_published());
+        uint64 res;
+        if (option != Choice.None) {
+            res = uint64(packed_results >> 64*(uint(option)-1));
+        }
+        return res;
+    }
+
+    function get_winning_choice() public view returns(Choice) {
+        Choice c = Choice.None;
+        uint votes = 0;
+        for (uint i = uint(Choice.a); i <= uint(Choice.c); ++i) {
+            uint res = get_result_for(Choice(i));
+            if (res > votes) {
+                c = Choice(i);
+                votes = res;
+            }
+        }
+        return c;
+    }
+
+    // Query with secret result
+    function check_if_agree_with_majority() public view returns(bool@me) {
+        Choice c = get_winning_choice();
+        return c == current_votes[me];
+    }
+
+    function is_closed() public view returns(bool) {
+        return now >= end_time;
+    }
+
+    function is_result_published() public view returns(bool) {
+        return is_closed() && packed_results != 0;
+    }
+}

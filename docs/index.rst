@@ -20,6 +20,7 @@ Given such a zkay contract, zkay's compiler automatically transforms it into a c
    getting_started
    tutorial
    language
+   release_notes
 
 
 
@@ -29,3 +30,15 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+Warning
+========
+This is an initial implementation for research purposes. There might be vulnerabilities or other bugs so you should not use this in production yet.
+
+You should also be aware that zkay currently uses zk-SNARKs to enforce its guarantees, which require a trusted setup phase that is currently performed locally during contract compilation.
+By tampering with said setup phase (e.g. by recording the produced toxic waste), a malicious contract owner can break some of the correctness guarantees provided by zkay contracts without any signs of tampering being visible in the contract source code (e.g. by forging zero-knowledge proofs).
+
+**You should thus not blindly trust zkay contracts deployed by untrusted/anonymous users.** (at least until an alternative to zk-SNARKs is available in zkay).
+
+*Note*: This is a general problem with zk-SNARKs and not specific to zkay.
