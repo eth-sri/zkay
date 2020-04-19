@@ -30,7 +30,7 @@ class CircuitGenerator(metaclass=ABCMeta):
         """
 
         self.circuits = {circ.fct: circ for circ in circuits}
-        self.circuits_to_prove = [c for c in circuits if c.requires_verification() and c.fct.can_be_external]
+        self.circuits_to_prove = [c for c in circuits if c.requires_verification() and c.fct.can_be_external and c.fct.has_side_effects]
         self.proving_scheme = proving_scheme
         self.output_dir = output_dir
         self.parallel_keygen = parallel_keygen

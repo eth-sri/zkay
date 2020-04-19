@@ -179,7 +179,7 @@ class ZkayTransformer(AstTransformerVisitor):
         contract_var_decls = [self.create_contract_variable(cfg.pki_contract_name)]
 
         for f in c.constructor_definitions + c.function_definitions:
-            if f.requires_verification_when_external:
+            if f.requires_verification_when_external and f.has_side_effects:
                 name = cfg.get_verification_contract_name(c.idf.name, f.name)
                 self.import_contract(name, su, self.circuits[f])
                 contract_var_decls.append(self.create_contract_variable(name))

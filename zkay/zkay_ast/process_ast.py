@@ -86,6 +86,6 @@ def get_verification_contract_names(code_or_ast) -> List[str]:
     vc_names = []
     for contract in ast.contracts:
         cname = contract.idf.name
-        fcts = [fct for fct in contract.function_definitions + contract.constructor_definitions if fct.requires_verification_when_external]
+        fcts = [fct for fct in contract.function_definitions + contract.constructor_definitions if fct.requires_verification_when_external and fct.has_side_effects]
         vc_names += [cfg.get_verification_contract_name(cname, fct.name) for fct in fcts]
     return vc_names
