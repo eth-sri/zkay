@@ -377,9 +377,12 @@ def main():
                             exit(13)
 
                     # Open interactive shell in context of contract object
+                    import inspect
                     contract_scope = {name: getattr(c_inst, name) for name in dir(c_inst)
-                                      if (name != 'constructor' and hasattr(getattr(c_inst, name), '_can_be_external')
-                                          and getattr(c_inst, name)._can_be_external) or name == 'api'}
+                                      if inspect.isclass(getattr(c_inst, name)) \
+                                         or (name != 'constructor' and hasattr(getattr(c_inst, name), '_can_be_external')
+                                             and getattr(c_inst, name)._can_be_external)
+                                         or name in ['state', 'api']}
                     contract_scope['me'] = me
                     contract_scope['help'] = lambda o=None: help(o) if o is not None else ContractSimulator.reduced_help(c)
                     sys.displayhook = echo_only_simple_expressions
