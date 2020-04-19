@@ -271,7 +271,7 @@ class ContractSimulator:
 
                 try:
                     yield is_external
-                except RequireException as e:
+                except (ValueError, BlockChainError, RequireException) as e:
                     if is_external and not cfg.is_unit_test:
                         with fail_print():
                             print(f'ERROR: {e}')
