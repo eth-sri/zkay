@@ -1,4 +1,4 @@
-from zkay.zkay_ast.ast import ReturnStatement, Block, ConstructorOrFunctionDefinition
+from zkay.zkay_ast.ast import ReturnStatement, Block, ConstructorOrFunctionDefinition, AstException
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -7,10 +7,10 @@ def check_return(ast):
     v.visit(ast)
 
 
-class ReturnPositionException(Exception):
+class ReturnPositionException(AstException):
 
     def __init__(self, ast: ReturnStatement):
-        super().__init__('Return statements are only allowed at the end of a function. Violated by' + ast.code())
+        super().__init__('Return statements are only allowed at the end of a function.', ast)
 
 
 class ReturnCheckVisitor(AstVisitor):

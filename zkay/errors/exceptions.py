@@ -23,6 +23,13 @@ class PreprocessAstException(ZkayCompilerError):
     pass
 
 
+class AnalysisException(ZkayCompilerError):
+    """
+    Error during ast analysis"
+    """
+    pass
+
+
 class TypeCheckException(ZkayCompilerError):
     """
     Error during type checking"

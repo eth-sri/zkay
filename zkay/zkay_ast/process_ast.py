@@ -2,7 +2,7 @@ from typing import Tuple, List
 
 from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors, SolcException
 from zkay.config import cfg
-from zkay.errors.exceptions import ZkayCompilerError, PreprocessAstException, TypeCheckException
+from zkay.errors.exceptions import ZkayCompilerError, PreprocessAstException, TypeCheckException, AnalysisException
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step
@@ -13,7 +13,7 @@ from zkay.zkay_ast.analysis.hybrid_function_detector import detect_hybrid_functi
 from zkay.zkay_ast.analysis.loop_checker import check_loops
 from zkay.zkay_ast.analysis.return_checker import check_return as r
 from zkay.zkay_ast.analysis.side_effects import compute_modified_sets, check_for_undefined_behavior_due_to_eval_order
-from zkay.zkay_ast.ast import AST, SourceUnit
+from zkay.zkay_ast.ast import AST, SourceUnit, AstException
 from zkay.zkay_ast.build_ast import build_ast
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
@@ -54,16 +54,19 @@ def process_ast(ast, parents=True, link_identifiers=True, check_return=True, ali
                 link(ast)
             except UnknownIdentifierException as e:
                 raise PreprocessAstException(f'\n\nSYMBOL ERROR: {e}')
-        if check_return:
-            r(ast)
-        if alias_analysis:
-            a(ast)
-        call_graph_analysis(ast)
-        compute_modified_sets(ast)
+        try:
+            if check_return:
+                r(ast)
+            if alias_analysis:
+                a(ast)
+            call_graph_analysis(ast)
+            compute_modified_sets(ast)
+            check_for_undefined_behavior_due_to_eval_order(ast)
+        except AstException as e:
+            raise AnalysisException(f'\n\nANALYSIS ERROR: {e}')
     if type_check:
         with print_step("Zkay type checking"):
             try:
-                check_for_undefined_behavior_due_to_eval_order(ast)
                 t(ast)
                 check_circuit_compliance(ast)
                 detect_hybrid_functions(ast)
