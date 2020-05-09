@@ -73,11 +73,12 @@ def parse_arguments():
                     arg.completer = DirectoriesCompleter()
     add_config_args(cfg_group, cfg_docs.keys())
 
-    solc_version_help = 'zkay defaults to using the latest solc version of the major\n' \
+    solc_version_help = 'zkay defaults to the latest installed\n' \
           'solidity version supported by the current zkay version.\n\n' \
           'If you need to use a particular minor release (e.g. because \n' \
           'the latest release is broken or you need determinism for testing)\n' \
-          'you can specify a particular solc version (e.g. v0.5.12) via this argument.'
+          'you can specify a particular solc version (e.g. v0.5.12) via this argument.\n' \
+          'Note: An internet connection is required if the selected version is not installed'
 
     subparsers = main_parser.add_subparsers(title='actions', dest='cmd', required=True)
 
@@ -108,7 +109,9 @@ def parse_arguments():
     export_parser.add_argument('input', help=msg, metavar='<zkay_compilation_output_dir>').completer = DirectoriesCompleter()
 
     # 'import' parser
-    import_parser = subparsers.add_parser('import', parents=[config_parser], help='Unpack a packaged zkay contract.', formatter_class=ShowSuppressedInHelpFormatter)
+    msg = 'Unpack a packaged zkay contract.\n' \
+          'Note: An internet connection is required if the packaged contract used a solc version which is not currently installed.'
+    import_parser = subparsers.add_parser('import', parents=[config_parser], help=msg, formatter_class=ShowSuppressedInHelpFormatter)
     msg = 'Directory where the contract should be unpacked to. Default: Current Directory'
     import_parser.add_argument('-o', '--output', default=os.getcwd(), help=msg, metavar='<target_directory>').completer = DirectoriesCompleter()
     msg = 'Contract package to unpack.'
@@ -153,6 +156,9 @@ def parse_arguments():
                                           help='Manually deploy proving-scheme specific crypto libraries (if any needed) to a blockchain')
     add_config_args(dclibs_parser, {'proving_scheme', 'blockchain_backend', 'blockchain_node_uri'})
 
+    subparsers.add_parser('version', help='Display zkay version information')
+    subparsers.add_parser('update-solc', help='Install latest compatible solc version (requires internet connection)')
+
     # parse
     argcomplete.autocomplete(main_parser, always_complete_options=False)
     a = main_parser.parse_args()
@@ -162,6 +168,20 @@ def parse_arguments():
 def main():
     # parse arguments
     a = parse_arguments()
+
+    from zkay.config_version import Versions
+
+    if a.cmd == 'version':
+        print(Versions.ZKAY_VERSION)
+        return
+
+    if a.cmd == 'update-solc':
+        try:
+            import solcx
+            solcx.install_solc_pragma(Versions.ZKAY_SOLC_VERSION_COMPATIBILITY.expression)
+        except Exception as e:
+            print(f'ERROR: Error while updating solc\n{e}')
+        return
 
     from pathlib import Path
 
@@ -225,6 +245,7 @@ def main():
                 with fail_print():
                     print(f'Error: {e}')
                 exit(10)
+        print(f'Using solc version {Versions.SOLC_VERSION}')
 
         input_path = Path(a.input)
         if not input_path.exists():

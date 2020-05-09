@@ -4,16 +4,12 @@ import os
 from contextlib import contextmanager
 from typing import Dict, Any, ContextManager, List
 
-from semantic_version import NpmSpec, Version
+from semantic_version import NpmSpec
 
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.config_user import UserConfig
+from zkay.config_version import Versions
 from zkay.transaction.crypto.meta import cryptoparams
-
-
-# Read zkay version from VERSION file
-with open(os.path.join(os.path.realpath(os.path.dirname(__file__)), 'VERSION')) as f:
-    _zkay_version = f.read().strip()
 
 
 def zk_print(*args, verbosity_level=1, **kwargs):
@@ -24,54 +20,6 @@ def zk_print(*args, verbosity_level=1, **kwargs):
 def zk_print_banner(title: str):
     l = len(title) + 4
     zk_print(f'{"#"*l}\n# {title} #\n{"#"*l}\n')
-
-
-def _init_solc(version):
-    version = version[1:] if version.startswith('v') else version
-
-    update_file = os.path.join(cfg._appdirs.user_config_dir, 'last_solc_update')
-    if version == 'latest' and os.path.exists(update_file):
-        # Load time when last checked and latest version at that point from file
-        # (Only check for solc-updates once per hour to avoid API limits)
-        from datetime import datetime, timedelta
-        try:
-            with open(update_file) as f:
-                t, v = tuple(f.read().splitlines())
-                t = datetime.strptime(t, '%Y-%m-%d, %H:%M:%S')
-            if t > datetime.now() - timedelta(hours=1) and Version(v) in cfg.zkay_solc_version_compatibility:
-                version = v
-        except Exception:
-            pass
-
-    import solcx
-    if version == 'latest':
-        from datetime import datetime
-        concrete_version = solcx.install_solc_pragma(cfg.zkay_solc_version_compatibility.expression, install=False)
-
-        # Store time when last checked for new version + currently latest version
-        os.makedirs(os.path.realpath(os.path.dirname(update_file)), exist_ok=True)
-        with open(update_file, 'w') as f:
-            f.write(f"{datetime.now().strftime('%Y-%m-%d, %H:%M:%S')}\n{concrete_version}")
-
-        if not concrete_version.startswith('v'):
-            concrete_version = f'v{concrete_version}'
-    else:
-        try:
-            semver = Version(version)
-        except ValueError:
-            raise ValueError(f'Invalid version string {version}')
-
-        if semver not in cfg.zkay_solc_version_compatibility:
-            raise ValueError(f'Solidity version {version} is not supported by zkay {cfg.zkay_version} (requires solc {cfg.zkay_solc_version_compatibility.expression})')
-        concrete_version = f'v{version}'
-
-    if concrete_version not in solcx.get_installed_solc_versions():
-        assert concrete_version in solcx.get_available_solc_versions()
-        solcx.install_solc(concrete_version)
-
-    assert concrete_version in solcx.get_installed_solc_versions()
-    cfg._concrete_solc_version = concrete_version
-    solcx.set_solc_version(concrete_version, silent=True)
 
 
 class Config(UserConfig):
@@ -145,12 +93,12 @@ class Config(UserConfig):
     @property
     def library_solc_version(self) -> str:
         # Note: Changing this version breaks compatibility with already deployed library contracts
-        return '0.6.5'
+        return '0.6.7'
 
     @property
     def zkay_version(self) -> str:
         """zkay version number"""
-        return _zkay_version
+        return Versions.ZKAY_VERSION
 
     @property
     def zkay_solc_version_compatibility(self) -> NpmSpec:
@@ -159,12 +107,13 @@ class Config(UserConfig):
 
     @property
     def solc_version(self) -> str:
-        assert self._concrete_solc_version is not None and self._concrete_solc_version != 'latest'
-        return self._concrete_solc_version
+        version = Versions.SOLC_VERSION
+        assert version is not None and version != 'latest'
+        return version
 
     @staticmethod
     def override_solc(new_version):
-        _init_solc(new_version)
+        Versions.set_solc_version(new_version)
 
     @property
     def key_bits(self) -> int:
@@ -328,4 +277,4 @@ class Config(UserConfig):
 
 
 cfg = Config()
-_init_solc('latest')
+Versions.set_solc_version('latest')
