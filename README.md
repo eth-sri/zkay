@@ -30,7 +30,7 @@ cd zkay
 python3 setup.py sdist
 pip3 install --no-binary zkay dist/zkay-{version}.tar.gz
 
-# Note: Once zkay is published this simplifies to `pip3 install zkay`
+# Note: Once zkay is published this simplifies to `pip3 install --no-binary zkay zkay`
 ```
 
 ## Development Setup

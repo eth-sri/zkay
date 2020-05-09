@@ -47,6 +47,12 @@ def build_libsnark_backend(target_dir: str):
         os.chmod(os.path.join(target_dir, 'run_snark'), perms.st_mode | (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
 
 
+def install_latest_compatible_solc():
+    import solcx
+    from zkay.config_version import Versions
+    solcx.install_solc_pragma(Versions.ZKAY_SOLC_VERSION_COMPATIBILITY.expression)
+
+
 class CustomSdist(sdist):
     def run(self):
         build_grammar()
@@ -58,6 +64,7 @@ class CustomInstall(install):
         install.run(self)
         interface_dir = os.path.join(self.install_lib, self.distribution.metadata.name, 'jsnark_interface')
         build_libsnark_backend(interface_dir)
+        install_latest_compatible_solc()
 
 
 class CustomDevelop(develop):
@@ -66,6 +73,7 @@ class CustomDevelop(develop):
         build_grammar()
         build_libsnark_backend(interface_source_dir)
         develop.run(self)
+        install_latest_compatible_solc()
 
 
 setup(
