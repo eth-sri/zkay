@@ -92,7 +92,7 @@ setup(
     python_requires='>=3.7,<4',
     install_requires=[
         'Cython>=0.29,<0.30',
-        'web3[tester]>=v5.5,<v5.8',
+        'web3[tester]>=v5.5,<v5.10',
         f'antlr4-python3-runtime=={antlr_version}',
         'parameterized>=0.7,<0.8',
         'py-solc-x>=0.7.1,<0.9',
