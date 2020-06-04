@@ -163,11 +163,12 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         zk_print(f'Got value {val} for state variable "{name}"', verbosity_level=2)
         return val
 
-    def call(self, contract_handle, name: str, *args) -> Union[bool, int, str, bytes, List]:
+    def call(self, contract_handle, sender: AddressValue, name: str, *args) -> Union[bool, int, str, bytes, List]:
         """
         Call the specified pure/view function in the given contract with the provided arguments.
 
         :param contract_handle: the contract in which the function resides
+        :param sender: sender address, its eth private key must be hosted in the eth node to which the backend connects.
         :param name: name of the function to call
         :param args: argument values
         :raise BlockChainError: if request fails
@@ -175,7 +176,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
         assert contract_handle is not None
         zk_print(f'Calling contract function {name}{Value.collection_to_string(args)}', verbosity_level=2)
-        val = self._req_state_var(contract_handle, name, *Value.unwrap_values(list(args)))
+        val = self._call(contract_handle, sender.val, name, *Value.unwrap_values(list(args)))
         zk_print(f'Got return value {val}', verbosity_level=2)
         return val
 
@@ -405,6 +406,10 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]) -> Any:
+        pass
+
+    @abstractmethod
+    def _call(self, contract_handle, sender: Union[bytes, str], name: str, *args) -> Union[bool, int, str]:
         pass
 
     @abstractmethod

@@ -273,6 +273,8 @@ class ContractSimulator:
                     yield is_external
                 except (ValueError, BlockChainError, RequireException) as e:
                     if is_external and not cfg.is_unit_test:
+                        # uncomment to raise errors instead of just printing message (for debugging)
+                        # raise e
                         with fail_print():
                             print(f'ERROR: {e}')
                     else:
@@ -372,7 +374,7 @@ class ApiWrapper:
         return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)
 
     def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Callable]]):
-        retvals = self.__conn.call(self.__contract_handle, fname, *args)
+        retvals = self.__conn.call(self.__contract_handle, self.__user_addr, fname, *args)
         if len(ret_val_constructors) == 1:
             return self.__get_decrypted_retval(retvals, *ret_val_constructors[0])
         else:

@@ -80,14 +80,23 @@ class Web3Blockchain(ZkayBlockchainInterface):
         except Exception as e:
             raise BlockChainError(e.args)
 
+    def _call(self, contract_handle, sender: Union[bytes, str], name: str, *args) -> Union[bool, int, str]:
+        try:
+            fct = contract_handle.functions[name]
+            gas_amount = self._gas_heuristic(sender, fct(*args))
+            tx = {'from': sender, 'gas': gas_amount}
+            return fct(*args).call(tx)
+        except Exception as e:
+            raise BlockChainError(e.args)
+
     def _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_params, wei_amount: Optional[int] = None) -> Any:
         try:
-            fobj = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
-            gas_amount = self._gas_heuristic(sender, fobj(*actual_params))
+            fct = contract_handle.constructor if function == 'constructor' else contract_handle.functions[function]
+            gas_amount = self._gas_heuristic(sender, fct(*actual_params))
             tx = {'from': sender, 'gas': gas_amount}
             if wei_amount:
                 tx['value'] = wei_amount
-            tx_hash = fobj(*actual_params).transact(tx)
+            tx_hash = fct(*actual_params).transact(tx)
             tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         except Exception as e:
             raise BlockChainError(e.args)
