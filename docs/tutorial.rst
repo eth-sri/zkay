@@ -25,9 +25,6 @@ The following example contract shows, how such an implementation could look like
 
         final address organizer;
 
-        // Time when vote closes
-        uint end_time;
-
         // Votes of the individual users (only readable by the respective user)
         mapping(address!x => Choice@x) current_votes;
 
@@ -40,6 +37,9 @@ The following example contract shows, how such an implementation could look like
         uint64@organizer b_count;
         uint64@organizer c_count;
 
+        // The minimum number of paticipants before the vote can be closed
+        uint min_votes;
+
         // Total number of votes
         uint vote_count;
 
@@ -47,10 +47,10 @@ The following example contract shows, how such an implementation could look like
         // packed into a single uint
         uint packed_results;
 
-        constructor(uint survey_open_duration) public {
-            require(survey_open_duration > 0);
+        constructor(uint _min_votes) public {
+            require(_min_votes > 0);
             organizer = me;
-            end_time = now + survey_open_duration;
+            min_votes = _min_votes;
         }
 
         // State altering functions
@@ -58,7 +58,7 @@ The following example contract shows, how such an implementation could look like
         function vote(Choice@me votum) public {
             require(!pending_vote);
             require(reveal(votum != Choice.None && current_votes[me] == Choice.None, all));
-            require(!is_closed());
+            require(!is_result_published());
 
             current_votes[me] = votum;
             new_vote = reveal(votum, organizer);
@@ -83,7 +83,7 @@ The following example contract shows, how such an implementation could look like
 
         function publish_results() public {
             require(me == organizer);
-            require(!pending_vote && is_closed());
+            require(!pending_vote && min_votes_reached());
             packed_results = reveal((uint192(c_count) << 128) | (uint192(b_count) << 64) | uint192(a_count), all);
         }
 
@@ -117,12 +117,12 @@ The following example contract shows, how such an implementation could look like
             return c == current_votes[me];
         }
 
-        function is_closed() public view returns(bool) {
-            return now >= end_time;
+        function min_votes_reached() public view returns(bool) {
+            return vote_count >= min_votes;
         }
 
         function is_result_published() public view returns(bool) {
-            return is_closed() && packed_results != 0;
+            return packed_results != 0;
         }
     }
 
@@ -164,11 +164,11 @@ Let's first create some test accounts to interact with the contract (this functi
 
     >>> survey_organizer, user_a, user_b = create_dummy_accounts(3)
 
-We can then deploy the above contract (using the value 4 for the constructor argument `survey_open_duration`) via:
+We can then deploy the above contract (using the value 2 for the constructor argument `_min_votes`) via:
 
 .. code-block:: python
 
-    >>> survey_organizer = deploy(4, user=survey_organizer)
+    >>> survey_organizer = deploy(2, user=survey_organizer)
 
 We should then "connect" the other users to the deployed contract using
 
@@ -194,7 +194,7 @@ If the return value is private (@me), it is automatically decrypted:
 
 .. code-block:: python
 
-    >>> user_a.is_closed()
+    >>> user_a.is_result_published()
         True
     >>> user_a.get_winning_choice()
         Choice.a
@@ -287,7 +287,7 @@ Example:
 .. code-block:: python
 
     >>> vote(Choice.a)
-    >>> is_closed()
+    >>> is_result_published()
         False
     >>> state.get_plain('pending_vote')
         False
