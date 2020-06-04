@@ -401,6 +401,10 @@ class ApiWrapper:
         return constr(res[0]), res[1]
 
     def _req_state_var(self, name: str, *indices, count=0) -> Any:
+        if self.__contract_handle is None:
+            # TODO check this statically in the type checker
+            raise ValueError(f'Cannot read state variable {name} within constructor before it is assigned a value.')
+
         if count == 0:
             val = self.__conn.req_state_var(self.__contract_handle, name, *indices)
         else:
