@@ -258,7 +258,7 @@ Once the contracts are deployed, you can tell zkay to use those contract address
         "blockchain_backend":"w3-ganache",
         "blockchain_node_uri":"http://{ganache_ip}:{ganache_port}",
         "blockchain_pki_address": "<Ethereum address of the PKI contract>",
-        "blockchain_crypto_lib_addresses": "<blank_for_groth16>",
+        "blockchain_crypto_lib_addresses": "<blank_for_groth16>"
     }
 
 Once this is done, you can then deploy the above Survey contract using (space separated constructor args at the end):
@@ -278,7 +278,7 @@ For contracts deployed in this way, you can open an interactive transaction shel
 
     zkay connect --account <sender_account_to_use> ./survey_compiled <deployed_contract_address>
 
-In contrast to zkay run, the shell directly starts in the context of a contract interface object, 
+In contrast to `zkay run`, the shell directly starts in the context of a contract interface object,
 i.e. all contract functions are directly available in the global scope (see help()).
 The address specified via the --account flag is used to send transactions. It can be accessed in the shell via the global 'me' variable.
 
@@ -290,7 +290,7 @@ Example:
     >>> is_result_published()
         False
     >>> state.get_plain('pending_vote')
-        False
+        True
 
 
 ------------------------
