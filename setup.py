@@ -92,10 +92,10 @@ setup(
     python_requires='>=3.7,<4',
     install_requires=[
         'Cython>=0.29,<0.30',
-        'web3[tester]>=v5.11,<v5.12',
+        'web3[tester]>=v5.11,<v5.13',
         f'antlr4-python3-runtime=={antlr_version}',
         'parameterized>=0.7,<0.8',
-        'py-solc-x>=0.7.1,<0.9',
+        'py-solc-x>=0.7.1,<0.11',
         'pycryptodome>=3.9,<4',
         'appdirs>=1.4,<1.5',
         'argcomplete>=1,<2',
