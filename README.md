@@ -96,8 +96,6 @@ so the `zkay deploy-crypto-libs` command is not needed unless you manually selec
 **Note**: With the debug 'eth-tester' blockchain backend which zkay uses by default, it is not necessary to manually deploy
 these contracts. So those commands are not needed in that case.
 
-[//]: # (We should probably deploy official pki and library contracts on testnet [maybe mainnet],
-         to which zkay can connect by default)
 
 ### Compile Contracts
 
@@ -131,7 +129,6 @@ To unpack and compile a contract package `contract.zkp`, which was previously cr
 ```bash
 zkay import [-o "<unpack_directory>"] contract.zkp
 ```
-
 
 ### Interact with contract
 
@@ -186,3 +183,12 @@ Integrity of the on-chain contract is automatically checked against the local fi
 In contrast to the `zkay run` command, the transaction shell starts in the context of the interface object, rather
 than in the context of the off-chain transaction simulator module. This means that the contract functions are
 available in the global scope of the shell.
+
+
+### Update solc to Latest Compatible Version
+
+To download and install the latest compatible version of solc (requires internet connection):
+
+```bash
+zkay update-solc
+```
