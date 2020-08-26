@@ -6,11 +6,12 @@
 Welcome to zkay's documentation!
 ================================
 
-zkay is a complete solution for writing, deploying and using privacy-enabled smart contracts on Ethereum.
+Zkay is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and non-interactive zero-knowledge (NIZK) proofs. The zkay package provides a toolchain for compiling, deploying and using zkay contracts.
 
-The zkay language, which is a Solidity-like smart contract language, allows you to easily specify data ownership, reclassification operations and private computations.
+The zkay language is closely related to Solidity and allows convenient specification of data ownership, reclassification, and private computations. Given a zkay contract, zkay's compiler automatically transforms it to a Solidity contract that realizes the privacy specification and can be deployed to an Ethereum blockchain.
 
-Given such a zkay contract, zkay's compiler automatically transforms it into a contract equivalent in terms of privacy and functionality, yet executable on public blockchains, by leveraging cryptographic encryption and non-interactive zero-knowledge proofs.
+The core concepts of zkay are introduced in its original `research paper
+<https://www.sri.inf.ethz.ch/publications/steffen2019zkay>`_. 
 
 
 .. toctree::
@@ -32,13 +33,8 @@ Indices and tables
 * :ref:`search`
 
 
-Warning
-========
-This is an initial implementation for research purposes. There might be vulnerabilities or other bugs so you should not use this in production yet.
+Security Disclaimer
+===================
+Zkay is a research project and its implementation is **not secure**! Do not use zkay in a productive system or to process confidential data.
 
-You should also be aware that zkay currently uses zk-SNARKs to enforce its guarantees, which require a trusted setup phase that is currently performed locally during contract compilation.
-By tampering with said setup phase (e.g. by recording the produced toxic waste), a malicious contract owner can break some of the correctness guarantees provided by zkay contracts without any signs of tampering being visible in the contract source code (e.g. by forging zero-knowledge proofs).
-
-**You should thus not blindly trust zkay contracts deployed by untrusted/anonymous users.** (at least until an alternative to zk-SNARKs is available in zkay).
-
-*Note*: This is a general problem with zk-SNARKs and not specific to zkay.
+Note that zkay currently relies on zk-SNARKs to enforce its correctness guarantees. These require a trusted setup phase, which is currently performed during local contract compilation and hence can not be trusted if performed by a different user.
