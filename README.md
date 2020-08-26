@@ -1,6 +1,6 @@
 # zkay: A Blockchain Privacy Language
 
-Zkay (pronounced as `[zi: keɪ]`) is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and zero-knowledge (NIZK) proofs. This repository provides a toolchain for compiling, deploying and using zkay contracts.
+Zkay (pronounced as `[zi: keɪ]`) is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and non-interactive zero-knowledge (NIZK) proofs. This repository provides a toolchain for compiling, deploying and using zkay contracts.
 
 In addition to the instructions below, we refer to the following resources:
 
@@ -55,7 +55,6 @@ Alternatively, you can also set up zkay in a docker container using the provided
 To build and run the image, you can simply use:
 
 ```bash
-cd install
 make -C ./install run
 ```
 
@@ -63,7 +62,6 @@ make -C ./install run
 
 To run all unit tests, use:
 ```bash
-cd zkay
 python3 -m unittest discover --verbose zkay
 ```
 
@@ -179,6 +177,11 @@ To download and install the latest compatible version of solc (requires internet
 ```bash
 zkay update-solc
 ```
+
+## CCS 2019 Evaluation
+
+The contracts evaluated in the [CCS 2019 paper][zkay-ccs] can be found in the folder `eval-ccs2019`. The scenarios have been adapted to use zkay's new frontend. The original artifact (zkay version 0.1) evaluated in the CCS 2019 paper can be found under the tag [ccs2019](https://github.com/eth-sri/zkay/tree/ccs2019).
+
 
 ## Citing this Work
 
