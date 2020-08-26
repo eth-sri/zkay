@@ -59,6 +59,9 @@ python3 -m unittest discover --verbose zkay
 
 ## Usage
 
+**Note**: zkay supports tab completion in Bash shells via the argcomplete package.
+To enable this feature, argcomplete must be installed and activated on your system (see [instructions](https://kislyuk.github.io/argcomplete/#installation)).
+
 ### Type-Check Contracts
 
 To type-check a zkay file `test.zkay` without compiling it, run:
@@ -167,7 +170,7 @@ in memory and does not persist across multiple zkay invocations. Use `zkay run` 
 zkay deploy [--account <addr>] [--blockchain-pki-address <addr>] [--blockchain-crypto-lib-addresses <addr>] output_dir <constructor_args...>
 ```
 Deploy a contract from the specified wallet account and make it use the specified PKI and library contracts, which were
-previously deployed using the `zkay deploy-pki` and `zaky deploy-crypto-libs` commands.
+previously deployed using the `zkay deploy-pki` and `zkay deploy-crypto-libs` commands.
 
 #### Connect to and interact with contract instance
 

@@ -93,7 +93,7 @@ class Config(UserConfig):
     @property
     def library_solc_version(self) -> str:
         # Note: Changing this version breaks compatibility with already deployed library contracts
-        return '0.6.7'
+        return Versions.ZKAY_LIBRARY_SOLC_VERSION
 
     @property
     def zkay_version(self) -> str:
@@ -103,7 +103,7 @@ class Config(UserConfig):
     @property
     def zkay_solc_version_compatibility(self) -> NpmSpec:
         """Target solidity language level for the current zkay version"""
-        return NpmSpec('^0.6.0')
+        return Versions.ZKAY_SOLC_VERSION_COMPATIBILITY
 
     @property
     def solc_version(self) -> str:

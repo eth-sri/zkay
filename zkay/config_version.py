@@ -9,7 +9,7 @@ from semantic_version import NpmSpec
 
 class Versions:
     ZKAY_SOLC_VERSION_COMPATIBILITY = NpmSpec('^0.6.0')
-    ZKAY_LIBRARY_SOLC_VERSION = '0.6.9'
+    ZKAY_LIBRARY_SOLC_VERSION = '0.6.12'
     SOLC_VERSION = None
 
     # Read zkay version from VERSION file
