@@ -55,6 +55,7 @@ Alternatively, you can also set up zkay in a docker container using the provided
 To build and run the image, you can simply use:
 
 ```bash
+cd install
 make -C ./install run
 ```
 
@@ -62,8 +63,21 @@ make -C ./install run
 
 To run all unit tests, use:
 ```bash
+cd zkay
 python3 -m unittest discover --verbose zkay
 ```
+
+### Building the Docs
+
+The documentation is hosted [here][zkay-docs]. To build it locally, use the following commands (requires sphinx, sphinx-rtd-theme, and sphinx-autoapi):
+
+```bash
+cd docs
+make html
+```
+
+The above commands create a tree of HTML files in `_build/html`. Developers with sufficient access rights can publish the documentation on GitHub Pages using the script `publish_gh_pages.sh`.
+
 
 ## Usage
 
