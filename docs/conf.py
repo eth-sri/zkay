@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'zkay'
-copyright = '2020, Nick Baumann'
-author = 'Nick Baumann'
+copyright = '2020, Nick Baumann, SRI Lab ETH Zurich'
+author = 'Nick Baumann, SRI Lab ETH Zurich'
 version = '0.2.0'
 
 
@@ -55,6 +55,10 @@ lexers['zkay'] = ZkayLexer(startinline=True)
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+
+# Exclude sources in output
+html_show_sourcelink = False
+html_copy_source = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
