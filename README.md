@@ -6,12 +6,11 @@ In addition to the instructions below, we refer to the following resources:
 
 - The original [research paper][zkay-ccs], which introduces the core concepts of zkay.
 - The [online documentation][zkay-docs], which provides a tutorial, language reference and API documentation.
-- The [technical report][zkay-0.2-techreport], which describes the features and implementation of zkay v0.2.
+- The [technical report] (coming soon), which describes the features and implementation of zkay v0.2.
 
 ## Warning / Security Disclaimer
 
-Zkay is a research project and its implementation is **not secure**! Do not use zkay in a
-productive system or to process confidential data.
+Zkay is a research project and its implementation should **not** be considered secure (e.g., it may contain bugs and has not undergone any security review)! Do not use zkay in a productive system or to process sensitive confidential data.
 
 ## Prerequisites
 
@@ -202,12 +201,11 @@ You are encouraged to cite the following [research paper][zkay-ccs] if you use z
 }
 ```
 
-The following [technical report][zkay-0.2-techreport] describes version 0.2 of zkay, which introduces many vital features such as real encryption.
+The following [technical report] (coming soon) describes version 0.2 of zkay, which introduces many vital features such as real encryption.
 ```
-TODO BibTex
+(BibTex coming soon)
 ```
 
 
 [zkay-ccs]: https://www.sri.inf.ethz.ch/publications/steffen2019zkay
 [zkay-docs]: https://eth-sri.github.io/zkay
-[zkay-0.2-techreport]: TODO

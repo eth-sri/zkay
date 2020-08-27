@@ -35,6 +35,6 @@ Indices and tables
 
 Security Disclaimer
 ===================
-Zkay is a research project and its implementation is **not secure**! Do not use zkay in a productive system or to process confidential data.
+Zkay is a research project and its implementation should **not** be considered secure (e.g., it may contain bugs and has not undergone any security review)! Do not use zkay in a productive system or to process sensitive confidential data.
 
 Note that zkay currently relies on zk-SNARKs to enforce its correctness guarantees. These require a trusted setup phase, which is currently performed during local contract compilation and hence can not be trusted if performed by a different user.
