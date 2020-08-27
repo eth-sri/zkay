@@ -31,7 +31,7 @@ sudo pacman -S --needed jdk-openjdk cmake pkgconf openssl gmp boost
 If you only want to use zkay as a tool, you can install it as follows.
 
 ```bash
-git clone git@github.com:eth-sri/zkay.git
+git clone https://github.com/eth-sri/zkay.git
 cd zkay
 python3 setup.py sdist
 pip3 install --no-binary zkay ./dist/zkay-*.tar.gz
@@ -41,7 +41,7 @@ pip3 install --no-binary zkay ./dist/zkay-*.tar.gz
 For development of zkay, install zkay in editable mode as follows.
 
 ```bash
-git clone git@github.com:eth-sri/zkay.git
+git clone https://github.com/eth-sri/zkay.git
 cd zkay
 pip3 install -e .
 ```
