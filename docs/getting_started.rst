@@ -22,13 +22,7 @@ Arch derivatives:
 Installation
 --------------
 
-You can then install the most recent zkay version via a simple:
-
-.. code-block:: bash
-
-	pip3 install --no-binary zkay zkay
-
-OR (to manually build from source):
+You can then build and install zkay as follows:
 
 .. code-block:: bash
 

@@ -35,8 +35,6 @@ git clone git@github.com:eth-sri/zkay.git
 cd zkay
 python3 setup.py sdist
 pip3 install --no-binary zkay ./dist/zkay-*.tar.gz
-
-# Note: Once zkay is published, this simplifies to `pip3 install --no-binary zkay zkay`
 ```
 
 ## Installation for Developers
