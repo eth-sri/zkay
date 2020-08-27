@@ -177,14 +177,15 @@ zkay update-solc
 
 ## Third-party Libraries
 
-Zkay leverages various third-party source code and libraries:
+Zkay is based on various third-party source code and libraries:
 
 - [zkay-libsnark](https://github.com/eth-sri/zkay-libsnark) (fork of [libsnark](https://github.com/scipr-lab/libsnark)): Downloaded and built during setup of zkay.
-- [zkay-jsnark](https://github.com/eth-sri/zkay-jsnark) (fork of [jsnark](https://github.com/akosba/jsnark)): Bundled in `zkay/jsnark_interface`.
+- [zkay-jsnark](https://github.com/eth-sri/zkay-jsnark) (fork of [jsnark](https://github.com/akosba/jsnark)): Bundled in `zkay/jsnark_interface/JsnarkCircuitBuilder.jar`.
 - [pygments-lexer-solidity](https://pypi.org/project/pygments-lexer-solidity/): See `docs/custom_highlighting/zkay_lexer.py`.
 - [solidity-BN256G2](https://github.com/musalbas/solidity-BN256G2): See `zkay/compiler/privacy/bn256g2.sol`.
 - [solidity alt_bn128 pairing library](https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L397): See `zkay/compiler/privacy/library_contracts.py`.
 - [solidity-antlr4](https://github.com/solidityj/solidity-antlr4): See `zkay/solidity_parser/Solidity.g4`.
+- [Bouncy Castle Crypto APIs for Java](https://www.bouncycastle.org/java.html): Bundled in `zkay/jsnark_interface/bcprov-jdk15on-1.64.jar`.
 
 See [LICENSE-3RD-PARTIES](LICENSE-3RD-PARTIES) for license information on third-party source code and libraries.
 
