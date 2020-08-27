@@ -175,6 +175,19 @@ To download and install the latest compatible version of solc (requires internet
 zkay update-solc
 ```
 
+## Third-party Libraries
+
+Zkay leverages various third-party source code and libraries:
+
+- [zkay-libsnark](https://github.com/eth-sri/zkay-libsnark) (fork of [libsnark](https://github.com/scipr-lab/libsnark)): Downloaded and built during setup of zkay.
+- [zkay-jsnark](https://github.com/eth-sri/zkay-jsnark) (fork of [jsnark](https://github.com/akosba/jsnark)): Bundled in `zkay/jsnark_interface`.
+- [pygments-lexer-solidity](https://pypi.org/project/pygments-lexer-solidity/): See `docs/custom_highlighting/zkay_lexer.py`.
+- [solidity-BN256G2](https://github.com/musalbas/solidity-BN256G2): See `zkay/compiler/privacy/bn256g2.sol`.
+- [solidity alt_bn128 pairing library](https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L397): See `zkay/compiler/privacy/library_contracts.py`.
+- [solidity-antlr4](https://github.com/solidityj/solidity-antlr4): See `zkay/solidity_parser/Solidity.g4`.
+
+See [LICENSE-3RD-PARTIES](LICENSE-3RD-PARTIES) for license information on third-party source code and libraries.
+
 ## CCS 2019 Evaluation
 
 The contracts evaluated in the [CCS 2019 paper][zkay-ccs] can be found in the folder `eval-ccs2019`. The scenarios have been adapted to use zkay's new frontend. The original artifact (zkay version 0.1) evaluated in the CCS 2019 paper can be found under the tag [ccs2019](https://github.com/eth-sri/zkay/tree/ccs2019).
