@@ -6,7 +6,7 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, Anno
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
     BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, \
-    UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr
+    UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr, ContractDefinition
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -349,7 +349,10 @@ class TypeCheckVisitor(AstVisitor):
             # no action necessary, the identifier will be replaced later
             pass
         else:
-            ast.annotated_type = ast.target.annotated_type.clone()
+            target = ast.target
+            if isinstance(target, ContractDefinition):
+                raise TypeException(f'Unsupported use of contract type in expression', ast)
+            ast.annotated_type = target.annotated_type.clone()
 
             if not self.is_accessible_by_invoker(ast):
                 raise TypeException("Tried to read value which cannot be proven to be owned by the transaction invoker", ast)
@@ -433,7 +436,7 @@ class TypeCheckVisitor(AstVisitor):
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         if type(ast.type_name) == UserDefinedTypeName:
             if not isinstance(ast.type_name.target, EnumDefinition):
-                raise NotImplementedError('For now enums are the only supported user defined types')
+                raise TypeException('Unsupported use of user-defined type', ast.type_name)
             ast.type_name = ast.type_name.target.annotated_type.type_name.clone()
 
         if ast.privacy_annotation != Expression.all_expr():

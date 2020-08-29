@@ -188,7 +188,8 @@ class BuildASTVisitor(SolidityVisitor):
         else:
             s = s[2:-2]
 
-        return StringLiteralExpr(s)
+        raise SyntaxException('Use of unsupported string literal expression', ctx, self.code)
+        # return StringLiteralExpr(s)
 
     def visitTupleExpr(self, ctx:SolidityParser.TupleExprContext):
         contents = ctx.expr.children[1:-1]
@@ -222,11 +223,15 @@ class BuildASTVisitor(SolidityVisitor):
             return ast.IntTypeName(t)
         elif t.startswith('uint'):
             return ast.UintTypeName(t)
+        elif t == 'var':
+            raise SyntaxException(f'Use of unsupported var keyword', ctx, self.code)
         else:
-            raise SyntaxException(f'Type {t} is currently unsupported', ctx, self.code)
+            raise SyntaxException(f"Use of unsupported type '{t}'.", ctx, self.code)
 
     def visitIndexExpr(self, ctx: SolidityParser.IndexExprContext):
         arr = self.visit(ctx.arr)
+        if not isinstance(arr, ast.LocationExpr):
+            raise SyntaxException(f'Expression cannot be indexed', ctx.arr, self.code)
         index = self.visit(ctx.index)
         return IndexExpr(arr, index)
 
