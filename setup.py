@@ -95,7 +95,7 @@ setup(
         'web3[tester]>=v5.11,<v5.13',
         f'antlr4-python3-runtime=={antlr_version}',
         'parameterized>=0.7,<0.8',
-        'py-solc-x>=0.7.1,<0.11',
+        'py-solc-x>=1.0.0,<1.1.0',
         'pycryptodome>=3.9,<4',
         'appdirs>=1.4,<1.5',
         'argcomplete>=1,<2',
