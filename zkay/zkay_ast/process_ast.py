@@ -2,7 +2,9 @@ from typing import Tuple, List
 
 from zkay.compiler.solidity.compiler import check_for_zkay_solc_errors, SolcException
 from zkay.config import cfg
-from zkay.errors.exceptions import ZkayCompilerError, PreprocessAstException, TypeCheckException, AnalysisException
+from zkay.errors.exceptions import ZkayCompilerError, PreprocessAstException, TypeCheckException, AnalysisException, \
+    ZkaySyntaxError
+from zkay.solidity_parser.parse import SyntaxException
 from zkay.type_check.type_checker import type_check as t
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException, RequireException, ReclassifyException
 from zkay.utils.progress_printer import print_step
@@ -22,7 +24,10 @@ from zkay.zkay_ast.pointers.symbol_table import link_identifiers as link
 
 def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
     with print_step("Parsing"):
-        ast = build_ast(code) # may raise ZkaySyntaxError
+        try:
+            ast = build_ast(code)
+        except SyntaxException as e:
+            raise ZkaySyntaxError(f'\n\nSYNTAX ERROR: {e}')
 
     from zkay.compiler.solidity.fake_solidity_generator import fake_solidity_code
     fake_code = fake_solidity_code(str(code))
