@@ -128,7 +128,7 @@ def check_compilation(filename: str, show_errors: bool = False, display_code: st
 
                 if is_error:
                     fatal_error_report += report
-                else:
+                elif 'errorCode' not in error or error['errorCode'] not in ['1878']:  # Suppress SPDX license warning
                     zk_print(report)
 
         zk_print()
