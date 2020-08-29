@@ -111,7 +111,7 @@ class BuildASTVisitor(SolidityVisitor):
         return f'pragma {self.visit(ctx.pragma())};'
 
     def visitVersionPragma(self, ctx: SolidityParser.VersionPragmaContext):
-        version = self.emitter.visit(ctx.ver).strip()
+        version = ctx.ver.getText().strip()
         spec = NpmSpec(version)
         name = self.handle_field(ctx.name)
         if name == 'zkay' and Version(cfg.zkay_version) not in spec:
@@ -222,7 +222,8 @@ class BuildASTVisitor(SolidityVisitor):
             return ast.IntTypeName(t)
         elif t.startswith('uint'):
             return ast.UintTypeName(t)
-        return super().visitElementaryTypeName(ctx)
+        else:
+            raise SyntaxException(f'Type {t} is currently unsupported', ctx, self.code)
 
     def visitIndexExpr(self, ctx: SolidityParser.IndexExprContext):
         arr = self.visit(ctx.arr)
