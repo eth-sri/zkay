@@ -1914,10 +1914,13 @@ def indent(s: str):
 
 def get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[ContractDefinition] = None,
                        fct: Optional[ConstructorOrFunctionDefinition] = None, stmt: Optional[Statement] = None):
-    assert line <= len(code)
-
     # Print Location
     error_msg = f'At line: {line};{column}'
+
+    # If error location is outside code bounds, only show line;col
+    if line <= 0 or column <= 0 or line > len(code):
+        return error_msg
+
     if fct is not None:
         assert ctr is not None
         error_msg += f', in function \'{fct.name}\' of contract \'{ctr.idf.name}\''
