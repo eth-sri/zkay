@@ -1,7 +1,7 @@
 Release Notes
 ================================
 
-v0.2.0 (xx-04-2020)
+v0.2.0 (2020-09-01)
 --------------------
 
 - Support for real encryption (RSA, ECDH+Chaskey, ECDH+AES)
@@ -22,7 +22,7 @@ v0.2.0 (xx-04-2020)
 - Greatly improved user experience (configuration file support, easy contract packaging, nice error messages, ...)
 
 
-v0.1.0 (20-09-2019)
+v0.1.0 (2019-09-20)
 --------------------
 Original proof of concept release for CCS2019.
 See `publication <https://www.sri.inf.ethz.ch/publications/steffen2019zkay>`_.
