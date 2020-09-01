@@ -1,0 +1,879 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.transaction.interface &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.interface</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.transaction.interface">
+<span id="zkay-transaction-interface"></span><h1><a class="reference internal" href="#module-zkay.transaction.interface" title="zkay.transaction.interface"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.interface</span></code></a><a class="headerlink" href="#module-zkay.transaction.interface" title="Permalink to this headline">¶</a></h1>
+<p><p>This module defines the Runtime API, an abstraction layer which is used by the generated PythonOffchainSimulator classes.</p>
+<p>It provides high level functions for</p>
+<ul class="simple">
+<li><p>blockchain interaction (deployment, state variable retrieval, transaction issuing, …),</p></li>
+<li><p>cryptographic operations (encryption, decryption, key generation) and key management (local keystore)</p></li>
+<li><p>NIZK-proof generation</p></li>
+</ul>
+</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py exception">
+<dt id="zkay.transaction.interface.IntegrityError">
+<em class="property">exception </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">IntegrityError</code><a class="headerlink" href="#zkay.transaction.interface.IntegrityError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception which is raised when any part of a deployed zkay contract does not match the local contract file.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="zkay.transaction.interface.BlockChainError">
+<em class="property">exception </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">BlockChainError</code><a class="headerlink" href="#zkay.transaction.interface.BlockChainError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception which is raised when a blockchain interaction fails for any reason.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="zkay.transaction.interface.TransactionFailedException">
+<em class="property">exception </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">TransactionFailedException</code><a class="headerlink" href="#zkay.transaction.interface.TransactionFailedException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.interface.BlockChainError</span></code></a></p>
+<p>Exception which is raised when a transaction fails.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="zkay.transaction.interface.ProofGenerationError">
+<em class="property">exception </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">ProofGenerationError</code><a class="headerlink" href="#zkay.transaction.interface.ProofGenerationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception which is raised when proof generation fails.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">ZkayBlockchainInterface</code><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <a class="reference internal" href="#zkay.transaction.interface.ZkayBlockchainInterface.connect" title="zkay.transaction.interface.ZkayBlockchainInterface.connect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code></a> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.pki_contract">
+<em class="property">property </em><code class="sig-name descname">pki_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.pki_contract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.lib_addresses">
+<em class="property">property </em><code class="sig-name descname">lib_addresses</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.lib_addresses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._connect_libraries">
+<em class="property">abstract </em><code class="sig-name descname">_connect_libraries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._connect_libraries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.default_address">
+<em class="property">property </em><code class="sig-name descname">default_address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.default_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return wallet address to use as from address when no address is explicitly specified.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.create_test_accounts">
+<em class="property">abstract </em><code class="sig-name descname">create_test_accounts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.create_test_accounts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return addresses of pre-funded accounts (only implemented for w3-eth-tester and w3-ganache, for debugging).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>count</strong> – how many accounts</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NotImplementedError</strong> – if the backend does not support dummy accounts</p></li>
+<li><p><strong>ValueError</strong> – if not enough unused pre-funded accounts are available</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the account addresses (either a single value if count = 1 or a tuple otherwise)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.get_special_variables">
+<em class="property">abstract </em><code class="sig-name descname">get_special_variables</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.get_special_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return message, block and transaction objects, populated according to the current chain state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> – transaction sender address</p></li>
+<li><p><strong>wei_amount</strong> – transaction value (if payable)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>populated builtin objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.get_balance">
+<code class="sig-name descname">get_balance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.get_balance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the balance of the wallet with the designated address (in wei).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.req_public_key">
+<code class="sig-name descname">req_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.req_public_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request the public key for the designated address from the PKI contract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – Address for which to request public key</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if request fails</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the public key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.announce_public_key">
+<code class="sig-name descname">announce_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">pk</span><span class="p">:</span> <span class="n">PublicKeyValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.announce_public_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Announce a public key to the PKI</p>
+<p><strong>WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> – public key owner, its eth private key must be hosted in the eth node to which the backend connects.</p></li>
+<li><p><strong>pk</strong> – the public key to announce</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if there is an error in the backend</p></li>
+<li><p><a class="reference internal" href="#zkay.transaction.interface.TransactionFailedException" title="zkay.transaction.interface.TransactionFailedException"><strong>TransactionFailedException</strong></a> – if the announcement transaction failed</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>backend-specific transaction receipt</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.req_state_var">
+<code class="sig-name descname">req_state_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">indices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.req_state_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request the contract state variable value name[indices[0]][indices[1]][…] from the chain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_handle</strong> – contract from which to read state</p></li>
+<li><p><strong>name</strong> – name of the state variable</p></li>
+<li><p><strong>indices</strong> – if the request is for an (nested) array/map index value, the values of all index keys.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if request fails</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the specified pure/view function in the given contract with the provided arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_handle</strong> – the contract in which the function resides</p></li>
+<li><p><strong>sender</strong> – sender address, its eth private key must be hosted in the eth node to which the backend connects.</p></li>
+<li><p><strong>name</strong> – name of the function to call</p></li>
+<li><p><strong>args</strong> – argument values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if request fails</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>function return value (single value if one return value, list if multiple return values)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.transact">
+<code class="sig-name descname">transact</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">function</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">actual_args</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">should_encrypt</span><span class="p">:</span> <span class="n">List<span class="p">[</span>bool<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.transact" title="Permalink to this definition">¶</a></dt>
+<dd><p>Issue a transaction for the specified function in the given contract with the provided arguments</p>
+<p><strong>WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_handle</strong> – the contract in which the function resides</p></li>
+<li><p><strong>sender</strong> – sender address, its eth private key must be hosted in the eth node to which the backend connects.</p></li>
+<li><p><strong>function</strong> – name of the function</p></li>
+<li><p><strong>actual_args</strong> – the function argument values</p></li>
+<li><p><strong>should_encrypt</strong> – a list which contains a boolean value for each argument, which should be true if the corresponding
+parameter expects an encrypted/private value (this is only used for a last sanity-check)</p></li>
+<li><p><strong>wei_amount</strong> – how much money to send along with the transaction (only for payable functions)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if there is an error in the backend</p></li>
+<li><p><a class="reference internal" href="#zkay.transaction.interface.TransactionFailedException" title="zkay.transaction.interface.TransactionFailedException"><strong>TransactionFailedException</strong></a> – if the transaction failed</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>backend-specific transaction receipt</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.deploy">
+<code class="sig-name descname">deploy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">actual_args</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">should_encrypt</span><span class="p">:</span> <span class="n">List<span class="p">[</span>bool<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.deploy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Issue a deployment transaction which constructs the specified contract with the provided constructor arguments on the chain.</p>
+<p><strong>WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_dir</strong> – directory where the zkay file, manifest and snark keys reside</p></li>
+<li><p><strong>sender</strong> – creator address, its eth private key must be hosted in the eth node to which the backend connects.</p></li>
+<li><p><strong>contract</strong> – name of the contract to instantiate</p></li>
+<li><p><strong>actual_args</strong> – the constructor argument values</p></li>
+<li><p><strong>should_encrypt</strong> – a list which contains a boolean value for each argument, which should be true if the corresponding
+parameter expects an encrypted/private value (this is only used for a last sanity-check)</p></li>
+<li><p><strong>wei_amount</strong> – how much money to send along with the constructor transaction (only for payable constructors)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if there is an error in the backend</p></li>
+<li><p><a class="reference internal" href="#zkay.transaction.interface.TransactionFailedException" title="zkay.transaction.interface.TransactionFailedException"><strong>TransactionFailedException</strong></a> – if the deployment transaction failed</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>handle for the newly created contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.connect">
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract_address</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">user_address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a handle which can be used to interact with an existing contract on the chain after verifying its integrity.</p>
+<p>Project dir must contain a .zkay file, a manifest.json file as well as a         subdirectory <em>verification_contract_name</em>_out containing ‘proving.key’ and ‘verification.key’ for each verification contract.
+These files are referred to as ‘local’ files in the following explanation.</p>
+<p>If this function succeeds, it is guaranteed, that:</p>
+<ul class="simple">
+<li><p>the remote main contract at contract_address, matches the solidity contract obtained by running zkay on the local zkay file
+using the configuration stored in the local manifest</p></li>
+<li><p>the pki contract referenced in the remote main contract matches the correct zkay pki contract</p></li>
+<li><p>the verification contracts referenced in the remote solidity contract were generated by running zkay on a zkay file
+equivalent to local zkay file, with zk-snark keys which match the local keys.</p></li>
+<li><p>the library contract referenced in the verification contracts matches the correct zkay library contract</p></li>
+</ul>
+<p>This reduces the required trust to the zk-snark setup phase (i.e. you must trust that prover/verification keys
+were generated for the correct circuit), since you can inspect the source code of the local zkay file and check it
+for malicious behavior yourself (and the zkay implementation, which performs the transformation, is open source as well).</p>
+<p>Example Scenarios:</p>
+<ol class="loweralpha simple">
+<li><p>the remote zkay contract is benign (generated by and deployed using zkay):
+-&gt; you will only be able to connect if the local files are equivalent -&gt; correctness is guaranteed</p></li>
+<li><p>the remote zkay contract was tampered with (any of the .sol files was modified was modified before deployment)
+-&gt; connection will fail, because local zkay compilation will not produce matching evm bytecode</p></li>
+<li><p>the prover/verification keys were tampered with (they were generated for a different circuit than the one produced by zkay)</p>
+<ul class="simple">
+<li><p>local keys are genuine -&gt; connection will be refused because the keys don’t match what is baked into the remote verification contract</p></li>
+<li><p>same tampered keys locally -&gt; NO GUARANTEES, since the trust assumption is violated</p></li>
+</ul>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_dir</strong> – directory where the zkay file, manifest and snark keys reside</p></li>
+<li><p><strong>contract</strong> – name of the contract to connect to</p></li>
+<li><p><strong>contract_address</strong> – address of the deployed contract</p></li>
+<li><p><strong>user_address</strong> – account which connects to the contract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if the integrity check fails (mismatch between local code and remote contract)</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>contract handle for the specified contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.deploy_solidity_contract">
+<em class="property">abstract </em><code class="sig-name descname">deploy_solidity_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sol_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.deploy_solidity_contract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compile and deploy the specified solidity contract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sol_filename</strong> – solidity file</p></li>
+<li><p><strong>contract_name</strong> – specifies which contract from the .sol file to compile (None -&gt; take first contract in file)</p></li>
+<li><p><strong>sender</strong> – account address from which to issue the deployment transaction (keys must be hosted in node)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if there is an error in the backend</p></li>
+<li><p><a class="reference internal" href="#zkay.transaction.interface.TransactionFailedException" title="zkay.transaction.interface.TransactionFailedException"><strong>TransactionFailedException</strong></a> – if the deployment transaction failed</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Address of the deployed contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.is_debug_backend">
+<em class="property">classmethod </em><code class="sig-name descname">is_debug_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.is_debug_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._verify_contract_integrity">
+<em class="property">abstract </em><code class="sig-name descname">_verify_contract_integrity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">sol_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">libraries</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_library</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._verify_contract_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the bytecode of the contract at address matches the bytecode obtained by locally compiling sol_filename.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – address of the remote contract</p></li>
+<li><p><strong>sol_filename</strong> – path to the local contract code file</p></li>
+<li><p><strong>libraries</strong> – library dict which should be passed during compilation (for linking)</p></li>
+<li><p><strong>contract_name</strong> – contract name, if not specified, the first contract in the file is used</p></li>
+<li><p><strong>is_library</strong> – set to true if this a library instead of a contract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if there is a mismatch</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a contract handle for the remote contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._verify_library_integrity">
+<em class="property">abstract </em><code class="sig-name descname">_verify_library_integrity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">libraries</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contract_with_libs_addr</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">sol_with_libs_filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._verify_library_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the libraries linked in contract_with_libs match library_sol and return the addresses of the library contracts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>libraries</strong> – = List of (library name, library.sol) tuples</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if there is a mismatch</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dict of library name -&gt; address for all libs from libraries which occurred in <a class="reference external" href="mailto:contract&#37;&#52;&#48;contract_with_libs_addr">contract<span>&#64;</span>contract_with_libs_addr</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._verify_zkay_contract_integrity">
+<em class="property">abstract </em><code class="sig-name descname">_verify_zkay_contract_integrity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">pki_verifier_addresses</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._verify_zkay_contract_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the zkay main contract at address matches the local file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – address of the remote main contract</p></li>
+<li><p><strong>project_dir</strong> – path to the zkay contract directory</p></li>
+<li><p><strong>pki_verifier_addresses</strong> – dictionary which maps pki and verification contract names to the corresponding remote addresses</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if there is a mismatch</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._default_address">
+<em class="property">abstract </em><code class="sig-name descname">_default_address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._default_address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._get_balance">
+<em class="property">abstract </em><code class="sig-name descname">_get_balance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._get_balance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._deploy_dependencies">
+<em class="property">abstract </em><code class="sig-name descname">_deploy_dependencies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">verifier_names</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._deploy_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._req_public_key">
+<em class="property">abstract </em><code class="sig-name descname">_req_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._req_public_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._announce_public_key">
+<em class="property">abstract </em><code class="sig-name descname">_announce_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">pk</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span><span class="p">…</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._announce_public_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._call">
+<em class="property">abstract </em><code class="sig-name descname">_call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._req_state_var">
+<em class="property">abstract </em><code class="sig-name descname">_req_state_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">indices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._req_state_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._transact">
+<em class="property">abstract </em><code class="sig-name descname">_transact</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">function</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">actual_args</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._transact" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._deploy">
+<em class="property">abstract </em><code class="sig-name descname">_deploy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">actual_args</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._deploy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface._connect">
+<em class="property">abstract </em><code class="sig-name descname">_connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface._connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayBlockchainInterface.__check_args">
+<em class="property">static </em><code class="sig-name descname">__check_args</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">actual_args</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">should_encrypt</span><span class="p">:</span> <span class="n">List<span class="p">[</span>bool<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayBlockchainInterface.__check_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.interface.ZkayKeystoreInterface">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">ZkayKeystoreInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conn</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.interface.ZkayBlockchainInterface" title="zkay.transaction.interface.ZkayBlockchainInterface">ZkayBlockchainInterface</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayKeystoreInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>API to add and retrieve local key pairs, and to request public keys.</p>
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayKeystoreInterface.add_keypair">
+<code class="sig-name descname">add_keypair</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">key_pair</span><span class="p">:</span> <span class="n">KeyPair</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayKeystoreInterface.add_keypair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import cryptographic keys for address into this keystore and announce the public key to the pki if necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – Address to which the keys belong</p></li>
+<li><p><strong>key_pair</strong> – cryptographic keys</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.TransactionFailedException" title="zkay.transaction.interface.TransactionFailedException"><strong>TransactionFailedException</strong></a> – if announcement transaction fails</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayKeystoreInterface.has_initialized_keys_for">
+<code class="sig-name descname">has_initialized_keys_for</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayKeystoreInterface.has_initialized_keys_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if keys for address are already in the store.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayKeystoreInterface.getPk">
+<code class="sig-name descname">getPk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayKeystoreInterface.getPk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return public key for address.</p>
+<p>If the key is cached locally, returned the cached copy, otherwise request from pki contract.</p>
+<p>NOTE: At the moment, the name of this function must match the name in the pki contract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – address to which the public key belongs</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if key request fails</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the public key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayKeystoreInterface.sk">
+<code class="sig-name descname">sk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayKeystoreInterface.sk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return secret key for address from the local key store.</p>
+<p>Only works for keys which were previously added through add_keypair</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – address to which the private key belongs</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>KeyError</strong> – if key not in local store</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>private key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayKeystoreInterface.pk">
+<code class="sig-name descname">pk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayKeystoreInterface.pk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return public key for address from the local key store.</p>
+<p>Only works for keys which were previously added through add_keypair</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – address to which the public key belongs</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>KeyError</strong> – if key not in local store</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>public key</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">ZkayCryptoInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keystore</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.interface.ZkayKeystoreInterface" title="zkay.transaction.interface.ZkayKeystoreInterface">ZkayKeystoreInterface</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>API to generate cryptographic keys and perform encryption/decryption operations.</p>
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.is_symmetric_cipher">
+<em class="property">abstract classmethod </em><code class="sig-name descname">is_symmetric_cipher</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.is_symmetric_cipher" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.generate_or_load_key_pair">
+<code class="sig-name descname">generate_or_load_key_pair</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.generate_or_load_key_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store cryptographic keys for the account with the specified address in the keystore.</p>
+<p>If the pre-existing keys are found for this address, they are loaded from the filesystem,         otherwise new keys are generated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – the address for which to generate keys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.enc">
+<code class="sig-name descname">enc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">plain</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>AddressValue<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">my_addr</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">target_addr</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.enc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encrypt plain for receiver with target_addr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plain</strong> – plain text to encrypt</p></li>
+<li><p><strong>my_addr</strong> – address of the sender who encrypts</p></li>
+<li><p><strong>target_addr</strong> – address of the receiver for whom to encrypt</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if symmetric -&gt; (iv_cipher, None), if asymmetric (cipher, randomness which was used to encrypt plain)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.dec">
+<code class="sig-name descname">dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">CipherValue</span></em>, <em class="sig-param"><span class="n">my_addr</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.dec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrypt cipher encrypted for my_addr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cipher</strong> – encrypted value</p></li>
+<li><p><strong>my_addr</strong> – cipher is encrypted for this address</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if symmetric -&gt; (plain, None), if asymmetric (plain, randomness which was used to encrypt plain)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.serialize_pk">
+<em class="property">static </em><code class="sig-name descname">serialize_pk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">total_bytes</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.serialize_pk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize a large integer into an array of {cfg.cipher_chunk_size}-byte ints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.deserialize_pk">
+<em class="property">static </em><code class="sig-name descname">deserialize_pk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span><span class="p">:</span> <span class="n">Collection<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.deserialize_pk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize an array of {cfg.cipher_chunk_size}-byte ints into a single large int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.pack_byte_array">
+<em class="property">static </em><code class="sig-name descname">pack_byte_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bin</span><span class="p">:</span> <span class="n">bytes</span></em>, <em class="sig-param"><span class="n">chunk_size</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.pack_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pack byte array into an array of {chunk_size}-byte ints</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface.unpack_to_byte_array">
+<em class="property">static </em><code class="sig-name descname">unpack_to_byte_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span><span class="p">:</span> <span class="n">Collection<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">desired_length</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface.unpack_to_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpack an array of {cfg.pack_chunk_size}-byte ints into a byte array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface._generate_or_load_key_pair">
+<em class="property">abstract </em><code class="sig-name descname">_generate_or_load_key_pair</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface._generate_or_load_key_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface._enc">
+<em class="property">abstract </em><code class="sig-name descname">_enc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">plain</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">my_sk</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">target_pk</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface._enc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayCryptoInterface._dec">
+<em class="property">abstract </em><code class="sig-name descname">_dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span><span class="p">…</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sk</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayCryptoInterface._dec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.interface.ZkayProverInterface">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.interface.</code><code class="sig-name descname">ZkayProverInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proving_scheme</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayProverInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>API to generate zero knowledge proofs for a particular circuit and arguments.</p>
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayProverInterface.generate_proof">
+<code class="sig-name descname">generate_proof</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">function</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">priv_values</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">in_vals</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">out_vals</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>CipherValue<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayProverInterface.generate_proof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a NIZK-proof using the provided circuit for the given arguments.</p>
+<p>Note: circuit arguments must be in the same order as they are declared inside the circuit. (i.e. in execution order)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_dir</strong> – directory where the manifest and the prover keys are located</p></li>
+<li><p><strong>contract</strong> – contract of which the function which requires verification is part of</p></li>
+<li><p><strong>function</strong> – the contract member function for which a proof needs to be generated</p></li>
+<li><p><strong>priv_values</strong> – private/auxiliary circuit inputs in correct order</p></li>
+<li><p><strong>in_vals</strong> – public circuit inputs in correct order</p></li>
+<li><p><strong>out_vals</strong> – public circuit outputs in correct order</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#zkay.transaction.interface.ProofGenerationError" title="zkay.transaction.interface.ProofGenerationError"><strong>ProofGenerationError</strong></a> – if proof generation fails</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the proof, serialized into an uint256 array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayProverInterface._generate_proof">
+<em class="property">abstract </em><code class="sig-name descname">_generate_proof</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">verifier_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">priv_values</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">in_vals</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">out_vals</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayProverInterface._generate_proof" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.interface.ZkayProverInterface.get_prover_key_hash">
+<em class="property">abstract </em><code class="sig-name descname">get_prover_key_hash</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">verifier_directory</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.interface.ZkayProverInterface.get_prover_key_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the hash of the prover key stored in the given verification contract output directory.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

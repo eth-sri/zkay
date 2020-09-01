@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.compiler.privacy.transformation.zkay_transformer &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.zkay_transformer</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.compiler.privacy.transformation.zkay_transformer">
+<span id="zkay-compiler-privacy-transformation-zkay-transformer"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.transformation.zkay_transformer" title="zkay.compiler.privacy.transformation.zkay_transformer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.zkay_transformer</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.transformation.zkay_transformer" title="Permalink to this headline">¶</a></h1>
+<p><p>This module defines zkay-&gt;solidity transformers for the smaller contract elements (statements, expressions, state variables).</p>
+</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.transformation.zkay_transformer.</code><code class="sig-name descname">ZkayVarDeclTransformer</code><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../../../zkay_ast/visitor/transformer_visitor/index.html#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor</span></code></a></p>
+<p>Transformer for types, which was left out in the paper.</p>
+<p>This removes all privacy labels and converts the types of non-public variables (not &#64;all)
+to cipher_type.</p>
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitAnnotatedTypeName">
+<code class="sig-name descname">visitAnnotatedTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AnnotatedTypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitAnnotatedTypeName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitVariableDeclaration">
+<code class="sig-name descname">visitVariableDeclaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclaration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitVariableDeclaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitParameter">
+<code class="sig-name descname">visitParameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Parameter</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitParameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitStateVariableDeclaration">
+<code class="sig-name descname">visitStateVariableDeclaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StateVariableDeclaration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitStateVariableDeclaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitMapping">
+<code class="sig-name descname">visitMapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayVarDeclTransformer.visitMapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.transformation.zkay_transformer.</code><code class="sig-name descname">ZkayStatementTransformer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_gen</span><span class="p">:</span> <span class="n">CircuitHelper</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../../../zkay_ast/visitor/transformer_visitor/index.html#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor</span></code></a></p>
+<p>Corresponds to T from paper, (with additional handling of return statement and loops).</p>
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitStatementList">
+<code class="sig-name descname">visitStatementList</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StatementList</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitStatementList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (1)</p>
+<p>All statements are transformed individually.
+Whenever the transformation of a statement requires the introduction of additional statements
+(the CircuitHelper indicates this by storing them in the statement’s pre_statements list), they are prepended to the transformed
+statement in the list.</p>
+<p>If transformation changes the appearance of a statement (apart from type changes),
+the statement is wrapped in a comment block which displays the original statement’s code.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.process_statement_child">
+<code class="sig-name descname">process_statement_child</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">child</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.process_statement_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default statement child handling. Expressions and declarations are visited by the corresponding transformers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitStatement">
+<code class="sig-name descname">visitStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Statement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitStatement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rules (3), (4)</p>
+<p>This is for all the statements where the statements themselves remain untouched and only the children are altered.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitAssignmentStatement">
+<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (2)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitIfStatement">
+<code class="sig-name descname">visitIfStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IfStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitIfStatement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (6) + additional support for private conditions</p>
+<p>If the condition is public, guard conditions are introduced for both branches if any of the branches contains private expressions.</p>
+<p>If the condition is private, the whole if statement is inlined into the circuit. The only side-effects which are allowed
+inside the branch bodies are assignment statements with an <a class="reference external" href="mailto:lhs&#37;&#52;&#48;me">lhs<span>&#64;</span>me</a>. (anything else would leak private information).
+The if statement will be replaced by an assignment statement where the lhs is a tuple of all locations which are written
+in either branch and rhs is a tuple of the corresponding circuit outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitWhileStatement">
+<code class="sig-name descname">visitWhileStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">WhileStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitWhileStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitDoWhileStatement">
+<code class="sig-name descname">visitDoWhileStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">DoWhileStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitDoWhileStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitForStatement">
+<code class="sig-name descname">visitForStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ForStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitForStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitContinueStatement">
+<code class="sig-name descname">visitContinueStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ContinueStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitContinueStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitBreakStatement">
+<code class="sig-name descname">visitBreakStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">BreakStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitBreakStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitReturnStatement">
+<code class="sig-name descname">visitReturnStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReturnStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitReturnStatement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle return statement.</p>
+<p>If the function requires verification, the return statement is replaced by an assignment to a return variable.
+(which will be returned at the very end of the function body, after any verification wrapper code).
+Otherwise only the expression is transformed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitExpression">
+<code class="sig-name descname">visitExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayStatementTransformer.visitExpression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail if there are any untransformed expressions left.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.transformation.zkay_transformer.</code><code class="sig-name descname">ZkayExpressionTransformer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_generator</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>CircuitHelper<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../../../zkay_ast/visitor/transformer_visitor/index.html#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor</span></code></a></p>
+<p>Roughly corresponds to T_L / T_e from paper.</p>
+<p>T_L and T_e are equivalent here, because parameter encryption checks are handled in the verification wrapper of the function body.
+In addition to the features described in the paper, this transformer also supports primitive type casting,
+tuples (multiple return values), operations with short-circuiting and function calls.</p>
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitMeExpr">
+<em class="property">static </em><code class="sig-name descname">visitMeExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">MeExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitMeExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace me with msg.sender.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitLiteralExpr">
+<code class="sig-name descname">visitLiteralExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">LiteralExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitLiteralExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (7), don’t modify constants.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitIdentifierExpr">
+<code class="sig-name descname">visitIdentifierExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitIdentifierExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (8), don’t modify identifiers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitIndexExpr">
+<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IndexExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (9), transform location and index expressions separately.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitMemberAccessExpr">
+<code class="sig-name descname">visitMemberAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">MemberAccessExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitMemberAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitTupleExpr">
+<code class="sig-name descname">visitTupleExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">TupleExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitTupleExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitReclassifyExpr">
+<code class="sig-name descname">visitReclassifyExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReclassifyExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitReclassifyExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (11), trigger a boundary crossing.</p>
+<p>The reclassified expression is evaluated in the circuit and its result is made available in solidity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitBuiltinFunction">
+<code class="sig-name descname">visitBuiltinFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">BuiltinFunction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitBuiltinFunction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitFunctionCallExpr">
+<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visit_guarded_expression">
+<code class="sig-name descname">visit_guarded_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">guard_var</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">if_true</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visit_guarded_expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitPrimitiveCastExpr">
+<code class="sig-name descname">visitPrimitiveCastExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">PrimitiveCastExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitPrimitiveCastExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Casts are handled either in public or inside the circuit depending on the privacy of the casted expression.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitExpression">
+<em class="property">abstract </em><code class="sig-name descname">visitExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayExpressionTransformer.visitExpression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.transformation.zkay_transformer.</code><code class="sig-name descname">ZkayCircuitTransformer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">current_generator</span><span class="p">:</span> <span class="n">CircuitHelper</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../../../zkay_ast/visitor/transformer_visitor/index.html#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor</span></code></a></p>
+<p>Corresponds to T_phi from paper.</p>
+<p>This extends the abstract circuit representation while transforming private expressions and statements.
+Private expressions can never have side effects.
+Private statements may contain assignment statements with <a class="reference external" href="mailto:lhs&#37;&#52;&#48;me">lhs<span>&#64;</span>me</a> (no other types of side effects are allowed).</p>
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitLiteralExpr">
+<code class="sig-name descname">visitLiteralExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">LiteralExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitLiteralExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (13), don’t modify constants.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitIndexExpr">
+<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IndexExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitIdentifierExpr">
+<code class="sig-name descname">visitIdentifierExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitIdentifierExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.transform_location">
+<code class="sig-name descname">transform_location</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n">LocationExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.transform_location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (14), move location into the circuit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitReclassifyExpr">
+<code class="sig-name descname">visitReclassifyExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReclassifyExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitReclassifyExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (15), boundary crossing if analysis determined that it is</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitExpression">
+<code class="sig-name descname">visitExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitExpression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rule (16), other expressions don’t need special treatment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitFunctionCallExpr">
+<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitReturnStatement">
+<code class="sig-name descname">visitReturnStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReturnStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitReturnStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitAssignmentStatement">
+<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitVariableDeclarationStatement">
+<code class="sig-name descname">visitVariableDeclarationStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclarationStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitVariableDeclarationStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitIfStatement">
+<code class="sig-name descname">visitIfStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IfStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitIfStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitBlock">
+<code class="sig-name descname">visitBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Block</span></em>, <em class="sig-param"><span class="n">guard_cond</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>HybridArgumentIdf<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">guard_val</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitBlock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitStatement">
+<em class="property">abstract </em><code class="sig-name descname">visitStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Statement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_transformer.ZkayCircuitTransformer.visitStatement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail if statement type was not handled.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

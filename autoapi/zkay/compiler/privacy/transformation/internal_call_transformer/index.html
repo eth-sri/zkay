@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.compiler.privacy.transformation.internal_call_transformer &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.internal_call_transformer</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.compiler.privacy.transformation.internal_call_transformer">
+<span id="zkay-compiler-privacy-transformation-internal-call-transformer"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.transformation.internal_call_transformer" title="zkay.compiler.privacy.transformation.internal_call_transformer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.internal_call_transformer</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.transformation.internal_call_transformer" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="zkay.compiler.privacy.transformation.internal_call_transformer.compute_transitive_circuit_io_sizes">
+<code class="sig-prename descclassname">zkay.compiler.privacy.transformation.internal_call_transformer.</code><code class="sig-name descname">compute_transitive_circuit_io_sizes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fcts_with_verification</span><span class="p">:</span> <span class="n">List<span class="p">[</span>ConstructorOrFunctionDefinition<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cgens</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>ConstructorOrFunctionDefinition<span class="p">, </span>CircuitHelper<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.internal_call_transformer.compute_transitive_circuit_io_sizes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute transitive circuit IO sizes (account for called circuits).</p>
+<p>This is only possible if the IO sizes of called circuits no longer change, which means, that this function has to be called in
+a second pass, after all function bodies are already fully transformed.</p>
+<p>IO sizes include public circuit inputs and outputs as well as the private inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fcts_with_verification</strong> – All functions which have a circuit associated with them</p></li>
+<li><p><strong>cgens</strong> – [SIDE EFFECT] A map from function to circuit</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.privacy.transformation.internal_call_transformer._compute_transitive_circuit_io_sizes">
+<code class="sig-prename descclassname">zkay.compiler.privacy.transformation.internal_call_transformer.</code><code class="sig-name descname">_compute_transitive_circuit_io_sizes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cgens</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>ConstructorOrFunctionDefinition<span class="p">, </span>CircuitHelper<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fct</span></em>, <em class="sig-param"><span class="n">gkeys</span></em>, <em class="sig-param"><span class="n">called_fcts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.internal_call_transformer._compute_transitive_circuit_io_sizes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.privacy.transformation.internal_call_transformer.transform_internal_calls">
+<code class="sig-prename descclassname">zkay.compiler.privacy.transformation.internal_call_transformer.</code><code class="sig-name descname">transform_internal_calls</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fcts_with_verification</span><span class="p">:</span> <span class="n">List<span class="p">[</span>ConstructorOrFunctionDefinition<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cgens</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>ConstructorOrFunctionDefinition<span class="p">, </span>CircuitHelper<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.internal_call_transformer.transform_internal_calls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add required additional args for public calls to functions which require verification.</p>
+<p>This must be called after compute_transitive_circuit_io_sizes.</p>
+<p>Whenever a function which requires verification is called, the caller needs to pass along the circuit input and output arrays,
+as well as the correct start indices for them, such that the callee deserializes/serializes from/into the correct segment of the
+output/input array. This function thus transforms function calls to functions requiring verification, by adding these additional
+arguments. This must be done in a second pass, after all function bodies in the contract are fully transformed,
+since the correct start indices depend on the circuit IO sizes of the caller function
+(see ZkayTransformer documentation for more information).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fcts_with_verification</strong> – [SIDE EFFECT] All functions which have a circuit associated with them</p></li>
+<li><p><strong>cgens</strong> – A map from function to circuit</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,437 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Language Overview &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Release Notes" href="release_notes.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Language Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features-specific-to-zkay">Features specific to zkay</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#final-variables">Final Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ownership">Ownership</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reclassification">Reclassification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#private-computations">Private Computations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#warning">Warning</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#general-language-features">General Language Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#contract-structure">Contract Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#statements">Statements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expressions">Expressions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cryptocurrency">Cryptocurrency</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Language Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="language-overview">
+<h1>Language Overview<a class="headerlink" href="#language-overview" title="Permalink to this headline">¶</a></h1>
+<p>In general, zkay can be regarded as a subset of Solidity with a few additional features and some minor differences.</p>
+<div class="section" id="features-specific-to-zkay">
+<h2>Features specific to zkay<a class="headerlink" href="#features-specific-to-zkay" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="final-variables">
+<h3>Final Variables<a class="headerlink" href="#final-variables" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kr">final</span> <span class="kt">uint</span> <span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>State variables can be declared final, which means that they can only be assigned once in the constructor.</p>
+</div>
+<div class="section" id="ownership">
+<h3>Ownership<a class="headerlink" href="#ownership" title="Permalink to this headline">¶</a></h3>
+<p>Any primitive type variable can be turned into a <em>private</em> variable by annotating it with an optional ownership label using the syntax:</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kt">type@</span><span class="nb">owner</span> <span class="n">identifier</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Which ownership labels are available depends on the scope:</p>
+<ul class="simple">
+<li><p>local variables: any final or constant address state variable, as well as the special value <em>me</em> (which corresponds to the address of msg.sender) can be used as an ownership label</p></li>
+<li><p>state variables: only final or constant state variables are allowed</p></li>
+<li><p>function parameters: only <em>me</em> is allowed</p></li>
+<li><p>function return parameters: in general only <em>me</em>, for private/internal functions also any final or constant state address variable</p></li>
+</ul>
+<p>It is also possible to declare mappings where the privacy annotation of a value depends on the key:</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kd">mapping</span><span class="p">(</span><span class="kt">address</span><span class="o">!</span><span class="n">x</span> <span class="o">=&gt;</span> <span class="kt">uint@</span><span class="n">x</span><span class="p">)</span> <span class="n">private_values</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Private variables are <strong>always encrypted</strong> on the the chain such that they can only be read by the designated owner.</p>
+</div>
+<div class="section" id="reclassification">
+<h3>Reclassification<a class="headerlink" href="#reclassification" title="Permalink to this headline">¶</a></h3>
+<p>If the transaction issuer owns a variable, it is possible to reveal its value to another owner or to make a private value public.</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kt">uint@</span><span class="nb">me</span> <span class="n">x</span><span class="p">;</span>
+<span class="kt">uint@</span><span class="nb">bob</span> <span class="n">x_bob</span><span class="p">;</span> <span class="n">x_bob</span> <span class="o">=</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bob</span><span class="p">);</span>
+<span class="kt">uint</span> <span class="n">x_public</span> <span class="o">=</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">all</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Revealing to <em>all</em> will decrypt the value and publish the plaintext, whereas revealing to another owner will reencrypt the value for the new owner.</p>
+<p>When assigning a public value to a private variable, zkay implicitly classifies the value, i.e.:</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kt">uint@</span><span class="nb">me</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span> <span class="c1">// &lt;=&gt; uint@me x = reveal(5, me)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="private-computations">
+<h3>Private Computations<a class="headerlink" href="#private-computations" title="Permalink to this headline">¶</a></h3>
+<p>One of zkay’s most powerful features is the ability to express computations over private values.</p>
+<p>Any variable for which the compiler can statically prove that the ownership label is equivalent to <em>&#64;me</em> can be used within an expression. e.g.:</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kt">uint@</span><span class="nb">me</span> <span class="n">val</span><span class="p">;</span>
+<span class="kt">uint@</span><span class="nb">me</span> <span class="n">res</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">val</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Mere assignment is also possible for values which are not owned by <cite>msg.sender</cite>, as this does not require decryption e.g.:</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kt">uint@</span><span class="nb">owner</span> <span class="n">x</span><span class="p">;</span>
+<span class="kt">uint@</span><span class="nb">owner</span> <span class="n">y</span><span class="p">;</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="section" id="limitations">
+<h4>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Private expressions are not allowed within loops or recursive functions (and vice versa).</p></li>
+<li><p>Private expressions must not contain side effects.</p></li>
+<li><p>If the condition of an if statement is a private expression, then the only allowed side-effects within the branches are assignments to primitive-type variables owned by <em>&#64;me</em>.</p></li>
+<li><p>Private bitwise operations cannot be used with 256-bit types.</p></li>
+<li><p>When bit-shifting private values, the shift amount needs to be a constant literal.</p></li>
+<li><p>Address members (balance, send, transfer) are not accessible on private addresses.</p></li>
+<li><p>Division, modulo and exponentiation oeprators are not supported within private expressions.</p></li>
+</ul>
+</div>
+<div class="section" id="warning">
+<h4>Warning<a class="headerlink" href="#warning" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p>Private 256-bit values overflow at a large prime (~253.5 bits).</p></li>
+<li><div class="line-block">
+<div class="line">Comparison of private 256-bit values &gt;= 2^252 may fail.</div>
+<div class="line"><strong>!!! If you cannot guarantee that the operands of a comparison stay below that threshold (i.e. if the values are freely controllable by untrusted users), use a smaller integer type to preserve correctness !!!</strong></div>
+</div>
+</li>
+</ul>
+<p>This does only apply to 256-bit values and is due to internal zk-SNARK circuit limitations. Smaller types are not affected.</p>
+</div>
+</div>
+</div>
+<div class="section" id="general-language-features">
+<h2>General Language Features<a class="headerlink" href="#general-language-features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="contract-structure">
+<h3>Contract Structure<a class="headerlink" href="#contract-structure" title="Permalink to this headline">¶</a></h3>
+<p>A zkay contract is of the following shape:</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kr">pragma</span> <span class="n">zkay</span> <span class="o">^</span><span class="mf">0.2</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span> <span class="c1">// Pragma directive with version constraint</span>
+
+<span class="c1">// For now, import statements are not supported</span>
+
+<span class="c1">// Example contract defintion</span>
+<span class="kd">contract</span> <span class="n">Test</span> <span class="p">{</span>
+    <span class="c1">// Example enum definition</span>
+    <span class="kd">enum</span> <span class="n">TestEnum</span> <span class="p">{</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Example state variable declarations</span>
+    <span class="kr">final</span> <span class="kt">address</span> <span class="nb">owner</span><span class="p">;</span>
+    <span class="kt">uint@</span><span class="nb">owner</span> <span class="n">value</span><span class="p">;</span>
+    <span class="n">TestEnum</span> <span class="n">e_value</span><span class="p">;</span>
+
+    <span class="c1">// Optional constructor definition</span>
+    <span class="kd">constructor</span><span class="p">()</span> <span class="kr">public</span> <span class="p">{</span>
+        <span class="nb">owner</span> <span class="o">=</span> <span class="nb">me</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Example function definition</span>
+    <span class="kd">function</span> <span class="n">set_value</span><span class="p">(</span><span class="kt">uint@</span><span class="nb">me</span> <span class="n">_value</span><span class="p">)</span> <span class="kr">public</span> <span class="k">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">require</span><span class="p">(</span><span class="nb">owner</span> <span class="o">==</span> <span class="nb">me</span><span class="p">);</span>
+        <span class="nf">require</span><span class="p">(</span><span class="o">!</span><span class="n">is_five</span><span class="p">());</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">_value</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">_value</span><span class="p">,</span> <span class="nb">all</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Example internal function</span>
+    <span class="kd">function</span> <span class="n">is_five</span><span class="p">()</span> <span class="kr">internal</span> <span class="kr">view</span> <span class="k">returns</span><span class="p">(</span><span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">require</span><span class="p">(</span><span class="nb">owner</span> <span class="o">==</span> <span class="nb">me</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="mi">5</span><span class="p">,</span> <span class="nb">all</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="types">
+<h3>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<p>The following primitive types are fully supported in zkay:</p>
+<ul class="simple">
+<li><p>bool</p></li>
+<li><p>int, int8, …, int256 (int256 only public)</p></li>
+<li><p>uint, uint8, …, uint256</p></li>
+<li><p>enums</p></li>
+<li><p>address</p></li>
+<li><p>address payable</p></li>
+</ul>
+<p>Additionally, zkay also supports the mapping type (only as state variable).
+Other reference types are currently not supported.</p>
+</div>
+<div class="section" id="statements">
+<h3>Statements<a class="headerlink" href="#statements" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="n">test</span><span class="p">()</span> <span class="kr">public</span> <span class="k">returns</span><span class="p">(</span><span class="kt">uint</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Declaration &amp; Assignment</span>
+    <span class="kt">uint</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">uint@</span><span class="nb">me</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+    <span class="c1">// Require assertions</span>
+    <span class="nf">require</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+
+    <span class="c1">// Public loops</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">uint</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kt">uint</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">);</span>
+
+    <span class="c1">// If statements</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// With private condition</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">priv_f</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span> <span class="c1">// Private function calls</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Function calls</span>
+    <span class="n">test2</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+    <span class="c1">// !! Return statement must always come at the end of the function body in zkay !!</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="n">priv_f</span><span class="p">(</span><span class="kt">uint</span> <span class="n">x</span><span class="p">)</span> <span class="kr">pure</span> <span class="kr">internal</span> <span class="k">returns</span><span class="p">(</span><span class="kt">uint@</span><span class="nb">me</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">x</span><span class="p">;</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+
+<span class="kd">function</span> <span class="n">test2</span><span class="p">(</span><span class="kt">uint</span> <span class="n">x</span><span class="p">,</span> <span class="kt">uint@</span><span class="nb">me</span> <span class="n">x2</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="expressions">
+<h3>Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline">¶</a></h3>
+<p>zkay supports largely the same operators as Solidity, with the same precedence rules.</p>
+<p>Tuples also work the same way as in Solidity.</p>
+<p><strong>Note</strong>: In contrast to Solidity, zkay does not have assignment expressions. Function calls are the only expressions which may have side-effects.</p>
+</div>
+<div class="section" id="cryptocurrency">
+<h3>Cryptocurrency<a class="headerlink" href="#cryptocurrency" title="Permalink to this headline">¶</a></h3>
+<p>Public functions can be declared <cite>payable</cite> to receive ether.</p>
+<p>There is some limited support for the <cite>now</cite>, <cite>block</cite>, <cite>tx</cite> and <cite>msg</cite> globals (all fields with <cite>bytes</cite> types are unavailable).</p>
+<p>You can use the <cite>transfer</cite> member function on public address payable variables to transfer funds.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="release_notes.html" class="btn btn-neutral float-right" title="Release Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial.html" class="btn btn-neutral float-left" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

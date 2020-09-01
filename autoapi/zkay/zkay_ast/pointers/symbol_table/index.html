@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.zkay_ast.pointers.symbol_table &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.pointers.symbol_table</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.zkay_ast.pointers.symbol_table">
+<span id="zkay-zkay-ast-pointers-symbol-table"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.pointers.symbol_table" title="zkay.zkay_ast.pointers.symbol_table"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.pointers.symbol_table</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.pointers.symbol_table" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="zkay.zkay_ast.pointers.symbol_table.fill_symbol_table">
+<code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">fill_symbol_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.fill_symbol_table" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_ast.pointers.symbol_table.link_symbol_table">
+<code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">link_symbol_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.link_symbol_table" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_ast.pointers.symbol_table.link_identifiers">
+<code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">link_identifiers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.link_identifiers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_ast.pointers.symbol_table.merge_dicts">
+<code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">merge_dicts</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">dict_args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.merge_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given any number of dicts, shallow copy and merge into a new dict.
+Report error on conflicting keys.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_ast.pointers.symbol_table.collect_children_names">
+<code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">collect_children_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>Identifier<span class="p">]</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.collect_children_names" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_ast.pointers.symbol_table.get_builtin_globals">
+<code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">get_builtin_globals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.get_builtin_globals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">SymbolTableFiller</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">traversal</span><span class="o">=</span><span class="default_value">'post'</span></em>, <em class="sig-param"><span class="n">log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.get_builtin_globals">
+<code class="sig-name descname">get_builtin_globals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.get_builtin_globals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitSourceUnit">
+<code class="sig-name descname">visitSourceUnit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">SourceUnit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitSourceUnit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitContractDefinition">
+<code class="sig-name descname">visitContractDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ContractDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitContractDefinition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitConstructorOrFunctionDefinition">
+<code class="sig-name descname">visitConstructorOrFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitConstructorOrFunctionDefinition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitStructDefinition">
+<code class="sig-name descname">visitStructDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StructDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitStructDefinition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitEnumDefinition">
+<code class="sig-name descname">visitEnumDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">EnumDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitEnumDefinition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitEnumValue">
+<code class="sig-name descname">visitEnumValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">EnumValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitEnumValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitVariableDeclaration">
+<code class="sig-name descname">visitVariableDeclaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclaration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitVariableDeclaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitStatementList">
+<code class="sig-name descname">visitStatementList</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StatementList</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitStatementList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitSimpleStatement">
+<code class="sig-name descname">visitSimpleStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">SimpleStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitSimpleStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitForStatement">
+<code class="sig-name descname">visitForStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ForStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitForStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitMapping">
+<code class="sig-name descname">visitMapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableFiller.visitMapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.pointers.symbol_table.</code><code class="sig-name descname">SymbolTableLinker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">traversal</span><span class="o">=</span><span class="default_value">'post'</span></em>, <em class="sig-param"><span class="n">log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker._find_next_decl">
+<em class="property">static </em><code class="sig-name descname">_find_next_decl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker._find_next_decl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker._find_lca">
+<em class="property">static </em><code class="sig-name descname">_find_lca</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast1</span><span class="p">:</span> <span class="n">AST</span></em>, <em class="sig-param"><span class="n">ast2</span><span class="p">:</span> <span class="n">AST</span></em>, <em class="sig-param"><span class="n">root</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker._find_lca" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.find_type_declaration">
+<em class="property">static </em><code class="sig-name descname">find_type_declaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">UserDefinedTypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.find_type_declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.find_identifier_declaration">
+<em class="property">static </em><code class="sig-name descname">find_identifier_declaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.find_identifier_declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.in_scope_at">
+<em class="property">static </em><code class="sig-name descname">in_scope_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target_idf</span><span class="p">:</span> <span class="n">Identifier</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.in_scope_at" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitIdentifierExpr">
+<code class="sig-name descname">visitIdentifierExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitIdentifierExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitUserDefinedTypeName">
+<code class="sig-name descname">visitUserDefinedTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">UserDefinedTypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitUserDefinedTypeName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitMemberAccessExpr">
+<code class="sig-name descname">visitMemberAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">MemberAccessExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitMemberAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitIndexExpr">
+<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IndexExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.pointers.symbol_table.SymbolTableLinker.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

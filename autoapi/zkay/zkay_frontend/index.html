@@ -1,0 +1,443 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.zkay_frontend &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_frontend</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.zkay_frontend">
+<span id="zkay-zkay-frontend"></span><h1><a class="reference internal" href="#module-zkay.zkay_frontend" title="zkay.zkay_frontend"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_frontend</span></code></a><a class="headerlink" href="#module-zkay.zkay_frontend" title="Permalink to this headline">¶</a></h1>
+<p><p>This module exposes functionality to compile and package zkay code</p>
+</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py data">
+<dt id="zkay.zkay_frontend.proving_scheme_classes">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">proving_scheme_classes</code><em class="property"> :Dict[str, Type[ProvingScheme]]</em><a class="headerlink" href="#zkay.zkay_frontend.proving_scheme_classes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.zkay_frontend.generator_classes">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">generator_classes</code><em class="property"> :Dict[str, Type[CircuitGenerator]]</em><a class="headerlink" href="#zkay.zkay_frontend.generator_classes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.compile_zkay_file">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">compile_zkay_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">import_keys</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_frontend.compile_zkay_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse, type-check and compile the given zkay contract file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_file_path</strong> – path to the zkay contract file</p></li>
+<li><p><strong>output_dir</strong> – path to a directory where the compilation output should be generated</p></li>
+<li><p><strong>import_keys</strong> – <div class="line-block">
+<div class="line">if false, zk-snark of all modified circuits will be generated during compilation</div>
+<div class="line">if true, zk-snark keys for all circuits are expected to be already present in the output directory, and the compilation will use the provided keys to generate the verification contracts</div>
+<div class="line">This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party</div>
+</div>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="../errors/exceptions/index.html#zkay.errors.exceptions.ZkayCompilerError" title="zkay.errors.exceptions.ZkayCompilerError"><strong>ZkayCompilerError</strong></a> – if any compilation stage fails</p></li>
+<li><p><strong>RuntimeError</strong> – if import_keys is True and zkay file, manifest file or any of the key files is missing</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.compile_zkay">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">compile_zkay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">import_keys</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>CircuitGenerator<span class="p">, </span>str<span class="p">]</span><a class="headerlink" href="#zkay.zkay_frontend.compile_zkay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse, type-check and compile the given zkay code.</p>
+<dl class="simple">
+<dt>Note: If a SolcException is raised, this indicates a bug in zkay</dt><dd><p>(i.e. zkay produced solidity code which doesn’t compile, without raising a ZkayCompilerError)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>code</strong> – zkay code to compile</p></li>
+<li><p><strong>output_dir</strong> – path to a directory where the compilation output should be generated</p></li>
+<li><p><strong>import_keys</strong> – <div class="line-block">
+<div class="line">if false, zk-snark of all modified circuits will be generated during compilation</div>
+<div class="line">if true, zk-snark keys for all circuits are expected to be already present in the output directory,                           and the compilation will use the provided keys to generate the verification contracts</div>
+<div class="line">This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party</div>
+</div>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="../errors/exceptions/index.html#zkay.errors.exceptions.ZkayCompilerError" title="zkay.errors.exceptions.ZkayCompilerError"><strong>ZkayCompilerError</strong></a> – if any compilation stage fails</p></li>
+<li><p><strong>RuntimeError</strong> – if import_keys is True and zkay file, manifest file or any of the key files is missing</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.use_configuration_from_manifest">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">use_configuration_from_manifest</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="headerlink" href="#zkay.zkay_frontend.use_configuration_from_manifest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.load_transaction_interface_from_directory">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">load_transaction_interface_from_directory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="headerlink" href="#zkay.zkay_frontend.load_transaction_interface_from_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load transaction interface module for contracts in contract_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>contract_dir</strong> – directory with zkay contract compilation output</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>module object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.transaction_benchmark_ctx">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">transaction_benchmark_ctx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; ContextManager<span class="p">[</span>Any<span class="p">]</span><a class="headerlink" href="#zkay.zkay_frontend.transaction_benchmark_ctx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.load_contract_transaction_interface_from_module">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">load_contract_transaction_interface_from_module</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_mod</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Type<a class="headerlink" href="#zkay.zkay_frontend.load_contract_transaction_interface_from_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load contract class from transaction interface module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_mod</strong> – loaded transaction interface module</p></li>
+<li><p><strong>contract_name</strong> – contract name, only required if file contains multiple contracts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Contract class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.load_contract_transaction_interface_from_directory">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">load_contract_transaction_interface_from_directory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Type<a class="headerlink" href="#zkay.zkay_frontend.load_contract_transaction_interface_from_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load contract class from transaction interface stored in contract_dir</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_dir</strong> – directory with contract compilation output</p></li>
+<li><p><strong>contract_name</strong> – contract name, only required if file contains multiple contracts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Contract class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.deploy_contract">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">deploy_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">account</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_frontend.deploy_contract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deploy zkay contract in contract_dir using the given account and with specified constructor arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_dir</strong> – contract’s compilation output directory</p></li>
+<li><p><strong>account</strong> – Account from which to deploy the contract</p></li>
+<li><p><strong>args</strong> – constructor arguments</p></li>
+<li><p><strong>contract_name</strong> – contract name, only required if file contains multiple contracts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="../transaction/interface/index.html#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if deployment fails</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>contract instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.connect_to_contract_at">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">connect_to_contract_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract_address</span></em>, <em class="sig-param"><span class="n">account</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_frontend.connect_to_contract_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect with account to zkay contract at contract_address, with local files in contract_dir.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_dir</strong> – contract’s compilation output directory</p></li>
+<li><p><strong>contract_address</strong> – blockchain address of the deployed contract</p></li>
+<li><p><strong>account</strong> – account from which to connect (will be used as msg.sender for transactions)</p></li>
+<li><p><strong>contract_name</strong> – contract name, only required if file contains multiple contracts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="../transaction/interface/index.html#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if connection fails</p></li>
+<li><p><a class="reference internal" href="../transaction/interface/index.html#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if integrity check fails</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>contract instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend._collect_package_contents">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">_collect_package_contents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">check_all_files</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#zkay.zkay_frontend._collect_package_contents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of relative paths of all files which should be part of the package for the contract in contract_dir.</p>
+<p>Raises an exception if contract.zkay, manifest.json or any of the files required by contract.zkay is missing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contract_dir</strong> – path to directory containing manifest and zkay file</p></li>
+<li><p><strong>check_all_files</strong> – if true, checks whether all expected files are present</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>FileNotFoundError</strong> – if any of the expected files is not present</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of relative paths (relative to contract_dir)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.package_zkay_contract">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">package_zkay_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zkay_output_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">output_filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_frontend.package_zkay_contract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Package zkay contract for distribution.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend.extract_zkay_package">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">extract_zkay_package</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zkp_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_frontend.extract_zkay_package" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpack and compile a zkay contract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zkp_filename</strong> – path to the packaged contract</p></li>
+<li><p><strong>output_dir</strong> – directory where to unpack and compile the contract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – if import fails</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_frontend._dump_to_output">
+<code class="sig-prename descclassname">zkay.zkay_frontend.</code><code class="sig-name descname">_dump_to_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">content</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">dryrun_solc</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#zkay.zkay_frontend._dump_to_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump ‘content’ into file ‘output_dir/filename’ and optionally check if it compiles error-free with solc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../compiler/solidity/compiler/index.html#zkay.compiler.solidity.compiler.SolcException" title="zkay.compiler.solidity.compiler.SolcException"><strong>SolcException</strong></a> – if dryrun_solc is True and there are compilation errors</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dumped content as string</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

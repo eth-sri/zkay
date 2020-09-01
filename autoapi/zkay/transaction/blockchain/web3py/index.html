@@ -1,0 +1,575 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.transaction.blockchain.web3py &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.transaction.blockchain.web3py">
+<span id="zkay-transaction-blockchain-web3py"></span><h1><a class="reference internal" href="#module-zkay.transaction.blockchain.web3py" title="zkay.transaction.blockchain.web3py"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py</span></code></a><a class="headerlink" href="#module-zkay.transaction.blockchain.web3py" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py data">
+<dt id="zkay.transaction.blockchain.web3py.max_gas_limit">
+<code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">max_gas_limit</code><em class="property"> = 10000000</em><a class="headerlink" href="#zkay.transaction.blockchain.web3py.max_gas_limit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3Blockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../interface/index.html#zkay.transaction.interface.ZkayBlockchainInterface" title="zkay.transaction.interface.ZkayBlockchainInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.interface.ZkayBlockchainInterface</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain.compile_contract">
+<em class="property">static </em><code class="sig-name descname">compile_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sol_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">libs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cwd</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain.compile_contract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain.deploy_solidity_contract">
+<code class="sig-name descname">deploy_solidity_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sol_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain.deploy_solidity_contract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compile and deploy the specified solidity contract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sol_filename</strong> – solidity file</p></li>
+<li><p><strong>contract_name</strong> – specifies which contract from the .sol file to compile (None -&gt; take first contract in file)</p></li>
+<li><p><strong>sender</strong> – account address from which to issue the deployment transaction (keys must be hosted in node)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="../../interface/index.html#zkay.transaction.interface.BlockChainError" title="zkay.transaction.interface.BlockChainError"><strong>BlockChainError</strong></a> – if there is an error in the backend</p></li>
+<li><p><a class="reference internal" href="../../interface/index.html#zkay.transaction.interface.TransactionFailedException" title="zkay.transaction.interface.TransactionFailedException"><strong>TransactionFailedException</strong></a> – if the deployment transaction failed</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Address of the deployed contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain.get_special_variables">
+<code class="sig-name descname">get_special_variables</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain.get_special_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return message, block and transaction objects, populated according to the current chain state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> – transaction sender address</p></li>
+<li><p><strong>wei_amount</strong> – transaction value (if payable)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>populated builtin objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._create_w3_instance">
+<em class="property">abstract </em><code class="sig-name descname">_create_w3_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._create_w3_instance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._default_address">
+<code class="sig-name descname">_default_address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._default_address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._get_balance">
+<code class="sig-name descname">_get_balance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._get_balance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._req_public_key">
+<code class="sig-name descname">_req_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._req_public_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._announce_public_key">
+<code class="sig-name descname">_announce_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">pk</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span><span class="p">…</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._announce_public_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._req_state_var">
+<code class="sig-name descname">_req_state_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">indices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._req_state_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._call">
+<code class="sig-name descname">_call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._transact">
+<code class="sig-name descname">_transact</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_handle</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">function</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">actual_params</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._transact" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._deploy">
+<code class="sig-name descname">_deploy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">actual_args</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._deploy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._deploy_contract">
+<code class="sig-name descname">_deploy_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contract_interface</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._deploy_contract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._deploy_dependencies">
+<code class="sig-name descname">_deploy_dependencies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">verifier_names</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._deploy_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._connect_libraries">
+<code class="sig-name descname">_connect_libraries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._connect_libraries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._connect">
+<code class="sig-name descname">_connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">contract</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._verify_contract_integrity">
+<code class="sig-name descname">_verify_contract_integrity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sol_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">libraries</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_library</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">cwd</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._verify_contract_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the bytecode of the contract at address matches the bytecode obtained by locally compiling sol_filename.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – address of the remote contract</p></li>
+<li><p><strong>sol_filename</strong> – path to the local contract code file</p></li>
+<li><p><strong>libraries</strong> – library dict which should be passed during compilation (for linking)</p></li>
+<li><p><strong>contract_name</strong> – contract name, if not specified, the first contract in the file is used</p></li>
+<li><p><strong>is_library</strong> – set to true if this a library instead of a contract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="../../interface/index.html#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if there is a mismatch</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a contract handle for the remote contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._verify_library_integrity">
+<code class="sig-name descname">_verify_library_integrity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">libraries</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">contract_with_libs_addr</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">sol_with_libs_filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._verify_library_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the libraries linked in contract_with_libs match library_sol and return the addresses of the library contracts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>libraries</strong> – = List of (library name, library.sol) tuples</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="../../interface/index.html#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if there is a mismatch</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dict of library name -&gt; address for all libs from libraries which occurred in <a class="reference external" href="mailto:contract&#37;&#52;&#48;contract_with_libs_addr">contract<span>&#64;</span>contract_with_libs_addr</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._verify_zkay_contract_integrity">
+<code class="sig-name descname">_verify_zkay_contract_integrity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">pki_verifier_addresses</span><span class="p">:</span> <span class="n">Dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._verify_zkay_contract_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the zkay main contract at address matches the local file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – address of the remote main contract</p></li>
+<li><p><strong>project_dir</strong> – path to the zkay contract directory</p></li>
+<li><p><strong>pki_verifier_addresses</strong> – dictionary which maps pki and verification contract names to the corresponding remote addresses</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="../../interface/index.html#zkay.transaction.interface.IntegrityError" title="zkay.transaction.interface.IntegrityError"><strong>IntegrityError</strong></a> – if there is a mismatch</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain.__hardcoded_external_contracts_ctx">
+<code class="sig-name descname">__hardcoded_external_contracts_ctx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">pki_verifier_addresses</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain.__hardcoded_external_contracts_ctx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain.__normalized_hex">
+<code class="sig-name descname">__normalized_hex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>bytes<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain.__normalized_hex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3Blockchain._gas_heuristic">
+<code class="sig-name descname">_gas_heuristic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span></em>, <em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3Blockchain._gas_heuristic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3TesterBlockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3TesterBlockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3TesterBlockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.blockchain.web3py.Web3Blockchain" title="zkay.transaction.blockchain.web3py.Web3Blockchain"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py.Web3Blockchain</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3TesterBlockchain.is_debug_backend">
+<em class="property">classmethod </em><code class="sig-name descname">is_debug_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3TesterBlockchain.is_debug_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3TesterBlockchain._connect_libraries">
+<code class="sig-name descname">_connect_libraries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3TesterBlockchain._connect_libraries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3TesterBlockchain._create_w3_instance">
+<code class="sig-name descname">_create_w3_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3TesterBlockchain._create_w3_instance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3TesterBlockchain.create_test_accounts">
+<code class="sig-name descname">create_test_accounts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3TesterBlockchain.create_test_accounts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return addresses of pre-funded accounts (only implemented for w3-eth-tester and w3-ganache, for debugging).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>count</strong> – how many accounts</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NotImplementedError</strong> – if the backend does not support dummy accounts</p></li>
+<li><p><strong>ValueError</strong> – if not enough unused pre-funded accounts are available</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the account addresses (either a single value if count = 1 or a tuple otherwise)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3TesterBlockchain._gas_heuristic">
+<code class="sig-name descname">_gas_heuristic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span></em>, <em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3TesterBlockchain._gas_heuristic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3IpcBlockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3IpcBlockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3IpcBlockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.blockchain.web3py.Web3Blockchain" title="zkay.transaction.blockchain.web3py.Web3Blockchain"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py.Web3Blockchain</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3IpcBlockchain._create_w3_instance">
+<code class="sig-name descname">_create_w3_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3IpcBlockchain._create_w3_instance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3WebsocketBlockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3WebsocketBlockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3WebsocketBlockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.blockchain.web3py.Web3Blockchain" title="zkay.transaction.blockchain.web3py.Web3Blockchain"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py.Web3Blockchain</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3WebsocketBlockchain._create_w3_instance">
+<code class="sig-name descname">_create_w3_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3WebsocketBlockchain._create_w3_instance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3HttpBlockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3HttpBlockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3HttpBlockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.blockchain.web3py.Web3Blockchain" title="zkay.transaction.blockchain.web3py.Web3Blockchain"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py.Web3Blockchain</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3HttpBlockchain._create_w3_instance">
+<code class="sig-name descname">_create_w3_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3HttpBlockchain._create_w3_instance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3HttpGanacheBlockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.blockchain.web3py.Web3HttpBlockchain" title="zkay.transaction.blockchain.web3py.Web3HttpBlockchain"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py.Web3HttpBlockchain</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain.is_debug_backend">
+<em class="property">classmethod </em><code class="sig-name descname">is_debug_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain.is_debug_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain.create_test_accounts">
+<code class="sig-name descname">create_test_accounts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain.create_test_accounts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return addresses of pre-funded accounts (only implemented for w3-eth-tester and w3-ganache, for debugging).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>count</strong> – how many accounts</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NotImplementedError</strong> – if the backend does not support dummy accounts</p></li>
+<li><p><strong>ValueError</strong> – if not enough unused pre-funded accounts are available</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the account addresses (either a single value if count = 1 or a tuple otherwise)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain._gas_heuristic">
+<code class="sig-name descname">_gas_heuristic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sender</span></em>, <em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3HttpGanacheBlockchain._gas_heuristic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.blockchain.web3py.Web3CustomBlockchain">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.blockchain.web3py.</code><code class="sig-name descname">Web3CustomBlockchain</code><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3CustomBlockchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.blockchain.web3py.Web3Blockchain" title="zkay.transaction.blockchain.web3py.Web3Blockchain"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.blockchain.web3py.Web3Blockchain</span></code></a></p>
+<p>API to interact with the blockchain.</p>
+<p>It automatically ensures that all needed library contracts are accessible.
+For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.</p>
+<p>For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.</p>
+<p>(Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)</p>
+<p>See documentation of <code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code> for more information.</p>
+<dl class="py method">
+<dt id="zkay.transaction.blockchain.web3py.Web3CustomBlockchain._create_w3_instance">
+<code class="sig-name descname">_create_w3_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.blockchain.web3py.Web3CustomBlockchain._create_w3_instance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

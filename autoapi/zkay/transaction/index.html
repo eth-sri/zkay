@@ -1,0 +1,233 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.transaction &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.transaction">
+<span id="zkay-transaction"></span><h1><a class="reference internal" href="#module-zkay.transaction" title="zkay.transaction"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction</span></code></a><a class="headerlink" href="#module-zkay.transaction" title="Permalink to this headline">¶</a></h1>
+<p><p>This package contains the runtime API used by the offchain simulation code when working with zkay transactions.</p>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="interface/index.html#module-zkay.transaction.interface" title="zkay.transaction.interface"><code class="xref py py-mod docutils literal notranslate"><span class="pre">interface</span></code></a>: Runtime API interface</p></li>
+<li><p><a class="reference internal" href="offchain/index.html#module-zkay.transaction.offchain" title="zkay.transaction.offchain"><code class="xref py py-mod docutils literal notranslate"><span class="pre">offchain</span></code></a>: Offchain simulator base class with common functionality</p></li>
+<li><p><a class="reference internal" href="runtime/index.html#module-zkay.transaction.runtime" title="zkay.transaction.runtime"><code class="xref py py-mod docutils literal notranslate"><span class="pre">runtime</span></code></a>: Static class which provides access to the individual API backend singletons.</p></li>
+<li><p><a class="reference internal" href="types/index.html#module-zkay.transaction.types" title="zkay.transaction.types"><code class="xref py py-mod docutils literal notranslate"><span class="pre">types</span></code></a>: Type wrapper classes (for safer API interactions) used by the Runtime API.</p></li>
+</ul>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="blockchain/index.html#module-zkay.transaction.blockchain" title="zkay.transaction.blockchain"><code class="xref py py-mod docutils literal notranslate"><span class="pre">blockchain</span></code></a>: Blockchain backends</p></li>
+<li><p><a class="reference internal" href="crypto/index.html#module-zkay.transaction.crypto" title="zkay.transaction.crypto"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crypto</span></code></a>: Cipher backends</p></li>
+<li><p><a class="reference internal" href="keystore/index.html#module-zkay.transaction.keystore" title="zkay.transaction.keystore"><code class="xref py py-mod docutils literal notranslate"><span class="pre">keystore</span></code></a>: Keystore backends</p></li>
+<li><p><a class="reference internal" href="prover/index.html#module-zkay.transaction.prover" title="zkay.transaction.prover"><code class="xref py py-mod docutils literal notranslate"><span class="pre">prover</span></code></a>: Proof-generation backends</p></li>
+</ul>
+</div>
+</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

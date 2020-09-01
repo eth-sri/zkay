@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.compiler.privacy.circuit_generation.circuit_constraints &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.compiler.privacy.circuit_generation.circuit_constraints">
+<span id="zkay-compiler-privacy-circuit-generation-circuit-constraints"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.circuit_generation.circuit_constraints" title="zkay.compiler.privacy.circuit_generation.circuit_constraints"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.circuit_generation.circuit_constraints" title="Permalink to this headline">¶</a></h1>
+<p><p>This module defines the different types of abstract circuit statements, which
+are collected by CircuitHelper during the code transformation.</p>
+<p>CircuitStatements specify high-level semantics of a zk-snark circuit.
+They can be compiled to concrete circuit-representations (e.g. java code for jsnark) by a CircuitGenerator.</p>
+<p>To add support for a new zero knowledge backend, one has to implement a CircuitGenerator subclass which provides functionality
+to convert all the different statement types in this file, as well as all the different AST expressions which are allowed inside
+private expressions into a backend specific format.</p>
+<p>To simplify compilation, CircVarDecl is the only CircuitStatement type which can contain an AST Expression.
+All the other statement types operate only on HybridArgumentIdfs, which reference either circuit inputs or temporary circuit variables.
+Thus, when you have e.g. an assignment <a class="reference external" href="mailto:a&#37;&#52;&#48;me">a<span>&#64;</span>me</a> = b + c, this will generate the circuit statements
+CircVarDecl(new_temporary_idf, phi(b + c))
+CircEncConstraint(new_temporary_idf, rnd, pk, secret_input_enc_b_plus_c)</p>
+<p>Additionally, abstract circuits use static-single assignment, which means that any HybridArgumentIdf can be regarded as a final variable.
+(That’s why it is called CircVarDecl rather than CircAssign)</p>
+</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircuitStatement</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircComment">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircComment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircComment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>A textual comment, has no impact on circuit semantics (meta statement)</p>
+<p>Implementing transformation for CircComment is recommended (for output readability) but you can also skip them.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircIndentBlock">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircIndentBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">statements</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement">CircuitStatement</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircIndentBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>A named block of statements (container meta statement)</p>
+<p>Implementing special transformation for CircIndentBlock itself is recommended (for output readability) but not required.
+In either case, don’t forget to include the contained statements in the transformed output!</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircCall">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircCall</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fct</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircCall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>Represents a public function call to a function which requires verification</p>
+<p>This statement is only used for function calls OUTSIDE private expressions
+(as function calls INSIDE private expressions are always fully inlined).
+The generated public solidity code will also contain this function call.</p>
+<p>The semantics of this statement can be described as:
+“Include all the circuit statements which are generated by the body of the called function such that all circuit inputs and outputs
+which are generated by those statements are not shared between different invocations unless they are provably equivalent.”</p>
+<p>IMPORTANT:
+It is up to the backend implementation to ensure that fresh inputs and outputs are generated for each function invocation.
+E.g. if we have a function a(x) { <a class="reference external" href="mailto:k&#37;&#52;&#48;me">k<span>&#64;</span>me</a> = x }
+if we have a(1), a(2), which leads to  CircCall(a); CircCall(a).
+Then the second CircCall must generate a fresh circuit input for x and a fresh circuit output for k.</p>
+<p>In the case of the jsnark backend, the java code of the jsnark wrapper handles this complexity internally by creating different
+namespaces for different function invocations, which simplifies the visible part of the java circuit representation
+and also the Jsnark Circuit Generator.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircVarDecl">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircVarDecl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lhs</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircVarDecl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>Represents an assignment of a private expression to a temporary circuit variable</p>
+<p>The circuit generator must ensure that the statements which come after this have access to the result of expr
+under the name lhs</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircGuardModification">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircGuardModification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_cond</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>HybridArgumentIdf<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">is_true</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircGuardModification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>Enters and leaves scopes protected by a guard condition (e.g. if statement blocks protected by if condition)</p>
+<p>A guard scope starts with a CircGuardModification(guard_cond, is_true) statements,
+and ends with a corresponding CircGuardModification(None) statement
+(like a stack, CircGuardModification(None) always ends the last opened scope)</p>
+<p>The circuit generator must ensure that any assertion statement ASSERT(COND) which is added inside a guarded scope (guard_var, is_true),
+is transformed into <code class="docutils literal notranslate"><span class="pre">ASSERT((previous_guard_constraint</span> <span class="pre">&amp;&amp;</span> <span class="pre">(guard_var</span> <span class="pre">==</span> <span class="pre">is_true))</span> <span class="pre">=&gt;</span> <span class="pre">COND)</span></code></p>
+<p>The circuit generator must also ensure that any CircVarDecl(var, expr) which corresponds to a real assignment to a variable
+(i.e. an AssignmentStatement inside a private expression (function call) or if statement),
+is transformed from <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">=</span> <span class="pre">expr</span></code> into <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">=</span> <span class="pre">(previous_guard_constraint</span> <span class="pre">&amp;&amp;</span> <span class="pre">(guard_var</span> <span class="pre">==</span> <span class="pre">is_true))</span> <span class="pre">?</span> <span class="pre">expr</span> <span class="pre">:</span> <span class="pre">var</span></code></p>
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircGuardModification.guarded">
+<em class="property">static </em><code class="sig-name descname">guarded</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">phi</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement">CircuitStatement</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">guard_idf</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">is_true</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircGuardModification.guarded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a context manager which manages the lifetime of a guarded scope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phi</strong> – list which stores all circuit statements for a particular circuit</p></li>
+<li><p><strong>guard_idf</strong> – HybridArgumentIdf which references the guard condition</p></li>
+<li><p><strong>is_true</strong> – assertions and assignments inside the guarded scope are ignored unless guard_idf is equal to is_true at
+proof generation time</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircEncConstraint">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircEncConstraint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">plain</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">rnd</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">pk</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">is_dec</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircEncConstraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>Depending on is_dec, either represents an encryption or a decryption constraint</p>
+<p>Both types are generally modelled using the constraint <code class="docutils literal notranslate"><span class="pre">enc(plain,</span> <span class="pre">pk,</span> <span class="pre">rnd)</span> <span class="pre">==</span> <span class="pre">cipher</span></code></p>
+<p>IMPORTANT FOR SECURITY:
+To support solidity’s default initialization semantics for encrypted variables, a cipher value of 0 is always decrypted to
+the plain value 0. To ensure correctness, the circuit should thus reject user-supplied (private input) cipher values equal to 0.
+(When a legitimate encryption operation produces cipher = 0 during simulation (extremely unlikely), it should be repeated with a different randomness)</p>
+<dl class="simple">
+<dt>For encryption (user supplies the cipher text as private input)</dt><dd><p>=&gt; the generated circuit must prove that enc(plain, pk, rnd) == cipher AND that cipher != 0</p>
+</dd>
+<dt>For decryption (user supplies the plain text as private input)</dt><dd><p>=&gt; the generated circuit must prove that enc(plain, pk, rnd) == cipher OR (cipher == 0 AND plain == 0 AND rnd == 0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircSymmEncConstraint">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircSymmEncConstraint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">plain</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">other_pk</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">iv_cipher</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">is_dec</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircSymmEncConstraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>ECDH+Symmetric encryption constraint</p>
+<p>Verifies that:
+iv_cipher == enc(plain, ecdh(other_pk, my_sk), iv)</p>
+<p>(circuit also verifies globally that my_pk = DeriveEcPk(my_sk))</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircEqConstraint">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_constraints.</code><code class="sig-name descname">CircEqConstraint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tgt</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircEqConstraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement" title="zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_constraints.CircuitStatement</span></code></a></p>
+<p>Represents a simple equality constraint</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

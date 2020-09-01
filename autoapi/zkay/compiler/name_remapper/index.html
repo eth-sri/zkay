@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.compiler.name_remapper &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.name_remapper</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.compiler.name_remapper">
+<span id="zkay-compiler-name-remapper"></span><h1><a class="reference internal" href="#module-zkay.compiler.name_remapper" title="zkay.compiler.name_remapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.name_remapper</span></code></a><a class="headerlink" href="#module-zkay.compiler.name_remapper" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py data">
+<dt id="zkay.compiler.name_remapper.K">
+<code class="sig-prename descclassname">zkay.compiler.name_remapper.</code><code class="sig-name descname">K</code><a class="headerlink" href="#zkay.compiler.name_remapper.K" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.name_remapper.V">
+<code class="sig-prename descclassname">zkay.compiler.name_remapper.</code><code class="sig-name descname">V</code><a class="headerlink" href="#zkay.compiler.name_remapper.V" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.name_remapper.Remapper">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.name_remapper.</code><code class="sig-name descname">Remapper</code><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic[K,</span> <span class="pre">V]</span></code></p>
+<p>Helper class to simulate static single assignment, mostly used by CircuitHelper
+For a given name it keeps track which value the name currently refers to (e.g. current SSA identifier)</p>
+<p>e.g. if we have:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>we can then simulate ssa by using the remapper whenever an identifier is read or written:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tmp1</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">remap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tmp1</span><span class="p">)</span>
+<span class="n">tmp2</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">remap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tmp2</span><span class="p">)</span>
+<span class="n">tmp3</span> <span class="o">=</span> <span class="n">get_current</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">remap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tmp3</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> – name type</p></li>
+<li><p><strong>V</strong> – type of element to which key refers at a code location</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="zkay.compiler.name_remapper.Remapper.RemapMapType">
+<code class="sig-name descname">RemapMapType</code><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.RemapMapType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.__bool__">
+<code class="sig-name descname">__bool__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.__bool__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if any name is currently remapped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if there exists at least one key which is currently remapped to a different value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discard the entire remap state.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.reset_key">
+<code class="sig-name descname">reset_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.compiler.name_remapper.K" title="zkay.compiler.name_remapper.K">K</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.reset_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invalidate remapping information for the given key (is_remapped returns false after this).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.remap">
+<code class="sig-name descname">remap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.compiler.name_remapper.K" title="zkay.compiler.name_remapper.K">K</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.compiler.name_remapper.V" title="zkay.compiler.name_remapper.V">V</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.remap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remap key to refer to new version element ‘value’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The key/identifier to update</p></li>
+<li><p><strong>value</strong> – latest version of the element to which key refers</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.remap_scope">
+<code class="sig-name descname">remap_scope</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">scope_stmt</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.remap_scope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a context manager which will automatically rollback the remap state once the end of the with statement is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scope_stmt</strong> – [OPTIONAL] last statement before the scope is entered. If this is not None, remappings for variables which were
+already in scope at scope_stmt will not be reset during rollback</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>context manager</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.is_remapped">
+<code class="sig-name descname">is_remapped</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.compiler.name_remapper.K" title="zkay.compiler.name_remapper.K">K</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.is_remapped" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.get_current">
+<code class="sig-name descname">get_current</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.compiler.name_remapper.K" title="zkay.compiler.name_remapper.K">K</a></span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.get_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value to which key currently refers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – Name to lookup</p></li>
+<li><p><strong>default</strong> – If set, this will be returned if key is not currently remapped</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>KeyError</strong> – raised if key not currently mapped and default=None</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The current value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.get_state">
+<code class="sig-name descname">get_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.get_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an opaque copy of the internal state.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.set_state">
+<code class="sig-name descname">set_state</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">state</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.set_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore internal state from an opaque copy previously obtained using get_state.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.name_remapper.Remapper.join_branch">
+<code class="sig-name descname">join_branch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">stmt</span></em>, <em class="sig-param"><span class="n">true_cond_for_other_branch</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em>, <em class="sig-param"><span class="n">other_branch_state</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">create_val_for_name_and_expr_fct</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span><a class="reference internal" href="#zkay.compiler.name_remapper.K" title="zkay.compiler.name_remapper.K">K</a><span class="p">, </span>Expression<span class="p">]</span><span class="p">, </span><a class="reference internal" href="#zkay.compiler.name_remapper.V" title="zkay.compiler.name_remapper.V">V</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.name_remapper.Remapper.join_branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform an SSA join for two branches.</p>
+<div class="line-block">
+<div class="line">i.e. if key is not remapped in any branch -&gt; keep previous remapping</div>
+<div class="line-block">
+<div class="line">if key is altered in at least one branch -&gt; remap to conditional assignment of latest remapped version in either branch</div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stmt</strong> – the branch statement, variables which are not already in scope at that statement are not included in the joined state</p></li>
+<li><p><strong>true_cond_for_other_branch</strong> – IdentifierExpression which evaluates to true at runtime if other_branch is taken</p></li>
+<li><p><strong>other_branch_state</strong> – remap state at the end of other branch (obtained using get_state)</p></li>
+<li><p><strong>create_val_for_name_and_expr_fct</strong> – function to introduce a new temporary variable to which the given expression is assigned</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example use</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">remapper</span><span class="o">.</span><span class="n">remap_scope</span><span class="p">(</span><span class="n">persist_globals</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="o">&lt;</span><span class="n">process</span> <span class="n">true</span> <span class="n">branch</span><span class="o">&gt;</span>
+    <span class="n">true_state</span> <span class="o">=</span> <span class="n">remapper</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+<span class="k">if</span> <span class="o">&lt;</span><span class="n">has</span> <span class="n">false</span> <span class="n">branch</span><span class="o">&gt;</span><span class="p">:</span>
+    <span class="o">&lt;</span><span class="n">process</span> <span class="n">false</span> <span class="n">branch</span><span class="o">&gt;</span>
+<span class="n">remapper</span><span class="o">.</span><span class="n">join_branch</span><span class="p">(</span><span class="n">cond_idf_expr</span><span class="p">,</span> <span class="n">true_state</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">create_tmp_var</span><span class="p">(</span><span class="n">idf</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span> <span class="n">function</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.compiler.name_remapper.CircVarRemapper">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.name_remapper.</code><code class="sig-name descname">CircVarRemapper</code><a class="headerlink" href="#zkay.compiler.name_remapper.CircVarRemapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Remapper[Identifier,</span> <span class="pre">HybridArgumentIdf]</span></code></p>
+<p>Remapper class used by CircuitHelper</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

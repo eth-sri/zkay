@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.compiler.solidity.fake_solidity_generator &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.solidity.fake_solidity_generator</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.compiler.solidity.fake_solidity_generator">
+<span id="zkay-compiler-solidity-fake-solidity-generator"></span><h1><a class="reference internal" href="#module-zkay.compiler.solidity.fake_solidity_generator" title="zkay.compiler.solidity.fake_solidity_generator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.solidity.fake_solidity_generator</span></code></a><a class="headerlink" href="#module-zkay.compiler.solidity.fake_solidity_generator" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.ME_DECL">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">ME_DECL</code><em class="property"> =  address private me = msg.sender;</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.ME_DECL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.WS_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">WS_PATTERN</code><em class="property"> = [ \t\r\n\u000C]</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.WS_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.ID_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">ID_PATTERN</code><em class="property"> = [a-zA-Z\$_][a-zA-Z0-9\$_]*</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.ID_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.UINT_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">UINT_PATTERN</code><em class="property"> = uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uint72|uint80|uint88|uint96|uint104|uint112|uint120|uint128|uint136|uint144|uint152|uint160|uint168|uint176|uint184|uint192|uint200|uint208|uint216|uint224|uint232|uint240|uint248|uint256</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.UINT_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.INT_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">INT_PATTERN</code><em class="property"> = int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.INT_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.USER_TYPE_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">USER_TYPE_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.USER_TYPE_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.ELEM_TYPE_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">ELEM_TYPE_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.ELEM_TYPE_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.NONID_START">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">NONID_START</code><em class="property"> = (?:[^a-zA-Z0-9\$_]|^)</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.NONID_START" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.NONID_END">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">NONID_END</code><em class="property"> = (?:[^a-zA-Z0-9\$_]|$)</em><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.NONID_END" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.PARENS_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">PARENS_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.PARENS_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.BRACE_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">BRACE_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.BRACE_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.STRING_OR_COMMENT_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">STRING_OR_COMMENT_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.STRING_OR_COMMENT_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.CONTRACT_START_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">CONTRACT_START_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.CONTRACT_START_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.ATYPE_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">ATYPE_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.ATYPE_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.MATCH_WORD_FSTR">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">MATCH_WORD_FSTR</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.MATCH_WORD_FSTR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.FINAL_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">FINAL_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.FINAL_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.ALL_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">ALL_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.ALL_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.PRAGMA_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">PRAGMA_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.PRAGMA_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.MAP_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">MAP_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.MAP_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.REVEAL_START_PATTERN">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">REVEAL_START_PATTERN</code><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.REVEAL_START_PATTERN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.create_surrogate_string">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">create_surrogate_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instr</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.create_surrogate_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preserve newlines and replace all other characters with spaces</p>
+<p>:return whitespace string with same length as instr and with the same line breaks</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.find_matching_parenthesis">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">find_matching_parenthesis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">open_parens_loc</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.find_matching_parenthesis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get index of matching parenthesis/bracket/brace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>code</strong> – code in which to search</p></li>
+<li><p><strong>open_parens_loc</strong> – index of the opening parenthesis within code</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>index of the matching closing parenthesis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.strip_reveals">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">strip_reveals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.strip_reveals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace reveal expressions by their inner expression, with whitespace padding.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.inject_me_decls">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">inject_me_decls</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.inject_me_decls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an additional address me = msg.sender state variable declaration right before the closing brace of each contract definition.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.replace_with_surrogate">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">replace_with_surrogate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">search_pattern</span><span class="p">:</span> <span class="n">Pattern</span></em>, <em class="sig-param"><span class="n">replacement_fstr</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'{}'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.replace_with_surrogate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace all occurrences of search_pattern with capture group &lt;keep&gt; (if any) + replacement.</p>
+<dl class="simple">
+<dt>Replacement is either</dt><dd><ol class="loweralpha simple">
+<li><p>replacement_fstr (if replacement_fstr does not contain ‘{}’)</p></li>
+<li><p>replacement_fstr with {} replaced by whitespace corresponding to content of capture group &lt;repl&gt;
+(such that replacement length == &lt;repl&gt; length with line breaks preserved)</p></li>
+</ol>
+</dd>
+</dl>
+<p>The &lt;repl&gt; capture group must be the last thing that is matched in search pattern</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.compiler.solidity.fake_solidity_generator.fake_solidity_code">
+<code class="sig-prename descclassname">zkay.compiler.solidity.fake_solidity_generator.</code><code class="sig-name descname">fake_solidity_code</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.solidity.fake_solidity_generator.fake_solidity_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the solidity code to which the given zkay_code corresponds when dropping all privacy features,
+while preserving original formatting</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

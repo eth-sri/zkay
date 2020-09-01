@@ -1,0 +1,412 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.transaction.types &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.types</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.transaction.types">
+<span id="zkay-transaction-types"></span><h1><a class="reference internal" href="#module-zkay.transaction.types" title="zkay.transaction.types"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.types</span></code></a><a class="headerlink" href="#module-zkay.transaction.types" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="zkay.transaction.types.Value">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">Value</code><a class="headerlink" href="#zkay.transaction.types.Value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable’s items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p>
+<dl class="py method">
+<dt id="zkay.transaction.types.Value.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.Value.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.Value.__eq__">
+<code class="sig-name descname">__eq__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.Value.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.Value.__hash__">
+<code class="sig-name descname">__hash__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.Value.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.Value.unwrap_values">
+<em class="property">static </em><code class="sig-name descname">unwrap_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>bool<span class="p">, </span><a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value">Value</a><span class="p">, </span>List<span class="p">, </span>Dict<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.Value.unwrap_values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.Value.flatten">
+<em class="property">static </em><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Collection</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.Value.flatten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.Value.collection_to_string">
+<em class="property">static </em><code class="sig-name descname">collection_to_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>bool<span class="p">, </span><a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value">Value</a><span class="p">, </span>Dict<span class="p">, </span>List<span class="p">, </span>Tuple<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.Value.collection_to_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.CipherValue">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">CipherValue</code><a class="headerlink" href="#zkay.transaction.types.CipherValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.types.Value</span></code></a></p>
+<p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable’s items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p>
+<dl class="py method">
+<dt id="zkay.transaction.types.CipherValue.__len__">
+<code class="sig-name descname">__len__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.CipherValue.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return len(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.PrivateKeyValue">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">PrivateKeyValue</code><a class="headerlink" href="#zkay.transaction.types.PrivateKeyValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.types.Value</span></code></a></p>
+<p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable’s items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p>
+<dl class="py method">
+<dt id="zkay.transaction.types.PrivateKeyValue.val">
+<em class="property">property </em><code class="sig-name descname">val</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.PrivateKeyValue.val" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.PublicKeyValue">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">PublicKeyValue</code><a class="headerlink" href="#zkay.transaction.types.PublicKeyValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.types.Value</span></code></a></p>
+<p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable’s items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.RandomnessValue">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">RandomnessValue</code><a class="headerlink" href="#zkay.transaction.types.RandomnessValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.types.Value</span></code></a></p>
+<p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable’s items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.AddressValue">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">AddressValue</code><a class="headerlink" href="#zkay.transaction.types.AddressValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.types.Value" title="zkay.transaction.types.Value"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.transaction.types.Value</span></code></a></p>
+<p>Built-in immutable sequence.</p>
+<p>If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable’s items.</p>
+<p>If the argument is a tuple, the return value is the same object.</p>
+<dl class="py attribute">
+<dt id="zkay.transaction.types.AddressValue.get_balance">
+<code class="sig-name descname">get_balance</code><em class="property"> :Optional[Callable[['AddressValue'], int]]</em><a class="headerlink" href="#zkay.transaction.types.AddressValue.get_balance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.AddressValue.val">
+<em class="property">property </em><code class="sig-name descname">val</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.AddressValue.val" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.AddressValue.transfer">
+<code class="sig-name descname">transfer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">amount</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.AddressValue.transfer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.AddressValue.send">
+<code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">amount</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.AddressValue.send" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.AddressValue.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.AddressValue.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.AddressValue.balance">
+<em class="property">property </em><code class="sig-name descname">balance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.AddressValue.balance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.KeyPair">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">KeyPair</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pk</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.types.PublicKeyValue" title="zkay.transaction.types.PublicKeyValue">PublicKeyValue</a></span></em>, <em class="sig-param"><span class="n">sk</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.types.PrivateKeyValue" title="zkay.transaction.types.PrivateKeyValue">PrivateKeyValue</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.KeyPair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.MsgStruct">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">MsgStruct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sender</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.types.AddressValue" title="zkay.transaction.types.AddressValue">AddressValue</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.MsgStruct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="zkay.transaction.types.MsgStruct.sender">
+<em class="property">property </em><code class="sig-name descname">sender</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.MsgStruct.sender" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.MsgStruct.value">
+<em class="property">property </em><code class="sig-name descname">value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.MsgStruct.value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.BlockStruct">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">BlockStruct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coinbase</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.types.AddressValue" title="zkay.transaction.types.AddressValue">AddressValue</a></span></em>, <em class="sig-param"><span class="n">difficulty</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">gaslimit</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">number</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">timestamp</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.BlockStruct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="zkay.transaction.types.BlockStruct.coinbase">
+<em class="property">property </em><code class="sig-name descname">coinbase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.BlockStruct.coinbase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.BlockStruct.difficulty">
+<em class="property">property </em><code class="sig-name descname">difficulty</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.BlockStruct.difficulty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.BlockStruct.gaslimit">
+<em class="property">property </em><code class="sig-name descname">gaslimit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.BlockStruct.gaslimit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.BlockStruct.number">
+<em class="property">property </em><code class="sig-name descname">number</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.BlockStruct.number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.BlockStruct.timestamp">
+<em class="property">property </em><code class="sig-name descname">timestamp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.BlockStruct.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.types.TxStruct">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.types.</code><code class="sig-name descname">TxStruct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gasprice</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">origin</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.transaction.types.AddressValue" title="zkay.transaction.types.AddressValue">AddressValue</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.TxStruct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="zkay.transaction.types.TxStruct.gasprice">
+<em class="property">property </em><code class="sig-name descname">gasprice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.TxStruct.gasprice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.types.TxStruct.origin">
+<em class="property">property </em><code class="sig-name descname">origin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.types.TxStruct.origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

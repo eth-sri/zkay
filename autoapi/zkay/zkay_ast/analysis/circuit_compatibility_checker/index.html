@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.zkay_ast.analysis.circuit_compatibility_checker &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.circuit_compatibility_checker</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.zkay_ast.analysis.circuit_compatibility_checker">
+<span id="zkay-zkay-ast-analysis-circuit-compatibility-checker"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.analysis.circuit_compatibility_checker" title="zkay.zkay_ast.analysis.circuit_compatibility_checker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.circuit_compatibility_checker</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.analysis.circuit_compatibility_checker" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.check_circuit_compliance">
+<code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">check_circuit_compliance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.check_circuit_compliance" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines for every function whether it can be used inside a circuit</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">DirectCanBePrivateDetector</code><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitFunctionCallExpr">
+<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitLocationExpr">
+<code class="sig-name descname">visitLocationExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">LocationExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitLocationExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitReclassifyExpr">
+<code class="sig-name descname">visitReclassifyExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReclassifyExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitReclassifyExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitAssignmentStatement">
+<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitVariableDeclarationStatement">
+<code class="sig-name descname">visitVariableDeclarationStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitVariableDeclarationStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitReturnStatement">
+<code class="sig-name descname">visitReturnStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReturnStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitReturnStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitIfStatement">
+<code class="sig-name descname">visitIfStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IfStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitIfStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitStatementList">
+<code class="sig-name descname">visitStatementList</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StatementList</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitStatementList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitStatement">
+<code class="sig-name descname">visitStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Statement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.DirectCanBePrivateDetector.visitStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.IndirectCanBePrivateDetector">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">IndirectCanBePrivateDetector</code><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.IndirectCanBePrivateDetector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.IndirectCanBePrivateDetector.visitConstructorOrFunctionDefinition">
+<code class="sig-name descname">visitConstructorOrFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.IndirectCanBePrivateDetector.visitConstructorOrFunctionDefinition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">CircuitComplianceChecker</code><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.should_evaluate_public_expr_in_circuit">
+<em class="property">static </em><code class="sig-name descname">should_evaluate_public_expr_in_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.should_evaluate_public_expr_in_circuit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitIndexExpr">
+<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IndexExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitReclassifyExpr">
+<code class="sig-name descname">visitReclassifyExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReclassifyExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitReclassifyExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitFunctionCallExpr">
+<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitPrimitiveCastExpr">
+<code class="sig-name descname">visitPrimitiveCastExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">PrimitiveCastExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitPrimitiveCastExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitIfStatement">
+<code class="sig-name descname">visitIfStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IfStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.CircuitComplianceChecker.visitIfStatement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">PrivateSetter</code><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter.set_evaluation">
+<code class="sig-name descname">set_evaluation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Expression<span class="p">, </span>Statement<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">evaluate_privately</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter.set_evaluation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter.visitFunctionCallExpr">
+<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter.visitExpression">
+<code class="sig-name descname">visitExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.PrivateSetter.visitExpression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs">
+<code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.NonstaticOrIncompatibilityDetector">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.circuit_compatibility_checker.</code><code class="sig-name descname">NonstaticOrIncompatibilityDetector</code><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.NonstaticOrIncompatibilityDetector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dl class="py method">
+<dt id="zkay.zkay_ast.analysis.circuit_compatibility_checker.NonstaticOrIncompatibilityDetector.visitFunctionCallExpr">
+<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.circuit_compatibility_checker.NonstaticOrIncompatibilityDetector.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

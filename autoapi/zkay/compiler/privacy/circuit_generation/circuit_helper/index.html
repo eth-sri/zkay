@@ -1,0 +1,734 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.compiler.privacy.circuit_generation.circuit_helper &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.compiler.privacy.circuit_generation.circuit_helper">
+<span id="zkay-compiler-privacy-circuit-generation-circuit-helper"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.circuit_generation.circuit_helper" title="zkay.compiler.privacy.circuit_generation.circuit_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.circuit_generation.circuit_helper" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.circuit_generation.circuit_helper.</code><code class="sig-name descname">CircuitHelper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fct</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">static_owner_labels</span><span class="p">:</span> <span class="n">List<span class="p">[</span>PrivacyLabelExpr<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">expr_trafo_constructor</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span><a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper">CircuitHelper</a><span class="p">]</span><span class="p">, </span>AstTransformerVisitor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">circ_trafo_constructor</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span><a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper">CircuitHelper</a><span class="p">]</span><span class="p">, </span>AstTransformerVisitor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">internal_circuit</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span><a class="reference internal" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper">CircuitHelper</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is used to construct abstract proof circuits during contract transformation.</p>
+<p>Typically there is one instance of this class for every function which requires verification.</p>
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.fct">
+<code class="sig-name descname">fct</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.fct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function and verification contract corresponding to this circuit</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.has_return_var">
+<code class="sig-name descname">has_return_var</code><em class="property"> = False</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.has_return_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metadata set later by ZkayContractTransformer</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._circ_trafo">
+<code class="sig-name descname">_circ_trafo</code><em class="property"> :AstTransformerVisitor</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._circ_trafo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transformer visitors</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._phi">
+<code class="sig-name descname">_phi</code><em class="property"> :List[CircuitStatement] = []</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of proof circuit statements (assertions and assignments)</p>
+<p>WARNING: Never assign to self._phi, always access it using the phi property and only mutate it</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._secret_input_name_factory">
+<code class="sig-name descname">_secret_input_name_factory</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._secret_input_name_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name factory for private circuit inputs</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._circ_temp_name_factory">
+<code class="sig-name descname">_circ_temp_name_factory</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._circ_temp_name_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name factory for temporary internal circuit variables</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._in_name_factory">
+<code class="sig-name descname">_in_name_factory</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._in_name_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name factory for public circuit inputs</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._out_name_factory">
+<code class="sig-name descname">_out_name_factory</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._out_name_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name factory for public circuit outputs</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._static_owner_labels">
+<code class="sig-name descname">_static_owner_labels</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._static_owner_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all statically known privacy labels for the contract of which this circuit is part of</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._need_secret_key">
+<code class="sig-name descname">_need_secret_key</code><em class="property"> :bool = False</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._need_secret_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether msg.sender’s secret key must be added to the private circuit inputs</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._global_keys">
+<code class="sig-name descname">_global_keys</code><em class="property"> :OrderedDict[Union[MeExpr, Identifier], None]</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._global_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of statically known privacy labels (OrderedDict is used to ensure deterministic iteration order)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.function_calls_with_verification">
+<code class="sig-name descname">function_calls_with_verification</code><em class="property"> :List[FunctionCallExpr] = []</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.function_calls_with_verification" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all (non-transitive) calls in self.fct’s body to functions which require verification, in AST visiting order
+This is internally used to compute transitive in/out/privin sizes, but may also be useful when implementing a new
+circuit generator backend.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.transitively_called_functions">
+<code class="sig-name descname">transitively_called_functions</code><em class="property"> :OrderedDict[ConstructorOrFunctionDefinition, None]</em><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.transitively_called_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set (with deterministic order) of all functions which this circuit transitively calls.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._remapper">
+<code class="sig-name descname">_remapper</code><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._remapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remapper instance used for SSA simulation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.register_verification_contract_metadata">
+<code class="sig-name descname">register_verification_contract_metadata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">contract_type</span><span class="p">:</span> <span class="n">TypeName</span></em>, <em class="sig-param"><span class="n">import_filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.register_verification_contract_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_verification_contract_name">
+<code class="sig-name descname">get_verification_contract_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_verification_contract_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.requires_zk_data_struct">
+<code class="sig-name descname">requires_zk_data_struct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.requires_zk_data_struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if a struct needs to be created in the solidity code to store public data (IO) associated with this circuit.</p>
+<p>A struct is used instead of plain temporary variables to bypass solidity’s stack limit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.zk_data_struct_name">
+<em class="property">property </em><code class="sig-name descname">zk_data_struct_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.zk_data_struct_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the data struct type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.priv_in_size_trans">
+<em class="property">property </em><code class="sig-name descname">priv_in_size_trans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.priv_in_size_trans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total size of all private inputs for this circuit (in # uints)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.priv_in_size">
+<em class="property">property </em><code class="sig-name descname">priv_in_size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.priv_in_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of all private inputs required for self.fct only (without called functions, in #uints)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.out_size_trans">
+<em class="property">property </em><code class="sig-name descname">out_size_trans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.out_size_trans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total size of all public outputs for this circuit (in # uints)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.out_size">
+<em class="property">property </em><code class="sig-name descname">out_size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.out_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of all public outputs required for self.fct only (without called functions, in #uints)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.in_size_trans">
+<em class="property">property </em><code class="sig-name descname">in_size_trans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.in_size_trans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total size of all public inputs for this circuit (in # uints)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.in_size">
+<em class="property">property </em><code class="sig-name descname">in_size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.in_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of all public inputs required for self.fct only (without called functions, in #uints)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.output_idfs">
+<em class="property">property </em><code class="sig-name descname">output_idfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.output_idfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>All public output HybridArgumentIdfs (for self.fct only, w/o called functions)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.input_idfs">
+<em class="property">property </em><code class="sig-name descname">input_idfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.input_idfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>All public input HybridArgumentIdfs (for self.fct only, w/o called functions)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.sec_idfs">
+<em class="property">property </em><code class="sig-name descname">sec_idfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.sec_idfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>All private input HybridArgumentIdfs (for self.fct only, w/o called functions)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.phi">
+<em class="property">property </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of abstract circuit statements which defines circuit semantics</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.requested_global_keys">
+<em class="property">property </em><code class="sig-name descname">requested_global_keys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.requested_global_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Statically known keys required by this circuit</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.public_arg_arrays">
+<em class="property">property </em><code class="sig-name descname">public_arg_arrays</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.public_arg_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns names and lengths of all public parameter uint256 arrays which go into the verifier</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.circ_indent_block">
+<code class="sig-name descname">circ_indent_block</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.circ_indent_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return context manager which manages the lifetime of a CircIndentBlock.</p>
+<p>All statements which are inserted into self.phi during the lifetime of this context manager are automatically wrapped inside
+a CircIndentBlock statement with the supplied name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.guarded">
+<code class="sig-name descname">guarded</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">guard_idf</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">is_true</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.guarded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a context manager which manages the lifetime of a guard variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_glob_key_name">
+<em class="property">static </em><code class="sig-name descname">get_glob_key_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">label</span><span class="p">:</span> <span class="n">PrivacyLabelExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_glob_key_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the HybridArgumentIdf which holds the statically known public key for the given privacy label.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_own_secret_key_name">
+<em class="property">static </em><code class="sig-name descname">get_own_secret_key_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_own_secret_key_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.requires_verification">
+<code class="sig-name descname">requires_verification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.requires_verification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the function corresponding to this circuit requires a zk proof verification for correctness</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.ensure_parameter_encryption">
+<code class="sig-name descname">ensure_parameter_encryption</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">insert_loc_stmt</span><span class="p">:</span> <span class="n">Statement</span></em>, <em class="sig-param"><span class="n">param</span><span class="p">:</span> <span class="n">Parameter</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.ensure_parameter_encryption" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make circuit prove that the encryption of the specified parameter is correct.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.evaluate_expr_in_circuit">
+<code class="sig-name descname">evaluate_expr_in_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">new_privacy</span><span class="p">:</span> <span class="n">PrivacyLabelExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.evaluate_expr_in_circuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate private expression and return result as a fresh out variable.</p>
+<p>Roughly corresponds to out() from paper</p>
+<p>Note: This function has side effects on expr.statement (adds a pre_statement)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>expr</strong> – [SIDE EFFECT] The expression which should be evaluated privately</p></li>
+<li><p><strong>new_privacy</strong> – The circuit output should be encrypted for this owner (or plain if ‘all’)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Location expression which references the encrypted circuit result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.evaluate_stmt_in_circuit">
+<code class="sig-name descname">evaluate_stmt_in_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Statement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.evaluate_stmt_in_circuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate an entire statement privately.</p>
+<p>This works by turning the statement into an assignment statement where the</p>
+<ul class="simple">
+<li><p>lhs is a tuple of all external locations (defined outside statement), which are modified inside the statement</p></li>
+<li><p>rhs is the return value of an inlined function call expression to a virtual function where body = the statement + return statement           which returns a tuple of the most recent SSA version of all modified locations</p></li>
+</ul>
+<p>Note: Modifying external locations which are not owned by &#64;me inside the statement is illegal (would leak information).
+Note: At the moment, this is only used for if statements with a private condition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ast</strong> – the statement to evaluate inside the circuit</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>AssignmentStatement as described above</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.invalidate_idf">
+<code class="sig-name descname">invalidate_idf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">target_idf</span><span class="p">:</span> <span class="n">Identifier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.invalidate_idf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.call_function">
+<code class="sig-name descname">call_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.call_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Include public function call to a function which requires verification in this circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ast</strong> – The function call to include, target function must require verification</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.request_public_key">
+<code class="sig-name descname">request_public_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">plabel</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>MeExpr<span class="p">, </span>Identifier<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.request_public_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request key for the address corresponding to plabel from pki infrastructure and add it to the public circuit inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plabel</strong> – privacy label for which to request key</p></li>
+<li><p><strong>name</strong> – name to use for the HybridArgumentIdf holding the key</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>HybridArgumentIdf containing the requested key and an AssignmentStatement which assigns the key request to the idf location</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.request_private_key">
+<code class="sig-name descname">request_private_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.request_private_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_to_circuit_inputs">
+<code class="sig-name descname">add_to_circuit_inputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_to_circuit_inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the provided expression to the public circuit inputs.</p>
+<p>Roughly corresponds to in() from paper</p>
+<p>If expr is encrypted (privacy != &#64;all), this function also automatically ensures that the circuit has access to
+the correctly decrypted expression value in the form of a new private circuit input.</p>
+<p>If expr is an IdentifierExpr, its value will be cached
+(i.e. when the same identifier is needed again as a circuit input, its value will be retrieved from cache rather          than adding an expensive redundant input. The cache is invalidated as soon as the identifier is overwritten in public code)</p>
+<p>Note: This function has side effects on expr.statement (adds a pre_statement)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>expr</strong> – [SIDE EFFECT] expression which should be made available inside the circuit as an argument</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>HybridArgumentIdf which references the plaintext value of the newly added input</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_remapped_idf_expr">
+<code class="sig-name descname">get_remapped_idf_expr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">idf</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.get_remapped_idf_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get location expression for the most recently assigned value of idf according to the SSA simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>idf</strong> – Identifier expression to lookup</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Either idf itself (not currently remapped)
+or a loc expr for the HybridArgumentIdf which references the most recent value of idf</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.create_new_idf_version_from_value">
+<code class="sig-name descname">create_new_idf_version_from_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">orig_idf</span><span class="p">:</span> <span class="n">Identifier</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.create_new_idf_version_from_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store expr in a new version of orig_idf (for SSA).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>orig_idf</strong> – the identifier which should be updated with a new value</p></li>
+<li><p><strong>expr</strong> – the updated value</p></li>
+<li><p><strong>is_local</strong> – whether orig_idf refers to a local variable (as opposed to a state variable)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.inline_function_call_into_circuit">
+<code class="sig-name descname">inline_function_call_into_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">fcall</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.inline_function_call_into_circuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inline an entire function call into the current circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fcall</strong> – Function call to inline</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression (1 retval) / TupleExpr (multiple retvals) with return value(s)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_assignment_to_circuit">
+<code class="sig-name descname">add_assignment_to_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_assignment_to_circuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Include private assignment statement in this circuit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_var_decl_to_circuit">
+<code class="sig-name descname">add_var_decl_to_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclarationStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_var_decl_to_circuit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_return_stmt_to_circuit">
+<code class="sig-name descname">add_return_stmt_to_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReturnStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_return_stmt_to_circuit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_if_statement_to_circuit">
+<code class="sig-name descname">add_if_statement_to_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IfStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_if_statement_to_circuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Include private if statement in this circuit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_block_to_circuit">
+<code class="sig-name descname">add_block_to_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Block</span></em>, <em class="sig-param"><span class="n">guard_cond</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>HybridArgumentIdf<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">guard_val</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>bool<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper.add_block_to_circuit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._get_canonical_privacy_label">
+<code class="sig-name descname">_get_canonical_privacy_label</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">analysis</span></em>, <em class="sig-param"><span class="n">privacy</span><span class="p">:</span> <span class="n">PrivacyLabelExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._get_canonical_privacy_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>If privacy is equivalent to a static privacy label -&gt; Return the corresponding static label, otherwise itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analysis</strong> – analysis state at the statement where expression with the given privacy occurs</p></li>
+<li><p><strong>privacy</strong> – original privacy label</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._create_temp_var">
+<code class="sig-name descname">_create_temp_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">tag</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._create_temp_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign expression to a fresh temporary circuit variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._add_assign">
+<code class="sig-name descname">_add_assign</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">rhs</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._add_assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate an assignment of rhs to lhs inside the circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lhs</strong> – destination</p></li>
+<li><p><strong>rhs</strong> – source</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._get_circuit_output_for_private_expression">
+<code class="sig-name descname">_get_circuit_output_for_private_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">new_privacy</span><span class="p">:</span> <span class="n">PrivacyLabelExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._get_circuit_output_for_private_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add evaluation of expr to the circuit and return the output HybridArgumentIdf corresponding to the evaluation result.</p>
+<p>Note: has side effects on expr.statement (adds pre_statement)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>expr</strong> – [SIDE EFFECT] expression to evaluate</p></li>
+<li><p><strong>new_privacy</strong> – result owner (determines encryption key)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>HybridArgumentIdf which references the circuit output containing the result of expr</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._evaluate_private_expression">
+<code class="sig-name descname">_evaluate_private_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">tmp_idf_suffix</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._evaluate_private_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate expr in the circuit (if not already done) and store result in a new temporary circuit variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>expr</strong> – expression to evaluate</p></li>
+<li><p><strong>tmp_idf_suffix</strong> – name suffix for the new temporary circuit variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>temporary circuit variable HybridArgumentIdf which refers to the transformed circuit expression</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._ensure_encryption">
+<code class="sig-name descname">_ensure_encryption</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">stmt</span><span class="p">:</span> <span class="n">Statement</span></em>, <em class="sig-param"><span class="n">plain</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">new_privacy</span><span class="p">:</span> <span class="n">PrivacyLabelExpr</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em>, <em class="sig-param"><span class="n">is_param</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">is_dec</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._ensure_encryption" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure that cipher = enc(plain, getPk(new_privacy), priv_user_provided_rnd).</p>
+<p>This automatically requests necessary keys and adds a circuit input for the randomness.</p>
+<p>Note: This function adds pre-statements to stmt</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[</strong><strong>SIDE EFFECT</strong><strong>]</strong> (<em>stmt</em>) – the statement which contains the expression which requires this encryption</p></li>
+<li><p><strong>plain</strong> – circuit variable referencing the plaintext value</p></li>
+<li><p><strong>new_privacy</strong> – privacy label corresponding to the destination key address</p></li>
+<li><p><strong>cipher</strong> – circuit variable referencing the encrypted value</p></li>
+<li><p><strong>is_param</strong> – whether cipher is a function parameter</p></li>
+<li><p><strong>is_dec</strong> – whether this is a decryption operation (user supplied plain) as opposed to an encryption operation (user supplied cipher)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._require_secret_key">
+<code class="sig-name descname">_require_secret_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._require_secret_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._require_public_key_for_label_at">
+<code class="sig-name descname">_require_public_key_for_label_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">stmt</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Statement<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">privacy</span><span class="p">:</span> <span class="n">PrivacyLabelExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._require_public_key_for_label_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make circuit helper aware, that the key corresponding to privacy is required at stmt.</p>
+<p>If privacy is not a statically known label, the key is requested on spot.
+Otherwise the label is added to the global key set.
+The keys in that set are requested only once at the start of the external wrapper function, to improve efficiency.</p>
+<p>Note: This function has side effects on stmt (adds a pre_statement)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>HybridArgumentIdf which references the key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._get_public_key_in_sender_field">
+<code class="sig-name descname">_get_public_key_in_sender_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">stmt</span><span class="p">:</span> <span class="n">Statement</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">HybridArgumentIdf</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper._get_public_key_in_sender_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure the circuit has access to the public key stored in cipher’s sender field.</p>
+<p>Note: This function has side effects on stmt [adds a pre-statement]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[</strong><strong>SIDE EFFECT</strong><strong>]</strong> (<em>stmt</em>) – statement in which this private expression occurs</p></li>
+<li><p><strong>cipher</strong> – HybridArgumentIdf which references the cipher value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>HybridArgumentIdf which references the key in cipher’s sender field (or 0 if none)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

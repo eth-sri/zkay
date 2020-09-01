@@ -1,0 +1,342 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>&lt;no title&gt;</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <p>{% if not obj.display %}
+:orphan:</p>
+<p>{% endif %}
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">{{</span> <span class="pre">obj.name</span> <span class="pre">}}</span></code>
+======={{ “=” * obj.name|length }}</p>
+<p>{% if obj.docstring %}
+.. autoapi-nested-parse:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{{</span> <span class="n">obj</span><span class="o">.</span><span class="n">docstring</span><span class="o">|</span><span class="n">prepare_docstring</span><span class="o">|</span><span class="n">indent</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">}}</span>
+</pre></div>
+</div>
+<p>{% block subpackages_hidden %}
+{% set visible_subpackages = obj.subpackages|selectattr(“display”)|list %}
+{% if visible_subpackages %}
+.. toctree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">titlesonly</span><span class="p">:</span>
+<span class="p">:</span><span class="n">maxdepth</span><span class="p">:</span> <span class="mi">3</span>
+<span class="p">:</span><span class="n">hidden</span><span class="p">:</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>{% for subpackage in visible_subpackages %}</dt><dd><p>{{ subpackage.short_name }}/index.rst</p>
+</dd>
+</dl>
+<p>{% endfor %}</p>
+<p>{% endif %}
+{% endblock %}
+{% block submodules_hidden %}
+{% set visible_submodules = obj.submodules|selectattr(“display”)|list %}
+{% if visible_submodules %}
+.. toctree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">titlesonly</span><span class="p">:</span>
+<span class="p">:</span><span class="n">maxdepth</span><span class="p">:</span> <span class="mi">1</span>
+<span class="p">:</span><span class="n">hidden</span><span class="p">:</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>{% for submodule in visible_submodules %}</dt><dd><p>{{ submodule.short_name }}/index.rst</p>
+</dd>
+</dl>
+<p>{% endfor %}</p>
+<p>{% endif %}
+{% endblock %}</p>
+<p>{% else %}</p>
+<p>{% block subpackages %}
+{% set visible_subpackages = obj.subpackages|selectattr(“display”)|list %}
+{% if visible_subpackages %}
+Subpackages
+———–
+.. toctree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">titlesonly</span><span class="p">:</span>
+<span class="p">:</span><span class="n">maxdepth</span><span class="p">:</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>{% for subpackage in visible_subpackages %}</dt><dd><p>{{ subpackage.short_name }}/index.rst</p>
+</dd>
+</dl>
+<p>{% endfor %}</p>
+<p>{% endif %}
+{% endblock %}
+{% block submodules %}
+{% set visible_submodules = obj.submodules|selectattr(“display”)|list %}
+{% if visible_submodules %}
+Submodules
+———-
+.. toctree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="n">titlesonly</span><span class="p">:</span>
+<span class="p">:</span><span class="n">maxdepth</span><span class="p">:</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>{% for submodule in visible_submodules %}</dt><dd><p>{{ submodule.short_name }}/index.rst</p>
+</dd>
+</dl>
+<p>{% endfor %}</p>
+<p>{% endif %}
+{% endblock %}</p>
+<p>{% endif %}</p>
+<p>{% block content %}
+{% if obj.all is not none %}
+{% set visible_children = obj.children|selectattr(“short_name”, “in”, obj.all)|list %}
+{% elif obj.type is equalto(“package”) %}
+{% set visible_children = obj.children|selectattr(“display”)|list %}
+{% else %}
+{% set visible_children = obj.children|selectattr(“display”)|rejectattr(“imported”)|list %}
+{% endif %}
+{% if visible_children %}
+{{ obj.type|title }} Contents
+{{ “-” * obj.type|length }}———</p>
+<p>{% set visible_classes = visible_children|selectattr(“type”, “equalto”, “class”)|list %}
+{% set visible_functions = visible_children|selectattr(“type”, “equalto”, “function”)|list %}
+{% if include_summaries and (visible_classes or visible_functions) %}
+{% block classes %}
+{% if visible_classes %}
+Classes
+~~~~~~~</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+</tbody>
+</table>
+<dl class="simple">
+<dt>{% for klass in visible_classes %}</dt><dd><p>{{ klass.id }}</p>
+</dd>
+</dl>
+<p>{% endfor %}</p>
+<p>{% endif %}
+{% endblock %}</p>
+<p>{% block functions %}
+{% if visible_functions %}
+Functions
+~~~~~~~~~</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+</tbody>
+</table>
+<dl class="simple">
+<dt>{% for function in visible_functions %}</dt><dd><p>{{ function.id }}</p>
+</dd>
+</dl>
+<p>{% endfor %}</p>
+<p>{% endif %}
+{% endblock %}
+{% endif %}
+{% for obj_item in visible_children %}
+{{ obj_item.rendered|indent(0) }}
+{% endfor %}
+{% endif %}
+{% endblock %}</p>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

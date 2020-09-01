@@ -1,0 +1,605 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>zkay.transaction.offchain &mdash; zkay  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">zkay</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.offchain</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-zkay.transaction.offchain">
+<span id="zkay-transaction-offchain"></span><h1><a class="reference internal" href="#module-zkay.transaction.offchain" title="zkay.transaction.offchain"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.offchain</span></code></a><a class="headerlink" href="#module-zkay.transaction.offchain" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<dl class="py data">
+<dt id="zkay.transaction.offchain.bn128_scalar_field">
+<code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">bn128_scalar_field</code><a class="headerlink" href="#zkay.transaction.offchain.bn128_scalar_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="zkay.transaction.offchain._bn128_comp_scalar_field">
+<code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">_bn128_comp_scalar_field</code><a class="headerlink" href="#zkay.transaction.offchain._bn128_comp_scalar_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt id="zkay.transaction.offchain.RequireException">
+<em class="property">exception </em><code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">RequireException</code><a class="headerlink" href="#zkay.transaction.offchain.RequireException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Common base class for all non-exit exceptions.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.offchain.StateDict">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">StateDict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">api</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary which wraps access to state variables</p>
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.decl">
+<code class="sig-name descname">decl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">constructor</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="default_value">lambda x: ...</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.decl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the wrapper constructor for a state variable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.names">
+<em class="property">property </em><code class="sig-name descname">names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.names" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.get_plain">
+<code class="sig-name descname">get_plain</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">indices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.get_plain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.get_raw">
+<code class="sig-name descname">get_raw</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">indices</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.get_raw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.__getitem__">
+<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>Tuple<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return value of the state variable (or index of state variable) key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>KeyError</strong> – if location does not exist on the chain</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The requested value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.__setitem__">
+<code class="sig-name descname">__setitem__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign value to state variable (or to index of state variable)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values</p></li>
+<li><p><strong>value</strong> – Correctly wrapped value which should be assigned to the specified state location</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.StateDict.__get">
+<code class="sig-name descname">__get</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>Tuple<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">cache</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.StateDict.__get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.offchain.LocalsDict">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">LocalsDict</code><a class="headerlink" href="#zkay.transaction.offchain.LocalsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary which supports multiple scopes with name shadowing.</p>
+<p>This is needed since python does not natively support c-style nested local scopes.</p>
+<dl class="py method">
+<dt id="zkay.transaction.offchain.LocalsDict.push_scope">
+<code class="sig-name descname">push_scope</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.LocalsDict.push_scope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduce a new scope.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.LocalsDict.pop_scope">
+<code class="sig-name descname">pop_scope</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.LocalsDict.pop_scope" title="Permalink to this definition">¶</a></dt>
+<dd><p>End the current scope.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.LocalsDict.decl">
+<code class="sig-name descname">decl</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">val</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.LocalsDict.decl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduce a new local variable with the given name and value into the current scope.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.LocalsDict.__getitem__">
+<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.LocalsDict.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the local variable which is referenced by the identifier key in the current scope.</p>
+<p>If there are multiple variables with the name key in different scopes,
+the variable with the lowest declaration scope is used.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.LocalsDict.__setitem__">
+<code class="sig-name descname">__setitem__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.LocalsDict.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign value to the local variable which is referenced by the identifier key in the current scope.</p>
+<p>If there are multiple variables with the name key in different scopes, the variable with the lowest declaration scope is used.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.offchain.ContractSimulator">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">ContractSimulator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user_addr</span><span class="p">:</span> <span class="n">AddressValue</span></em>, <em class="sig-param"><span class="n">contract_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt id="zkay.transaction.offchain.ContractSimulator.tidx">
+<code class="sig-name descname">tidx</code><em class="property"> :Dict[str, int]</em><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.tidx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ContractSimulator.locals">
+<code class="sig-name descname">locals</code><em class="property"> :Optional[LocalsDict]</em><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.locals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hierarchical dictionary (scopes are managed internally) which holds the currently accessible local variables</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ContractSimulator.state">
+<code class="sig-name descname">state</code><em class="property"> :StateDict</em><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dict which stores stores state variable values. Empty at the beginning of a transaction.
+State variable read: 1. if not in dict -&gt; request from chain and insert into dict, 2. return dict value
+State variable write: store in dict</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.address">
+<em class="property">property </em><code class="sig-name descname">address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator._scope">
+<code class="sig-name descname">_scope</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator._scope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return context manager which manages the lifetime of a local scope.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.help">
+<em class="property">static </em><code class="sig-name descname">help</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">module</span></em>, <em class="sig-param"><span class="n">contract</span></em>, <em class="sig-param"><span class="n">contract_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.help" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.reduced_help">
+<em class="property">static </em><code class="sig-name descname">reduced_help</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">contract</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.reduced_help" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.default_address">
+<em class="property">static </em><code class="sig-name descname">default_address</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.default_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return default wallet address (if supported by backend, otherwise empty address is returned).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.initialize_keys_for">
+<em class="property">static </em><code class="sig-name descname">initialize_keys_for</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bytes<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.initialize_keys_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate/Load keys for the given address.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.use_config_from_manifest">
+<em class="property">static </em><code class="sig-name descname">use_config_from_manifest</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_dir</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.use_config_from_manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override zkay configuration with values from the manifest file in project_dir.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator.create_dummy_accounts">
+<em class="property">static </em><code class="sig-name descname">create_dummy_accounts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">count</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator.create_dummy_accounts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create count pre-funded dummy accounts (if supported by backend)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>count</strong> – # of accounts to create</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if count == 1 -&gt; returns a address, otherwise returns a tuple of count addresses</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ContractSimulator._function_ctx">
+<code class="sig-name descname">_function_ctx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">trans_sec_size</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'?'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ContractSimulator._function_ctx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="zkay.transaction.offchain.ApiWrapper">
+<em class="property">class </em><code class="sig-prename descclassname">zkay.transaction.offchain.</code><code class="sig-name descname">ApiWrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_dir</span></em>, <em class="sig-param"><span class="n">contract_name</span></em>, <em class="sig-param"><span class="n">user_addr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.__contract_handle">
+<code class="sig-name descname">__contract_handle</code><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__contract_handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle which refers to the deployed contract, this is passed to the blockchain interface when e.g. issuing transactions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.__user_addr">
+<code class="sig-name descname">__user_addr</code><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__user_addr" title="Permalink to this definition">¶</a></dt>
+<dd><p>From address for all transactions which are issued by this ContractSimulator</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.__current_tx">
+<code class="sig-name descname">__current_tx</code><em class="property"> :Optional[TxStruct]</em><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__current_tx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builtin variable (msg, block, tx) values for the current transaction</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.current_priv_values">
+<code class="sig-name descname">current_priv_values</code><em class="property"> :Dict[str, Union[int, bool, RandomnessValue]]</em><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.current_priv_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary which stores the private circuit values (secret inputs) for the current function (no transitivity)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.all_priv_values">
+<code class="sig-name descname">all_priv_values</code><em class="property"> :Optional[List[Union[int, bool, RandomnessValue]]]</em><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.all_priv_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>List which stores all secret circuit inputs for the current transaction in correct order (order of use)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.current_all_index">
+<code class="sig-name descname">current_all_index</code><em class="property"> :Optional[int]</em><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.current_all_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index which designates where in all_priv_values the secret circuit inputs of the current function should be inserted.
+This is basically private analogue of the start_index parameters which are passed to functions which require verification
+to designate where in the public IO arrays the functions should store/retrieve public circuit inputs/outputs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="zkay.transaction.offchain.ApiWrapper.is_external">
+<code class="sig-name descname">is_external</code><em class="property"> :Optional[bool]</em><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.is_external" title="Permalink to this definition">¶</a></dt>
+<dd><p>True whenever simulation is inside a function which was directly (without transitivity) called by the user.
+This is mostly used for some checks (e.g. to prevent the user from calling internal functions), or to change
+function behavior depending on whether a call is external or not (e.g. encrypting parameters or not)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.address">
+<em class="property">property </em><code class="sig-name descname">address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.user_address">
+<em class="property">property </em><code class="sig-name descname">user_address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.user_address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.keystore">
+<em class="property">property </em><code class="sig-name descname">keystore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.keystore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.get_my_sk">
+<code class="sig-name descname">get_my_sk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.get_my_sk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.get_my_pk">
+<code class="sig-name descname">get_my_pk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.get_my_pk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.call_fct">
+<code class="sig-name descname">call_fct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sec_offset</span></em>, <em class="sig-param"><span class="n">fct</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.call_fct" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.range_checked">
+<em class="property">static </em><code class="sig-name descname">range_checked</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.range_checked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether a comparison with value ‘val’ can be evaluated correctly in the circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>val</strong> – the value to check</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.deploy">
+<code class="sig-name descname">deploy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">actual_args</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">should_encrypt</span><span class="p">:</span> <span class="n">List<span class="p">[</span>bool<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.deploy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.connect">
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">address</span><span class="p">:</span> <span class="n">AddressValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.transact">
+<code class="sig-name descname">transact</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">should_encrypt</span><span class="p">:</span> <span class="n">List<span class="p">[</span>bool<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.transact" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">ret_val_constructors</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>bool<span class="p">, </span>Callable<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.__get_decrypted_retval">
+<code class="sig-name descname">__get_decrypted_retval</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">raw_value</span></em>, <em class="sig-param"><span class="n">is_cipher</span></em>, <em class="sig-param"><span class="n">constructor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__get_decrypted_retval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.get_special_variables">
+<code class="sig-name descname">get_special_variables</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.get_special_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.update_special_variables">
+<code class="sig-name descname">update_special_variables</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">wei_amount</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.update_special_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.clear_special_variables">
+<code class="sig-name descname">clear_special_variables</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.clear_special_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.enc">
+<code class="sig-name descname">enc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">plain</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>AddressValue<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">target_addr</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>AddressValue<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.enc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.dec">
+<code class="sig-name descname">dec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">cipher</span><span class="p">:</span> <span class="n">CipherValue</span></em>, <em class="sig-param"><span class="n">constr</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span>int<span class="p">]</span><span class="p">, </span>Any<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.dec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper._req_state_var">
+<code class="sig-name descname">_req_state_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">indices</span></em>, <em class="sig-param"><span class="n">count</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper._req_state_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.__serialize_val">
+<em class="property">static </em><code class="sig-name descname">__serialize_val</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">bitwidth</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__serialize_val" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.__serialize_circuit_array">
+<em class="property">static </em><code class="sig-name descname">__serialize_circuit_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">target_array</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">target_out_start_idx</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">elem_bitwidths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__serialize_circuit_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.serialize_circuit_outputs">
+<code class="sig-name descname">serialize_circuit_outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">zk_data</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">out_elem_bitwidths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.serialize_circuit_outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.serialize_private_inputs">
+<code class="sig-name descname">serialize_private_inputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">zk_priv</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">priv_elem_bitwidths</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.serialize_private_inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.gen_proof">
+<code class="sig-name descname">gen_proof</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">in_vals</span><span class="p">:</span> <span class="n">List</span></em>, <em class="sig-param"><span class="n">out_vals</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>CipherValue<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.gen_proof" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.__call_ctx">
+<code class="sig-name descname">__call_ctx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">sec_offset</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.__call_ctx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return context manager which sets the correct current_all_index for the given sec_offset during its lifetime.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zkay.transaction.offchain.ApiWrapper.api_function_ctx">
+<code class="sig-name descname">api_function_ctx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">trans_sec_size</span></em>, <em class="sig-param"><span class="n">wei_amount</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.offchain.ApiWrapper.api_function_ctx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
