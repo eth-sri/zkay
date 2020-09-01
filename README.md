@@ -222,4 +222,4 @@ The following [technical report] (coming soon) describes version 0.2 of zkay, wh
 
 
 [zkay-ccs]: https://www.sri.inf.ethz.ch/publications/steffen2019zkay
-[zkay-docs]: https://eth-sri.github.io/zkay
+[zkay-docs]: https://eth-sri.github.io/zkay/
