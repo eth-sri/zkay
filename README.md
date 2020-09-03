@@ -6,7 +6,7 @@ In addition to the instructions below, we refer to the following resources:
 
 - The original [research paper][zkay-ccs], which introduces the core concepts of zkay.
 - The [online documentation][zkay-docs], which provides a tutorial, language reference and API documentation.
-- The [technical report] (coming soon), which describes the features and implementation of zkay v0.2.
+- The [technical report][zkay-techreport], which describes the features and implementation of zkay v0.2.
 
 ## Warning / Security Disclaimer
 
@@ -215,11 +215,18 @@ You are encouraged to cite the following [research paper][zkay-ccs] if you use z
 }
 ```
 
-The following [technical report] (coming soon) describes version 0.2 of zkay, which introduces many vital features such as real encryption.
+The following [technical report][zkay-techreport] describes version 0.2 of zkay, which introduces many vital features such as real encryption.
 ```
-(BibTex coming soon)
+@techreport{baumann2020zkay,
+    title={zkay v0.2: Practical Data Privacy for Smart Contracts},
+    author={Nick Baumann and Samuel Steffen and Benjamin Bichsel and Petar Tsankov and Martin Vechev},
+    year={2020},
+    eprint={2009.01020},
+    url={https://arxiv.org/abs/2009.01020}
+}
 ```
 
 
 [zkay-ccs]: https://www.sri.inf.ethz.ch/publications/steffen2019zkay
 [zkay-docs]: https://eth-sri.github.io/zkay/
+[zkay-techreport]: https://arxiv.org/abs/2009.01020
