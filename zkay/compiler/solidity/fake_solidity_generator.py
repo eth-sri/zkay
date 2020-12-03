@@ -16,6 +16,7 @@ UINT_PATTERN = r'uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uin
 INT_PATTERN = r'int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256'
 USER_TYPE_PATTERN = f'(?:(?:{ID_PATTERN}\\.)*(?:{ID_PATTERN}))'
 ELEM_TYPE_PATTERN = r'(?:address|address payable|bool|' + UINT_PATTERN + '|' + INT_PATTERN + '|' + USER_TYPE_PATTERN + ')'
+HOMOMORPHISM_PATTERN = r'<\+?>'
 NONID_START = r'(?:[^a-zA-Z0-9\$_]|^)'
 NONID_END = r'(?:[^a-zA-Z0-9\$_]|$)'
 PARENS_PATTERN = re.compile(r'[()]')
@@ -33,8 +34,8 @@ STRING_OR_COMMENT_PATTERN = re.compile(
 CONTRACT_START_PATTERN = re.compile(f'{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])')
 
 # Regex to match annotated types
-ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)'  # match basic type
-                           f'(?P<repl>@{WS_PATTERN}*{ID_PATTERN})')             # match @owner
+ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)'          # match basic type
+                           f'(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)')   # match @owner[<op>]
 
 # Regexes to match 'all' and 'final'
 MATCH_WORD_FSTR = f'(?P<keep>{NONID_START})(?P<repl>{{}})(?={NONID_END})'
@@ -52,6 +53,9 @@ MAP_PATTERN = re.compile(
 
 # Regex to detect start of reveal
 REVEAL_START_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()')  # match 'reveal', expect '('
+
+# Regex to detect addhom & unhom
+ADDHOM_UNHOM_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))(?P<repl>addhom|unhom){WS_PATTERN}*(?=\\()')
 
 
 def create_surrogate_string(instr: str):
@@ -174,6 +178,9 @@ def fake_solidity_code(code: str):
 
     # Strip map key tags
     code = replace_with_surrogate(code, MAP_PATTERN)
+
+    # Strip addhom / unhom expressions
+    code = replace_with_surrogate(code, ADDHOM_UNHOM_PATTERN)
 
     # Strip reveal expressions
     code = strip_reveals(code)
