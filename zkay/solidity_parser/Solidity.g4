@@ -303,8 +303,11 @@ numberLiteral
 MeKeyword : 'me' ;
 AllKeyword : 'all' ;
 
+homomorphismAnnotation
+  : '<>' | '<+>'; // For multiplicative homomorphism: | '<*>';
+
 annotatedTypeName
-  : type_name=typeName ('@' privacy_annotation=expression)? ;
+  : type_name=typeName ('@' privacy_annotation=expression (homomorphism=homomorphismAnnotation)?)? ;
 
 // REMOVED:
 // - 'from'
