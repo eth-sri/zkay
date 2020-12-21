@@ -1,0 +1,15 @@
+pragma zkay >=0.2.0;
+
+contract AddhomUnreadable {
+	final address business;
+	final uint@business x;
+
+	constructor() public {
+		business = me;
+		x = 0;
+	}
+
+	function f() public {
+		uint@business<+> y = addhom(x);
+	}
+}

@@ -1,0 +1,20 @@
+pragma zkay >=0.2.0;
+
+contract IncompatibleHomomorphism {
+
+	final address A;
+	uint@A<+> a;
+	final address B;
+	uint@B<+> b;
+
+	constructor(address _A, address _B) {
+		A = _A;
+		a = 0;
+		B = _B;
+		b = 0;
+	}
+
+	function f() public {
+		uint@A<+> result = a + b;
+	}
+}

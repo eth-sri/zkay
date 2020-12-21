@@ -1,0 +1,18 @@
+pragma zkay >=0.2.0;
+
+contract HomomorphicAddition {
+
+	final address owner;
+	uint@owner<+> a;
+	uint@owner<+> b;
+
+	constructor() public {
+		owner = me;
+		a = 0;
+		b = 0;
+	}
+
+	function f() public{
+		uint@owner<+> x = a + b;
+	}
+}

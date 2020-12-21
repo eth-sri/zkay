@@ -1,0 +1,15 @@
+pragma zkay >=0.2.0;
+
+contract RevealUnreadable {
+	final address business;
+	final uint@business x;
+
+	constructor() public {
+		business = me;
+		x = 0;
+	}
+
+	function read() public returns (uint@me) {
+		return reveal(x, me);
+	}
+}

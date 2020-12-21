@@ -1,0 +1,8 @@
+pragma zkay >=0.2.0;
+
+contract Addhom {
+
+	function f(uint@me x) public{
+		uint@me<+> y = addhom(x);
+	}
+}

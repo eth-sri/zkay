@@ -1,0 +1,16 @@
+pragma zkay >=0.2.0;
+
+contract HomomorphicNegation {
+
+	final address owner;
+	uint@owner<+> x;
+
+	constructor() public {
+		owner = me;
+		x = 0;
+	}
+
+	function f() public{
+		x = -x;
+	}
+}

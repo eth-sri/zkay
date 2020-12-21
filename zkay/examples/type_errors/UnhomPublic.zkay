@@ -1,0 +1,8 @@
+pragma zkay >=0.2.0;
+
+contract UnhomPublic {
+
+	function f(uint@all a) public {
+		uint@me x = unhom(a);
+	}
+}
