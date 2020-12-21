@@ -5,7 +5,8 @@ import math
 import operator
 import textwrap
 from collections import OrderedDict
-from enum import IntEnum
+from dataclasses import dataclass
+from enum import IntEnum, Enum
 from functools import cmp_to_key
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
@@ -221,7 +222,7 @@ class Expression(AST):
         if not self.instanceof_data_type(expected.type_name):
             return False
 
-        # check privacy type
+        # check privacy type and homomorphism
         combined_label = actual.combined_privacy(self.analysis, expected)
         if combined_label is None:
             return False
@@ -288,13 +289,57 @@ builtin_functions.update(shiftop)
 assert builtin_op_fct.keys() == builtin_functions.keys()
 
 
+class Homomorphism(Enum):
+    NON_HOMOMORPHIC = ('<>', 'unhom')
+    ADDITIVE = ('<+>', 'addhom')
+
+    def __init__(self, type_annotation: str, rehom_expr_name: str):
+        self.type_annotation = type_annotation
+        self.rehom_expr_name = rehom_expr_name
+
+    def __str__(self):
+        return self.type_annotation if self != Homomorphism.NON_HOMOMORPHIC else ''
+
+
+@dataclass
+class HomomorphicBuiltin:
+    """
+    Just a named tuple that describes an available homomorphic operation.
+    """
+    op: str
+    homomorphism: Homomorphism
+    public_args: List[bool]
+    """
+    A list that describes what arguments are required to be public to be able to use this homomorphic function.
+    """
+
+
+homomorphic_builtin_functions = [
+    HomomorphicBuiltin('sign+', Homomorphism.ADDITIVE, [False]),
+    HomomorphicBuiltin('sign-', Homomorphism.ADDITIVE, [False]),
+    HomomorphicBuiltin('+', Homomorphism.ADDITIVE, [False, False]),
+    HomomorphicBuiltin('-', Homomorphism.ADDITIVE, [False, False]),
+    # HomomorphicBuiltin('*', Homomorphism.ADDITIVE, [True, False]),
+    # HomomorphicBuiltin('*', Homomorphism.ADDITIVE, [False, True]),
+    # HomomorphicBuiltin('ite', Homomorphism.ADDITIVE, [False, True, True]),
+    # HomomorphicBuiltin('ite', Homomorphism.ADDITIVE, [True, False, False]),
+    # HomomorphicBuiltin('*', Homomorphism.MULTIPLICATIVE, [False, False]),
+]
+
+for hom in homomorphic_builtin_functions:
+    assert hom.op in builtin_op_fct and hom.homomorphism != Homomorphism.NON_HOMOMORPHIC
+    op_arity = builtin_functions[hom.op].count('{}')
+    assert op_arity == len(hom.public_args)
+
+
 class BuiltinFunction(Expression):
 
     def __init__(self, op: str):
         super().__init__()
         self.op = op
-        # set later by type checker
+        # both set later by type checker
         self.is_private: bool = False
+        self.homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC
 
         # input validation
         if op not in builtin_functions:
@@ -389,6 +434,55 @@ class BuiltinFunction(Expression):
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
         return self.op not in ['**', '%', '/']
+
+    def select_homomorphic_overload(self, arg_types: List[AnnotatedTypeName], analysis: PartitionState[PrivacyLabelExpr]):
+        """
+        Finds a homomorphic builtin that performs the correct operation and which can be applied
+        on the given argument types, if any exist.
+
+        :return: A HomomorphicBuiltinFunction that can be used to query the required input types and
+                 the resulting output type of the homomorphic operation, or None
+        """
+
+        # The first inaccessible (not @all, not @me) determines the output type
+        # self.op and the public arguments determine which homomorphic builtin is selected
+        # We may want to rethink this in the future if we also implement other homomorphisms (e.g. multiplicative)
+
+        inaccessible_arg_types = list(filter(lambda x: not x.is_accessible(analysis), arg_types))
+        if len(inaccessible_arg_types) == 0:  # Else we would not have selected a homomorphic operation
+            raise ValueError('Cannot select proper homomorphic function if all arguments are public or @me-private')
+        first_inaccessible_type = inaccessible_arg_types[0]
+        public_args = list(map(AnnotatedTypeName.is_public, arg_types))
+
+        for hom in homomorphic_builtin_functions:
+            # Can have more public arguments, but not fewer (hom.public_args[i] implies public_args[i])
+            args_match = [(not h) or a for a, h in zip(public_args, hom.public_args)]
+            if self.op == hom.op and all(args_match):
+                target_type = AnnotatedTypeName(first_inaccessible_type.type_name,
+                                                first_inaccessible_type.privacy_annotation,
+                                                hom.homomorphism)
+                return HomomorphicBuiltinFunction(target_type, public_args)
+        else:
+            return None
+
+
+class HomomorphicBuiltinFunction:
+    """
+    Describes the required input types and the resulting output type of a homomorphic execution of a BuiltinFunction.
+    """
+    target_type: AnnotatedTypeName
+    public_args: List[bool]
+
+    def __init__(self, target_type, public_args):
+        self.target_type = target_type
+        self.public_args = public_args
+
+    def input_types(self):
+        public_type = AnnotatedTypeName.all(self.target_type.type_name)  # same data type, but @all
+        return [public_type if public else self.target_type for public in self.public_args]
+
+    def output_type(self):
+        return self.target_type
 
 
 class FunctionCallExpr(Expression):
@@ -619,14 +713,18 @@ class AllExpr(Expression):
 
 class ReclassifyExpr(Expression):
 
-    def __init__(self, expr: Expression, privacy: Expression):
+    def __init__(self, expr: Expression, privacy: Expression, homomorphism: Optional[Homomorphism]):
         super().__init__()
         self.expr = expr
         self.privacy = privacy
+        self.homomorphism = homomorphism
 
     def process_children(self, f: Callable[[T], T]):
         self.expr = f(self.expr)
         self.privacy = f(self.privacy)
+
+    def is_rehom(self):
+        return self.homomorphism is not None
 
 
 class HybridArgType(IntEnum):
@@ -710,10 +808,10 @@ class HybridArgumentIdf(Identifier):
 
 
 class EncryptionExpression(ReclassifyExpr):
-    def __init__(self, expr: Expression, privacy: PrivacyLabelExpr):
+    def __init__(self, expr: Expression, privacy: PrivacyLabelExpr, homomorphism: Homomorphism):
         if isinstance(privacy, Identifier):
             privacy = IdentifierExpr(privacy)
-        super().__init__(expr, privacy)
+        super().__init__(expr, privacy, homomorphism)
         self.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type)
 
 
@@ -1467,7 +1565,8 @@ class FunctionTypeName(TypeName):
 
 class AnnotatedTypeName(AST):
 
-    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None):
+    def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None,
+                 homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC):
         super().__init__()
         self.type_name = type_name
         self.had_privacy_annotation = privacy_annotation is not None
@@ -1475,6 +1574,9 @@ class AnnotatedTypeName(AST):
             self.privacy_annotation = privacy_annotation
         else:
             self.privacy_annotation = AllExpr()
+        self.homomorphism = homomorphism
+        if self.privacy_annotation == AllExpr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
+            raise ValueError(f'Public type name cannot be homomorphic (got {homomorphism.type_annotation})')
 
     def process_children(self, f: Callable[[T], T]):
         self.type_name = f(self.type_name)
@@ -1482,7 +1584,7 @@ class AnnotatedTypeName(AST):
 
     def clone(self) -> AnnotatedTypeName:
         assert self.privacy_annotation is not None
-        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone())
+        at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.homomorphism)
         at.had_privacy_annotation = self.had_privacy_annotation
         return at
 
@@ -1495,7 +1597,9 @@ class AnnotatedTypeName(AST):
 
     def __eq__(self, other):
         if isinstance(other, AnnotatedTypeName):
-            return self.type_name == other.type_name and self.privacy_annotation == other.privacy_annotation
+            return (self.type_name == other.type_name and
+                    self.privacy_annotation == other.privacy_annotation and
+                    self.homomorphism == other.homomorphism)
         else:
             return False
 
@@ -1503,6 +1607,9 @@ class AnnotatedTypeName(AST):
         if isinstance(self.type_name, TupleType):
             assert isinstance(other.type_name, TupleType) and len(self.type_name.types) == len(other.type_name.types)
             return [e1.combined_privacy(analysis, e2) for e1, e2 in zip(self.type_name.types, other.type_name.types)]
+
+        if self.homomorphism != other.homomorphism and not self.is_public():
+            return None
 
         p_expected = other.privacy_annotation.privacy_annotation_label()
         p_actual = self.privacy_annotation.privacy_annotation_label()
@@ -1519,6 +1626,13 @@ class AnnotatedTypeName(AST):
 
     def is_private(self):
         return not self.is_public()
+
+    def is_private_at_me(self, analysis: PartitionState[PrivacyLabelExpr]):
+        p = self.privacy_annotation
+        return p.is_me_expr() or (analysis is not None and analysis.same_partition(p.privacy_annotation_label(), MeExpr()))
+
+    def is_accessible(self, analysis: PartitionState[PrivacyLabelExpr]):
+        return self.is_public() or self.is_private_at_me(analysis)
 
     def is_address(self) -> bool:
         return isinstance(self.type_name, (AddressTypeName, AddressPayableTypeName))
@@ -2084,8 +2198,12 @@ class CodeVisitor(AstVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         e = self.visit(ast.expr)
-        p = self.visit(ast.privacy)
-        return f'reveal({e}, {p})'
+        if ast.is_rehom():
+            func = ast.homomorphism.rehom_expr_name
+            return f'{func}({e})'
+        else:
+            p = self.visit(ast.privacy)
+            return f'reveal({e}, {p})'
 
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)
@@ -2203,7 +2321,7 @@ class CodeVisitor(AstVisitor):
         t = self.visit(ast.type_name)
         p = self.visit(ast.privacy_annotation)
         if ast.had_privacy_annotation:
-            return f'{t}@{p}'
+            return f'{t}@{p}{ast.homomorphism}'
         return t
 
     def visitMapping(self, ast: Mapping):

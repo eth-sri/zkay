@@ -10,10 +10,14 @@ from zkay.config import cfg
 from zkay.type_check.type_checker import TypeCheckVisitor
 from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
-    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, CircuitInputStatement, \
-    CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, BooleanLiteralType, \
-    Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, get_privacy_expr_from_label, \
-    ExpressionStatement, NumberLiteralExpr, VariableDeclarationStatement, EnterPrivateKeyStatement, KeyLiteralExpr
+    HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, \
+    CircuitInputStatement, \
+    CircuitComputationStatement, AllExpr, MeExpr, ReturnStatement, Block, MemberAccessExpr, NumberLiteralType, \
+    BooleanLiteralType, \
+    Statement, StateVariableDeclaration, IfStatement, TupleExpr, VariableDeclaration, IndexExpr, \
+    get_privacy_expr_from_label, \
+    ExpressionStatement, NumberLiteralExpr, VariableDeclarationStatement, EnterPrivateKeyStatement, KeyLiteralExpr, \
+    Homomorphism
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 
@@ -642,7 +646,8 @@ class CircuitHelper:
             privacy_label_expr = get_privacy_expr_from_label(new_privacy)
             cipher_t = TypeName.cipher_type(expr.annotated_type)
             tname = f'{self._out_name_factory.get_new_name(cipher_t)}{t_suffix}'
-            new_out_param = self._out_name_factory.add_idf(tname, cipher_t, EncryptionExpression(private_expr, privacy_label_expr))
+            enc_expr = EncryptionExpression(private_expr, privacy_label_expr, Homomorphism.NON_HOMOMORPHIC)  # TODO: Homomorphism
+            new_out_param = self._out_name_factory.add_idf(tname, cipher_t, enc_expr)
             self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, new_out_param, False, False)
             out_var = new_out_param.get_loc_expr()
 

@@ -1,4 +1,5 @@
 import inspect
+from enum import Enum
 from typing import TypeVar
 
 from zkay.zkay_ast.ast import AST, Expression, Statement, UserDefinedTypeName
@@ -66,6 +67,7 @@ class DeepCopyVisitor(AstVisitor):
         'instantiated_key',
         'function',
         'is_private',
+        'homomorphism',
         'evaluate_privately',
         'has_side_effects',
         'contains_inlined_function',
@@ -153,7 +155,7 @@ class DeepCopyVisitor(AstVisitor):
     def copy_field(self, field):
         if field is None:
             return None
-        elif isinstance(field, str) or isinstance(field, int) or isinstance(field, bool):
+        elif isinstance(field, str) or isinstance(field, int) or isinstance(field, bool) or isinstance(field, Enum):
             return field
         elif isinstance(field, list):
             return [self.copy_field(e) for e in field]

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
@@ -6,7 +8,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, Anno
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
     BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, \
-    UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr, ContractDefinition
+    UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr, ContractDefinition, \
+    Homomorphism
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -34,7 +37,7 @@ class TypeCheckVisitor(AstVisitor):
                 rhs = self.implicitly_converted_to(rhs, expected_type.type_name)
 
             if instance == 'make-private':
-                return self.make_private(rhs, expected_type.privacy_annotation)
+                return self.make_private(rhs, expected_type.privacy_annotation, expected_type.homomorphism)
             else:
                 return rhs
 
@@ -100,6 +103,13 @@ class TypeCheckVisitor(AstVisitor):
         return isinstance(ast.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType))
 
     def handle_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction):
+        all_args_all_or_me = all(map(lambda x: x.annotated_type.is_accessible(ast.analysis), ast.args))
+        if all_args_all_or_me:
+            self.handle_unhom_builtin_function_call(ast, func)
+        else:
+            self.handle_homomorphic_builtin_function_call(ast, func)
+
+    def handle_unhom_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction):
         # handle special cases
         if func.is_ite():
             cond_t = ast.args[0].annotated_type
@@ -209,6 +219,26 @@ class TypeCheckVisitor(AstVisitor):
 
         ast.annotated_type = out_t.annotate(p)
 
+    def handle_homomorphic_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction):
+        # First - same as non-homomorphic - check that argument types conform to op signature
+        if not func.is_eq():
+            for arg, t in zip(ast.args, func.input_types()):
+                if not arg.instanceof_data_type(t):
+                    raise TypeMismatchException(t, arg.annotated_type.type_name, arg)
+
+        provided_arg_types = list(map(lambda x: x.annotated_type, ast.args))
+        homomorphic_func = func.select_homomorphic_overload(provided_arg_types, ast.analysis)
+        if homomorphic_func is None:
+            raise TypeException(f'Operation \'{func.op}\' requires all arguments to be accessible, '
+                                f'i.e. @all or provably equal to @me', ast)
+
+        ast.annotated_type = homomorphic_func.output_type()
+        func.homomorphism = ast.annotated_type.homomorphism
+        expected_arg_types = homomorphic_func.input_types()
+
+        # Check that the argument types are correct
+        ast.args[:] = map(lambda arg, arg_pt: self.get_rhs(arg, arg_pt), ast.args, expected_arg_types)
+
     @staticmethod
     def is_accessible_by_invoker(ast: Expression):
         return True
@@ -216,11 +246,11 @@ class TypeCheckVisitor(AstVisitor):
         #       ast.instanceof(AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr()))
 
     @staticmethod
-    def make_private(expr: Expression, privacy: Expression):
+    def make_private(expr: Expression, privacy: Expression, homomorphism: Homomorphism):
         assert (privacy.privacy_annotation_label() is not None)
 
         pl = get_privacy_expr_from_label(privacy.privacy_annotation_label())
-        r = ReclassifyExpr(expr, pl)
+        r = ReclassifyExpr(expr, pl, homomorphism)
 
         # set type
         r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl.clone())
@@ -303,10 +333,29 @@ class TypeCheckVisitor(AstVisitor):
         if not ast.privacy.privacy_annotation_label():
             raise TypeException('Second argument of "reveal" cannot be used as a privacy type', ast)
 
+        homomorphism = ast.homomorphism or ast.expr.annotated_type.homomorphism
+        assert(homomorphism is not None)
+
+        # Prevent ReclassifyExpr to all with homomorphic type
+        if ast.privacy.is_all_expr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
+            raise TypeException('Cannot create a public homomorphic value (argument is homomorphic)', ast)
+
+        # Make sure the first argument to reveal / rehom is public or private provably equal to @me
+        is_expr_at_all = ast.expr.annotated_type.is_public()
+        is_expr_at_me = ast.expr.annotated_type.is_private_at_me(ast.analysis)
+        if not is_expr_at_all and not is_expr_at_me:
+            name = homomorphism.rehom_expr_name if ast.is_rehom() else "reveal"
+            raise TypeException(f'First argument of "{name}" must be accessible (@all or provably equal to @me)', ast)
+
+        # Prevent unhom(public_value)
+        if is_expr_at_all and ast.is_rehom() and ast.homomorphism == Homomorphism.NON_HOMOMORPHIC:
+            raise TypeException(f'Cannot use "{ast.homomorphism.rehom_expr_name}" on a public value', ast)
+
         # NB prevent any redundant reveal (not just for public)
-        ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy)
+        ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy, homomorphism)
         if ast.instanceof(ast.expr.annotated_type) is True:
-            raise TypeException(f'Redundant "reveal": Expression is already "@{ast.privacy.code()}"', ast)
+            name = homomorphism.rehom_expr_name if ast.is_rehom() else "reveal"
+            raise TypeException(f'Redundant "{name}": Expression is already "@{ast.privacy.code()}{homomorphism}"', ast)
         self.check_for_invalid_private_type(ast)
 
     def visitIfStatement(self, ast: IfStatement):

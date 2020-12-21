@@ -203,13 +203,27 @@ class BuildASTVisitor(SolidityVisitor):
 
     def visitAnnotatedTypeName(self, ctx: SolidityParser.AnnotatedTypeNameContext):
         pa = None
+        hom = ast.Homomorphism.NON_HOMOMORPHIC
         if ctx.privacy_annotation is not None:
             pa = self.visit(ctx.privacy_annotation)
+            if ctx.homomorphism is not None:
+                hom = self.visit(ctx.homomorphism)
 
             if not (isinstance(pa, ast.AllExpr) or isinstance(pa, ast.MeExpr) or isinstance(pa, IdentifierExpr)):
                 raise SyntaxException('Privacy annotation can only be me | all | Identifier', ctx.privacy_annotation, self.code)
+            if isinstance(pa, ast.AllExpr) and hom != ast.Homomorphism.NON_HOMOMORPHIC:
+                raise SyntaxException('Public types cannot be homomorphic', ctx.homomorphism, self.code)
 
-        return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa)
+        return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa, hom)
+
+    def visitHomomorphismAnnotation(self, ctx:SolidityParser.HomomorphismAnnotationContext):
+        t = ctx.getText()
+        for h in ast.Homomorphism:
+            if h.type_annotation == t:
+                return h
+        else:
+            raise SyntaxException(f'Unsupported homomorphism {t}', ctx, self.code)
+
 
     def visitElementaryTypeName(self, ctx: SolidityParser.ElementaryTypeNameContext):
         t = ctx.getText()
@@ -312,7 +326,15 @@ class BuildASTVisitor(SolidityVisitor):
             if func.idf.name == 'reveal':
                 if len(args) != 2:
                     raise SyntaxException(f'Invalid number of arguments for reveal: {args}', ctx.args, self.code)
-                return ReclassifyExpr(args[0], args[1])
+                return ReclassifyExpr(args[0], args[1], None)
+            elif func.idf.name == 'addhom':
+                if len(args) != 1:
+                    raise SyntaxException(f'Invalid number of arguments for addhom: {args}', ctx.args, self.code)
+                return ReclassifyExpr(args[0], ast.MeExpr(), ast.Homomorphism.ADDITIVE)
+            elif func.idf.name == 'unhom':
+                if len(args) != 1:
+                    raise SyntaxException(f'Invalid number of arguments for unhom: {args}', ctx.args, self.code)
+                return ReclassifyExpr(args[0], ast.MeExpr(), ast.Homomorphism.NON_HOMOMORPHIC)
 
         return FunctionCallExpr(func, args)
 
