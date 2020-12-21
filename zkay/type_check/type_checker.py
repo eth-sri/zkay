@@ -253,7 +253,7 @@ class TypeCheckVisitor(AstVisitor):
         r = ReclassifyExpr(expr, pl, homomorphism)
 
         # set type
-        r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl.clone())
+        r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl.clone(), homomorphism)
         TypeCheckVisitor.check_for_invalid_private_type(r)
 
         # set statement
@@ -277,7 +277,9 @@ class TypeCheckVisitor(AstVisitor):
             parent=expr.parent, statement=expr.statement, line=expr.line, column=expr.column)
         cast.elem_type.parent = cast
         expr.parent = cast
-        cast.annotated_type = AnnotatedTypeName(t.clone(), expr.annotated_type.privacy_annotation.clone()).override(parent=cast)
+        cast.annotated_type = AnnotatedTypeName(t.clone(),
+                                                expr.annotated_type.privacy_annotation.clone(),
+                                                expr.annotated_type.homomorphism).override(parent=cast)
         return cast
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):

@@ -166,7 +166,8 @@ class Expression(AST):
             assert cast
             return PrimitiveCastExpr(expected, self).as_type(expected)
 
-        ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation.clone())
+        ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation.clone(),
+                                               self.annotated_type.homomorphism)
         return ret
 
     def __init__(self):
