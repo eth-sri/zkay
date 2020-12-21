@@ -22,14 +22,22 @@ def type_check(ast):
 
 class TypeCheckVisitor(AstVisitor):
 
-    def get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName):
+    def get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName, allow_rehom: bool = False):
         if isinstance(rhs, TupleExpr):
             if not isinstance(rhs, TupleExpr) or not isinstance(expected_type.type_name, TupleType) or len(rhs.elements) != len(expected_type.type_name.types):
                 raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
-            exprs = [self.get_rhs(a, e) for e, a, in zip(expected_type.type_name.types, rhs.elements)]
+            exprs = [self.get_rhs(a, e, allow_rehom) for e, a, in zip(expected_type.type_name.types, rhs.elements)]
             return replace_expr(rhs, TupleExpr(exprs)).as_type(TupleType([e.annotated_type for e in exprs]))
 
+        require_rehom = False
         instance = rhs.instanceof(expected_type)
+
+        if not instance and allow_rehom:
+            require_rehom = True
+            expected_matching_hom = AnnotatedTypeName(expected_type.type_name, expected_type.privacy_annotation,
+                                                      rhs.annotated_type.homomorphism)
+            instance = rhs.instanceof(expected_matching_hom)
+
         if not instance:
             raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
         else:
@@ -38,6 +46,8 @@ class TypeCheckVisitor(AstVisitor):
 
             if instance == 'make-private':
                 return self.make_private(rhs, expected_type.privacy_annotation, expected_type.homomorphism)
+            elif require_rehom:
+                return self.try_rehom(rhs, expected_type)
             else:
                 return rhs
 
@@ -74,7 +84,7 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeException("Assignment target is not a location", ast.lhs)
 
         expected_type = ast.lhs.annotated_type
-        ast.rhs = self.get_rhs(ast.rhs, expected_type)
+        ast.rhs = self.get_rhs(ast.rhs, expected_type, allow_rehom=True)
 
         # prevent modifying final
         f = ast.function
@@ -83,7 +93,7 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         if ast.expr:
-            ast.expr = self.get_rhs(ast.expr, ast.variable_declaration.annotated_type)
+            ast.expr = self.get_rhs(ast.expr, ast.variable_declaration.annotated_type, allow_rehom=True)
 
     @staticmethod
     def has_private_type(ast: Expression):
@@ -204,9 +214,9 @@ class TypeCheckVisitor(AstVisitor):
             # Add implicit casts for arguments
             arg_pt = arg_t.annotate(p)
             if func.is_shiftop() and p is not None:
-                ast.args[0] = self.get_rhs(ast.args[0], arg_pt)
+                ast.args[0] = self.get_rhs(ast.args[0], arg_pt, allow_rehom=True)
             else:
-                ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt), ast.args)
+                ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt, allow_rehom=True), ast.args)
 
         ast.annotated_type = out_t.annotate(p)
 
@@ -228,13 +238,53 @@ class TypeCheckVisitor(AstVisitor):
         expected_arg_types = homomorphic_func.input_types()
 
         # Check that the argument types are correct
-        ast.args[:] = map(lambda arg, arg_pt: self.get_rhs(arg, arg_pt), ast.args, expected_arg_types)
+        ast.args[:] = map(lambda arg, arg_pt: self.get_rhs(arg, arg_pt, allow_rehom=True),
+                          ast.args, expected_arg_types)
 
     @staticmethod
     def is_accessible_by_invoker(ast: Expression):
         return True
         #return ast.annotated_type.is_public() or ast.is_lvalue() or \
         #       ast.instanceof(AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr()))
+
+    @staticmethod
+    def try_rehom(rhs, expected_type):
+        if rhs.annotated_type.is_public():
+            raise ValueError('Cannot change the homomorphism of a public value')
+
+        if rhs.annotated_type.is_private_at_me(rhs.analysis):
+            # The value is @me, so we can just insert a ReclassifyExpr to change
+            # the homomorphism of this value, just like we do for public values.
+            return TypeCheckVisitor.make_rehom(rhs, expected_type)
+        elif isinstance(rhs, ReclassifyExpr) and not isinstance(rhs, RehomExpr):
+            # rhs is a valid ReclassifyExpr, i.e. the argument is public or @me-private
+            # To create an expression with the correct homomorphism,
+            # just change the ReclassifyExpr's output homomorphism
+            rhs.homomorphism = expected_type.homomorphism
+            rhs.annotated_type = AnnotatedTypeName(rhs.annotated_type.type_name,
+                                                   rhs.annotated_type.privacy_annotation,
+                                                   expected_type.homomorphism)
+            return rhs
+        else:
+            raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
+
+    @staticmethod
+    def make_rehom(expr: Expression, expected_type: AnnotatedTypeName):
+        assert (expected_type.privacy_annotation.privacy_annotation_label() is not None)
+        assert (expr.annotated_type.is_private_at_me(expr.analysis))
+        assert (expected_type.is_private_at_me(expr.analysis))
+
+        r = RehomExpr(expr, expected_type.homomorphism)
+
+        # set type
+        pl = get_privacy_expr_from_label(expected_type.privacy_annotation.privacy_annotation_label())
+        r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl, expected_type.homomorphism)
+        TypeCheckVisitor.check_for_invalid_private_type(r)
+
+        # set statement, parents, location
+        TypeCheckVisitor.assign_location(r, expr)
+
+        return r
 
     @staticmethod
     def make_private(expr: Expression, privacy: Expression, homomorphism: Homomorphism):
@@ -247,19 +297,24 @@ class TypeCheckVisitor(AstVisitor):
         r.annotated_type = AnnotatedTypeName(expr.annotated_type.type_name, pl.clone(), homomorphism)
         TypeCheckVisitor.check_for_invalid_private_type(r)
 
-        # set statement
-        r.statement = expr.statement
-
-        # set parents
-        r.parent = expr.parent
-        r.annotated_type.parent = r
-        expr.parent = r
-
-        # set source location
-        r.line = expr.line
-        r.column = expr.column
+        # set statement, parents, location
+        TypeCheckVisitor.assign_location(r, expr)
 
         return r
+
+    @staticmethod
+    def assign_location(target: Expression, source: Expression):
+        # set statement
+        target.statement = source.statement
+
+        # set parents
+        target.parent = source.parent
+        target.annotated_type.parent = target
+        source.parent = target
+
+        # set source location
+        target.line = source.line
+        target.column = source.column
 
     @staticmethod
     def implicitly_converted_to(expr: Expression, t: TypeName) -> Expression:
@@ -376,9 +431,9 @@ class TypeCheckVisitor(AstVisitor):
         if ast.expr is None:
             self.get_rhs(TupleExpr([]), rt)
         elif not isinstance(ast.expr, TupleExpr):
-            ast.expr = self.get_rhs(TupleExpr([ast.expr]), rt)
+            ast.expr = self.get_rhs(TupleExpr([ast.expr]), rt, allow_rehom=True)
         else:
-            ast.expr = self.get_rhs(ast.expr, rt)
+            ast.expr = self.get_rhs(ast.expr, rt, allow_rehom=True)
 
     def visitTupleExpr(self, ast: TupleExpr):
         ast.annotated_type = AnnotatedTypeName(TupleType([elem.annotated_type.clone() for elem in ast.elements]))
