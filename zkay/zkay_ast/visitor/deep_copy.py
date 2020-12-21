@@ -137,6 +137,7 @@ class DeepCopyVisitor(AstVisitor):
     def visitBuiltinFunction(self, ast):
         ast_copy = self.visitChildren(ast)
         ast_copy.is_private = ast.is_private
+        ast_copy.homomorphism = ast.homomorphism
         return ast_copy
 
     def visitExpression(self, ast: Expression):
