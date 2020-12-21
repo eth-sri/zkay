@@ -85,15 +85,6 @@ class TypeCheckVisitor(AstVisitor):
         if ast.expr:
             ast.expr = self.get_rhs(ast.expr, ast.variable_declaration.annotated_type)
 
-    def make_private_if_not_already(self, ast: Expression):
-        if ast.annotated_type.is_private():
-            expected = AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr())
-            if not ast.instanceof(expected):
-                raise TypeMismatchException(expected, ast.annotated_type, ast)
-            return ast
-        else:
-            return self.make_private(ast, Expression.me_expr())
-
     @staticmethod
     def has_private_type(ast: Expression):
         return ast.annotated_type.is_private()
