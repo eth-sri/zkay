@@ -724,8 +724,17 @@ class ReclassifyExpr(Expression):
         self.expr = f(self.expr)
         self.privacy = f(self.privacy)
 
-    def is_rehom(self):
-        return self.homomorphism is not None
+    def func_name(self):
+        return 'reveal'
+
+
+class RehomExpr(ReclassifyExpr):
+
+    def __init__(self, expr: Expression, homomorphism: Homomorphism):
+        super().__init__(expr, MeExpr(), homomorphism)
+
+    def func_name(self):
+        return self.homomorphism.rehom_expr_name
 
 
 class HybridArgType(IntEnum):
@@ -2199,12 +2208,13 @@ class CodeVisitor(AstVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         e = self.visit(ast.expr)
-        if ast.is_rehom():
-            func = ast.homomorphism.rehom_expr_name
-            return f'{func}({e})'
-        else:
-            p = self.visit(ast.privacy)
-            return f'reveal({e}, {p})'
+        p = self.visit(ast.privacy)
+        h = ast.homomorphism or ''
+        return f'reveal{h}({e}, {p})'
+
+    def visitRehomExpr(self, ast: RehomExpr):
+        e = self.visit(ast.expr)
+        return f'{ast.func_name()}({e})'
 
     def visitIfStatement(self, ast: IfStatement):
         c = self.visit(ast.condition)

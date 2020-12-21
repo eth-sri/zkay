@@ -11,7 +11,7 @@ from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
 from zkay.solidity_parser.parse import MyParser
 from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, NumberLiteralExpr, \
     BooleanLiteralExpr, StringLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
-    ReclassifyExpr, BuiltinFunction, IndexExpr
+    ReclassifyExpr, RehomExpr, BuiltinFunction, IndexExpr, Homomorphism
 
 
 def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream, code: str) -> ast.AST:
@@ -203,7 +203,7 @@ class BuildASTVisitor(SolidityVisitor):
 
     def visitAnnotatedTypeName(self, ctx: SolidityParser.AnnotatedTypeNameContext):
         pa = None
-        hom = ast.Homomorphism.NON_HOMOMORPHIC
+        hom = Homomorphism.NON_HOMOMORPHIC
         if ctx.privacy_annotation is not None:
             pa = self.visit(ctx.privacy_annotation)
             if ctx.homomorphism is not None:
@@ -211,14 +211,14 @@ class BuildASTVisitor(SolidityVisitor):
 
             if not (isinstance(pa, ast.AllExpr) or isinstance(pa, ast.MeExpr) or isinstance(pa, IdentifierExpr)):
                 raise SyntaxException('Privacy annotation can only be me | all | Identifier', ctx.privacy_annotation, self.code)
-            if isinstance(pa, ast.AllExpr) and hom != ast.Homomorphism.NON_HOMOMORPHIC:
+            if isinstance(pa, ast.AllExpr) and hom != Homomorphism.NON_HOMOMORPHIC:
                 raise SyntaxException('Public types cannot be homomorphic', ctx.homomorphism, self.code)
 
         return ast.AnnotatedTypeName(self.visit(ctx.type_name), pa, hom)
 
     def visitHomomorphismAnnotation(self, ctx:SolidityParser.HomomorphismAnnotationContext):
         t = ctx.getText()
-        for h in ast.Homomorphism:
+        for h in Homomorphism:
             if h.type_annotation == t:
                 return h
         else:
@@ -318,6 +318,10 @@ class BuildASTVisitor(SolidityVisitor):
         else_expr = self.visit(ctx.else_expr)
         return FunctionCallExpr(f, [cond, then_expr, else_expr])
 
+    rehom_expressions = {}
+    for h in Homomorphism:
+        rehom_expressions[h.rehom_expr_name] = h
+
     def visitFunctionCallExpr(self, ctx: SolidityParser.FunctionCallExprContext):
         func = self.visit(ctx.func)
         args = self.handle_field(ctx.args)
@@ -327,14 +331,12 @@ class BuildASTVisitor(SolidityVisitor):
                 if len(args) != 2:
                     raise SyntaxException(f'Invalid number of arguments for reveal: {args}', ctx.args, self.code)
                 return ReclassifyExpr(args[0], args[1], None)
-            elif func.idf.name == 'addhom':
+            elif func.idf.name in self.rehom_expressions:
+                name = func.idf.name
+                homomorphism = self.rehom_expressions[name]
                 if len(args) != 1:
-                    raise SyntaxException(f'Invalid number of arguments for addhom: {args}', ctx.args, self.code)
-                return ReclassifyExpr(args[0], ast.MeExpr(), ast.Homomorphism.ADDITIVE)
-            elif func.idf.name == 'unhom':
-                if len(args) != 1:
-                    raise SyntaxException(f'Invalid number of arguments for unhom: {args}', ctx.args, self.code)
-                return ReclassifyExpr(args[0], ast.MeExpr(), ast.Homomorphism.NON_HOMOMORPHIC)
+                    raise SyntaxException(f'Invalid number of arguments for {name}: {args}', ctx.args, self.code)
+                return RehomExpr(args[0], homomorphism)
 
         return FunctionCallExpr(func, args)
 

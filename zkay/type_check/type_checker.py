@@ -9,7 +9,7 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, Anno
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
     BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, \
     UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr, ContractDefinition, \
-    Homomorphism
+    Homomorphism, RehomExpr
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -337,18 +337,18 @@ class TypeCheckVisitor(AstVisitor):
         is_expr_at_all = ast.expr.annotated_type.is_public()
         is_expr_at_me = ast.expr.annotated_type.is_private_at_me(ast.analysis)
         if not is_expr_at_all and not is_expr_at_me:
-            name = homomorphism.rehom_expr_name if ast.is_rehom() else "reveal"
-            raise TypeException(f'First argument of "{name}" must be accessible (@all or provably equal to @me)', ast)
+            raise TypeException(f'First argument of "{ast.func_name()}" must be accessible,'
+                                f'i.e. @all or provably equal to @me', ast)
 
         # Prevent unhom(public_value)
-        if is_expr_at_all and ast.is_rehom() and ast.homomorphism == Homomorphism.NON_HOMOMORPHIC:
+        if is_expr_at_all and isinstance(ast, RehomExpr) and ast.homomorphism == Homomorphism.NON_HOMOMORPHIC:
             raise TypeException(f'Cannot use "{ast.homomorphism.rehom_expr_name}" on a public value', ast)
 
         # NB prevent any redundant reveal (not just for public)
         ast.annotated_type = AnnotatedTypeName(ast.expr.annotated_type.type_name, ast.privacy, homomorphism)
         if ast.instanceof(ast.expr.annotated_type) is True:
-            name = homomorphism.rehom_expr_name if ast.is_rehom() else "reveal"
-            raise TypeException(f'Redundant "{name}": Expression is already "@{ast.privacy.code()}{homomorphism}"', ast)
+            raise TypeException(f'Redundant "{ast.func_name()}": Expression is already '
+                                f'"@{ast.privacy.code()}{homomorphism}"', ast)
         self.check_for_invalid_private_type(ast)
 
     def visitIfStatement(self, ast: IfStatement):
