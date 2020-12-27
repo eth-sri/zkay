@@ -38,7 +38,7 @@ class UserConfig:
         self._snark_backend_values = ['jsnark']
 
         self._crypto_backend: str = 'ecdh-aes'
-        self._crypto_backend_values = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey']
+        self._crypto_backend_values = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']
 
         self._blockchain_backend: str = 'w3-eth-tester'
         self._blockchain_backend_values = ['w3-eth-tester', 'w3-ganache', 'w3-ipc', 'w3-websocket', 'w3-http', 'w3-custom']

@@ -42,5 +42,14 @@ cryptoparams = {
         'symmetric': True,
         'rnd_bytes': 0, # included in cipher text
         'rnd_chunk_size': 0,
+    },
+
+    'paillier': {
+        'key_bits': 320,  # 320-bit n
+        'cipher_payload_bytes': 640 // 8,  # cipher is mod n^2, thus at most twice the bit length
+        'cipher_chunk_size': 120 // 8,  # LongElement.CHUNK_SIZE / sizeof(byte)
+        'symmetric': False,
+        'rnd_bytes': 320 // 8,  # random value mod n, thus same size as n
+        'rnd_chunk_size': 120 // 8,  # LongElement.CHUNK_SIZE / sizeof(byte)
     }
 }
