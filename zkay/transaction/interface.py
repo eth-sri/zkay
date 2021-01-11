@@ -15,6 +15,7 @@ from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.proving_scheme.proving_scheme import ProvingScheme
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.zkay_ast.process_ast import get_verification_contract_names
 from zkay.zkay_frontend import compile_zkay_file
 from zkay.config import cfg, zk_print, zk_print_banner
@@ -515,9 +516,9 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
     def __init__(self, keystore: ZkayKeystoreInterface):
         self.keystore = keystore
 
-    @classmethod
+    @property
     @abstractmethod
-    def is_symmetric_cipher(cls) -> bool:
+    def params(self) -> CryptoParams:
         pass
 
     def generate_or_load_key_pair(self, address: AddressValue):
@@ -549,7 +550,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
 
         sk = self.keystore.sk(my_addr).val
         raw_pk = self.keystore.getPk(target_addr)
-        if self.is_symmetric_cipher():
+        if self.params.is_symmetric_cipher():
             assert len(raw_pk) == 1
             pk = raw_pk[0]
         else:
@@ -575,25 +576,22 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         assert isinstance(my_addr, AddressValue)
         zk_print(f'Decrypting value {cipher} for {my_addr}', verbosity_level=2)
 
-        if cipher == CipherValue():
-            ret = 0, None if cfg.is_symmetric_cipher() else RandomnessValue()
+        if cipher == CipherValue(params=self.params):
+            # Ciphertext is all zeros, i.e. uninitialized -> zero
+            return 0, (None if self.params.is_symmetric_cipher() else RandomnessValue(params=self.params))
         else:
             sk = self.keystore.sk(my_addr)
             plain, rnd = self._dec(cipher[:], sk.val)
-            ret = plain, RandomnessValue(rnd) if rnd is not None else None
+            return plain, (None if rnd is None else RandomnessValue(rnd, params=self.params))
 
-        return ret
-
-    @staticmethod
-    def serialize_pk(key: int, total_bytes: int) -> List[int]:
-        """Serialize a large integer into an array of {cfg.cipher_chunk_size}-byte ints."""
+    def serialize_pk(self, key: int, total_bytes: int) -> List[int]:
+        """Serialize a large integer into an array of {params.cipher_chunk_size}-byte ints."""
         data = key.to_bytes(total_bytes, byteorder='big')
-        return ZkayCryptoInterface.pack_byte_array(data, cfg.cipher_chunk_size)
+        return ZkayCryptoInterface.pack_byte_array(data, self.params.cipher_chunk_size)
 
-    @staticmethod
-    def deserialize_pk(arr: Collection[int]) -> int:
-        """Deserialize an array of {cfg.cipher_chunk_size}-byte ints into a single large int"""
-        data = ZkayCryptoInterface.unpack_to_byte_array(arr, cfg.cipher_chunk_size, 0)
+    def deserialize_pk(self, arr: Collection[int]) -> int:
+        """Deserialize an array of {params.cipher_chunk_size}-byte ints into a single large int"""
+        data = ZkayCryptoInterface.unpack_to_byte_array(arr, self.params.cipher_chunk_size, 0)
         return int.from_bytes(data, byteorder='big')
 
     @staticmethod
@@ -608,7 +606,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
 
     @staticmethod
     def unpack_to_byte_array(arr: Collection[int], chunk_size: int, desired_length: int) -> bytes:
-        """Unpack an array of {cfg.pack_chunk_size}-byte ints into a byte array"""
+        """Unpack an array of {chunk_size}-byte ints into a byte array"""
         return b''.join(chunk.to_bytes(chunk_size, byteorder='big') for chunk in reversed(list(arr)))[-desired_length:]
 
     # Interface implementation

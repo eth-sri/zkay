@@ -9,7 +9,8 @@ from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, Anno
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
     BooleanLiteralType, EnumValue, EnumTypeName, EnumDefinition, EnumValueTypeName, PrimitiveCastExpr, \
     UserDefinedTypeName, get_privacy_expr_from_label, issue_compiler_warning, AllExpr, ContractDefinition, \
-    Homomorphism, RehomExpr
+    RehomExpr
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.deep_copy import replace_expr
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 

@@ -9,9 +9,6 @@ from zkay.utils.run_command import run_command
 
 
 class EcdhBase(ZkayCryptoInterface):
-    @classmethod
-    def is_symmetric_cipher(cls) -> bool:
-        return True
 
     @staticmethod
     def _gen_keypair(rnd: bytes):
@@ -46,4 +43,4 @@ class EcdhBase(ZkayCryptoInterface):
         # Derive keys from randomness
         pk, sk = self._gen_keypair(rnd)
 
-        return KeyPair(PublicKeyValue([pk]), PrivateKeyValue(sk))
+        return KeyPair(PublicKeyValue([pk], params=self.params), PrivateKeyValue(sk))

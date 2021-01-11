@@ -1,6 +1,7 @@
 from typing import Optional, Collection, Any, Dict, Tuple, List, Union, Callable
 
-from zkay.config import cfg
+from zkay.transaction.crypto.params import CryptoParams
+from zkay.zkay_ast.homomorphism import Homomorphism
 
 
 class Value(tuple):
@@ -48,16 +49,30 @@ class Value(tuple):
         else:
             return str(v)
 
+    @staticmethod
+    def get_params(params: CryptoParams = None, hom: Homomorphism = None) -> CryptoParams:
+        from zkay.config import cfg
+        if params is not None:
+            return params
+        elif hom is not None:
+            return cfg.get_crypto_params(hom)
+        else:
+            return cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC)
+
 
 class CipherValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
-        content = [0] * cfg.cipher_len
+    def __new__(cls, contents: Optional[Collection] = None, *,
+                params: CryptoParams = None, hom: Homomorphism = None):
+        params = Value.get_params(params, hom)
+        content = [0] * params.cipher_len
         if contents:
             content[:len(contents)] = contents[:]
-        return super(CipherValue, cls).__new__(cls, content)
+        ret = super(CipherValue, cls).__new__(cls, content)
+        ret.cipher_payload_len = params.cipher_payload_len
+        return ret
 
     def __len__(self) -> int:
-        return cfg.cipher_payload_len
+        return self.cipher_payload_len
 
 
 class PrivateKeyValue(Value):
@@ -70,20 +85,24 @@ class PrivateKeyValue(Value):
 
 
 class PublicKeyValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
+    def __new__(cls, contents: Optional[Collection] = None, *,
+                params: CryptoParams = None, hom: Homomorphism = None):
+        params = Value.get_params(params, hom)
         if contents is None:
-            return super(PublicKeyValue, cls).__new__(cls, [0] * cfg.key_len)
+            return super(PublicKeyValue, cls).__new__(cls, [0] * params.key_len)
         else:
-            assert len(contents) == cfg.key_len
+            assert len(contents) == params.key_len
             return super(PublicKeyValue, cls).__new__(cls, contents)
 
 
 class RandomnessValue(Value):
-    def __new__(cls, contents: Optional[Collection] = None):
+    def __new__(cls, contents: Optional[Collection] = None, *,
+                params: CryptoParams = None, hom: Homomorphism = None):
+        params = Value.get_params(params, hom)
         if contents is None:
-            return super(RandomnessValue, cls).__new__(cls, [0] * cfg.randomness_len)
+            return super(RandomnessValue, cls).__new__(cls, [0] * params.randomness_len)
         else:
-            assert len(contents) == cfg.randomness_len
+            assert len(contents) == params.randomness_len
             return super(RandomnessValue, cls).__new__(cls, contents)
 
 

@@ -43,16 +43,12 @@ class PersistentLocals(object):
 class RSACrypto(ZkayCryptoInterface, metaclass=ABCMeta):
     default_exponent = 65537 # == 0x10001
 
-    @classmethod
-    def is_symmetric_cipher(cls) -> bool:
-        return False
-
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
-        key_file = os.path.join(cfg.data_dir, 'keys', f'rsa_{cfg.key_bits}_{address}.bin')
+        key_file = os.path.join(cfg.data_dir, 'keys', f'rsa_{self.params.key_bits}_{address}.bin')
         os.makedirs(os.path.dirname(key_file), exist_ok=True)
         if not os.path.exists(key_file):
-            print(f'Key pair not found, generating new {cfg.key_bits} bit rsa key pair...')
-            key = RSA.generate(cfg.key_bits, e=self.default_exponent)
+            print(f'Key pair not found, generating new {self.params.key_bits} bit rsa key pair...')
+            key = RSA.generate(self.params.key_bits, e=self.default_exponent)
             with open(key_file, 'wb') as f:
                 f.write(key.export_key())
             print('done')
@@ -62,4 +58,5 @@ class RSACrypto(ZkayCryptoInterface, metaclass=ABCMeta):
                 key = RSA.import_key(f.read())
 
         modulus = key.publickey().n
-        return KeyPair(PublicKeyValue(self.serialize_pk(modulus, cfg.key_bytes)), PrivateKeyValue(key))
+        return KeyPair(PublicKeyValue(self.serialize_pk(modulus, self.params.key_bytes), params=self.params),
+                       PrivateKeyValue(key))

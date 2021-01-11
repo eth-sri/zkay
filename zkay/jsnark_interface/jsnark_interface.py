@@ -6,6 +6,7 @@ from zkay.config import cfg
 from zkay.utils.helpers import hash_file
 from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent
+from zkay.zkay_ast.homomorphism import Homomorphism
 
 # path jo jsnark interface jar
 circuit_builder_jar = os.path.join(os.path.dirname(os.path.realpath(__file__)),  'JsnarkCircuitBuilder.jar')
@@ -84,8 +85,14 @@ def get_jsnark_circuit_class_str(circuit: CircuitHelper, fdefs: List[str], circu
     function_definitions = '\n\n'.join(fdefs)
     if function_definitions:
         function_definitions = f'\n{function_definitions}\n'
-    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname, crypto_backend=cfg.crypto_backend,
+
+    return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname,
+                                      crypto_backend=cfg.main_crypto_backend,  # TODO?
                                       circuit_name=circuit.get_verification_contract_name(),
-                                      key_bits=cfg.key_bits, pub_in_size=circuit.in_size_trans, pub_out_size=circuit.out_size_trans,
-                                      priv_in_size=circuit.priv_in_size_trans, use_input_hashing=str(cfg.should_use_hash(circuit)).lower(),
-                                      fdefs=indent(function_definitions), circuit_statements=indent(indent('\n'.join(circuit_statements))))
+                                      key_bits=cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).key_bits,  # TODO?
+                                      pub_in_size=circuit.in_size_trans,
+                                      pub_out_size=circuit.out_size_trans,
+                                      priv_in_size=circuit.priv_in_size_trans,
+                                      use_input_hashing=str(cfg.should_use_hash(circuit)).lower(),
+                                      fdefs=indent(function_definitions),
+                                      circuit_statements=indent(indent('\n'.join(circuit_statements))))

@@ -5,6 +5,7 @@ import os
 from textwrap import dedent
 
 from zkay.config import cfg
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.utils.helpers import read_file
 
 
@@ -26,19 +27,21 @@ bn128_scalar_field_bits = bn128_scalar_field.bit_length() - 1
 """Integers of at most this many bits can be represented using field values"""
 
 
-def get_pki_contract() -> str:
+def get_pki_contract(crypto_backend: str) -> str:
     """Contract of the public key infrastructure used for asymmetric cryptography"""
     # TODO prove private key knowledge during announcePk
+    params = CryptoParams(crypto_backend)
+    # TODO: Change contract name based on crypto backend
     return dedent(f'''\
     pragma solidity {cfg.zkay_solc_version_compatibility.expression};
 
     contract {cfg.pki_contract_name} {{
-        mapping(address => uint[{cfg.key_len}]) pks;
+        mapping(address => uint[{params.key_len}]) pks;
         mapping(address => bool) hasAnnounced;
 
-        function announcePk(uint[{cfg.key_len}] calldata pk) external {{
+        function announcePk(uint[{params.key_len}] calldata pk) external {{
             bool all_zero = true;
-            for (uint i = 0; i < {cfg.key_len}; ++i) {{
+            for (uint i = 0; i < {params.key_len}; ++i) {{
                 all_zero = all_zero && (pk[i] == 0);
             }}
             require(!all_zero, "ERROR: 0 is not a valid public key.");
@@ -46,7 +49,7 @@ def get_pki_contract() -> str:
             hasAnnounced[msg.sender] = true;
         }}
 
-        function getPk(address a) public view returns(uint[{cfg.key_len}] memory) {{
+        function getPk(address a) public view returns(uint[{params.key_len}] memory) {{
             require(hasAnnounced[a]);
             return pks[a];
         }}

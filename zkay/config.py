@@ -1,5 +1,4 @@
 import json
-import math
 import os
 from contextlib import contextmanager
 from typing import Dict, Any, ContextManager, List
@@ -9,7 +8,6 @@ from semantic_version import NpmSpec
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.config_user import UserConfig
 from zkay.config_version import Versions
-from zkay.transaction.crypto.meta import cryptoparams
 
 
 def zk_print(*args, verbosity_level=1, **kwargs):
@@ -29,7 +27,7 @@ class Config(UserConfig):
         # Internal values
 
         self._options_with_effect_on_circuit_output = [
-            'proving_scheme', 'snark_backend', 'crypto_backend',
+            'proving_scheme', 'snark_backend', 'main_crypto_backend',  # TODO
             'opt_solc_optimizer_runs', 'opt_hash_threshold',
             'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs',
         ]
@@ -115,47 +113,8 @@ class Config(UserConfig):
     def override_solc(new_version):
         Versions.set_solc_version(new_version)
 
-    @property
-    def key_bits(self) -> int:
-        return cryptoparams[self.crypto_backend]['key_bits']
-
-    @property
-    def key_bytes(self) -> int:
-        return self.key_bits // 8
-
-    @property
-    def rnd_bytes(self) -> int:
-        return cryptoparams[self.crypto_backend]['rnd_bytes']
-
-    @property
-    def cipher_bytes_payload(self) -> int:
-        return cryptoparams[self.crypto_backend]['cipher_payload_bytes']
-
-    @property
-    def cipher_bytes_meta(self) -> int:
-        return cryptoparams[self.crypto_backend]['cipher_meta_bytes']
-
-    def is_symmetric_cipher(self) -> bool:
-        return cryptoparams[self.crypto_backend]['symmetric']
-
-    @property
-    def cipher_payload_len(self) -> int:
-        return int(math.ceil(self.cipher_bytes_payload / self.cipher_chunk_size))
-
-    @property
-    def cipher_len(self) -> int:
-        if self.is_symmetric_cipher():
-            return self.cipher_payload_len + 1 # Additional uint to store sender address
-        else:
-            return self.cipher_payload_len
-
-    @property
-    def key_len(self) -> int:
-        return 1 if self.is_symmetric_cipher() else int(math.ceil(self.key_bytes / self.cipher_chunk_size))
-
-    @property
-    def randomness_len(self) -> int:
-        return 0 if self.is_symmetric_cipher() else int(math.ceil(self.rnd_bytes / self.rnd_chunk_size))
+    def is_symmetric_cipher(self, hom) -> bool:
+        return self.get_crypto_params(hom).is_symmetric_cipher()
 
     @property
     def proof_len(self) -> int:
@@ -262,14 +221,6 @@ class Config(UserConfig):
     @property
     def verification_function_name(self) -> str:
         return 'check_verify'
-
-    @property
-    def cipher_chunk_size(self) -> int:
-        return cryptoparams[self.crypto_backend]['cipher_chunk_size']
-
-    @property
-    def rnd_chunk_size(self) -> int:
-        return cryptoparams[self.crypto_backend]['rnd_chunk_size']
 
     @property
     def is_unit_test(self) -> bool:

@@ -15,6 +15,7 @@ from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunct
     PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName, \
     StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr, \
     BoolTypeName
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.python_visitor import PythonCodeVisitor
 
 
@@ -378,7 +379,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     if plain_t.is_signed_numeric:
                         plain_val = self.handle_cast(pname, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
-                    if cfg.is_symmetric_cipher():
+                    if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
                         my_pk = f'{api("get_my_pk")}()[0]'
                         enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[0][:-1] + ({my_pk}, ))\n'
                     else:
@@ -518,7 +519,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             plain_idf_name = self.get_priv_value(in_idf.corresponding_priv_expression.idf.name)
             constr = self._get_type_constr(in_idf.t.plain_type.type_name)
             dec_call = f'{api("dec")}({self.visit(in_idf.get_loc_expr())}, {constr})'
-            if cfg.is_symmetric_cipher():
+            if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
                 in_decrypt += f'\n{plain_idf_name}, _ = {dec_call}'
             else:
                 in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")} = {dec_call}'
@@ -536,7 +537,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         out_val = out_idf.corresponding_priv_expression
         if isinstance(out_val, EncryptionExpression):
             cipher_loc = self.visit(out_idf.get_loc_expr())
-            if cfg.is_symmetric_cipher():
+            if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
                 s = cipher_loc
             else:
                 s = f'{cipher_loc}, {self.get_priv_value(f"{out_idf.name}_R")}'
@@ -547,7 +548,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             rhs = self.visit(out_val)
         if not out_idf.t.is_cipher():
             rhs = self.handle_cast(rhs, out_idf.t)
-        elif cfg.is_symmetric_cipher():
+        elif cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
             my_pk = f'{api("get_my_pk")}()[0]'
             rhs += f'[0][:-1] + ({my_pk}, )'
             rhs = f'CipherValue({rhs})'

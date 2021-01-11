@@ -149,7 +149,7 @@ def parse_arguments():
     # 'deploy-pki' parser
     dpki_parser = subparsers.add_parser('deploy-pki', parents=[deploy_libs_parser],
                                         help='Manually deploy global pki contract compatible with a particular crypto backend to a blockchain')
-    add_config_args(dpki_parser, {'crypto_backend', 'blockchain_backend', 'blockchain_node_uri'})
+    add_config_args(dpki_parser, {'main_crypto_backend', 'blockchain_backend', 'blockchain_node_uri'})
 
     # 'deploy-crypto-libs' parser
     dclibs_parser = subparsers.add_parser('deploy-crypto-libs', parents=[deploy_libs_parser],
@@ -222,7 +222,7 @@ def main():
             try:
                 with cfg.library_compilation_environment():
                     if a.cmd == 'deploy-pki':
-                        file = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
+                        file = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract(cfg.main_crypto_backend))  # TODO
                         addr = Runtime.blockchain().deploy_solidity_contract(file, cfg.pki_contract_name, a.account)
                         print(f'Deployed pki contract at: {addr}')
                     else:

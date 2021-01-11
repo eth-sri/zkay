@@ -6,7 +6,7 @@ import operator
 import textwrap
 from collections import OrderedDict
 from dataclasses import dataclass
-from enum import IntEnum, Enum
+from enum import IntEnum
 from functools import cmp_to_key
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
@@ -14,6 +14,7 @@ from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 from zkay.config import cfg, zk_print
 from zkay.utils.progress_printer import warn_print
 from zkay.zkay_ast.analysis.partition_state import PartitionState
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 T = TypeVar('T')
@@ -290,18 +291,6 @@ builtin_functions.update(shiftop)
 assert builtin_op_fct.keys() == builtin_functions.keys()
 
 
-class Homomorphism(Enum):
-    NON_HOMOMORPHIC = ('<>', 'unhom')
-    ADDITIVE = ('<+>', 'addhom')
-
-    def __init__(self, type_annotation: str, rehom_expr_name: str):
-        self.type_annotation = type_annotation
-        self.rehom_expr_name = rehom_expr_name
-
-    def __str__(self):
-        return self.type_annotation if self != Homomorphism.NON_HOMOMORPHIC else ''
-
-
 @dataclass
 class HomomorphicBuiltin:
     """
@@ -327,10 +316,10 @@ homomorphic_builtin_functions = [
     # HomomorphicBuiltin('*', Homomorphism.MULTIPLICATIVE, [False, False]),
 ]
 
-for hom in homomorphic_builtin_functions:
-    assert hom.op in builtin_op_fct and hom.homomorphism != Homomorphism.NON_HOMOMORPHIC
-    op_arity = builtin_functions[hom.op].count('{}')
-    assert op_arity == len(hom.public_args)
+for __hom in homomorphic_builtin_functions:
+    assert __hom.op in builtin_op_fct and __hom.homomorphism != Homomorphism.NON_HOMOMORPHIC
+    op_arity = builtin_functions[__hom.op].count('{}')
+    assert op_arity == len(__hom.public_args)
 
 
 class BuiltinFunction(Expression):
@@ -822,7 +811,7 @@ class EncryptionExpression(ReclassifyExpr):
         if isinstance(privacy, Identifier):
             privacy = IdentifierExpr(privacy)
         super().__init__(expr, privacy, homomorphism)
-        self.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type)
+        self.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type, homomorphism)
 
 
 class Statement(AST):
@@ -1036,16 +1025,16 @@ class TypeName(AST):
         return AddressPayableTypeName()
 
     @staticmethod
-    def cipher_type(plain_type: AnnotatedTypeName):
-        return CipherText(plain_type)
+    def cipher_type(plain_type: AnnotatedTypeName, hom: Homomorphism):
+        return CipherText(plain_type, hom)
 
     @staticmethod
-    def rnd_type():
-        return Randomness()
+    def rnd_type(hom: Homomorphism):
+        return Randomness(hom)
 
     @staticmethod
-    def key_type():
-        return Key()
+    def key_type(hom: Homomorphism):
+        return Key(hom)
 
     @staticmethod
     def proof_type():
@@ -1077,6 +1066,9 @@ class TypeName(AST):
 
     def is_cipher(self) -> bool:
         return isinstance(self, CipherText)
+
+    def is_key(self) -> bool:
+        return isinstance(self, Key)
 
     @property
     def is_numeric(self) -> bool:
@@ -1433,44 +1425,59 @@ class Array(TypeName):
 
 
 class CipherText(Array):
-    def __init__(self, plain_type: AnnotatedTypeName):
+    def __init__(self, plain_type: AnnotatedTypeName, homomorphism: Homomorphism):
         assert not plain_type.type_name.is_cipher()
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.cipher_len))
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.get_crypto_params(homomorphism).cipher_len))
         self.plain_type = plain_type.clone()
+        self.homomorphism = homomorphism
 
     @property
     def size_in_uints(self):
-        return cfg.cipher_payload_len
+        return cfg.get_crypto_params(self.homomorphism).cipher_payload_len
 
     def clone(self) -> CipherText:
-        return CipherText(self.plain_type)
+        return CipherText(self.plain_type, self.homomorphism)
 
     def __eq__(self, other):
-        return isinstance(other, CipherText) and (self.plain_type is None or self.plain_type == other.plain_type)
+        return (isinstance(other, CipherText)
+                and (self.plain_type is None or self.plain_type == other.plain_type)
+                and self.homomorphism == other.homomorphism)
 
 
 class Randomness(Array):
-    def __init__(self):
-        if cfg.randomness_len is None:
+    def __init__(self, homomorphism: Homomorphism):
+        params = cfg.get_crypto_params(homomorphism)
+        if params.randomness_len is None:
             super().__init__(AnnotatedTypeName.uint_all(), None)
         else:
-            super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.randomness_len))
+            super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(params.randomness_len))
+        self.homomorphism = homomorphism
+
+    def clone(self) -> Randomness:
+        return Randomness(self.homomorphism)
 
     def __eq__(self, other):
-        return isinstance(other, Randomness)
+        return isinstance(other, Randomness) and self.homomorphism == other.homomorphism
 
 
 class Key(Array):
-    def __init__(self):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.key_len))
+    def __init__(self, homomorphism: Homomorphism):
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.get_crypto_params(homomorphism).key_len))
+        self.homomorphism = homomorphism
+
+    def clone(self) -> Key:
+        return Key(self.homomorphism)
 
     def __eq__(self, other):
-        return isinstance(other, Key)
+        return isinstance(other, Key) and self.homomorphism == other.homomorphism
 
 
 class Proof(Array):
     def __init__(self):
         super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.proof_len))
+
+    def clone(self) -> Proof:
+        return Proof()
 
     def __eq__(self, other):
         return isinstance(other, Proof)
@@ -1663,12 +1670,12 @@ class AnnotatedTypeName(AST):
         return AnnotatedTypeName(TypeName.address_type())
 
     @staticmethod
-    def cipher_type(plain_type: AnnotatedTypeName):
-        return AnnotatedTypeName(TypeName.cipher_type(plain_type))
+    def cipher_type(plain_type: AnnotatedTypeName, hom: Homomorphism):
+        return AnnotatedTypeName(TypeName.cipher_type(plain_type, hom))
 
     @staticmethod
-    def key_type():
-        return AnnotatedTypeName(TypeName.key_type())
+    def key_type(hom: Homomorphism):
+        return AnnotatedTypeName(TypeName.key_type(hom))
 
     @staticmethod
     def proof_type():

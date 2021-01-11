@@ -6,15 +6,13 @@ from Crypto.Math.Primality import generate_probable_prime
 from Crypto.Random.random import getrandbits
 
 from zkay.config import cfg
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import ZkayCryptoInterface
 from zkay.transaction.types import KeyPair, PublicKeyValue, PrivateKeyValue
 
 
 class PaillierCrypto(ZkayCryptoInterface):
-
-    @classmethod
-    def is_symmetric_cipher(cls) -> bool:
-        return False
+    params = CryptoParams('paillier')
 
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
         key_file = os.path.join(cfg.data_dir, 'keys', f'paillier_{address}.bin')
@@ -29,33 +27,31 @@ class PaillierCrypto(ZkayCryptoInterface):
             print(f'Paillier secret found, loading from file {key_file}')
             pk, sk = self._read_key_pair(key_file)
 
-        return KeyPair(PublicKeyValue(pk), PrivateKeyValue(sk))
+        return KeyPair(PublicKeyValue(pk, params=self.params), PrivateKeyValue(sk))
 
-    @staticmethod
-    def _write_key_pair(key_file: str, pk: Tuple[int], sk: Tuple[int]):
+    def _write_key_pair(self, key_file: str, pk: List[int], sk: List[int]):
         with open(key_file, 'wb') as f:
             f.write(len(pk).to_bytes(4, byteorder='big'))
             for p in pk:
-                f.write(p.to_bytes(cfg.cipher_chunk_size, byteorder='big'))
+                f.write(p.to_bytes(self.params.cipher_chunk_size, byteorder='big'))
             f.write(len(sk).to_bytes(4, byteorder='big'))
             for s in sk:
-                f.write(s.to_bytes(cfg.cipher_chunk_size, byteorder='big'))
+                f.write(s.to_bytes(self.params.cipher_chunk_size, byteorder='big'))
 
-    @staticmethod
-    def _read_key_pair(key_file: str) -> Tuple[List[int], List[int]]:
+    def _read_key_pair(self, key_file: str) -> Tuple[List[int], List[int]]:
         pk = []
         sk = []
         with open(key_file, 'rb') as f:
             pk_len = int.from_bytes(f.read(4), byteorder='big')
             for _ in range(pk_len):
-                pk.append(int.from_bytes(f.read(cfg.cipher_chunk_size), byteorder='big'))
+                pk.append(int.from_bytes(f.read(self.params.cipher_chunk_size), byteorder='big'))
             sk_len = int.from_bytes(f.read(4), byteorder='big')
             for _ in range(sk_len):
-                sk.append(int.from_bytes(f.read(cfg.cipher_chunk_size), byteorder='big'))
+                sk.append(int.from_bytes(f.read(self.params.cipher_chunk_size), byteorder='big'))
         return pk, sk
 
     def _generate_key_pair(self) -> Tuple[List[int], List[int]]:
-        n_bits = cfg.key_bits
+        n_bits = self.params.key_bits
         pq_bits = (n_bits + 1) // 2
 
         while True:
@@ -65,9 +61,9 @@ class PaillierCrypto(ZkayCryptoInterface):
             if p != q and n.bit_length() == n_bits:
                 break
 
-        n_chunks = self.serialize_pk(n, cfg.key_bytes)
-        p_chunks = self.serialize_pk(p, cfg.key_bytes)
-        q_chunks = self.serialize_pk(q, cfg.key_bytes)
+        n_chunks = self.serialize_pk(n, self.params.key_bytes)
+        p_chunks = self.serialize_pk(p, self.params.key_bytes)
+        q_chunks = self.serialize_pk(q, self.params.key_bytes)
 
         return n_chunks, p_chunks + q_chunks
 
@@ -83,14 +79,14 @@ class PaillierCrypto(ZkayCryptoInterface):
         rand_pow_n = pow(random, n, n_sqr)
         cipher = (g_pow_plain * rand_pow_n) % n_sqr
 
-        cipher_chunks = self.serialize_pk(cipher, cfg.cipher_bytes_payload)
-        random_chunks = self.serialize_pk(random, cfg.rnd_bytes)
+        cipher_chunks = self.serialize_pk(cipher, self.params.cipher_bytes_payload)
+        random_chunks = self.serialize_pk(random, self.params.rnd_bytes)
 
         return cipher_chunks, random_chunks
 
     def _dec(self, cipher: Tuple[int, ...], sk: Any) -> Tuple[int, List[int]]:
-        p = self.deserialize_pk(sk[:cfg.key_len])
-        q = self.deserialize_pk(sk[cfg.key_len:])
+        p = self.deserialize_pk(sk[:self.params.key_len])
+        q = self.deserialize_pk(sk[self.params.key_len:])
         n = p * q
         n_sqr = n * n
         lambda_ = (p - 1) * (q - 1)
@@ -120,6 +116,6 @@ class PaillierCrypto(ZkayCryptoInterface):
         w_2 = (y_2 * p) % n
 
         random = (c_pow_q_inv * w_1 + c_pow_p_inv * w_2) % n
-        random_chunks = self.serialize_pk(random, cfg.rnd_bytes)
+        random_chunks = self.serialize_pk(random, self.params.rnd_bytes)
 
         return plain, random_chunks

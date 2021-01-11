@@ -17,7 +17,7 @@ class BaseNameFactory:
         :param t: transformed type
         :param inc: if True, the internal counter, which is used as part of fresh ids, is incremented
         """
-        if t == TypeName.key_type():
+        if t.is_key():
             postfix = 'key'
         elif t.is_cipher():
             postfix = 'cipher'

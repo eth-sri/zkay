@@ -7,6 +7,7 @@ from typing import Dict, Optional, List, Tuple
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.transformation.internal_call_transformer import transform_internal_calls, compute_transitive_circuit_io_sizes
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.transformation.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
     ZkayStatementTransformer
@@ -316,7 +317,7 @@ class ZkayTransformer(AstTransformerVisitor):
         circuit = self.circuits[ast]
         stmts = []
 
-        if cfg.is_symmetric_cipher() and 'pure' in ast.modifiers:
+        if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC) and 'pure' in ast.modifiers:  # TODO
             # Symmetric trafo requires msg.sender access -> change from pure to view
             ast.modifiers = ['view' if mod == 'pure' else mod for mod in ast.modifiers]
 
@@ -346,10 +347,11 @@ class ZkayTransformer(AstTransformerVisitor):
         offset = 0
         for s in circuit.output_idfs:
             deserialize_stmts.append(s.deserialize(cfg.zk_out_name, out_start_idx, offset))
-            if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher():
+            if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
                 # Assign sender field to user-encrypted values if necessary
                 sender_key = in_var.index(0)
-                deserialize_stmts.append(s.get_loc_expr().index(cfg.cipher_payload_len).assign(sender_key))
+                cipher_payload_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).cipher_payload_len  # TODO
+                deserialize_stmts.append(s.get_loc_expr().index(cipher_payload_len).assign(sender_key))
             offset += s.t.size_in_uints
         if deserialize_stmts:
             stmts.append(StatementList(Comment.comment_wrap_block("Deserialize output values", deserialize_stmts), excluded_from_simulation=True))
@@ -444,12 +446,14 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts = []
 
         if has_priv_args:
-            ext_circuit._require_public_key_for_label_at(None, Expression.me_expr())
-        if cfg.is_symmetric_cipher():
+            required_homs = set([p.annotated_type.homomorphism for p in original_params if p.annotated_type.is_cipher()])
+            for required_hom in required_homs:
+                ext_circuit._require_public_key_for_label_at(None, Expression.me_expr(), required_hom)
+        if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
             # Make sure msg.sender's key pair is available in the circuit
             assert any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) \
                    or has_priv_args, "requires verification => both sender keys required"
-            stmts += ext_circuit.request_private_key()
+            stmts += ext_circuit.request_private_key(Homomorphism.NON_HOMOMORPHIC)  # TODO
 
         # Verify that out parameter has correct size
         stmts += [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
@@ -473,16 +477,18 @@ class ZkayTransformer(AstTransformerVisitor):
             if glob_me_key_index != -1:
                 (keys[0], keys[glob_me_key_index]) = (keys[glob_me_key_index], keys[0])
 
+            # TODO
             tmp_key_var = Identifier('_tmp_key')
-            key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type()))
+            key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type(Homomorphism.NON_HOMOMORPHIC)))
             for key_owner in keys:
-                idf, assignment = ext_circuit.request_public_key(key_owner, ext_circuit.get_glob_key_name(key_owner))
+                idf, assignment = ext_circuit.request_public_key(key_owner, Homomorphism.NON_HOMOMORPHIC, ext_circuit.get_glob_key_name(key_owner))
                 assignment.lhs = IdentifierExpr(tmp_key_var.clone())
                 key_req_stmts.append(assignment)
 
                 # Manually add to circuit inputs
-                key_req_stmts.append(in_arr_var.slice(offset, cfg.key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, cfg.key_len)))
-                offset += cfg.key_len
+                key_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).key_len
+                key_req_stmts.append(in_arr_var.slice(offset, key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, key_len)))
+                offset += key_len
                 assert offset == ext_circuit.in_size
 
         # Check encrypted parameters
@@ -490,21 +496,23 @@ class ZkayTransformer(AstTransformerVisitor):
         for p in original_params:
             """ * of T_e rule 8 """
             if p.annotated_type.is_cipher():
-                assign_stmt = in_arr_var.slice(offset, cfg.cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cfg.cipher_payload_len))
+                cipher_payload_len = cfg.get_crypto_params(p.annotated_type.homomorphism).cipher_payload_len
+                assign_stmt = in_arr_var.slice(offset, cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cipher_payload_len))
                 ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 
                 # Manually add to circuit inputs
                 param_stmts.append(assign_stmt)
-                offset += cfg.cipher_payload_len
+                offset += cipher_payload_len
 
-        if cfg.is_symmetric_cipher():
+        if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
             # Populate sender field of encrypted parameters
             copy_stmts = []
             for p in original_params:
                 if p.annotated_type.is_cipher():
                     sender_key = in_arr_var.index(0)
                     idf = IdentifierExpr(p.idf.clone()).as_type(p.annotated_type.clone())
-                    lit = ArrayLiteralExpr([idf.clone().index(i) for i in range(cfg.cipher_payload_len)] + [sender_key])
+                    cipher_payload_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).cipher_payload_len  # TODO
+                    lit = ArrayLiteralExpr([idf.clone().index(i) for i in range(cipher_payload_len)] + [sender_key])
                     copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], p.annotated_type.clone(), p.idf.clone(), 'memory'), lit))
             if copy_stmts:
                 param_stmts += [Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts

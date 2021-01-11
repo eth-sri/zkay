@@ -35,7 +35,7 @@ class ZkayVarDeclTransformer(AstTransformerVisitor):
 
     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
         if ast.is_private():
-            t = TypeName.cipher_type(ast)
+            t = TypeName.cipher_type(ast, ast.homomorphism)
         else:
             t = self.visit(ast.type_name.clone())
         return AnnotatedTypeName(t)

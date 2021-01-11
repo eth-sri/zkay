@@ -9,6 +9,7 @@ from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
 from zkay.transaction.keystore import *
 from zkay.transaction.prover import *
+from zkay.zkay_ast.homomorphism import Homomorphism
 
 _crypto_classes = {
     'dummy': DummyCrypto,
@@ -42,8 +43,8 @@ class Runtime:
     """
 
     __blockchain = None
-    __crypto = None
-    __keystore = None
+    __crypto = {}
+    __keystore = {}
     __prover = None
 
     @staticmethod
@@ -54,8 +55,8 @@ class Runtime:
         When a new backend is selected in the configuration, it will only be loaded after a runtime reset.
         """
         Runtime.__blockchain = None
-        Runtime.__crypto = None
-        Runtime.__keystore = None
+        Runtime.__crypto = {}
+        Runtime.__keystore = {}
         Runtime.__prover = None
 
     @staticmethod
@@ -68,18 +69,20 @@ class Runtime:
         return Runtime.__blockchain
 
     @staticmethod
-    def keystore() -> ZkayKeystoreInterface:
-        """Return singleton object which implements ZkayKeystoreInterface."""
-        if Runtime.__keystore is None:
-            Runtime.__keystore = SimpleKeystore(Runtime.blockchain())
-        return Runtime.__keystore
+    def keystore(homomorphism: Homomorphism) -> ZkayKeystoreInterface:
+        """Return object which implements ZkayKeystoreInterface for given homomorphism."""
+        crypto_backend = cfg.get_crypto_backend(homomorphism)
+        if crypto_backend not in Runtime.__keystore:
+            Runtime.__keystore[crypto_backend] = SimpleKeystore(Runtime.blockchain())
+        return Runtime.__keystore[crypto_backend]
 
     @staticmethod
-    def crypto() -> ZkayCryptoInterface:
-        """Return singleton object which implements ZkayCryptoInterface."""
-        if Runtime.__crypto is None:
-            Runtime.__crypto = _crypto_classes[cfg.crypto_backend](Runtime.keystore())
-        return Runtime.__crypto
+    def crypto(homomorphism: Homomorphism) -> ZkayCryptoInterface:
+        """Return object which implements ZkayCryptoInterface for given homomorphism."""
+        crypto_backend = cfg.get_crypto_backend(homomorphism)
+        if crypto_backend not in Runtime.__crypto:
+            Runtime.__crypto[crypto_backend] = _crypto_classes[crypto_backend](Runtime.keystore(homomorphism))
+        return Runtime.__crypto[crypto_backend]
 
     @staticmethod
     def prover() -> ZkayProverInterface:

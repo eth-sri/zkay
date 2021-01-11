@@ -16,11 +16,11 @@ os.makedirs(output_dir, exist_ok=True)
 
 @contextmanager
 def _mock_config(crypto: str, hash_opt):
-    old_c, old_h = cfg.crypto_backend, cfg.should_use_hash
-    cfg.crypto_backend = crypto
+    old_c, old_h = cfg.main_crypto_backend, cfg.should_use_hash
+    cfg.main_crypto_backend = crypto
     cfg.should_use_hash = (lambda _: hash_opt) if isinstance(hash_opt, bool) else hash_opt
     yield
-    cfg.crypto_backend, cfg.should_use_hash = old_c, old_h
+    cfg.main_crypto_backend, cfg.should_use_hash = old_c, old_h
 
 
 homomorphic_examples = ["Addhom", "Unhom", "RevealHomomorphic", "HomomorphicAddition", "HomomorphicNegation"]

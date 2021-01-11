@@ -10,8 +10,9 @@ from zkay.solidity_parser.generated.SolidityParser import SolidityParser, Parser
 from zkay.solidity_parser.generated.SolidityVisitor import SolidityVisitor
 from zkay.solidity_parser.parse import MyParser
 from zkay.zkay_ast.ast import StateVariableDeclaration, ContractDefinition, NumberLiteralExpr, \
-    BooleanLiteralExpr, StringLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
-    ReclassifyExpr, RehomExpr, BuiltinFunction, IndexExpr, Homomorphism
+    BooleanLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr, \
+    ReclassifyExpr, RehomExpr, BuiltinFunction, IndexExpr
+from zkay.zkay_ast.homomorphism import Homomorphism
 
 
 def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream, code: str) -> ast.AST:

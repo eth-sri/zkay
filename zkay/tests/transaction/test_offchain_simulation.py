@@ -109,12 +109,12 @@ class TestOffchainBase(TestScenarios):
 
 @contextmanager
 def _mock_config(crypto: str, hash_opt, blockchain: str = 'w3-eth-tester'):
-    old_c, old_h, old_b = cfg.crypto_backend, cfg.should_use_hash, cfg.blockchain_backend
-    cfg.crypto_backend = crypto
+    old_c, old_h, old_b = cfg.main_crypto_backend, cfg.should_use_hash, cfg.blockchain_backend
+    cfg.main_crypto_backend = crypto
     cfg.should_use_hash = (lambda _: hash_opt) if isinstance(hash_opt, bool) else hash_opt
     cfg.blockchain_backend = blockchain
     yield
-    cfg.crypto_backend, cfg.should_use_hash, cfg.blockchain_backend = old_c, old_h, old_b
+    cfg.main_crypto_backend, cfg.should_use_hash, cfg.blockchain_backend = old_c, old_h, old_b
 
 
 #@parameterized_class(('name', 'scenario'), get_scenario('.py'))

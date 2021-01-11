@@ -17,6 +17,7 @@ from zkay.config import cfg, zk_print
 from zkay.utils.helpers import hash_file, hash_string
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
     IndexExpr, NumberLiteralExpr, MemberAccessExpr, TypeName, indent, PrimitiveCastExpr, EnumDefinition, Expression
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
 
@@ -66,8 +67,8 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircEncConstraint(self, stmt: CircEncConstraint):
         assert stmt.cipher.t.is_cipher()
-        assert stmt.pk.t == TypeName.key_type()
-        assert stmt.rnd.t == TypeName.rnd_type()
+        assert stmt.pk.t == TypeName.key_type(Homomorphism.NON_HOMOMORPHIC)  # TODO
+        assert stmt.rnd.t == TypeName.rnd_type(Homomorphism.NON_HOMOMORPHIC)  # TODO
         if stmt.is_dec:
             return f'checkDec("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
         else:
@@ -75,7 +76,7 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint):
         assert stmt.iv_cipher.t.is_cipher()
-        assert stmt.other_pk.t == TypeName.key_type()
+        assert stmt.other_pk.t == TypeName.key_type(Homomorphism.NON_HOMOMORPHIC)  # TODO
         if stmt.is_dec:
             return f'checkDec("{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
         else:
@@ -154,7 +155,7 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
         input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {_get_t(sec_input.t)});')
 
     for pub_input in circuit.input_idfs:
-        if pub_input.t == TypeName.key_type():
+        if pub_input.t == TypeName.key_type(Homomorphism.NON_HOMOMORPHIC):  # TODO
             input_init_stmts.append(f'addK("{pub_input.name}", {pub_input.t.size_in_uints});')
         else:
             input_init_stmts.append(f'addIn("{pub_input.name}", {pub_input.t.size_in_uints}, {_get_t(pub_input.t)});')

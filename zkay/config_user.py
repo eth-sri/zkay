@@ -7,9 +7,12 @@ The argument parser in :py:mod:`.__main__` uses the docstrings, type hints and _
 WARNING: This is one of the only zkay modules that is imported before argcomplete.autocomplete is called. \
 For performance reasons it should thus not have any import side-effects or perform any expensive operations during import.
 """
-from typing import Any, Union
+from typing import Any, Union, Dict, List
 
 from appdirs import AppDirs
+
+from zkay.transaction.crypto.params import CryptoParams
+from zkay.zkay_ast.homomorphism import Homomorphism
 
 
 def _check_is_one_of(val: str, legal_vals):
@@ -37,8 +40,15 @@ class UserConfig:
         self._snark_backend: str = 'jsnark'
         self._snark_backend_values = ['jsnark']
 
-        self._crypto_backend: str = 'ecdh-aes'
-        self._crypto_backend_values = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']
+        self._main_crypto_backend_values = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']  # TODO
+        self._crypto_backends: Dict[Homomorphism, str] = {
+            Homomorphism.NON_HOMOMORPHIC: 'ecdh-aes',
+            Homomorphism.ADDITIVE: 'paillier'
+        }
+        self._crypto_backend_values: Dict[Homomorphism, List[str]] = {
+            Homomorphism.NON_HOMOMORPHIC: ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier'],
+            Homomorphism.ADDITIVE: ['paillier']
+        }
 
         self._blockchain_backend: str = 'w3-eth-tester'
         self._blockchain_backend_values = ['w3-eth-tester', 'w3-ganache', 'w3-ipc', 'w3-websocket', 'w3-http', 'w3-custom']
@@ -91,18 +101,27 @@ class UserConfig:
         self._snark_backend = val
 
     @property
-    def crypto_backend(self) -> str:
+    def main_crypto_backend(self) -> str:
         """
-        Encryption backend to use.
+        Main encryption backend to use.
 
-        Available Options: [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey]
+        Available Options: [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]
         """
-        return self._crypto_backend
+        return self.get_crypto_backend(Homomorphism.NON_HOMOMORPHIC)
 
-    @crypto_backend.setter
-    def crypto_backend(self, val: str):
-        _check_is_one_of(val, self._crypto_backend_values)
-        self._crypto_backend = val
+    @main_crypto_backend.setter
+    def main_crypto_backend(self, val: str):
+        self.set_crypto_backend(Homomorphism.NON_HOMOMORPHIC, val)
+
+    def get_crypto_backend(self, hom: Homomorphism) -> str:
+        return self._crypto_backends[hom]
+
+    def set_crypto_backend(self, hom: Homomorphism, val: str):
+        _check_is_one_of(val, self._crypto_backend_values[hom])
+        self._crypto_backends[hom] = val
+
+    def get_crypto_params(self, hom: Homomorphism) -> CryptoParams:
+        return CryptoParams(self.get_crypto_backend(hom))
 
     @property
     def blockchain_backend(self) -> str:

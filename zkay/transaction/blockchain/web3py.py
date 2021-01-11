@@ -159,7 +159,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
-                pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
+                pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract(cfg.main_crypto_backend))  # TODO
                 self._pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
 
                 verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
@@ -278,7 +278,7 @@ class Web3TesterBlockchain(Web3Blockchain):
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
                 with log_context('transaction', 'deploy_pki'):
-                    pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract())
+                    pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract(cfg.main_crypto_backend))  # TODO
                     self._pki_contract = self._deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
                     zk_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
 

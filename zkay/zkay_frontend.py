@@ -29,6 +29,7 @@ from zkay.config import cfg
 from zkay.utils.helpers import read_file, lines_of_code, without_extension
 from zkay.utils.progress_printer import print_step
 from zkay.utils.timer import time_measure
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.process_ast import get_processed_ast, get_verification_contract_names
 from zkay.zkay_ast.visitor.solidity_visitor import to_solidity
 
@@ -106,7 +107,8 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     with print_step("Write library contract files"):
         with cfg.library_compilation_environment():
             # Write pki contract
-            _dump_to_output(library_contracts.get_pki_contract(), output_dir, f'{cfg.pki_contract_name}.sol', dryrun_solc=True)
+            crypto_backend = cfg.get_crypto_backend(Homomorphism.NON_HOMOMORPHIC)  # TODO
+            _dump_to_output(library_contracts.get_pki_contract(crypto_backend), output_dir, f'{cfg.pki_contract_name}.sol', dryrun_solc=True)  # TODO
 
             # Write library contract
             _dump_to_output(library_contracts.get_verify_libs_code(), output_dir, ProvingScheme.verify_libs_contract_filename, dryrun_solc=True)
