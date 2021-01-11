@@ -386,7 +386,8 @@ class TypeCheckVisitor(AstVisitor):
 
         # Prevent ReclassifyExpr to all with homomorphic type
         if ast.privacy.is_all_expr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
-            raise TypeException('Cannot create a public homomorphic value (argument is homomorphic)', ast)
+            # If the target privacy is all, we infer a target homomorphism of NON_HOMOMORPHIC
+            ast.homomorphism = homomorphism = Homomorphism.NON_HOMOMORPHIC
 
         # Make sure the first argument to reveal / rehom is public or private provably equal to @me
         is_expr_at_all = ast.expr.annotated_type.is_public()
