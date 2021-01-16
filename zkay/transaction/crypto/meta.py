@@ -8,6 +8,15 @@ cryptoparams = {
         'rnd_chunk_size': 31,
     },
 
+    'dummy-hom': {
+        'key_bits': 248,
+        'cipher_payload_bytes': 31,
+        'cipher_chunk_size': 31,
+        'symmetric': False,
+        'rnd_bytes': 31,
+        'rnd_chunk_size': 31,
+    },
+
     'rsa-oaep': {
         'key_bits': 2048,
         'cipher_payload_bytes': 256,

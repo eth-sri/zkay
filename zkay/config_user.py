@@ -40,14 +40,14 @@ class UserConfig:
         self._snark_backend: str = 'jsnark'
         self._snark_backend_values = ['jsnark']
 
-        self._main_crypto_backend_values = ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']  # TODO
+        self._main_crypto_backend_values = ['dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']  # TODO
         self._crypto_backends: Dict[Homomorphism, str] = {
             Homomorphism.NON_HOMOMORPHIC: 'ecdh-aes',
             Homomorphism.ADDITIVE: 'paillier'
         }
         self._crypto_backend_values: Dict[Homomorphism, List[str]] = {
             Homomorphism.NON_HOMOMORPHIC: ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier'],
-            Homomorphism.ADDITIVE: ['paillier']
+            Homomorphism.ADDITIVE: ['dummy-hom', 'paillier']
         }
 
         self._blockchain_backend: str = 'w3-eth-tester'
@@ -112,6 +112,19 @@ class UserConfig:
     @main_crypto_backend.setter
     def main_crypto_backend(self, val: str):
         self.set_crypto_backend(Homomorphism.NON_HOMOMORPHIC, val)
+
+    @property
+    def addhom_crypto_backend(self) -> str:
+        """
+        Additively homomorphic encryption backend to use.
+
+        Available Options: [dummy-hom, paillier]
+        """
+        return self.get_crypto_backend(Homomorphism.ADDITIVE)
+
+    @addhom_crypto_backend.setter
+    def addhom_crypto_backend(self, val: str):
+        self.set_crypto_backend(Homomorphism.ADDITIVE, val)
 
     def get_crypto_backend(self, hom: Homomorphism) -> str:
         return self._crypto_backends[hom]

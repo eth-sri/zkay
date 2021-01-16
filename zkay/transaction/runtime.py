@@ -1,4 +1,5 @@
 from zkay.config import cfg
+from zkay.transaction.crypto.dummy_hom import DummyHomCrypto
 from zkay.transaction.crypto.ecdh_chaskey import EcdhChaskeyCrypto
 from zkay.transaction.crypto.paillier import PaillierCrypto
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
@@ -13,6 +14,7 @@ from zkay.zkay_ast.homomorphism import Homomorphism
 
 _crypto_classes = {
     'dummy': DummyCrypto,
+    'dummy-hom': DummyHomCrypto,
     'rsa-pkcs1.5': RSAPKCS15Crypto,
     'rsa-oaep': RSAOAEPCrypto,
     'ecdh-aes': EcdhAesCrypto,
