@@ -1,5 +1,3 @@
-from typing import Iterator
-
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
@@ -233,6 +231,10 @@ class TypeCheckVisitor(AstVisitor):
         if homomorphic_func is None:
             raise TypeException(f'Operation \'{func.op}\' requires all arguments to be accessible, '
                                 f'i.e. @all or provably equal to @me', ast)
+
+        # We could perform homomorphic operations on-chain by using some Solidity arbitrary precision math library.
+        # For now, keep it simple and evaluate homomorphic operations in Python and check the result in the circuit.
+        func.is_private = True
 
         ast.annotated_type = homomorphic_func.output_type()
         func.homomorphism = ast.annotated_type.homomorphism
