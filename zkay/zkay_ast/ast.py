@@ -451,7 +451,7 @@ class BuiltinFunction(Expression):
                 target_type = AnnotatedTypeName(first_inaccessible_type.type_name,
                                                 first_inaccessible_type.privacy_annotation,
                                                 hom.homomorphism)
-                return HomomorphicBuiltinFunction(target_type, public_args)
+                return HomomorphicBuiltinFunction(target_type, hom.public_args)
         else:
             return None
 
