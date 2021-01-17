@@ -103,6 +103,10 @@ class TypeCheckVisitor(AstVisitor):
         return isinstance(ast.annotated_type.type_name, (NumberLiteralType, BooleanLiteralType))
 
     def handle_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction):
+        if func.is_parenthesis():
+            ast.annotated_type = ast.args[0].annotated_type
+            return
+
         all_args_all_or_me = all(map(lambda x: x.annotated_type.is_accessible(ast.analysis), ast.args))
         if all_args_all_or_me:
             self.handle_unhom_builtin_function_call(ast, func)
@@ -131,9 +135,6 @@ class TypeCheckVisitor(AstVisitor):
             ast.args[2] = self.get_rhs(ast.args[2], a)
 
             ast.annotated_type = a
-            return
-        elif func.is_parenthesis():
-            ast.annotated_type = ast.args[0].annotated_type
             return
 
         # Check that argument types conform to op signature
