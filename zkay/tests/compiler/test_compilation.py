@@ -24,12 +24,8 @@ def _mock_config(crypto: str, crypto_addhom: str, hash_opt):
     cfg.main_crypto_backend, cfg.addhom_crypto_backend, cfg.should_use_hash = old_c_nh, old_c_add, old_h
 
 
-homomorphic_examples = ["Addhom", "Unhom", "RevealHomomorphic", "HomomorphicAddition", "HomomorphicNegation"]
-compiling_examples = filter(lambda x: x[0] not in homomorphic_examples, all_examples)
-
-
 #@parameterized_class(('name', 'example'), get_code_example('.zkay'))
-@parameterized_class(('name', 'example'), compiling_examples)  # TODO: Switch back to all_examples when implemented
+@parameterized_class(('name', 'example'), all_examples)
 class TestCompiler(TestExamples):
 
     def get_directory(self):
