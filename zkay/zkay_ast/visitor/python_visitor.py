@@ -208,17 +208,25 @@ class PythonCodeVisitor(CodeVisitor):
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction):
             args = [self.visit(a) for a in ast.args]
-            fstr = ast.func.format_string()
-            if ast.func.op == '&&':
-                fstr = '{} and {}'
-            elif ast.func.op == '||':
-                fstr = '{} or {}'
-            elif ast.func.op == '!':
-                fstr = 'not {}'
-            elif ast.func.op == '/':
-                fstr = '{} // {}'
-            elif ast.func.is_ite():
-                fstr = '({1} if {0} else {2})'
+            homomorphism = ast.func.homomorphism
+            if homomorphism == Homomorphism.NON_HOMOMORPHIC:
+                fstr = ast.func.format_string()
+                if ast.func.op == '&&':
+                    fstr = '{} and {}'
+                elif ast.func.op == '||':
+                    fstr = '{} or {}'
+                elif ast.func.op == '!':
+                    fstr = 'not {}'
+                elif ast.func.op == '/':
+                    fstr = '{} // {}'
+                elif ast.func.is_ite():
+                    fstr = '({1} if {0} else {2})'
+            else:
+                target_address = ast.annotated_type.zkay_type.privacy_annotation
+                target_expr = get_privacy_expr_from_label(target_address.privacy_annotation_label())
+                target_code = self.visit(target_expr.clone())
+                # TODO: Is this legal in non-offchain?
+                fstr = f"self.api.do_homomorphic_op('{ast.func.op}', {homomorphism.code()}, {target_code}{', {}' * ast.func.arity()})"
 
             return fstr.format(*args)
         else:

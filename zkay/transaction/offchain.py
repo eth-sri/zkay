@@ -415,6 +415,20 @@ class ApiWrapper:
         res = self.__crypto[hom].dec(cipher, self.__user_addr)
         return constr(res[0]), res[1]
 
+    def do_homomorphic_op(self, op: str, hom: Homomorphism, target_addr: AddressValue, *args: List[CipherValue]):
+        if hom == Homomorphism.NON_HOMOMORPHIC:
+            raise ValueError('Cannot perform non-homomorphic homomorphic operation')
+        pk = self.get_keystore(hom).getPk(target_addr)
+        params = cfg.get_crypto_params(hom)
+        for arg in args:
+            if isinstance(arg, CipherValue) and params.crypto_name != arg.params.crypto_name:
+                raise ValueError('CipherValues from different crypto backends used in homomorphic operation')
+
+        crypto_inst = self.__crypto[hom]
+        assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface)
+        result = crypto_inst.do_op(op, pk[:], *[list(arg) if isinstance(arg, CipherValue) else arg for arg in args])
+        return CipherValue(result, params=params)
+
     def _req_state_var(self, name: str, *indices, count=0) -> Any:
         if self.__contract_handle is None:
             # TODO check this statically in the type checker

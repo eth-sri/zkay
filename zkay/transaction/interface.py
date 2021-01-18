@@ -629,6 +629,13 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         pass
 
 
+class ZkayHomomorphicCryptoInterface(ZkayCryptoInterface):
+
+    @abstractmethod
+    def do_op(self, op: str, public_key: List[int], *args: Union[List[int], int]) -> List[int]:
+        pass
+
+
 class ZkayProverInterface(metaclass=ABCMeta):
     """API to generate zero knowledge proofs for a particular circuit and arguments."""
 

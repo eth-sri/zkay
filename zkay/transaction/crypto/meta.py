@@ -10,11 +10,11 @@ cryptoparams = {
 
     'dummy-hom': {
         'key_bits': 248,
-        'cipher_payload_bytes': 31,
-        'cipher_chunk_size': 31,
+        'cipher_payload_bytes': 32,
+        'cipher_chunk_size': 32,
         'symmetric': False,
-        'rnd_bytes': 31,
-        'rnd_chunk_size': 31,
+        'rnd_bytes': 32,
+        'rnd_chunk_size': 32,
     },
 
     'rsa-oaep': {

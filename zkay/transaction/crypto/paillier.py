@@ -1,17 +1,17 @@
 import os
 from math import gcd
-from typing import Tuple, Any, List
+from typing import Tuple, Any, List, Union
 
 from Crypto.Math.Primality import generate_probable_prime
 from Crypto.Random.random import getrandbits
 
 from zkay.config import cfg
 from zkay.transaction.crypto.params import CryptoParams
-from zkay.transaction.interface import ZkayCryptoInterface
+from zkay.transaction.interface import ZkayHomomorphicCryptoInterface
 from zkay.transaction.types import KeyPair, PublicKeyValue, PrivateKeyValue
 
 
-class PaillierCrypto(ZkayCryptoInterface):
+class PaillierCrypto(ZkayHomomorphicCryptoInterface):
     params = CryptoParams('paillier')
 
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
@@ -119,3 +119,26 @@ class PaillierCrypto(ZkayCryptoInterface):
         random_chunks = self.serialize_pk(random, self.params.rnd_bytes)
 
         return plain, random_chunks
+
+    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[List[int], int]) -> List[int]:
+        n = self.deserialize_pk(public_key)
+        n_sqr = n * n
+
+        def deserialize(operand: Union[List[int], int]) -> int:
+            if isinstance(operand, List):
+                val = self.deserialize_pk(operand[:])
+                return val if val != 0 else 1  # If ciphertext is 0, return 1 == Enc(0, 0)
+            else:
+                return operand  # Return plaintext arguments as-is
+        operands = [deserialize(arg) for arg in args]
+
+        if op == 'sign-':
+            result = pow(operands[0], -1, n_sqr)
+        elif op == '+':
+            result = (operands[0] * operands[1]) % n_sqr
+        elif op == '-':
+            result = (operands[0] * pow(operands[1], -1, n_sqr)) % n_sqr
+        else:
+            raise ValueError(f'Unsupported operation {op}')
+
+        return self.serialize_pk(result, self.params.cipher_bytes_payload)

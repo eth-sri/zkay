@@ -1,15 +1,15 @@
-from random import Random, random
-from typing import Tuple, List
+from random import Random
+from typing import Tuple, List, Union
 
 from Crypto.Math.Primality import generate_probable_prime
 
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.crypto.params import CryptoParams
-from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair, RandomnessValue
-from zkay.transaction.interface import ZkayCryptoInterface
+from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair, RandomnessValue, \
+    ZkayHomomorphicCryptoInterface
 
 
-class DummyHomCrypto(ZkayCryptoInterface):
+class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
     params = CryptoParams('dummy-hom')
 
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
@@ -30,3 +30,24 @@ class DummyHomCrypto(ZkayCryptoInterface):
         key_inv = pow(sk, -1, bn128_scalar_field)
         plain = ((cipher[0] - 1) * key_inv) % bn128_scalar_field
         return plain, list(RandomnessValue(params=self.params)[:])
+
+    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[List[int], int]) -> List[int]:
+        def deserialize(operand: Union[List[int], int]) -> int:
+            if isinstance(operand, List):
+                val = operand[0]
+                return val - 1 if val != 0 else 0
+            else:
+                return operand
+
+        operands = [deserialize(arg) for arg in args]
+        if op == 'sign-':
+            result = -operands[0]
+        elif op == '+':
+            result = operands[0] + operands[1]
+        elif op == '-':
+            result = operands[0] - operands[1]
+        elif op == '*':
+            result = operands[0] * operands[1]
+        else:
+            raise ValueError(f'Unsupported operation {op}')
+        return [(result + 1) % bn128_scalar_field]
