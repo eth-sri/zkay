@@ -14,6 +14,7 @@ from zkay.compiler.privacy import library_contracts
 from zkay.compiler.solidity.compiler import compile_solidity_json
 from zkay.config import cfg, zk_print, zk_print_banner
 from zkay.my_logging.log_context import log_context
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import ZkayBlockchainInterface, IntegrityError, BlockChainError, \
     TransactionFailedException
 from zkay.transaction.types import PublicKeyValue, AddressValue, MsgStruct, BlockStruct, TxStruct
@@ -67,12 +68,13 @@ class Web3Blockchain(ZkayBlockchainInterface):
     def _get_balance(self, address: Union[bytes, str]) -> int:
         return self.w3.eth.getBalance(address)
 
-    def _req_public_key(self, address: Union[bytes, str]) -> PublicKeyValue:
-        return PublicKeyValue(self._req_state_var(self.pki_contract, 'getPk', address))
+    def _req_public_key(self, address: Union[bytes, str], crypto_params: CryptoParams) -> PublicKeyValue:
+        return PublicKeyValue(self._req_state_var(self.pki_contract(crypto_params.crypto_name), 'getPk', address),
+                              params=crypto_params)
 
-    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]) -> Any:
+    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...], crypto_params: CryptoParams) -> Any:
         with log_context('transaction', f'announcePk'):
-            return self._transact(self.pki_contract, address, 'announcePk', pk)
+            return self._transact(self.pki_contract(crypto_params.crypto_name), address, 'announcePk', pk)
 
     def _req_state_var(self, contract_handle, name: str, *indices) -> Any:
         try:
@@ -143,7 +145,10 @@ class Web3Blockchain(ZkayBlockchainInterface):
                 filename = os.path.join(project_dir, f'{verifier_name}.sol')
                 cout = self.compile_contract(filename, verifier_name, self.lib_addresses)
                 vf[verifier_name] = AddressValue(self._deploy_contract(sender, cout).address)
-        vf[cfg.pki_contract_name] = AddressValue(self.pki_contract.address)
+        for crypto_params in cfg.all_crypto_params():
+            pki_contract_name = cfg.get_pki_contract_name(crypto_params)
+            pki_contract_address = self.pki_contract(crypto_params.crypto_name).address
+            vf[pki_contract_name] = AddressValue(pki_contract_address)
         return vf
 
     def _connect_libraries(self):
@@ -159,8 +164,10 @@ class Web3Blockchain(ZkayBlockchainInterface):
 
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
-                pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract(cfg.main_crypto_backend))  # TODO
-                self._pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=cfg.pki_contract_name)
+                for crypto_params in cfg.all_crypto_params():  # TODO: Only used backends?
+                    contract_name = cfg.get_pki_contract_name(crypto_params.crypto_name)
+                    pki_sol = save_to_file(tmpdir, f'{contract_name}.sol', library_contracts.get_pki_contract(crypto_params))
+                    self._pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=contract_name)
 
                 verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())
                 self._lib_addresses = {}
@@ -278,9 +285,14 @@ class Web3TesterBlockchain(Web3Blockchain):
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
                 with log_context('transaction', 'deploy_pki'):
-                    pki_sol = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract(cfg.main_crypto_backend))  # TODO
-                    self._pki_contract = self._deploy_contract(sender, self.compile_contract(pki_sol, cfg.pki_contract_name))
-                    zk_print(f'Deployed pki contract at address "{self.pki_contract.address}"')
+                    self._pki_contract = {}
+                    for crypto_params in cfg.all_crypto_params():  # TODO: Only used homomorphisms?
+                        pki_contract_code = library_contracts.get_pki_contract(crypto_params)
+                        pki_contract_name = cfg.get_pki_contract_name(crypto_params)
+                        pki_sol = save_to_file(tmpdir, f'{pki_contract_name}.sol', pki_contract_code)
+                        contract = self._deploy_contract(sender, self.compile_contract(pki_sol, pki_contract_name))
+                        self._pki_contract[crypto_params.crypto_name] = contract
+                        zk_print(f'Deployed pki contract at address "{contract.address}"')  # TODO
 
                 with log_context('transaction', 'deploy_verify_libs'):
                     verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())

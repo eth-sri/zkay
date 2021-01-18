@@ -1,4 +1,5 @@
 import math
+import re
 
 from zkay.transaction.crypto.meta import cryptoparams
 
@@ -7,6 +8,10 @@ class CryptoParams:
 
     def __init__(self, crypto_name: str):
         self.crypto_name = crypto_name
+
+    @property
+    def identifier_name(self) -> str:
+        return re.sub('[^a-zA-Z0-9$_]', '_', self.crypto_name).title()
 
     @property
     def key_bits(self) -> int:

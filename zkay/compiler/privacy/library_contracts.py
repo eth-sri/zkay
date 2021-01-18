@@ -27,15 +27,13 @@ bn128_scalar_field_bits = bn128_scalar_field.bit_length() - 1
 """Integers of at most this many bits can be represented using field values"""
 
 
-def get_pki_contract(crypto_backend: str) -> str:
+def get_pki_contract(params: CryptoParams) -> str:
     """Contract of the public key infrastructure used for asymmetric cryptography"""
     # TODO prove private key knowledge during announcePk
-    params = CryptoParams(crypto_backend)
-    # TODO: Change contract name based on crypto backend
     return dedent(f'''\
     pragma solidity {cfg.zkay_solc_version_compatibility.expression};
 
-    contract {cfg.pki_contract_name} {{
+    contract {cfg.get_pki_contract_name(params)} {{
         mapping(address => uint[{params.key_len}]) pks;
         mapping(address => bool) hasAnnounced;
 

@@ -10,7 +10,7 @@ from zkay.compiler.privacy.manifest import Manifest
 from zkay.config import cfg, zk_print_banner
 from zkay.my_logging.log_context import log_context
 from zkay.transaction.int_casts import __convert as int_cast
-from zkay.transaction.interface import BlockChainError, ZkayKeystoreInterface
+from zkay.transaction.interface import BlockChainError, ZkayHomomorphicCryptoInterface, ZkayKeystoreInterface
 from zkay.transaction.runtime import Runtime
 from zkay.transaction.types import AddressValue, RandomnessValue, CipherValue, MsgStruct, BlockStruct, TxStruct, Value, \
     PrivateKeyValue, PublicKeyValue
@@ -31,25 +31,26 @@ class StateDict:
     def __init__(self, api) -> None:
         self.api = api
         self.__state: Dict[str, Any] = {}
-        self.__constructors: Dict[str, (bool, Callable)] = {}
+        self.__constructors: Dict[str, (bool, Homomorphism, Callable)] = {}
 
     def clear(self):
         self.__state.clear()
 
-    def decl(self, name, constructor: Callable = lambda x: x, *, cipher: bool = False):
+    def decl(self, name, constructor: Callable = lambda x: x, *,
+             cipher: bool = False, hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC):
         """Define the wrapper constructor for a state variable."""
         assert name not in self.__constructors
-        self.__constructors[name] = (cipher, constructor)
+        self.__constructors[name] = (cipher, hom, constructor)
 
     @property
     def names(self) -> List[str]:
         return list(self.__constructors.keys())
 
     def get_plain(self, name: str, *indices):
-        is_cipher, constr = self.__constructors[name]
+        is_cipher, homomorphism, constr = self.__constructors[name]
         val = self.__get((name, *indices), cache=False)
         if is_cipher:
-            ret, _ = self.api.dec(val, constr)
+            ret, _ = self.api.dec(val, constr, homomorphism)
             return ret
         else:
             return val
@@ -93,11 +94,11 @@ class StateDict:
         if cache and loc in self.__state:
             return self.__state[loc]
         else:
-            is_cipher, constr = self.__constructors[var]
+            is_cipher, homomorphism, constr = self.__constructors[var]
             try:
                 if is_cipher:
-                    cipher_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).cipher_len  # TODO
-                    val = CipherValue(self.api._req_state_var(var, *indices, count=cipher_len))
+                    cipher_len = cfg.get_crypto_params(homomorphism).cipher_len
+                    val = CipherValue(self.api._req_state_var(var, *indices, count=cipher_len), hom=homomorphism)
                 else:
                     val = constr(self.api._req_state_var(var, *indices))
             except BlockChainError:
@@ -232,8 +233,8 @@ class ContractSimulator:
     def initialize_keys_for(address: Union[bytes, str]):
         """Generate/Load keys for the given address."""
         account = AddressValue(address)
-        for hom in Homomorphism:  # TODO: Only used homomorphisms?
-            Runtime.crypto(hom).generate_or_load_key_pair(account)
+        for crypto_params in cfg.all_crypto_params():  # TODO: Only used homomorphisms?
+            Runtime.crypto(crypto_params).generate_or_load_key_pair(account)
 
     @staticmethod
     def use_config_from_manifest(project_dir: str):
@@ -296,10 +297,9 @@ class ApiWrapper:
         self.__crypto = {}
         self.__prover = Runtime.prover()
 
-        # TODO: Only used homomorphisms?
-        for hom in Homomorphism:
-            self.__keystore[hom] = Runtime.keystore(hom)
-            self.__crypto[hom] = Runtime.crypto(hom)
+        for hom in Homomorphism:  # TODO: Only used homomorphisms?
+            self.__keystore[hom] = Runtime.keystore(cfg.get_crypto_params(hom))
+            self.__crypto[hom] = Runtime.crypto(cfg.get_crypto_params(hom))
 
         self.__project_dir = project_dir
         self.__contract_name = contract_name
@@ -346,7 +346,10 @@ class ApiWrapper:
         return self.__user_addr
 
     @property
-    def keystore(self, hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> ZkayKeystoreInterface:
+    def keystore(self) -> ZkayKeystoreInterface:
+        return self.get_keystore(Homomorphism.NON_HOMOMORPHIC)
+
+    def get_keystore(self, hom: Homomorphism):
         return self.__keystore[hom]
 
     def get_my_sk(self, hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> PrivateKeyValue:
@@ -381,16 +384,16 @@ class ApiWrapper:
     def transact(self, fname: str, args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
         return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)
 
-    def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Callable]]):
+    def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Homomorphism, Callable]]):
         retvals = self.__conn.call(self.__contract_handle, self.__user_addr, fname, *args)
         if len(ret_val_constructors) == 1:
             return self.__get_decrypted_retval(retvals, *ret_val_constructors[0])
         else:
-            return tuple([self.__get_decrypted_retval(retval, is_cipher, constr)
-                          for retval, (is_cipher, constr) in zip(retvals, ret_val_constructors)])
+            return tuple([self.__get_decrypted_retval(retval, is_cipher, homomorphism, constr)
+                          for retval, (is_cipher, homomorphism, constr) in zip(retvals, ret_val_constructors)])
 
-    def __get_decrypted_retval(self, raw_value, is_cipher, constructor):
-        return self.dec(CipherValue(raw_value), constructor)[0] if is_cipher else constructor(raw_value)
+    def __get_decrypted_retval(self, raw_value, is_cipher, homomorphism, constructor):
+        return self.dec(CipherValue(raw_value, hom=homomorphism), constructor)[0] if is_cipher else constructor(raw_value)
 
     def get_special_variables(self) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         assert self.__current_msg is not None and self.__current_block is not None and self.__current_tx is not None
@@ -403,13 +406,13 @@ class ApiWrapper:
         self.__current_msg, self.__current_block, self.__current_tx = None, None, None
 
     def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None,
-            target_hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> Tuple[CipherValue, Optional[RandomnessValue]]:
+            hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> Tuple[CipherValue, Optional[RandomnessValue]]:
         target_addr = self.__user_addr if target_addr is None else target_addr
-        return self.__crypto[target_hom].enc(plain, self.__user_addr, target_addr)
+        return self.__crypto[hom].enc(plain, self.__user_addr, target_addr)
 
     def dec(self, cipher: CipherValue, constr: Callable[[int], Any],
-            source_hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> Tuple[Any, Optional[RandomnessValue]]:
-        res = self.__crypto[source_hom].dec(cipher, self.__user_addr)
+            hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> Tuple[Any, Optional[RandomnessValue]]:
+        res = self.__crypto[hom].dec(cipher, self.__user_addr)
         return constr(res[0]), res[1]
 
     def _req_state_var(self, name: str, *indices, count=0) -> Any:

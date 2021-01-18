@@ -173,5 +173,5 @@ class TestOffchainRsaOaepEnc(TestOffchainBase):
 class TestOffchainPaillierEnc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_paillier(self):
-        with _mock_config('paillier', 'paillier', True):
+        with _mock_config('paillier', 'dummy-hom', True):
             self.run_scenario(suffix='Paillier', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)

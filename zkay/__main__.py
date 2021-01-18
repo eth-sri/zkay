@@ -222,9 +222,12 @@ def main():
             try:
                 with cfg.library_compilation_environment():
                     if a.cmd == 'deploy-pki':
-                        file = save_to_file(tmpdir, f'{cfg.pki_contract_name}.sol', library_contracts.get_pki_contract(cfg.main_crypto_backend))  # TODO
-                        addr = Runtime.blockchain().deploy_solidity_contract(file, cfg.pki_contract_name, a.account)
-                        print(f'Deployed pki contract at: {addr}')
+                        for crypto_params in cfg.all_crypto_params():  # TODO: Only used homomorphisms?
+                            pki_contract_code = library_contracts.get_pki_contract(crypto_params)
+                            pki_contract_name = cfg.get_pki_contract_name(crypto_params)
+                            file = save_to_file(tmpdir, f'{pki_contract_name}.sol', pki_contract_code)
+                            addr = Runtime.blockchain().deploy_solidity_contract(file, pki_contract_name, a.account)
+                            print(f'Deployed pki contract at: {addr}')  # TODO
                     else:
                         if not cfg.external_crypto_lib_names:
                             print('Current proving scheme does not require library deployment')

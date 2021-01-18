@@ -11,3 +11,6 @@ class Homomorphism(Enum):
 
     def __str__(self):
         return self.type_annotation if self != Homomorphism.NON_HOMOMORPHIC else ''
+
+    def code(self) -> str:
+        return super().__str__()  # i.e. Homomorphism.ENUM_NAME

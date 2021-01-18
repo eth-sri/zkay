@@ -8,6 +8,7 @@ from semantic_version import NpmSpec
 from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
 from zkay.config_user import UserConfig
 from zkay.config_version import Versions
+from zkay.transaction.crypto.params import CryptoParams
 
 
 def zk_print(*args, verbosity_level=1, **kwargs):
@@ -181,6 +182,9 @@ class Config(UserConfig):
     @property
     def pki_contract_name(self) -> str:
         return f'{self.reserved_name_prefix}PublicKeyInfrastructure'
+
+    def get_pki_contract_name(self, params: CryptoParams) -> str:
+        return f'{self.pki_contract_name}_{params.identifier_name}'
 
     @property
     def zk_out_name(self) -> str:

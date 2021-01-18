@@ -106,9 +106,11 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     # Dump libraries
     with print_step("Write library contract files"):
         with cfg.library_compilation_environment():
-            # Write pki contract
-            crypto_backend = cfg.get_crypto_backend(Homomorphism.NON_HOMOMORPHIC)  # TODO
-            _dump_to_output(library_contracts.get_pki_contract(crypto_backend), output_dir, f'{cfg.pki_contract_name}.sol', dryrun_solc=True)  # TODO
+            for crypto_params in cfg.all_crypto_params():  # TODO: Only used homomorphisms?
+                # Write pki contract
+                pki_contract_code = library_contracts.get_pki_contract(crypto_params)
+                pki_contract_file = f'{cfg.get_pki_contract_name(crypto_params)}.sol'
+                _dump_to_output(pki_contract_code, output_dir, pki_contract_file, dryrun_solc=True)
 
             # Write library contract
             _dump_to_output(library_contracts.get_verify_libs_code(), output_dir, ProvingScheme.verify_libs_contract_filename, dryrun_solc=True)

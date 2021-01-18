@@ -68,11 +68,10 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         self._pki_contract = None
         self._lib_addresses = None
 
-    @property
-    def pki_contract(self):
+    def pki_contract(self, crypto_backend: str):
         if self._pki_contract is None:
             self._connect_libraries()
-        return self._pki_contract
+        return self._pki_contract[crypto_backend]
 
     @property
     def lib_addresses(self) -> Dict:
@@ -119,7 +118,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """Return the balance of the wallet with the designated address (in wei)."""
         return self._get_balance(address.val)
 
-    def req_public_key(self, address: AddressValue) -> PublicKeyValue:
+    def req_public_key(self, address: AddressValue, crypto_params: CryptoParams) -> PublicKeyValue:
         """
         Request the public key for the designated address from the PKI contract.
 
@@ -129,9 +128,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         """
         assert isinstance(address, AddressValue)
         zk_print(f'Requesting public key for address "{address}"', verbosity_level=2)
-        return self._req_public_key(address.val)
+        return self._req_public_key(address.val, crypto_params)
 
-    def announce_public_key(self, sender: AddressValue, pk: PublicKeyValue) -> Any:
+    def announce_public_key(self, sender: AddressValue, pk: PublicKeyValue, crypto_params: CryptoParams) -> Any:
         """
         Announce a public key to the PKI
 
@@ -146,7 +145,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         assert isinstance(sender, AddressValue)
         assert isinstance(pk, PublicKeyValue)
         zk_print(f'Announcing public key "{pk}" for address "{sender}"')
-        return self._announce_public_key(sender.val, pk[:])
+        return self._announce_public_key(sender.val, pk[:], crypto_params)
 
     def req_state_var(self, contract_handle, name: str, *indices) -> Union[bool, int, str, bytes]:
         """
@@ -294,11 +293,15 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         pki_verifier_addresses = {}
 
-        # Check pki integrity
-        pki_address = self._req_state_var(contract_on_chain, f'{cfg.pki_contract_name}_inst')
-        pki_verifier_addresses[cfg.pki_contract_name] = AddressValue(pki_address)
-        with cfg.library_compilation_environment():
-            self._pki_contract = self._verify_contract_integrity(pki_address, os.path.join(project_dir, f'{cfg.pki_contract_name}.sol'))
+        # Check integrity of all pki contracts
+        self._pki_contract = {}
+        for crypto_params in cfg.all_crypto_params():  # TODO: Only for used homomorphisms?
+            contract_name = cfg.get_pki_contract_name(crypto_params)
+            pki_address = self._req_state_var(contract_on_chain, f'{contract_name}_inst')
+            pki_verifier_addresses[contract_name] = AddressValue(pki_address)
+            with cfg.library_compilation_environment():
+                contract = self._verify_contract_integrity(pki_address, os.path.join(project_dir, f'{contract_name}.sol'))
+                self._pki_contract[crypto_params.crypto_name] = contract
 
         # Check verifier contract and library integrity
         if verifier_names:
@@ -402,11 +405,11 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _req_public_key(self, address: Union[bytes, str]) -> PublicKeyValue:
+    def _req_public_key(self, address: Union[bytes, str], crypto_params: CryptoParams) -> PublicKeyValue:
         pass
 
     @abstractmethod
-    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...]) -> Any:
+    def _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...], crypto_params: CryptoParams) -> Any:
         pass
 
     @abstractmethod
@@ -440,8 +443,9 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 class ZkayKeystoreInterface(metaclass=ABCMeta):
     """API to add and retrieve local key pairs, and to request public keys."""
 
-    def __init__(self, conn: ZkayBlockchainInterface):
+    def __init__(self, conn: ZkayBlockchainInterface, crypto_params: CryptoParams):
         self.conn = conn
+        self.crypto_params = crypto_params
         self.local_pk_store: Dict[AddressValue, PublicKeyValue] = {}
         self.local_key_pairs: Dict[AddressValue, KeyPair] = {}
 
@@ -456,9 +460,9 @@ class ZkayKeystoreInterface(metaclass=ABCMeta):
         self.local_key_pairs[address] = key_pair
         # Announce if not yet in pki
         try:
-            self.conn.req_public_key(address)
+            self.conn.req_public_key(address, self.crypto_params)
         except BlockChainError:
-            self.conn.announce_public_key(address, key_pair.pk)
+            self.conn.announce_public_key(address, key_pair.pk, self.crypto_params)
 
     def has_initialized_keys_for(self, address: AddressValue) -> bool:
         """Return true if keys for address are already in the store."""
@@ -481,7 +485,7 @@ class ZkayKeystoreInterface(metaclass=ABCMeta):
         if address in self.local_pk_store:
             return self.local_pk_store[address]
         else:
-            pk = self.conn.req_public_key(address)
+            pk = self.conn.req_public_key(address, self.crypto_params)
             self.local_pk_store[address] = pk
             return pk
 
@@ -558,8 +562,9 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
         while True:
             # Retry until cipher text is not 0
             cipher, rnd = self._enc(int(plain), sk, pk)
-            cipher, rnd = CipherValue(cipher), RandomnessValue(rnd) if rnd is not None else None
-            if cipher != CipherValue():
+            cipher = CipherValue(cipher, params=self.params)
+            rnd = RandomnessValue(rnd, params=self.params) if rnd is not None else None
+            if cipher != CipherValue(params=self.params):
                 break
 
         return cipher, rnd

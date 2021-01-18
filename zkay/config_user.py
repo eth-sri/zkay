@@ -40,13 +40,14 @@ class UserConfig:
         self._snark_backend: str = 'jsnark'
         self._snark_backend_values = ['jsnark']
 
-        self._main_crypto_backend_values = ['dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']  # TODO
+        # TODO
+        self._main_crypto_backend_values = ['dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']
         self._crypto_backends: Dict[Homomorphism, str] = {
             Homomorphism.NON_HOMOMORPHIC: 'ecdh-aes',
             Homomorphism.ADDITIVE: 'paillier'
         }
         self._crypto_backend_values: Dict[Homomorphism, List[str]] = {
-            Homomorphism.NON_HOMOMORPHIC: ['dummy', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier'],
+            Homomorphism.NON_HOMOMORPHIC: ['dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier'],
             Homomorphism.ADDITIVE: ['dummy-hom', 'paillier']
         }
 
@@ -135,6 +136,12 @@ class UserConfig:
 
     def get_crypto_params(self, hom: Homomorphism) -> CryptoParams:
         return CryptoParams(self.get_crypto_backend(hom))
+
+    def all_crypto_backends(self) -> List[str]:
+        return list(dict.fromkeys([self.get_crypto_backend(hom) for hom in Homomorphism]))
+
+    def all_crypto_params(self) -> List[CryptoParams]:
+        return [CryptoParams(crypto_backend) for crypto_backend in self.all_crypto_backends()]
 
     @property
     def blockchain_backend(self) -> str:

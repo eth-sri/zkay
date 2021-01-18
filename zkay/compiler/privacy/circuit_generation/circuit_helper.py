@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from contextlib import contextmanager, nullcontext
-from typing import List, Optional, Tuple, Callable, Union, ContextManager
+from typing import List, Optional, Set, Tuple, Callable, Union, ContextManager
 
 from zkay.compiler.name_remapper import CircVarRemapper
 from zkay.compiler.privacy.circuit_generation.circuit_constraints import CircuitStatement, CircEncConstraint, CircVarDecl, \
@@ -8,7 +8,7 @@ from zkay.compiler.privacy.circuit_generation.circuit_constraints import Circuit
 from zkay.compiler.privacy.circuit_generation.name_factory import NameFactory
 from zkay.config import cfg
 from zkay.type_check.type_checker import TypeCheckVisitor
-from zkay.zkay_ast.ast import Expression, IdentifierExpr, PrivacyLabelExpr, \
+from zkay.zkay_ast.ast import BuiltinFunction, Expression, IdentifierExpr, PrivacyLabelExpr, \
     LocationExpr, TypeName, AssignmentStatement, UserDefinedTypeName, ConstructorOrFunctionDefinition, Parameter, \
     HybridArgumentIdf, EncryptionExpression, FunctionCallExpr, Identifier, AnnotatedTypeName, HybridArgType, \
     CircuitInputStatement, \
@@ -84,7 +84,7 @@ class CircuitHelper:
         self._static_owner_labels = static_owner_labels
         """List of all statically known privacy labels for the contract of which this circuit is part of"""
 
-        self._need_secret_key: bool = False
+        self._need_secret_key: Set[Homomorphism] = set()
         """Whether msg.sender's secret key must be added to the private circuit inputs"""
 
         self._global_keys: OrderedDict[Union[MeExpr, Identifier], None] = OrderedDict([])
@@ -227,14 +227,16 @@ class CircuitHelper:
         return CircGuardModification.guarded(self.phi, guard_idf, is_true)
 
     @staticmethod
-    def get_glob_key_name(label: PrivacyLabelExpr) -> str:
+    def get_glob_key_name(label: PrivacyLabelExpr, hom: Homomorphism) -> str:
         """Return the name of the HybridArgumentIdf which holds the statically known public key for the given privacy label."""
         assert isinstance(label, (MeExpr, Identifier))
-        return f'glob_key_{label.name}'
+        crypto_backend = cfg.get_crypto_params(hom).identifier_name
+        return f'glob_key_{crypto_backend}__{label.name}'
 
     @staticmethod
-    def get_own_secret_key_name() -> str:
-        return f'glob_sk_me'
+    def get_own_secret_key_name(hom: Homomorphism) -> str:
+        crypto_backend = cfg.get_crypto_params(hom).identifier_name
+        return f'glob_sk_{crypto_backend}__me'
 
     def requires_verification(self) -> bool:
         """ Returns true if the function corresponding to this circuit requires a zk proof verification for correctness """
@@ -253,10 +255,11 @@ class CircuitHelper:
         plain_idf = self._secret_input_name_factory.add_idf(param.idf.name, param.annotated_type.zkay_type.type_name)
         name = f'{self._in_name_factory.get_new_name(param.annotated_type.type_name)}_{param.idf.name}'
         cipher_idf = self._in_name_factory.add_idf(name, param.annotated_type.type_name)
-        self._ensure_encryption(insert_loc_stmt, plain_idf, Expression.me_expr(), param.annotated_type.homomorphism,
-                                cipher_idf, True, False)
+        self._ensure_encryption(insert_loc_stmt, plain_idf, Expression.me_expr(),
+                                param.annotated_type.type_name.homomorphism, cipher_idf, True, False)
 
-    def evaluate_expr_in_circuit(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
+    def evaluate_expr_in_circuit(self, expr: Expression, new_privacy: PrivacyLabelExpr,
+                                 homomorphism: Homomorphism) -> LocationExpr:
         """
         Evaluate private expression and return result as a fresh out variable.
 
@@ -269,7 +272,7 @@ class CircuitHelper:
         :return: Location expression which references the encrypted circuit result
         """
         with self.circ_indent_block(expr.code()):
-            return self._get_circuit_output_for_private_expression(expr, new_privacy)
+            return self._get_circuit_output_for_private_expression(expr, new_privacy, homomorphism)
 
     def evaluate_stmt_in_circuit(self, ast: Statement) -> AssignmentStatement:
         """
@@ -330,7 +333,7 @@ class CircuitHelper:
         for ret_arg in ret_args.elements:
             ret_arg.statement = astmt
         ret_arg_outs = [
-            self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr())
+            self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr(), Homomorphism.NON_HOMOMORPHIC)  # TODO
             for ret_param, ret_arg in zip(ret_params, ret_args.elements)
         ]
 
@@ -366,14 +369,15 @@ class CircuitHelper:
         :return: HybridArgumentIdf containing the requested key and an AssignmentStatement which assigns the key request to the idf location
         """
         idf = self._in_name_factory.add_idf(name, TypeName.key_type(hom))
-        pki = IdentifierExpr(cfg.get_contract_var_name(cfg.pki_contract_name))
+        pki = IdentifierExpr(cfg.get_contract_var_name(cfg.get_pki_contract_name(cfg.get_crypto_params(hom))))
         privacy_label_expr = get_privacy_expr_from_label(plabel)
         return idf, idf.get_loc_expr().assign(pki.call('getPk', [self._expr_trafo.visit(privacy_label_expr)]))
 
     def request_private_key(self, hom: Homomorphism) -> List[Statement]:
-        assert self._need_secret_key or any(p.annotated_type.is_cipher() for p in self.fct.parameters)
-        self._secret_input_name_factory.add_idf(self.get_own_secret_key_name(), TypeName.key_type(hom))
-        return [EnterPrivateKeyStatement()]
+        # TODO
+        # assert hom in self._need_secret_key or any(p.annotated_type.is_cipher() for p in self.fct.parameters)
+        self._secret_input_name_factory.add_idf(self.get_own_secret_key_name(hom), TypeName.key_type(hom))
+        return [EnterPrivateKeyStatement(hom)]
 
     # Circuit-side interface #
 
@@ -395,7 +399,8 @@ class CircuitHelper:
         :param expr: [SIDE EFFECT] expression which should be made available inside the circuit as an argument
         :return: HybridArgumentIdf which references the plaintext value of the newly added input
         """
-        privacy = Expression.me_expr() if expr.annotated_type.is_private() else Expression.all_expr()
+        privacy = expr.annotated_type.privacy_annotation.privacy_annotation_label() if expr.annotated_type.is_private() else Expression.all_expr()
+        homomorphism = expr.annotated_type.zkay_type.homomorphism
 
         expr_text = expr.code()
         input_expr = self._expr_trafo.visit(expr)
@@ -418,24 +423,30 @@ class CircuitHelper:
             t_suffix = f'_{expr.idf.name}'
 
         # Generate circuit inputs
-        if privacy.is_all_expr():
+        if privacy == Expression.all_expr():
             tname = f'{self._in_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
-            input_idf = self._in_name_factory.add_idf(tname, expr.annotated_type.type_name)
+            return_idf = input_idf = self._in_name_factory.add_idf(tname, expr.annotated_type.type_name)
             self._phi.append(CircComment(f'{input_idf.name} = {expr_text}'))
-            locally_decrypted_idf = input_idf
-        else:
+        elif privacy == Expression.me_expr() or homomorphism == Homomorphism.NON_HOMOMORPHIC:  # TODO: This breaks
             # Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
             tname = f'{self._secret_input_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
-            locally_decrypted_idf = self._secret_input_name_factory.add_idf(tname, expr.annotated_type.type_name)
-            cipher_t = TypeName.cipher_type(input_expr.annotated_type, input_expr.annotated_type.homomorphism)  # TODO?
+            return_idf = locally_decrypted_idf = self._secret_input_name_factory.add_idf(tname, expr.annotated_type.type_name)
+            cipher_t = TypeName.cipher_type(input_expr.annotated_type, expr.annotated_type.homomorphism)
             tname = f'{self._in_name_factory.get_new_name(cipher_t)}{t_suffix}'
             input_idf = self._in_name_factory.add_idf(tname, cipher_t, IdentifierExpr(locally_decrypted_idf))
+        else:
+            # Homomorphic state variables get moved into the circuit as-is, i.e. by including the ciphertext directly
+            # (there cannot be non-@me parameters, and @me cannot occur as a state variable)
+            cipher_t = TypeName.cipher_type(input_expr.annotated_type, expr.annotated_type.homomorphism)
+            tname = f'{self._in_name_factory.get_new_name(cipher_t)}{t_suffix}'
+            return_idf = input_idf = self._in_name_factory.add_idf(tname, cipher_t)
+            self._phi.append(CircComment(f'{input_idf.name} = {expr_text}'))
 
         # Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         # but also signals the offchain simulator to perform decryption if necessary
         expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
 
-        if not privacy.is_all_expr():
+        if privacy != Expression.all_expr() and homomorphism == Homomorphism.NON_HOMOMORPHIC:
             # Check if the secret plain input corresponds to the decrypted cipher value
             self._phi.append(CircComment(f'{locally_decrypted_idf} = dec({expr_text}) [{input_idf.name}]'))
             self._ensure_encryption(expr.statement, locally_decrypted_idf, Expression.me_expr(),
@@ -444,9 +455,9 @@ class CircuitHelper:
         # Cache circuit input for later reuse if possible
         if cfg.opt_cache_circuit_inputs and isinstance(expr, IdentifierExpr):
             assert expr.annotated_type.type_name.is_primitive_type()
-            self._remapper.remap(expr.target.idf, locally_decrypted_idf)
+            self._remapper.remap(expr.target.idf, return_idf)
 
-        return locally_decrypted_idf
+        return return_idf
 
     def get_remapped_idf_expr(self, idf: IdentifierExpr) -> LocationExpr:
         """
@@ -612,7 +623,8 @@ class CircuitHelper:
             for e_l, e_r in zip(lhs.elements, rhs.elements):
                 self._add_assign(e_l, e_r)
 
-    def _get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr) -> LocationExpr:
+    def _get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr,
+                                                   homomorphism: Homomorphism) -> LocationExpr:
         """
         Add evaluation of expr to the circuit and return the output HybridArgumentIdf corresponding to the evaluation result.
 
@@ -623,34 +635,38 @@ class CircuitHelper:
         :return: HybridArgumentIdf which references the circuit output containing the result of expr
         """
         is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
+        is_hom_comp = isinstance(expr, FunctionCallExpr) and isinstance(expr.func, BuiltinFunction) and expr.func.homomorphism != Homomorphism.NON_HOMOMORPHIC
+        if is_hom_comp:
+            expr.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type, homomorphism)
+
         if is_circ_val or expr.annotated_type.is_private() or expr.evaluate_privately:
-            plain_result_idf = self._evaluate_private_expression(expr)
+            priv_result_idf = self._evaluate_private_expression(expr)
         else:
             # For public expressions which should not be evaluated in private, only the result is moved into the circuit
-            plain_result_idf = self.add_to_circuit_inputs(expr)
-        private_expr = plain_result_idf.get_idf_expr()
+            priv_result_idf = self.add_to_circuit_inputs(expr)
+        private_expr = priv_result_idf.get_idf_expr()
 
         t_suffix = ''
         if isinstance(expr, IdentifierExpr) and not is_circ_val:
             t_suffix += f'_{expr.idf.name}'
 
-        if isinstance(new_privacy, AllExpr):
+        if isinstance(new_privacy, AllExpr) or expr.annotated_type.type_name.is_cipher():
             # If the result is public, add an equality constraint to ensure that the user supplied public output
             # is equal to the circuit evaluation result
             tname = f'{self._out_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
             new_out_param = self._out_name_factory.add_idf(tname, expr.annotated_type.type_name, private_expr)
-            self._phi.append(CircEqConstraint(plain_result_idf, new_out_param))
+            self._phi.append(CircEqConstraint(priv_result_idf, new_out_param))
             out_var = new_out_param.get_loc_expr().explicitly_converted(expr.annotated_type.type_name)
         else:
             # If the result is encrypted, add an encryption constraint to ensure that the user supplied encrypted output
             # is equal to the correctly encrypted circuit evaluation result
             new_privacy = self._get_canonical_privacy_label(expr.analysis, new_privacy)
             privacy_label_expr = get_privacy_expr_from_label(new_privacy)
-            cipher_t = TypeName.cipher_type(expr.annotated_type, expr.annotated_type.homomorphism)  # TODO?
+            cipher_t = TypeName.cipher_type(expr.annotated_type, homomorphism)
             tname = f'{self._out_name_factory.get_new_name(cipher_t)}{t_suffix}'
-            enc_expr = EncryptionExpression(private_expr, privacy_label_expr, expr.annotated_type.homomorphism)  # TODO?
+            enc_expr = EncryptionExpression(private_expr, privacy_label_expr, homomorphism)
             new_out_param = self._out_name_factory.add_idf(tname, cipher_t, enc_expr)
-            self._ensure_encryption(expr.statement, plain_result_idf, new_privacy, expr.annotated_type.homomorphism,
+            self._ensure_encryption(expr.statement, priv_result_idf, new_privacy, homomorphism,
                                     new_out_param, False, False)
             out_var = new_out_param.get_loc_expr()
 
@@ -718,8 +734,8 @@ class CircuitHelper:
             self._phi.append(CircEncConstraint(plain, rnd, pk, cipher, is_dec))
 
     def _require_secret_key(self, hom: Homomorphism) -> HybridArgumentIdf:
-        self._need_secret_key = True
-        return HybridArgumentIdf(self.get_own_secret_key_name(), TypeName.key_type(hom), HybridArgType.PRIV_CIRCUIT_VAL)
+        self._need_secret_key.add(hom)
+        return HybridArgumentIdf(self.get_own_secret_key_name(hom), TypeName.key_type(hom), HybridArgType.PRIV_CIRCUIT_VAL)
 
     def _require_public_key_for_label_at(self, stmt: Optional[Statement], privacy: PrivacyLabelExpr,
                                          hom: Homomorphism) -> HybridArgumentIdf:
@@ -737,15 +753,22 @@ class CircuitHelper:
         if privacy in self._static_owner_labels:
             # Statically known privacy -> keep track (all global keys will be requested only once)
             self._global_keys[privacy] = None
-            return HybridArgumentIdf(self.get_glob_key_name(privacy), TypeName.key_type(hom), HybridArgType.PUB_CIRCUIT_ARG)
+            return HybridArgumentIdf(self.get_glob_key_name(privacy, hom), TypeName.key_type(hom), HybridArgType.PUB_CIRCUIT_ARG)
 
         if stmt is None:
             raise ValueError('stmt cannot be None if privacy is not guaranteed to be statically known')
+
+        # Shitty bug fix, TODO
+        if not hasattr(stmt, 'used_keys'):
+            stmt.used_keys = {}
+        if privacy in stmt.used_keys:
+            return stmt.used_keys[privacy]
 
         # Dynamic privacy -> always request key on spot and add to local in args
         name = f'{self._in_name_factory.get_new_name(TypeName.key_type(hom))}_{privacy.name}'
         idf, get_key_stmt = self.request_public_key(privacy, hom, name)
         stmt.pre_statements.append(get_key_stmt)
+        stmt.used_keys[privacy] = idf
         return idf
 
     def _get_public_key_in_sender_field(self, stmt: Statement, cipher: HybridArgumentIdf,

@@ -24,6 +24,7 @@ def api(name: str, invoker: str = 'self') -> str:
     assert name in dir(ApiWrapper)
     return f'{invoker}.api.{name}'
 
+
 PRIV_VALUES_NAME = f'{cfg.reserved_name_prefix}priv'
 IS_EXTERNAL_CALL = f'{cfg.reserved_name_prefix}is_ext'
 
@@ -138,6 +139,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from typing import Dict, List, Tuple, Optional, Union, Any
 
         from zkay import my_logging
+        from zkay.zkay_ast.homomorphism import Homomorphism
         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
         from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, RequireException
         from zkay.transaction.int_casts import *
@@ -203,7 +205,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             while not isinstance(t, CipherText) and hasattr(t, 'value_type'):
                 t = t.value_type.type_name
             if isinstance(t, CipherText):
-                constr = f', {self._get_type_constr(t.plain_type.type_name)}, cipher=True'
+                if t.homomorphism == Homomorphism.NON_HOMOMORPHIC:
+                    constr = f', {self._get_type_constr(t.plain_type.type_name)}, cipher=True'
+                else:
+                    constr = f', {self._get_type_constr(t.plain_type.type_name)}, cipher=True, hom={t.homomorphism.code()}'
             else:
                 constr = f', {self._get_type_constr(t)}'
             sv_constr.append(f'self.state.decl("{svd.idf.name}"{constr})')
@@ -232,7 +237,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     @staticmethod
     def is_special_var(idf: Identifier):
-        return idf.name.startswith(cfg.reserved_name_prefix) or idf.name in ['msg', 'block', 'tx', '_tmp_key', 'now']
+        return (idf.name.startswith(cfg.reserved_name_prefix)
+                or idf.name.startswith('_tmp_key_')
+                or idf.name in ['msg', 'block', 'tx', 'now'])
 
     @staticmethod
     def get_priv_value(idf: str):
@@ -373,17 +380,20 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             enc_param_str = ''
             for arg in self.current_params:
                 if arg.annotated_type.is_cipher():
+                    assert isinstance(arg.annotated_type.type_name, CipherText)
+                    cipher: CipherText = arg.annotated_type.type_name
                     pname = self.visit(arg.idf)
                     plain_val = pname
-                    plain_t = arg.annotated_type.type_name.plain_type.type_name
+                    plain_t = cipher.plain_type.type_name
+                    hom_str = f', hom = {cipher.homomorphism.code()}' if cipher.homomorphism != Homomorphism.NON_HOMOMORPHIC else ''
                     if plain_t.is_signed_numeric:
                         plain_val = self.handle_cast(pname, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
-                    if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
+                    if cfg.is_symmetric_cipher(cipher.homomorphism):
                         my_pk = f'{api("get_my_pk")}()[0]'
-                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)})[0][:-1] + ({my_pk}, ))\n'
+                        enc_param_str += f'{pname} = CipherValue({api("enc")}({self.get_priv_value(arg.idf.name)}{hom_str})[0][:-1] + ({my_pk}, ))\n'
                     else:
-                        enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)})\n'
+                        enc_param_str += f'{pname}, {self.get_priv_value(f"{arg.idf.name}_R")} = {api("enc")}({self.get_priv_value(arg.idf.name)}{hom_str})\n'
 
             enc_param_comment_str = '\n# Encrypt parameters' if enc_param_str else ''
             enc_param_str = enc_param_str[:-1] if enc_param_str else ''
@@ -518,8 +528,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         if in_idf.corresponding_priv_expression is not None:
             plain_idf_name = self.get_priv_value(in_idf.corresponding_priv_expression.idf.name)
             constr = self._get_type_constr(in_idf.t.plain_type.type_name)
-            dec_call = f'{api("dec")}({self.visit(in_idf.get_loc_expr())}, {constr})'
-            if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
+            homomorphism = in_idf.t.homomorphism
+            hom_str = f', {homomorphism.code()}' if homomorphism != Homomorphism.NON_HOMOMORPHIC else ''
+            dec_call = f'{api("dec")}({self.visit(in_idf.get_loc_expr())}, {constr}{hom_str})'
+            if cfg.is_symmetric_cipher(homomorphism):
                 in_decrypt += f'\n{plain_idf_name}, _ = {dec_call}'
             else:
                 in_decrypt += f'\n{plain_idf_name}, {self.get_priv_value(f"{in_idf.name}_R")} = {dec_call}'
@@ -537,7 +549,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         out_val = out_idf.corresponding_priv_expression
         if isinstance(out_val, EncryptionExpression):
             cipher_loc = self.visit(out_idf.get_loc_expr())
-            if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
+            if cfg.is_symmetric_cipher(out_val.homomorphism):
                 s = cipher_loc
             else:
                 s = f'{cipher_loc}, {self.get_priv_value(f"{out_idf.name}_R")}'
@@ -548,7 +560,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             rhs = self.visit(out_val)
         if not out_idf.t.is_cipher():
             rhs = self.handle_cast(rhs, out_idf.t)
-        elif cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
+        elif cfg.is_symmetric_cipher(out_idf.t.homomorphism):
             my_pk = f'{api("get_my_pk")}()[0]'
             rhs += f'[0][:-1] + ({my_pk}, )'
             rhs = f'CipherValue({rhs})'
@@ -558,21 +570,23 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitEnterPrivateKeyStatement(self, ast: EnterPrivateKeyStatement):
         assert self.current_circ
-        return f'{PRIV_VALUES_NAME}["{self.current_circ.get_own_secret_key_name()}"] = {api("get_my_sk")}()'
+        key_var_name = self.current_circ.get_own_secret_key_name(ast.homomorphism)
+        return f'{PRIV_VALUES_NAME}["{key_var_name}"] = {api("get_my_sk")}()'
 
     def visitEncryptionExpression(self, ast: EncryptionExpression):
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())
+        hom_str = f', {ast.homomorphism.code()}' if ast.homomorphism != Homomorphism.NON_HOMOMORPHIC else ''
         plain = self.visit(ast.expr)
         if ast.expr.annotated_type.type_name.is_signed_numeric:
             plain = self.handle_cast(plain, UintTypeName(f'uint{ast.expr.annotated_type.type_name.elem_bitwidth}'))
-        return f'{api("enc")}({plain}, {priv_str})'
+        return f'{api("enc")}({plain}, {priv_str}{hom_str})'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
         if isinstance(ast.func, BuiltinFunction) and (ast.func.is_arithmetic() or ast.func.op == '~'):
             # For arithmetic operations, need to simulate finite integer semantics (since python has arbitrary precision ints)
             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
             res = super().visitFunctionCallExpr(ast)
-            if not t.is_literal:
+            if not t.is_literal and ast.func.homomorphism == Homomorphism.NON_HOMOMORPHIC:
                 # Use cast for correct overflow behavior according to type
                 res = self.handle_cast(res, t)
             return res
@@ -605,7 +619,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             return self.handle_cast(self.visit(ast.expr), ast.elem_type)
 
     def visitKeyLiteralExpr(self, ast: KeyLiteralExpr):
-        return f'PublicKeyValue({super().visitArrayLiteralExpr(ast)})'
+        return f'PublicKeyValue({super().visitArrayLiteralExpr(ast)}, hom={ast.annotated_type.homomorphism.code()})'
 
     def handle_cast(self, expr: str, t: TypeName) -> str:
         """Return python expr which corresponds to expr converted to type t."""
@@ -636,8 +650,10 @@ class PythonOffchainVisitor(PythonCodeVisitor):
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
         # Special identifiers
-        if ast.idf.name == f'{cfg.pki_contract_name}_inst' and not ast.is_lvalue():
-            return api('keystore')
+        pki_inst_names = [f'{cfg.get_pki_contract_name(crypto_params)}_inst' for crypto_params in cfg.all_crypto_params()]
+        if ast.idf.name in pki_inst_names and not ast.is_lvalue():
+            hom = [hom for hom in Homomorphism if ast.idf.name == f'{cfg.get_pki_contract_name(cfg.get_crypto_params(hom))}_inst'][0]  # TODO!
+            return f"{api('get_keystore')}({hom.code()})"
         elif ast.idf.name == cfg.field_prime_var_name:
             assert ast.is_rvalue()
             return f'{SCALAR_FIELD_NAME}'

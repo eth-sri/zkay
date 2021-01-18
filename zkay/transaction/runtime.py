@@ -2,6 +2,7 @@ from zkay.config import cfg
 from zkay.transaction.crypto.dummy_hom import DummyHomCrypto
 from zkay.transaction.crypto.ecdh_chaskey import EcdhChaskeyCrypto
 from zkay.transaction.crypto.paillier import PaillierCrypto
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface
 from zkay.transaction.blockchain import *
 from zkay.transaction.crypto.ecdh_aes import EcdhAesCrypto
@@ -10,7 +11,6 @@ from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
 from zkay.transaction.keystore import *
 from zkay.transaction.prover import *
-from zkay.zkay_ast.homomorphism import Homomorphism
 
 _crypto_classes = {
     'dummy': DummyCrypto,
@@ -71,19 +71,19 @@ class Runtime:
         return Runtime.__blockchain
 
     @staticmethod
-    def keystore(homomorphism: Homomorphism) -> ZkayKeystoreInterface:
+    def keystore(crypto_params: CryptoParams) -> ZkayKeystoreInterface:
         """Return object which implements ZkayKeystoreInterface for given homomorphism."""
-        crypto_backend = cfg.get_crypto_backend(homomorphism)
+        crypto_backend = crypto_params.crypto_name
         if crypto_backend not in Runtime.__keystore:
-            Runtime.__keystore[crypto_backend] = SimpleKeystore(Runtime.blockchain())
+            Runtime.__keystore[crypto_backend] = SimpleKeystore(Runtime.blockchain(), crypto_params)
         return Runtime.__keystore[crypto_backend]
 
     @staticmethod
-    def crypto(homomorphism: Homomorphism) -> ZkayCryptoInterface:
+    def crypto(crypto_params: CryptoParams) -> ZkayCryptoInterface:
         """Return object which implements ZkayCryptoInterface for given homomorphism."""
-        crypto_backend = cfg.get_crypto_backend(homomorphism)
+        crypto_backend = crypto_params.crypto_name
         if crypto_backend not in Runtime.__crypto:
-            Runtime.__crypto[crypto_backend] = _crypto_classes[crypto_backend](Runtime.keystore(homomorphism))
+            Runtime.__crypto[crypto_backend] = _crypto_classes[crypto_backend](Runtime.keystore(crypto_params))
         return Runtime.__crypto[crypto_backend]
 
     @staticmethod

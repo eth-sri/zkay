@@ -6,6 +6,7 @@ import re
 from typing import Optional
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import HybridArgumentIdf, CircuitHelper
+from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
 from zkay.config import cfg
@@ -278,7 +279,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
 
         The reclassified expression is evaluated in the circuit and its result is made available in solidity.
         """
-        return self.gen.evaluate_expr_in_circuit(ast.expr, ast.privacy.privacy_annotation_label())
+        return self.gen.evaluate_expr_in_circuit(ast.expr, ast.privacy.privacy_annotation_label(), ast.annotated_type.homomorphism)
 
     def visitBuiltinFunction(self, ast: BuiltinFunction):
         return ast
@@ -287,12 +288,14 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
         if isinstance(ast.func, BuiltinFunction):
             if ast.func.is_private:
                 """
-                Modified Rule (12) builtin functions with private operands are evaluated inside the circuit.
+                Modified Rule (12) builtin functions with private operands and homomorphic operations on ciphertexts
+                are evaluated inside the circuit.
 
                 A private expression on its own (like an IdentifierExpr referring to a private variable) is not enough to trigger a
                 boundary crossing (assignment of private variables is a public operation).
                 """
-                return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr())
+                privacy_label = ast.annotated_type.privacy_annotation.privacy_annotation_label()
+                return self.gen.evaluate_expr_in_circuit(ast, privacy_label, ast.func.homomorphism)
             else:
                 """
                 Rule (10) with additional short-circuit handling.
@@ -320,7 +323,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
             assert isinstance(ast.func.target, EnumDefinition)
             if ast.args[0].evaluate_privately:
-                return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr())
+                return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr(), Homomorphism.NON_HOMOMORPHIC)  # TODO: Casts of homomorphic values?
             else:
                 return self.visit_children(ast)
         else:
@@ -371,7 +374,7 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
         """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
         if ast.evaluate_privately:
-            return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr())
+            return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr(), Homomorphism.NON_HOMOMORPHIC)  # TODO: Casts of homomorphic values?
         else:
             return self.visit_children(ast)
 
@@ -417,7 +420,10 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """Rule (15), boundary crossing if analysis determined that it is """
-        if ast.expr.evaluate_privately:
+        if ast.annotated_type.homomorphism != Homomorphism.NON_HOMOMORPHIC:
+            # We need a homomorphic value -> make sure the correct encryption of the value is available
+            return self.gen.evaluate_expr_in_circuit(ast.expr, ast.privacy.privacy_annotation_label(), ast.annotated_type.homomorphism)
+        elif ast.expr.evaluate_privately:
             return self.visit(ast.expr)
         else:
             assert ast.expr.annotated_type.is_public()
@@ -437,6 +443,11 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             return replace_expr(ast, NumberLiteralExpr(t.value))
 
         if isinstance(ast.func, BuiltinFunction):
+            if ast.func.homomorphism != Homomorphism.NON_HOMOMORPHIC:
+                # To perform homomorphic operations, we require the recipient's public key
+                recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
+                ast.public_key = self.gen._require_public_key_for_label_at(ast.statement, recipient, ast.func.homomorphism)
+
             # Builtin functions are supported natively by the circuit
             return self.visit_children(ast)
 

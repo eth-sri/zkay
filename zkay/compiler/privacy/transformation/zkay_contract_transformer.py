@@ -177,7 +177,10 @@ class ZkayTransformer(AstTransformerVisitor):
         :param c: contract for which verification contracts should be imported
         :return: list of all constant state variable declarations for the pki contract + all the verification contracts
         """
-        contract_var_decls = [self.create_contract_variable(cfg.pki_contract_name)]
+        contract_var_decls = []
+        for crypto_params in cfg.all_crypto_params():  # TODO: Only used crypto backends?
+            contract_name = cfg.get_pki_contract_name(crypto_params)
+            contract_var_decls.append(self.create_contract_variable(contract_name))
 
         for f in c.constructor_definitions + c.function_definitions:
             if f.requires_verification_when_external and f.has_side_effects:
@@ -188,7 +191,8 @@ class ZkayTransformer(AstTransformerVisitor):
         return contract_var_decls
 
     @staticmethod
-    def create_circuit_helper(fct: ConstructorOrFunctionDefinition, global_owners: List[PrivacyLabelExpr],
+    def create_circuit_helper(fct: ConstructorOrFunctionDefinition,
+                              global_owners: List[PrivacyLabelExpr],
                               internal_circ: Optional[CircuitHelper] = None):
         """
         Create circuit helper for the given function.
@@ -202,7 +206,8 @@ class ZkayTransformer(AstTransformerVisitor):
         return CircuitHelper(fct, global_owners, ZkayExpressionTransformer, ZkayCircuitTransformer, internal_circ)
 
     def visitSourceUnit(self, ast: SourceUnit):
-        self.import_contract(cfg.pki_contract_name, ast)
+        for crypto_params in cfg.all_crypto_params():  # TODO: Only used crypto backends?
+            self.import_contract(cfg.get_pki_contract_name(crypto_params), ast)
 
         for c in ast.contracts:
             self.transform_contract(ast, c)
@@ -347,10 +352,10 @@ class ZkayTransformer(AstTransformerVisitor):
         offset = 0
         for s in circuit.output_idfs:
             deserialize_stmts.append(s.deserialize(cfg.zk_out_name, out_start_idx, offset))
-            if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
+            if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher(s.t.homomorphism):
                 # Assign sender field to user-encrypted values if necessary
-                sender_key = in_var.index(0)
-                cipher_payload_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).cipher_payload_len  # TODO
+                sender_key = in_var.index(0)  # TODO?
+                cipher_payload_len = cfg.get_crypto_params(s.t.homomorphism).cipher_payload_len
                 deserialize_stmts.append(s.get_loc_expr().index(cipher_payload_len).assign(sender_key))
             offset += s.t.size_in_uints
         if deserialize_stmts:
@@ -446,14 +451,15 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts = []
 
         if has_priv_args:
-            required_homs = set([p.annotated_type.homomorphism for p in original_params if p.annotated_type.is_cipher()])
+            required_homs = set([p.annotated_type.type_name.homomorphism for p in original_params if p.annotated_type.is_cipher()])
             for required_hom in required_homs:
                 ext_circuit._require_public_key_for_label_at(None, Expression.me_expr(), required_hom)
         if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
             # Make sure msg.sender's key pair is available in the circuit
-            assert any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) \
-                   or has_priv_args, "requires verification => both sender keys required"
-            stmts += ext_circuit.request_private_key(Homomorphism.NON_HOMOMORPHIC)  # TODO
+            # assert any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) \
+            #       or has_priv_args, "requires verification => both sender keys required"
+            if any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) or has_priv_args:
+                stmts += ext_circuit.request_private_key(Homomorphism.NON_HOMOMORPHIC)  # TODO
 
         # Verify that out parameter has correct size
         stmts += [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
@@ -478,25 +484,31 @@ class ZkayTransformer(AstTransformerVisitor):
                 (keys[0], keys[glob_me_key_index]) = (keys[glob_me_key_index], keys[0])
 
             # TODO
-            tmp_key_var = Identifier('_tmp_key')
-            key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type(Homomorphism.NON_HOMOMORPHIC)))
+            tmp_keys = {}
+            for hom in Homomorphism:
+                crypto_params = cfg.get_crypto_params(hom)
+                tmp_key_var = Identifier(f'_tmp_key_{crypto_params.identifier_name}')
+                key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type(hom)))
+                tmp_keys[hom] = tmp_key_var
             for key_owner in keys:
-                idf, assignment = ext_circuit.request_public_key(key_owner, Homomorphism.NON_HOMOMORPHIC, ext_circuit.get_glob_key_name(key_owner))
-                assignment.lhs = IdentifierExpr(tmp_key_var.clone())
-                key_req_stmts.append(assignment)
+                for hom in Homomorphism:  # TODO: Only used homomorphisms, also de-duplicate
+                    tmp_key_var = tmp_keys[hom]
+                    idf, assignment = ext_circuit.request_public_key(key_owner, hom, ext_circuit.get_glob_key_name(key_owner, hom))  # TODO
+                    assignment.lhs = IdentifierExpr(tmp_key_var.clone())
+                    key_req_stmts.append(assignment)
 
-                # Manually add to circuit inputs
-                key_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).key_len
-                key_req_stmts.append(in_arr_var.slice(offset, key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, key_len)))
-                offset += key_len
-                assert offset == ext_circuit.in_size
+                    # Manually add to circuit inputs
+                    key_len = cfg.get_crypto_params(hom).key_len
+                    key_req_stmts.append(in_arr_var.slice(offset, key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, key_len)))
+                    offset += key_len
+                    assert offset == ext_circuit.in_size
 
         # Check encrypted parameters
         param_stmts = []
         for p in original_params:
             """ * of T_e rule 8 """
             if p.annotated_type.is_cipher():
-                cipher_payload_len = cfg.get_crypto_params(p.annotated_type.homomorphism).cipher_payload_len
+                cipher_payload_len = cfg.get_crypto_params(p.annotated_type.type_name.homomorphism).cipher_payload_len
                 assign_stmt = in_arr_var.slice(offset, cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cipher_payload_len))
                 ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 
@@ -511,13 +523,14 @@ class ZkayTransformer(AstTransformerVisitor):
                 if p.annotated_type.is_cipher():
                     sender_key = in_arr_var.index(0)
                     idf = IdentifierExpr(p.idf.clone()).as_type(p.annotated_type.clone())
-                    cipher_payload_len = cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).cipher_payload_len  # TODO
+                    cipher_payload_len = cfg.get_crypto_params(p.annotated_type.homomorphism).cipher_payload_len
                     lit = ArrayLiteralExpr([idf.clone().index(i) for i in range(cipher_payload_len)] + [sender_key])
                     copy_stmts.append(VariableDeclarationStatement(VariableDeclaration([], p.annotated_type.clone(), p.idf.clone(), 'memory'), lit))
             if copy_stmts:
                 param_stmts += [Comment(), Comment('Copy from calldata to memory and set sender field')] + copy_stmts
 
-            assert glob_me_key_index != -1, "Symmetric cipher but did not request me key"
+            # TODO
+            # assert glob_me_key_index != -1, "Symmetric cipher but did not request me key"
 
         # Declare in array
         new_in_array_expr = NewExpr(AnnotatedTypeName(TypeName.dyn_uint_array()), [NumberLiteralExpr(ext_circuit.in_size_trans)])

@@ -68,11 +68,11 @@ class CipherValue(Value):
         if contents:
             content[:len(contents)] = contents[:]
         ret = super(CipherValue, cls).__new__(cls, content)
-        ret.cipher_payload_len = params.cipher_payload_len
+        ret.params = params
         return ret
 
     def __len__(self) -> int:
-        return self.cipher_payload_len
+        return self.params.cipher_payload_len
 
 
 class PrivateKeyValue(Value):

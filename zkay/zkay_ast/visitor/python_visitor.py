@@ -9,8 +9,9 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition, EnumTypeName, StructTypeName
+    EnumDefinition, EnumTypeName, StructTypeName, get_privacy_expr_from_label
 from zkay.config import cfg
+from zkay.zkay_ast.homomorphism import Homomorphism
 
 _kwords = {kw for kw in keyword.kwlist + ['self']}
 
@@ -136,7 +137,10 @@ class PythonCodeVisitor(CodeVisitor):
         elif isinstance(t, UserDefinedTypeName):
             return '{}'
         else:
-            return f'{self.visit(t)}()'
+            arg = ''
+            if hasattr(t, 'homomorphism') and t.homomorphism != Homomorphism.NON_HOMOMORPHIC:
+                arg = f'hom = {t.homomorphism.code()}'
+            return f'{self.visit(t)}({arg})'
 
     def handle_var_decl_expr(self, ast: VariableDeclarationStatement) -> str:
         """

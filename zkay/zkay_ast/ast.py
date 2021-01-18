@@ -840,7 +840,9 @@ class CircuitComputationStatement(CircuitDirectiveStatement):
 
 
 class EnterPrivateKeyStatement(CircuitDirectiveStatement):
-    pass
+    def __init__(self, homomorphism: Homomorphism):
+        super().__init__()
+        self.homomorphism = homomorphism
 
 
 class IfStatement(Statement):
@@ -1069,6 +1071,9 @@ class TypeName(AST):
 
     def is_key(self) -> bool:
         return isinstance(self, Key)
+
+    def is_randomness(self) -> bool:
+        return isinstance(self, Randomness)
 
     @property
     def is_numeric(self) -> bool:
@@ -1429,6 +1434,7 @@ class CipherText(Array):
         assert not plain_type.type_name.is_cipher()
         super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.get_crypto_params(homomorphism).cipher_len))
         self.plain_type = plain_type.clone()
+        self.plain_type.homomorphism = homomorphism  # Just for display purposes
         self.homomorphism = homomorphism
 
     @property
