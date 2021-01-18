@@ -14,7 +14,7 @@ Zkay is a research project and its implementation should **not** be considered s
 
 ## Prerequisites
 
-Zkay requires python version 3.7 or later to be installed. Additionally, install the following dependencies using your system's package manager:
+Zkay requires python version 3.8 or later to be installed. Additionally, install the following dependencies using your system's package manager:
 
 #### Debian/Ubuntu
 ```bash

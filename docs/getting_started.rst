@@ -32,7 +32,7 @@ You can then build and install zkay as follows:
 	pip3 install --no-binary zkay ./dist/zkay-*.tar.gz
 
 
-**Note**: zkay requires Python >= 3.7.
+**Note**: zkay requires Python >= 3.8.
 
 Usage
 --------------

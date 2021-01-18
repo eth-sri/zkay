@@ -86,7 +86,7 @@ setup(
     description='Zkay is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and non-interactive zero-knowledge (NIZK) proofs. The zkay package provides a toolchain for compiling, deploying and using zkay contracts.',
 
     # Dependencies
-    python_requires='>=3.7,<4',
+    python_requires='>=3.8,<4',
     install_requires=[
         'Cython>=0.29,<0.30',
         'web3[tester]>=v5.11,<v5.13',
