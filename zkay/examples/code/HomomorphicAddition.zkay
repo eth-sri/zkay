@@ -5,14 +5,17 @@ contract HomomorphicAddition {
 	final address owner;
 	uint@owner<+> a;
 	uint@owner<+> b;
+	uint@owner<+> sum;
+	uint@owner<+> diff;
 
-	constructor() public {
+	constructor(uint@me _a, uint@me _b) public {
 		owner = me;
-		a = 0;
-		b = 0;
+		a = _a;
+		b = _b;
 	}
 
-	function f() public{
-		uint@owner<+> x = a + b;
+	function f() public {
+		sum = a + b;
+		diff = a - b;
 	}
 }
