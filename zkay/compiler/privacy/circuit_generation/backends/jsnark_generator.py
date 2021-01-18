@@ -16,7 +16,8 @@ from zkay.compiler.privacy.proving_scheme.proving_scheme import VerifyingKey, G2
 from zkay.config import cfg, zk_print
 from zkay.utils.helpers import hash_file, hash_string
 from zkay.zkay_ast.ast import FunctionCallExpr, BuiltinFunction, IdentifierExpr, BooleanLiteralExpr, \
-    IndexExpr, NumberLiteralExpr, MemberAccessExpr, TypeName, indent, PrimitiveCastExpr, EnumDefinition, Expression
+    IndexExpr, MeExpr, NumberLiteralExpr, MemberAccessExpr, TypeName, indent, PrimitiveCastExpr, EnumDefinition, \
+    Expression
 from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.visitor import AstVisitor
 
@@ -58,7 +59,6 @@ class JsnarkVisitor(AstVisitor):
         return f'_{stmt.fct.name}();'
 
     def visitCircVarDecl(self, stmt: CircVarDecl):
-        assert stmt.lhs.t.size_in_uints == 1, "ERROR, circuit currently only supports operations on plain types which fit into 1 field"
         return f'decl("{stmt.lhs.name}", {self.visit(stmt.expr)});'
 
     def visitCircEqConstraint(self, stmt: CircEqConstraint):
@@ -67,20 +67,24 @@ class JsnarkVisitor(AstVisitor):
 
     def visitCircEncConstraint(self, stmt: CircEncConstraint):
         assert stmt.cipher.t.is_cipher()
-        assert stmt.pk.t == TypeName.key_type(Homomorphism.NON_HOMOMORPHIC)  # TODO
-        assert stmt.rnd.t == TypeName.rnd_type(Homomorphism.NON_HOMOMORPHIC)  # TODO
+        assert stmt.pk.t.is_key()
+        assert stmt.rnd.t.is_randomness()
+        assert stmt.cipher.t.homomorphism == stmt.pk.t.homomorphism == stmt.rnd.t.homomorphism
+        backend = cfg.get_crypto_backend(stmt.pk.t.homomorphism)
         if stmt.is_dec:
-            return f'checkDec("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+            return f'checkDec("{backend}", "{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
         else:
-            return f'checkEnc("{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
+            return f'checkEnc("{backend}", "{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
 
     def visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint):
         assert stmt.iv_cipher.t.is_cipher()
-        assert stmt.other_pk.t == TypeName.key_type(Homomorphism.NON_HOMOMORPHIC)  # TODO
+        assert stmt.other_pk.t.is_key()
+        assert stmt.iv_cipher.t.homomorphism == stmt.other_pk.t.homomorphism
+        backend = cfg.get_crypto_backend(stmt.other_pk.t.homomorphism)
         if stmt.is_dec:
-            return f'checkDec("{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
+            return f'checkSymmDec("{backend}", "{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
         else:
-            return f'checkEnc("{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
+            return f'checkSymmEnc("{backend}", "{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
 
     def visitCircGuardModification(self, stmt: CircGuardModification):
         if stmt.new_cond is None:
@@ -99,11 +103,18 @@ class JsnarkVisitor(AstVisitor):
             return f'val("{ast.value}", {t})'
 
     def visitIdentifierExpr(self, ast: IdentifierExpr):
-        return f'get("{ast.idf.name}")'
+        if isinstance(ast.idf, HybridArgumentIdf) and ast.idf.t.is_cipher():
+            return f'getCipher("{ast.idf.name}")'
+        else:
+            return f'get("{ast.idf.name}")'
 
     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
-        assert isinstance(ast.member, HybridArgumentIdf) and ast.member.t.size_in_uints == 1
-        return f'get("{ast.member.name}")'
+        assert isinstance(ast.member, HybridArgumentIdf)
+        if ast.member.t.is_cipher():
+            return f'getCipher("{ast.member.name}")'
+        else:
+            assert ast.member.t.size_in_uints == 1
+            return f'get("{ast.member.name}")'
 
     def visitIndexExpr(self, ast: IndexExpr):
         raise NotImplementedError()
@@ -119,8 +130,17 @@ class JsnarkVisitor(AstVisitor):
             op = ast.func.op
             op = '-' if op == 'sign-' else op
 
+            homomorphism = ast.func.homomorphism
+            if homomorphism == Homomorphism.NON_HOMOMORPHIC:
+                f_start = 'o_('
+            else:
+                crypto_backend = cfg.get_crypto_backend(homomorphism)
+                public_key_name = ast.public_key.name
+                f_start = f'o_hom("{crypto_backend}", "{public_key_name}", '
+                args = [f'HomomorphicInput.of({arg})' for arg in args]
+
             if op == 'ite':
-                fstr = "o_({}, '?', {}, ':', {})"
+                fstr = f"{f_start}{{}}, '?', {{}}, ':', {{}})"
             elif op == 'parenthesis':
                 fstr = '({})'
             elif op == 'sign+':
@@ -128,10 +148,10 @@ class JsnarkVisitor(AstVisitor):
             else:
                 o = f"'{op}'" if len(op) == 1 else f'"{op}"'
                 if len(args) == 1:
-                    fstr = f"o_({o}, {{}})"
+                    fstr = f"{f_start}{o}, {{}})"
                 else:
                     assert len(args) == 2
-                    fstr = f'o_({{}}, {o}, {{}})'
+                    fstr = f'{f_start}{{}}, {o}, {{}})'
 
             return fstr.format(*args)
         elif ast.is_cast and isinstance(ast.func.target, EnumDefinition):
@@ -155,13 +175,24 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
         input_init_stmts.append(f'addS("{sec_input.name}", {sec_input.t.size_in_uints}, {_get_t(sec_input.t)});')
 
     for pub_input in circuit.input_idfs:
-        if pub_input.t == TypeName.key_type(Homomorphism.NON_HOMOMORPHIC):  # TODO
-            input_init_stmts.append(f'addK("{pub_input.name}", {pub_input.t.size_in_uints});')
+        if pub_input.t.is_key():
+            backend = cfg.get_crypto_backend(pub_input.t.homomorphism)
+            input_init_stmts.append(f'addK("{backend}", "{pub_input.name}", {pub_input.t.size_in_uints});')
         else:
             input_init_stmts.append(f'addIn("{pub_input.name}", {pub_input.t.size_in_uints}, {_get_t(pub_input.t)});')
 
     for pub_output in circuit.output_idfs:
         input_init_stmts.append(f'addOut("{pub_output.name}", {pub_output.t.size_in_uints}, {_get_t(pub_output.t)});')
+
+    # Very TODO
+    sec_input_names = [sec_input.name for sec_input in circuit.sec_idfs]
+    for hom in Homomorphism:  # TODO: Fix, de-duplicate, also wtf
+        crypto_params = cfg.get_crypto_params(hom)
+        if crypto_params.is_symmetric_cipher() and circuit.get_own_secret_key_name(hom) in sec_input_names:
+            pk_name = circuit.get_glob_key_name(MeExpr(), hom)
+            sk_name = circuit.get_own_secret_key_name(hom)
+            input_init_stmts.append(
+                f'setKeyPair("{crypto_params.crypto_name}", "{pk_name}", "{sk_name}");')
 
     return input_init_stmts
 
@@ -175,6 +206,12 @@ class JsnarkGenerator(CircuitGenerator):
         output_dir = self._get_circuit_output_dir(circuit)
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
+
+        # Generate java code to add used crypto backends by calling addCryptoBackend
+        crypto_init_stmts = []
+        for params in cfg.all_crypto_params():
+            init_stmt = f'addCryptoBackend("{params.crypto_name}", "{params.crypto_name}", {params.key_bits});'
+            crypto_init_stmts.append(init_stmt)
 
         # Generate java code for all functions which are transitively called by the fct corresponding to this circuit
         # (outside private expressions)
@@ -195,7 +232,7 @@ class JsnarkGenerator(CircuitGenerator):
         constraints = JsnarkVisitor(circuit.phi).visitCircuit()
 
         # Inject the function definitions into the java template
-        code = jsnark.get_jsnark_circuit_class_str(circuit, fdefs, input_init_stmts + [''] + constraints)
+        code = jsnark.get_jsnark_circuit_class_str(circuit, crypto_init_stmts, fdefs, input_init_stmts + [''] + constraints)
 
         # Compute combined hash of the current jsnark interface jar and of the contents of the java file
         hashfile = os.path.join(output_dir, f'{cfg.jsnark_circuit_classname}.hash')

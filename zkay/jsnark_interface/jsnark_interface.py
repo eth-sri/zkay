@@ -49,13 +49,15 @@ def prepare_proof(circuit_dir: str, output_dir: str, serialized_args: List[int])
 
 _class_template_str = '' + '''\
 import zkay.ZkayCircuitBase;
+import zkay.HomomorphicInput;
 import static zkay.ZkayType.ZkUint;
 import static zkay.ZkayType.ZkInt;
 import static zkay.ZkayType.ZkBool;
 
 public class {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{
-        super("{circuit_name}", "{crypto_backend}", {key_bits}, {pub_in_size}, {pub_out_size}, {priv_in_size}, {use_input_hashing});
+        super("{circuit_name}", {pub_in_size}, {pub_out_size}, {priv_in_size}, {use_input_hashing});
+{crypto_init_stmts}
     }}
 {fdefs}
     @Override
@@ -73,11 +75,13 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 """Java circuit code template"""
 
 
-def get_jsnark_circuit_class_str(circuit: CircuitHelper, fdefs: List[str], circuit_statements: List[str]) -> str:
+def get_jsnark_circuit_class_str(circuit: CircuitHelper, crypto_init_stmts: List[str],
+                                 fdefs: List[str], circuit_statements: List[str]) -> str:
     """
     Inject circuit and input code into jsnark-wrapper skeleton.
 
     :param circuit: the abstract circuit to which this java code corresponds
+    :param fdefs: java code that calls addCryptoBackend for each used crypto backend
     :param fdefs: java function definition with circuit code for each transitively called function (public calls in this circuit's function)
     :param circuit_statements: the java code corresponding to this circuit
     :return: complete java file as string
@@ -87,9 +91,8 @@ def get_jsnark_circuit_class_str(circuit: CircuitHelper, fdefs: List[str], circu
         function_definitions = f'\n{function_definitions}\n'
 
     return _class_template_str.format(circuit_class_name=cfg.jsnark_circuit_classname,
-                                      crypto_backend=cfg.main_crypto_backend,  # TODO?
                                       circuit_name=circuit.get_verification_contract_name(),
-                                      key_bits=cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC).key_bits,  # TODO?
+                                      crypto_init_stmts=indent(indent('\n'.join(crypto_init_stmts))),
                                       pub_in_size=circuit.in_size_trans,
                                       pub_out_size=circuit.out_size_trans,
                                       priv_in_size=circuit.priv_in_size_trans,
