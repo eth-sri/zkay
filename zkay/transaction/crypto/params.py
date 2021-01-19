@@ -62,3 +62,7 @@ class CryptoParams:
     @property
     def cipher_chunk_size(self) -> int:
         return cryptoparams[self.crypto_name]['cipher_chunk_size']
+
+    @property
+    def enc_signed_as_unsigned(self) -> int:
+        return cryptoparams[self.crypto_name]['enc_signed_as_unsigned']

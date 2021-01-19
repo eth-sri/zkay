@@ -6,6 +6,7 @@ cryptoparams = {
         'symmetric': False,
         'rnd_bytes': 31,
         'rnd_chunk_size': 31,
+        'enc_signed_as_unsigned': True,
     },
 
     'dummy-hom': {
@@ -15,6 +16,7 @@ cryptoparams = {
         'symmetric': False,
         'rnd_bytes': 32,
         'rnd_chunk_size': 32,
+        'enc_signed_as_unsigned': False,
     },
 
     'rsa-oaep': {
@@ -24,6 +26,7 @@ cryptoparams = {
         'symmetric': False,
         'rnd_bytes': 32,
         'rnd_chunk_size': 16,
+        'enc_signed_as_unsigned': True,
     },
 
     'rsa-pkcs1.5': {
@@ -33,6 +36,7 @@ cryptoparams = {
         'symmetric': False,
         'rnd_bytes': 221,  # for 256 - 3 - plainbytes (32 byte plaintext, for now fixed)
         'rnd_chunk_size': 28,
+        'enc_signed_as_unsigned': True,
     },
 
     'ecdh-aes': {
@@ -42,6 +46,7 @@ cryptoparams = {
         'symmetric': True,
         'rnd_bytes': 0, # included in cipher text
         'rnd_chunk_size': 0,
+        'enc_signed_as_unsigned': True,
     },
 
     'ecdh-chaskey': {
@@ -51,6 +56,7 @@ cryptoparams = {
         'symmetric': True,
         'rnd_bytes': 0, # included in cipher text
         'rnd_chunk_size': 0,
+        'enc_signed_as_unsigned': True,
     },
 
     'paillier': {
@@ -60,5 +66,6 @@ cryptoparams = {
         'symmetric': False,
         'rnd_bytes': 320 // 8,  # random value mod n, thus same size as n
         'rnd_chunk_size': 120 // 8,  # LongElement.CHUNK_SIZE / sizeof(byte)
+        'enc_signed_as_unsigned': False,
     }
 }

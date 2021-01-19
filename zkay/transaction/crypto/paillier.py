@@ -70,6 +70,7 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
     def _enc(self, plain: int, _: int, target_pk: int) -> Tuple[List[int], List[int]]:
         n = target_pk
         n_sqr = n * n
+        plain = plain % n  # handle negative numbers
         while True:
             random = getrandbits(n.bit_length())
             if 0 < random < n and (gcd(random, n) == 1):
@@ -117,6 +118,10 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
 
         random = (c_pow_q_inv * w_1 + c_pow_p_inv * w_2) % n
         random_chunks = self.serialize_pk(random, self.params.rnd_bytes)
+
+        # Handle possible negative plaintexts
+        if plain > n // 2:
+            plain = plain - n
 
         return plain, random_chunks
 

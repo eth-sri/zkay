@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, ContextManager, Set
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper, HybridArgumentIdf
 from zkay.config import cfg
 from zkay.utils.multiline_formatter import MultiLineFormatter
-from zkay.zkay_ast.ast import ContractDefinition, SourceUnit, ConstructorOrFunctionDefinition, \
+from zkay.zkay_ast.ast import ContractDefinition, IntTypeName, SourceUnit, ConstructorOrFunctionDefinition, \
     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction, \
     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier, \
     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Array, \
@@ -577,8 +577,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         priv_str = 'msg.sender' if isinstance(ast.privacy, MeExpr) else self.visit(ast.privacy.clone())
         hom_str = f', {ast.homomorphism.code()}' if ast.homomorphism != Homomorphism.NON_HOMOMORPHIC else ''
         plain = self.visit(ast.expr)
-        if ast.expr.annotated_type.type_name.is_signed_numeric:
-            plain = self.handle_cast(plain, UintTypeName(f'uint{ast.expr.annotated_type.type_name.elem_bitwidth}'))
+        plain_t = ast.expr.annotated_type.type_name
+        crypto_params = cfg.get_crypto_params(ast.homomorphism)
+        if plain_t.is_signed_numeric:
+            if crypto_params.enc_signed_as_unsigned:
+                plain = self.handle_cast(plain, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
+            else:
+                plain = self.handle_cast(plain, IntTypeName(f'int{plain_t.elem_bitwidth}'))
         return f'{api("enc")}({plain}, {priv_str}{hom_str})'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):

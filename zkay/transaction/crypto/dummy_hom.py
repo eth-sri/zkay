@@ -23,12 +23,15 @@ class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
                        PrivateKeyValue(pk))
 
     def _enc(self, plain: int, _: int, target_pk: int):
+        plain = plain % bn128_scalar_field  # handle negative values
         cipher = (plain * target_pk + 1) % bn128_scalar_field
         return [cipher], list(RandomnessValue(params=self.params)[:])
 
     def _dec(self, cipher: Tuple[int, ...], sk: int) -> Tuple[int, List[int]]:
         key_inv = pow(sk, -1, bn128_scalar_field)
         plain = ((cipher[0] - 1) * key_inv) % bn128_scalar_field
+        if plain > bn128_scalar_field // 2:
+            plain = plain - bn128_scalar_field
         return plain, list(RandomnessValue(params=self.params)[:])
 
     def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[List[int], int]) -> List[int]:

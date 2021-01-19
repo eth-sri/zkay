@@ -3,11 +3,11 @@ pragma zkay >=0.2.0;
 contract HomomorphicNegation {
 
 	final address owner;
-	uint@owner<+> x;
+	int248@owner<+> x;
 
-	constructor() public {
+	constructor(int248@me _x) public {
 		owner = me;
-		x = 0;
+		x = _x;
 	}
 
 	function f() public{
