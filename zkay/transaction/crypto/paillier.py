@@ -143,6 +143,10 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
             result = (operands[0] * operands[1]) % n_sqr
         elif op == '-':
             result = (operands[0] * pow(operands[1], -1, n_sqr)) % n_sqr
+        elif op == '*' and isinstance(args[1], int):
+            result = pow(operands[0], operands[1], n_sqr)
+        elif op == '*' and isinstance(args[0], int):
+            result = pow(operands[1], operands[0], n_sqr)
         else:
             raise ValueError(f'Unsupported operation {op}')
 
