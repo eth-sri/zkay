@@ -134,7 +134,7 @@ class JsnarkVisitor(AstVisitor):
             if homomorphism == Homomorphism.NON_HOMOMORPHIC:
                 f_start = 'o_('
             else:
-                crypto_backend = cfg.get_crypto_backend(homomorphism)
+                crypto_backend = cfg.get_crypto_params(homomorphism).crypto_name
                 public_key_name = ast.public_key.name
                 f_start = f'o_hom("{crypto_backend}", "{public_key_name}", '
                 args = [f'HomomorphicInput.of({arg})' for arg in args]

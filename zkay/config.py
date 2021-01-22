@@ -28,7 +28,8 @@ class Config(UserConfig):
         # Internal values
 
         self._options_with_effect_on_circuit_output = [
-            'proving_scheme', 'snark_backend', 'main_crypto_backend',  # TODO
+            'proving_scheme', 'snark_backend',
+            'main_crypto_backend', 'addhom_crypto_backend',
             'opt_solc_optimizer_runs', 'opt_hash_threshold',
             'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs',
         ]

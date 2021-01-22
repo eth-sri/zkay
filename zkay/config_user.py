@@ -40,15 +40,20 @@ class UserConfig:
         self._snark_backend: str = 'jsnark'
         self._snark_backend_values = ['jsnark']
 
-        # TODO
+        # These only exist for the auto-generated help strings in __main__ and should not be used directly
+        self._main_crypto_backend = 'ecdh-aes'
         self._main_crypto_backend_values = ['dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier']
+        self._addhom_crypto_backend = 'paillier'
+        self._addhom_crypto_backend_values = [None, 'dummy-hom', 'paillier']
+
+        # This map of crypto backends / values is actually used
         self._crypto_backends: Dict[Homomorphism, str] = {
-            Homomorphism.NON_HOMOMORPHIC: 'ecdh-aes',
-            Homomorphism.ADDITIVE: 'paillier'
+            Homomorphism.NON_HOMOMORPHIC: self._main_crypto_backend,
+            Homomorphism.ADDITIVE: self._addhom_crypto_backend
         }
         self._crypto_backend_values: Dict[Homomorphism, List[str]] = {
-            Homomorphism.NON_HOMOMORPHIC: ['dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier'],
-            Homomorphism.ADDITIVE: ['dummy-hom', 'paillier']
+            Homomorphism.NON_HOMOMORPHIC: self._main_crypto_backend_values,
+            Homomorphism.ADDITIVE: self._addhom_crypto_backend_values
         }
 
         self._blockchain_backend: str = 'w3-eth-tester'
@@ -106,13 +111,13 @@ class UserConfig:
         """
         Main encryption backend to use.
 
-        Available Options: [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]
+        Available Options: [dummy, dummy-hom, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]
         """
-        return self.get_crypto_backend(Homomorphism.NON_HOMOMORPHIC)
+        return self._get_crypto_backend(Homomorphism.NON_HOMOMORPHIC)
 
     @main_crypto_backend.setter
     def main_crypto_backend(self, val: str):
-        self.set_crypto_backend(Homomorphism.NON_HOMOMORPHIC, val)
+        self._set_crypto_backend(Homomorphism.NON_HOMOMORPHIC, val)
 
     @property
     def addhom_crypto_backend(self) -> str:
@@ -121,27 +126,28 @@ class UserConfig:
 
         Available Options: [dummy-hom, paillier]
         """
-        return self.get_crypto_backend(Homomorphism.ADDITIVE)
+        return self._crypto_backends[Homomorphism.ADDITIVE]
 
     @addhom_crypto_backend.setter
     def addhom_crypto_backend(self, val: str):
-        self.set_crypto_backend(Homomorphism.ADDITIVE, val)
+        self._set_crypto_backend(Homomorphism.ADDITIVE, val)
 
-    def get_crypto_backend(self, hom: Homomorphism) -> str:
+    def _get_crypto_backend(self, hom: Homomorphism) -> str:
         return self._crypto_backends[hom]
 
-    def set_crypto_backend(self, hom: Homomorphism, val: str):
+    def _set_crypto_backend(self, hom: Homomorphism, val: str):
         _check_is_one_of(val, self._crypto_backend_values[hom])
         self._crypto_backends[hom] = val
 
     def get_crypto_params(self, hom: Homomorphism) -> CryptoParams:
-        return CryptoParams(self.get_crypto_backend(hom))
-
-    def all_crypto_backends(self) -> List[str]:
-        return list(dict.fromkeys([self.get_crypto_backend(hom) for hom in Homomorphism]))
+        backend_name = self._get_crypto_backend(hom)
+        if backend_name is None:
+            raise ValueError(f'No crypto backend set for homomorphism {hom.name}')
+        return CryptoParams(backend_name)
 
     def all_crypto_params(self) -> List[CryptoParams]:
-        return [CryptoParams(crypto_backend) for crypto_backend in self.all_crypto_backends()]
+        crypto_backends = list(dict.fromkeys([self._get_crypto_backend(hom) for hom in Homomorphism]))
+        return [CryptoParams(backend) for backend in crypto_backends if backend is not None]
 
     @property
     def blockchain_backend(self) -> str:

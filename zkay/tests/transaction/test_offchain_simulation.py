@@ -4,6 +4,7 @@ import shutil
 import sys
 import unittest
 from contextlib import nullcontext, contextmanager
+from typing import Optional
 
 from parameterized import parameterized_class
 
@@ -108,7 +109,7 @@ class TestOffchainBase(TestScenarios):
 
 
 @contextmanager
-def _mock_config(crypto: str, crypto_addhom: str, hash_opt, blockchain: str = 'w3-eth-tester'):
+def _mock_config(crypto: str, crypto_addhom: Optional[str], hash_opt, blockchain: str = 'w3-eth-tester'):
     old_c_nh, old_c_add = cfg.main_crypto_backend, cfg.addhom_crypto_backend
     old_h, old_b = cfg.should_use_hash, cfg.blockchain_backend
     cfg.main_crypto_backend = crypto
@@ -141,7 +142,7 @@ class TestOffchainWithHashing(TestOffchainBase):
 class TestOffchainEcdhChaskeyEnc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_ecdh_chaskey(self):
-        with _mock_config('ecdh-chaskey', 'dummy-hom', True):
+        with _mock_config('ecdh-chaskey', None, True):
             self.run_scenario(suffix='EcdhChaskey', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
@@ -149,7 +150,7 @@ class TestOffchainEcdhChaskeyEnc(TestOffchainBase):
 class TestOffchainEcdhAesEnc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_ecdh_aes(self):
-        with _mock_config('ecdh-aes', 'dummy-hom', True):
+        with _mock_config('ecdh-aes', None, True):
             self.run_scenario(suffix='EcdhAes', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
@@ -157,7 +158,7 @@ class TestOffchainEcdhAesEnc(TestOffchainBase):
 class TestOffchainRsaPkcs15Enc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_rsa_pkcs_15(self):
-        with _mock_config('rsa-pkcs1.5', 'dummy-hom', True):
+        with _mock_config('rsa-pkcs1.5', None, True):
             self.run_scenario(suffix='RsaPkcs15', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
@@ -165,7 +166,7 @@ class TestOffchainRsaPkcs15Enc(TestOffchainBase):
 class TestOffchainRsaOaepEnc(TestOffchainBase):
     @unittest.skipIf(True or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_rsa_oaep(self):
-        with _mock_config('rsa-oaep', 'dummy-hom', True):
+        with _mock_config('rsa-oaep', None, True):
             self.run_scenario(suffix='RsaOaep', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
 
 
@@ -173,5 +174,5 @@ class TestOffchainRsaOaepEnc(TestOffchainBase):
 class TestOffchainPaillierEnc(TestOffchainBase):
     @unittest.skipIf(False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_paillier(self):
-        with _mock_config('paillier', 'dummy-hom', True):
+        with _mock_config('paillier', None, True):
             self.run_scenario(suffix='Paillier', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
