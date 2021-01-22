@@ -37,6 +37,8 @@ def run_command(cmd: List[str], cwd=None, allow_verbose: bool = False) -> Tuple[
         cmd = get_command(cmd)
         msg = f"Non-zero exit status {process.returncode} for command:\n{cwd}: $ {cmd}\n\n{output}\n{error}"
         raise subprocess.SubprocessError(msg)
+    elif cfg.verbosity >= 2:
+        print(f'Ran command {get_command(cmd)}:\n\n{output}\n{error}')
 
     return output, error
 
