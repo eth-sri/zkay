@@ -34,13 +34,11 @@ RUN apt-get update && apt-get install -y \
 		wget \
         zlib1g-dev \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN wget https://www.python.org/ftp/python/{$PYTHON_VERSION}/Python-{$PYTHON_VERSION}.tgz \
-    && tar xzf Python-{$PYTHON_VERSION}.tgz \
-    && cd Python-{$PYTHON_VERSION} \
+RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz \
+    && tar xzf Python-$PYTHON_VERSION.tgz \
+    && cd Python-$PYTHON_VERSION \
     && ./configure --enable-optimizations \
     && make install
-
-
 
 ###################
 # ZKAY (OPTIONAL) #
