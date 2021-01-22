@@ -40,9 +40,7 @@ RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSIO
     && cd Python-$PYTHON_VERSION \
     && ./configure --enable-optimizations \
     && make install
-RUN apt-get update && apt-get install -y \
-		python-virtualenv \
-	&& apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN pip3 install virtualenv
 
 ###################
 # ZKAY (OPTIONAL) #
