@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
 		wget \
         zlib1g-dev \
+		libffi-dev \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz \
     && tar xzf Python-$PYTHON_VERSION.tgz \
