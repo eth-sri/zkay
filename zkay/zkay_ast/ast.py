@@ -448,9 +448,7 @@ class BuiltinFunction(Expression):
             # Can have more public arguments, but not fewer (hom.public_args[i] implies public_args[i])
             args_match = [(not h) or a for a, h in zip(public_args, hom.public_args)]
             if self.op == hom.op and all(args_match):
-                target_type = AnnotatedTypeName(first_inaccessible_type.type_name,
-                                                first_inaccessible_type.privacy_annotation,
-                                                hom.homomorphism)
+                target_type = first_inaccessible_type.with_homomorphism(hom.homomorphism)
                 return HomomorphicBuiltinFunction(target_type, hom.public_args)
         else:
             return None
@@ -1662,6 +1660,9 @@ class AnnotatedTypeName(AST):
 
     def is_cipher(self) -> bool:
         return isinstance(self.type_name, CipherText)
+
+    def with_homomorphism(self, hom: Homomorphism):
+        return AnnotatedTypeName(self.type_name, self.privacy_annotation, hom)
 
     @staticmethod
     def uint_all():

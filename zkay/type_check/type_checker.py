@@ -33,8 +33,7 @@ class TypeCheckVisitor(AstVisitor):
 
         if not instance and allow_rehom:
             require_rehom = True
-            expected_matching_hom = AnnotatedTypeName(expected_type.type_name, expected_type.privacy_annotation,
-                                                      rhs.annotated_type.homomorphism)
+            expected_matching_hom = expected_type.with_homomorphism(rhs.annotated_type.homomorphism)
             instance = rhs.instanceof(expected_matching_hom)
 
         if not instance:
@@ -108,7 +107,8 @@ class TypeCheckVisitor(AstVisitor):
             return
 
         all_args_all_or_me = all(map(lambda x: x.annotated_type.is_accessible(ast.analysis), ast.args))
-        if all_args_all_or_me:
+        is_public_ite = func.is_ite() and ast.args[0].annotated_type.is_public()
+        if all_args_all_or_me or is_public_ite:
             self.handle_unhom_builtin_function_call(ast, func)
         else:
             self.handle_homomorphic_builtin_function_call(ast, func)
@@ -129,10 +129,13 @@ class TypeCheckVisitor(AstVisitor):
                 func.is_private = True
                 a = res_t.annotate(Expression.me_expr())
             else:
-                p = ast.args[1].annotated_type.combined_privacy(ast.analysis, ast.args[2].annotated_type)
-                a = res_t.annotate(p)
-            ast.args[1] = self.get_rhs(ast.args[1], a)
-            ast.args[2] = self.get_rhs(ast.args[2], a)
+                hom = self.combine_homomorphism(ast.args[1], ast.args[2])
+                true_type = ast.args[1].annotated_type.with_homomorphism(hom)
+                false_type = ast.args[2].annotated_type.with_homomorphism(hom)
+                p = true_type.combined_privacy(ast.analysis, false_type)
+                a = res_t.annotate(p).with_homomorphism(hom)
+            ast.args[1] = self.get_rhs(ast.args[1], a, allow_rehom=True)
+            ast.args[2] = self.get_rhs(ast.args[2], a, allow_rehom=True)
 
             ast.annotated_type = a
             return
@@ -252,7 +255,30 @@ class TypeCheckVisitor(AstVisitor):
         #       ast.instanceof(AnnotatedTypeName(ast.annotated_type.type_name, Expression.me_expr()))
 
     @staticmethod
-    def try_rehom(rhs, expected_type):
+    def combine_homomorphism(lhs: Expression, rhs: Expression) -> Homomorphism:
+        if lhs.annotated_type.homomorphism == rhs.annotated_type.homomorphism:
+            return lhs.annotated_type.homomorphism
+        elif TypeCheckVisitor.can_rehom(lhs):
+            return rhs.annotated_type.homomorphism
+        else:
+            return lhs.annotated_type.homomorphism
+
+    @staticmethod
+    def can_rehom(ast: Expression) -> bool:
+        if ast.annotated_type.is_accessible(ast.analysis):
+            return True
+        if isinstance(ast, ReclassifyExpr):
+            return True
+        if isinstance(ast, PrimitiveCastExpr):
+            return TypeCheckVisitor.can_rehom(ast.expr)
+        if isinstance(ast, FunctionCallExpr) and isinstance(ast.func, BuiltinFunction) and ast.func.is_ite() \
+                and ast.args[0].annotated_type.is_public():
+            return TypeCheckVisitor.can_rehom(ast.args[1]) and TypeCheckVisitor.can_rehom(ast.args[2])
+
+        return False
+
+    @staticmethod
+    def try_rehom(rhs: Expression, expected_type: AnnotatedTypeName):
         if rhs.annotated_type.is_public():
             raise ValueError('Cannot change the homomorphism of a public value')
 
@@ -260,17 +286,26 @@ class TypeCheckVisitor(AstVisitor):
             # The value is @me, so we can just insert a ReclassifyExpr to change
             # the homomorphism of this value, just like we do for public values.
             return TypeCheckVisitor.make_rehom(rhs, expected_type)
-        elif isinstance(rhs, ReclassifyExpr) and not isinstance(rhs, RehomExpr):
+
+        if isinstance(rhs, ReclassifyExpr) and not isinstance(rhs, RehomExpr):
             # rhs is a valid ReclassifyExpr, i.e. the argument is public or @me-private
             # To create an expression with the correct homomorphism,
             # just change the ReclassifyExpr's output homomorphism
             rhs.homomorphism = expected_type.homomorphism
-            rhs.annotated_type = AnnotatedTypeName(rhs.annotated_type.type_name,
-                                                   rhs.annotated_type.privacy_annotation,
-                                                   expected_type.homomorphism)
-            return rhs
+        elif isinstance(rhs, PrimitiveCastExpr):
+            # Ignore primitive cast & recurse
+            rhs.expr = TypeCheckVisitor.try_rehom(rhs.expr, expected_type)
+        elif isinstance(rhs, FunctionCallExpr) and isinstance(rhs.func, BuiltinFunction) and rhs.func.is_ite() \
+                and rhs.args[0].annotated_type.is_public():
+            # Argument is public_cond ? true_val : false_val. Try to rehom both true_val and false_val
+            rhs.args[1] = TypeCheckVisitor.try_rehom(rhs.args[1], expected_type)
+            rhs.args[2] = TypeCheckVisitor.try_rehom(rhs.args[2], expected_type)
         else:
             raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
+
+        # Rehom worked without throwing, change annotated_type and return
+        rhs.annotated_type = rhs.annotated_type.with_homomorphism(expected_type.homomorphism)
+        return rhs
 
     @staticmethod
     def make_rehom(expr: Expression, expected_type: AnnotatedTypeName):
