@@ -323,7 +323,8 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
             """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
             assert isinstance(ast.func.target, EnumDefinition)
             if ast.args[0].evaluate_privately:
-                return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr(), Homomorphism.NON_HOMOMORPHIC)  # TODO: Casts of homomorphic values?
+                privacy_label = ast.annotated_type.privacy_annotation.privacy_annotation_label()
+                return self.gen.evaluate_expr_in_circuit(ast, privacy_label, ast.annotated_type.homomorphism)
             else:
                 return self.visit_children(ast)
         else:
@@ -374,7 +375,8 @@ class ZkayExpressionTransformer(AstTransformerVisitor):
     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
         """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
         if ast.evaluate_privately:
-            return self.gen.evaluate_expr_in_circuit(ast, Expression.me_expr(), Homomorphism.NON_HOMOMORPHIC)  # TODO: Casts of homomorphic values?
+            privacy_label = ast.annotated_type.privacy_annotation.privacy_annotation_label()
+            return self.gen.evaluate_expr_in_circuit(ast, privacy_label, ast.annotated_type.homomorphism)
         else:
             return self.visit_children(ast)
 
@@ -420,9 +422,12 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
 
     def visitReclassifyExpr(self, ast: ReclassifyExpr):
         """Rule (15), boundary crossing if analysis determined that it is """
-        if ast.annotated_type.homomorphism != Homomorphism.NON_HOMOMORPHIC:
-            # We need a homomorphic value -> make sure the correct encryption of the value is available
-            return self.gen.evaluate_expr_in_circuit(ast.expr, ast.privacy.privacy_annotation_label(), ast.annotated_type.homomorphism)
+        if ast.annotated_type.is_cipher():
+            # We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
+            orig_type = ast.annotated_type.zkay_type
+            orig_privacy = orig_type.privacy_annotation.privacy_annotation_label()
+            orig_homomorphism = orig_type.homomorphism
+            return self.gen.evaluate_expr_in_circuit(ast.expr, orig_privacy, orig_homomorphism)
         elif ast.expr.evaluate_privately:
             return self.visit(ast.expr)
         else:
@@ -445,9 +450,13 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
         if isinstance(ast.func, BuiltinFunction):
             if ast.func.homomorphism != Homomorphism.NON_HOMOMORPHIC:
                 # To perform homomorphic operations, we require the recipient's public key
-                recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
                 crypto_params = cfg.get_crypto_params(ast.func.homomorphism)
+                recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
                 ast.public_key = self.gen._require_public_key_for_label_at(ast.statement, recipient, crypto_params)
+                # We require all non-public arguments to be present as ciphertexts
+                for arg in ast.args:
+                    if arg.annotated_type.is_private():
+                        arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type, ast.func.homomorphism)
 
             # Builtin functions are supported natively by the circuit
             return self.visit_children(ast)

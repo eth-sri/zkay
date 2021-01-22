@@ -460,7 +460,8 @@ class CircuitHelper:
 
         # Cache circuit input for later reuse if possible
         if cfg.opt_cache_circuit_inputs and isinstance(expr, IdentifierExpr):
-            assert expr.annotated_type.type_name.is_primitive_type()
+            # TODO: Check if this makes sense
+            # assert expr.annotated_type.type_name.is_primitive_type()
             self._remapper.remap(expr.target.idf, return_idf)
 
         return return_idf
