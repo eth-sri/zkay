@@ -1,5 +1,6 @@
 FROM debian:10
 ARG INSTALL_ZKAY=0
+ARG PYTHON_VERSION=3.8.7
 
 #############
 # LIBSNARK #
@@ -28,9 +29,17 @@ RUN apt-get update && apt-get install -y \
 ##########
 # PYTHON #
 ##########
+# recent python versions need to be built from source
 RUN apt-get update && apt-get install -y \
-		python3-pip \
+		wget \
+        zlib1g-dev \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN wget https://www.python.org/ftp/python/{$PYTHON_VERSION}/Python-{$PYTHON_VERSION}.tgz \
+    && tar xzf Python-{$PYTHON_VERSION}.tgz \
+    && cd Python-{$PYTHON_VERSION} \
+    && ./configure --enable-optimizations \
+    && make install
+
 
 
 ###################
