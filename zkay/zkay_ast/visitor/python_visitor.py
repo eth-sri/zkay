@@ -138,8 +138,8 @@ class PythonCodeVisitor(CodeVisitor):
             return '{}'
         else:
             arg = ''
-            if hasattr(t, 'homomorphism') and t.homomorphism != Homomorphism.NON_HOMOMORPHIC:
-                arg = f'hom = {t.homomorphism.code()}'
+            if hasattr(t, 'crypto_params'):
+                arg = f'crypto_backend="{t.crypto_params.crypto_name}"'
             return f'{self.visit(t)}({arg})'
 
     def handle_var_decl_expr(self, ast: VariableDeclarationStatement) -> str:
@@ -225,8 +225,8 @@ class PythonCodeVisitor(CodeVisitor):
                 target_address = ast.annotated_type.zkay_type.privacy_annotation
                 target_expr = get_privacy_expr_from_label(target_address.privacy_annotation_label())
                 target_code = self.visit(target_expr.clone())
-                # TODO: Is this legal in non-offchain?
-                fstr = f"self.api.do_homomorphic_op('{ast.func.op}', {homomorphism.code()}, {target_code}{', {}' * ast.func.arity()})"
+                crypto_backend = cfg.get_crypto_params(homomorphism).crypto_name
+                fstr = f"self.api.do_homomorphic_op('{ast.func.op}', '{crypto_backend}', {target_code}{', {}' * ast.func.arity()})"
 
             return fstr.format(*args)
         else:

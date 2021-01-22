@@ -446,7 +446,8 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             if ast.func.homomorphism != Homomorphism.NON_HOMOMORPHIC:
                 # To perform homomorphic operations, we require the recipient's public key
                 recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
-                ast.public_key = self.gen._require_public_key_for_label_at(ast.statement, recipient, ast.func.homomorphism)
+                crypto_params = cfg.get_crypto_params(ast.func.homomorphism)
+                ast.public_key = self.gen._require_public_key_for_label_at(ast.statement, recipient, crypto_params)
 
             # Builtin functions are supported natively by the circuit
             return self.visit_children(ast)

@@ -2,6 +2,7 @@ import inspect
 from enum import Enum
 from typing import TypeVar
 
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.zkay_ast.ast import AST, Expression, Statement, UserDefinedTypeName
 from zkay.zkay_ast.pointers.parent_setter import set_parents
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers
@@ -156,7 +157,7 @@ class DeepCopyVisitor(AstVisitor):
     def copy_field(self, field):
         if field is None:
             return None
-        elif isinstance(field, str) or isinstance(field, int) or isinstance(field, bool) or isinstance(field, Enum):
+        elif isinstance(field, str) or isinstance(field, int) or isinstance(field, bool) or isinstance(field, Enum) or isinstance(field, CryptoParams):
             return field
         elif isinstance(field, list):
             return [self.copy_field(e) for e in field]

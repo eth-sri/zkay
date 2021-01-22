@@ -69,8 +69,8 @@ class JsnarkVisitor(AstVisitor):
         assert stmt.cipher.t.is_cipher()
         assert stmt.pk.t.is_key()
         assert stmt.rnd.t.is_randomness()
-        assert stmt.cipher.t.homomorphism == stmt.pk.t.homomorphism == stmt.rnd.t.homomorphism
-        backend = cfg.get_crypto_backend(stmt.pk.t.homomorphism)
+        assert stmt.cipher.t.crypto_params == stmt.pk.t.crypto_params == stmt.rnd.t.crypto_params
+        backend = stmt.pk.t.crypto_params.crypto_name
         if stmt.is_dec:
             return f'checkDec("{backend}", "{stmt.plain.name}", "{stmt.pk.name}", "{stmt.rnd.name}", "{stmt.cipher.name}");'
         else:
@@ -79,8 +79,8 @@ class JsnarkVisitor(AstVisitor):
     def visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint):
         assert stmt.iv_cipher.t.is_cipher()
         assert stmt.other_pk.t.is_key()
-        assert stmt.iv_cipher.t.homomorphism == stmt.other_pk.t.homomorphism
-        backend = cfg.get_crypto_backend(stmt.other_pk.t.homomorphism)
+        assert stmt.iv_cipher.t.crypto_params == stmt.other_pk.t.crypto_params
+        backend = stmt.other_pk.t.crypto_params.crypto_name
         if stmt.is_dec:
             return f'checkSymmDec("{backend}", "{stmt.plain.name}", "{stmt.other_pk.name}", "{stmt.iv_cipher.name}");'
         else:
@@ -176,7 +176,7 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
 
     for pub_input in circuit.input_idfs:
         if pub_input.t.is_key():
-            backend = cfg.get_crypto_backend(pub_input.t.homomorphism)
+            backend = pub_input.t.crypto_params.crypto_name
             input_init_stmts.append(f'addK("{backend}", "{pub_input.name}", {pub_input.t.size_in_uints});')
         else:
             input_init_stmts.append(f'addIn("{pub_input.name}", {pub_input.t.size_in_uints}, {_get_t(pub_input.t)});')
@@ -184,15 +184,13 @@ def add_function_circuit_arguments(circuit: CircuitHelper):
     for pub_output in circuit.output_idfs:
         input_init_stmts.append(f'addOut("{pub_output.name}", {pub_output.t.size_in_uints}, {_get_t(pub_output.t)});')
 
-    # Very TODO
     sec_input_names = [sec_input.name for sec_input in circuit.sec_idfs]
-    for hom in Homomorphism:  # TODO: Fix, de-duplicate, also wtf
-        crypto_params = cfg.get_crypto_params(hom)
-        if crypto_params.is_symmetric_cipher() and circuit.get_own_secret_key_name(hom) in sec_input_names:
-            pk_name = circuit.get_glob_key_name(MeExpr(), hom)
-            sk_name = circuit.get_own_secret_key_name(hom)
-            input_init_stmts.append(
-                f'setKeyPair("{crypto_params.crypto_name}", "{pk_name}", "{sk_name}");')
+    for crypto_params in cfg.all_crypto_params():
+        pk_name = circuit.get_glob_key_name(MeExpr(), crypto_params)
+        sk_name = circuit.get_own_secret_key_name(crypto_params)
+        if crypto_params.is_symmetric_cipher() and sk_name in sec_input_names:
+            assert pk_name in [pub_input.name for pub_input in circuit.input_idfs]
+            input_init_stmts.append(f'setKeyPair("{crypto_params.crypto_name}", "{pk_name}", "{sk_name}");')
 
     return input_init_stmts
 

@@ -1,7 +1,7 @@
 """
 This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits
 """
-
+from collections import OrderedDict
 from typing import Dict, Optional, List, Tuple
 
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
@@ -352,10 +352,10 @@ class ZkayTransformer(AstTransformerVisitor):
         offset = 0
         for s in circuit.output_idfs:
             deserialize_stmts.append(s.deserialize(cfg.zk_out_name, out_start_idx, offset))
-            if isinstance(s.t, CipherText) and cfg.is_symmetric_cipher(s.t.homomorphism):
+            if isinstance(s.t, CipherText) and s.t.crypto_params.is_symmetric_cipher():
                 # Assign sender field to user-encrypted values if necessary
                 sender_key = in_var.index(0)  # TODO?
-                cipher_payload_len = cfg.get_crypto_params(s.t.homomorphism).cipher_payload_len
+                cipher_payload_len = s.t.crypto_params.cipher_payload_len
                 deserialize_stmts.append(s.get_loc_expr().index(cipher_payload_len).assign(sender_key))
             offset += s.t.size_in_uints
         if deserialize_stmts:
@@ -447,19 +447,18 @@ class ZkayTransformer(AstTransformerVisitor):
         :param original_params: list of transformed function parameters without additional parameters added due to transformation
         :return: body with wrapper code
         """
-        has_priv_args = any([p.annotated_type.is_cipher() for p in original_params])
+        priv_args = [p for p in original_params if p.annotated_type.is_cipher()]
+        args_backends = OrderedDict.fromkeys([p.annotated_type.type_name.crypto_params for p in priv_args])
         stmts = []
 
-        if has_priv_args:
-            required_homs = set([p.annotated_type.type_name.homomorphism for p in original_params if p.annotated_type.is_cipher()])
-            for required_hom in required_homs:
-                ext_circuit._require_public_key_for_label_at(None, Expression.me_expr(), required_hom)
-        if cfg.is_symmetric_cipher(Homomorphism.NON_HOMOMORPHIC):  # TODO
-            # Make sure msg.sender's key pair is available in the circuit
-            # assert any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) \
-            #       or has_priv_args, "requires verification => both sender keys required"
-            if any(isinstance(k, MeExpr) for k in ext_circuit.requested_global_keys) or has_priv_args:
-                stmts += ext_circuit.request_private_key(Homomorphism.NON_HOMOMORPHIC)  # TODO
+        for crypto_params in args_backends:
+            # If there are any private arguments with homomorphism 'hom', we need the public key for that crypto backend
+            ext_circuit._require_public_key_for_label_at(None, Expression.me_expr(), crypto_params)
+        for crypto_params in cfg.all_crypto_params():
+            if crypto_params.is_symmetric_cipher():
+                if (MeExpr(), crypto_params) in ext_circuit.requested_global_keys or crypto_params in args_backends:
+                    # Make sure msg.sender's key pair is available in the circuit
+                    stmts += ext_circuit.request_private_key(crypto_params)
 
         # Verify that out parameter has correct size
         stmts += [RequireStatement(IdentifierExpr(cfg.zk_out_name).dot('length').binop('==', NumberLiteralExpr(ext_circuit.out_size_trans)))]
@@ -483,32 +482,29 @@ class ZkayTransformer(AstTransformerVisitor):
             if glob_me_key_index != -1:
                 (keys[0], keys[glob_me_key_index]) = (keys[glob_me_key_index], keys[0])
 
-            # TODO
             tmp_keys = {}
-            for hom in Homomorphism:
-                crypto_params = cfg.get_crypto_params(hom)
+            for crypto_params in cfg.all_crypto_params():  # TODO: Only used crypto backends
                 tmp_key_var = Identifier(f'_tmp_key_{crypto_params.identifier_name}')
-                key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type(hom)))
-                tmp_keys[hom] = tmp_key_var
-            for key_owner in keys:
-                for hom in Homomorphism:  # TODO: Only used homomorphisms, also de-duplicate
-                    tmp_key_var = tmp_keys[hom]
-                    idf, assignment = ext_circuit.request_public_key(key_owner, hom, ext_circuit.get_glob_key_name(key_owner, hom))  # TODO
-                    assignment.lhs = IdentifierExpr(tmp_key_var.clone())
-                    key_req_stmts.append(assignment)
+                key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type(crypto_params)))
+                tmp_keys[crypto_params] = tmp_key_var
+            for (key_owner, crypto_params) in keys:
+                tmp_key_var = tmp_keys[crypto_params]
+                idf, assignment = ext_circuit.request_public_key(crypto_params, key_owner, ext_circuit.get_glob_key_name(key_owner, crypto_params))
+                assignment.lhs = IdentifierExpr(tmp_key_var.clone())
+                key_req_stmts.append(assignment)
 
-                    # Manually add to circuit inputs
-                    key_len = cfg.get_crypto_params(hom).key_len
-                    key_req_stmts.append(in_arr_var.slice(offset, key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, key_len)))
-                    offset += key_len
-                    assert offset == ext_circuit.in_size
+                # Manually add to circuit inputs
+                key_len = crypto_params.key_len
+                key_req_stmts.append(in_arr_var.slice(offset, key_len).assign(IdentifierExpr(tmp_key_var.clone()).slice(0, key_len)))
+                offset += key_len
+                assert offset == ext_circuit.in_size
 
         # Check encrypted parameters
         param_stmts = []
         for p in original_params:
             """ * of T_e rule 8 """
             if p.annotated_type.is_cipher():
-                cipher_payload_len = cfg.get_crypto_params(p.annotated_type.type_name.homomorphism).cipher_payload_len
+                cipher_payload_len = p.annotated_type.type_name.crypto_params.cipher_payload_len
                 assign_stmt = in_arr_var.slice(offset, cipher_payload_len).assign(IdentifierExpr(p.idf.clone()).slice(0, cipher_payload_len))
                 ext_circuit.ensure_parameter_encryption(assign_stmt, p)
 

@@ -291,8 +291,9 @@ class Web3TesterBlockchain(Web3Blockchain):
                         pki_contract_name = cfg.get_pki_contract_name(crypto_params)
                         pki_sol = save_to_file(tmpdir, f'{pki_contract_name}.sol', pki_contract_code)
                         contract = self._deploy_contract(sender, self.compile_contract(pki_sol, pki_contract_name))
-                        self._pki_contract[crypto_params.crypto_name] = contract
-                        zk_print(f'Deployed pki contract at address "{contract.address}"')  # TODO
+                        backend_name = crypto_params.crypto_name
+                        self._pki_contract[backend_name] = contract
+                        zk_print(f'Deployed pki contract for crypto back-end {backend_name} at address "{contract.address}"')
 
                 with log_context('transaction', 'deploy_verify_libs'):
                     verify_sol = save_to_file(tmpdir, 'verify_libs.sol', library_contracts.get_verify_libs_code())

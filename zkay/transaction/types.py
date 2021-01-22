@@ -50,20 +50,20 @@ class Value(tuple):
             return str(v)
 
     @staticmethod
-    def get_params(params: CryptoParams = None, hom: Homomorphism = None) -> CryptoParams:
+    def get_params(params: CryptoParams = None, crypto_backend: str = None) -> CryptoParams:
         from zkay.config import cfg
         if params is not None:
             return params
-        elif hom is not None:
-            return cfg.get_crypto_params(hom)
+        elif crypto_backend is not None:
+            return CryptoParams(crypto_backend)
         else:
             return cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC)
 
 
 class CipherValue(Value):
     def __new__(cls, contents: Optional[Collection] = None, *,
-                params: CryptoParams = None, hom: Homomorphism = None):
-        params = Value.get_params(params, hom)
+                params: CryptoParams = None, crypto_backend: str = None):
+        params = Value.get_params(params, crypto_backend)
         content = [0] * params.cipher_len
         if contents:
             content[:len(contents)] = contents[:]
@@ -86,8 +86,8 @@ class PrivateKeyValue(Value):
 
 class PublicKeyValue(Value):
     def __new__(cls, contents: Optional[Collection] = None, *,
-                params: CryptoParams = None, hom: Homomorphism = None):
-        params = Value.get_params(params, hom)
+                params: CryptoParams = None, crypto_backend: str = None):
+        params = Value.get_params(params, crypto_backend)
         if contents is None:
             return super(PublicKeyValue, cls).__new__(cls, [0] * params.key_len)
         else:
@@ -97,8 +97,8 @@ class PublicKeyValue(Value):
 
 class RandomnessValue(Value):
     def __new__(cls, contents: Optional[Collection] = None, *,
-                params: CryptoParams = None, hom: Homomorphism = None):
-        params = Value.get_params(params, hom)
+                params: CryptoParams = None, crypto_backend: str = None):
+        params = Value.get_params(params, crypto_backend)
         if contents is None:
             return super(RandomnessValue, cls).__new__(cls, [0] * params.randomness_len)
         else:

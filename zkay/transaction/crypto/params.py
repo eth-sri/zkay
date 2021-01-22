@@ -9,6 +9,12 @@ class CryptoParams:
     def __init__(self, crypto_name: str):
         self.crypto_name = crypto_name
 
+    def __eq__(self, other):
+        return isinstance(other, CryptoParams) and self.crypto_name == other.crypto_name
+
+    def __hash__(self):
+        return self.crypto_name.__hash__()
+
     @property
     def identifier_name(self) -> str:
         return re.sub('[^a-zA-Z0-9$_]', '_', self.crypto_name).title()

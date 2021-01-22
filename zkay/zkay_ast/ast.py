@@ -12,6 +12,7 @@ from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 
 from zkay.config import cfg, zk_print
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.utils.progress_printer import warn_print
 from zkay.zkay_ast.analysis.partition_state import PartitionState
 from zkay.zkay_ast.homomorphism import Homomorphism
@@ -552,7 +553,10 @@ class ArrayLiteralExpr(LiteralExpr):
 
 
 class KeyLiteralExpr(ArrayLiteralExpr):
-    pass
+
+    def __init__(self, values: List[Expression], crypto_params: CryptoParams):
+        super().__init__(values)
+        self.crypto_params = crypto_params
 
 
 class TupleOrLocationExpr(Expression):
@@ -838,9 +842,9 @@ class CircuitComputationStatement(CircuitDirectiveStatement):
 
 
 class EnterPrivateKeyStatement(CircuitDirectiveStatement):
-    def __init__(self, homomorphism: Homomorphism):
+    def __init__(self, crypto_params: CryptoParams):
         super().__init__()
-        self.homomorphism = homomorphism
+        self.crypto_params = crypto_params
 
 
 class IfStatement(Statement):
@@ -1026,15 +1030,18 @@ class TypeName(AST):
 
     @staticmethod
     def cipher_type(plain_type: AnnotatedTypeName, hom: Homomorphism):
-        return CipherText(plain_type, hom)
+        crypto_params = cfg.get_crypto_params(hom)
+        type = plain_type.clone()
+        type.homomorphism = hom  # Just for display purposes
+        return CipherText(type, crypto_params)
 
     @staticmethod
-    def rnd_type(hom: Homomorphism):
-        return Randomness(hom)
+    def rnd_type(crypto_params: CryptoParams):
+        return Randomness(crypto_params)
 
     @staticmethod
-    def key_type(hom: Homomorphism):
-        return Key(hom)
+    def key_type(crypto_params: CryptoParams):
+        return Key(crypto_params)
 
     @staticmethod
     def proof_type():
@@ -1428,52 +1435,50 @@ class Array(TypeName):
 
 
 class CipherText(Array):
-    def __init__(self, plain_type: AnnotatedTypeName, homomorphism: Homomorphism):
+    def __init__(self, plain_type: AnnotatedTypeName, crypto_params: CryptoParams):
         assert not plain_type.type_name.is_cipher()
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.get_crypto_params(homomorphism).cipher_len))
-        self.plain_type = plain_type.clone()
-        self.plain_type.homomorphism = homomorphism  # Just for display purposes
-        self.homomorphism = homomorphism
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(crypto_params.cipher_len))
+        self.plain_type = plain_type
+        self.crypto_params = crypto_params
 
     @property
     def size_in_uints(self):
-        return cfg.get_crypto_params(self.homomorphism).cipher_payload_len
+        return self.crypto_params.cipher_payload_len
 
     def clone(self) -> CipherText:
-        return CipherText(self.plain_type, self.homomorphism)
+        return CipherText(self.plain_type, self.crypto_params)
 
     def __eq__(self, other):
         return (isinstance(other, CipherText)
                 and (self.plain_type is None or self.plain_type == other.plain_type)
-                and self.homomorphism == other.homomorphism)
+                and self.crypto_params == other.crypto_params)
 
 
 class Randomness(Array):
-    def __init__(self, homomorphism: Homomorphism):
-        params = cfg.get_crypto_params(homomorphism)
-        if params.randomness_len is None:
+    def __init__(self, crypto_params: CryptoParams):
+        if crypto_params.randomness_len is None:
             super().__init__(AnnotatedTypeName.uint_all(), None)
         else:
-            super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(params.randomness_len))
-        self.homomorphism = homomorphism
+            super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(crypto_params.randomness_len))
+        self.crypto_params = crypto_params
 
     def clone(self) -> Randomness:
-        return Randomness(self.homomorphism)
+        return Randomness(self.crypto_params)
 
     def __eq__(self, other):
-        return isinstance(other, Randomness) and self.homomorphism == other.homomorphism
+        return isinstance(other, Randomness) and self.crypto_params == other.crypto_params
 
 
 class Key(Array):
-    def __init__(self, homomorphism: Homomorphism):
-        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.get_crypto_params(homomorphism).key_len))
-        self.homomorphism = homomorphism
+    def __init__(self, crypto_params: CryptoParams):
+        super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(crypto_params.key_len))
+        self.crypto_params = crypto_params
 
     def clone(self) -> Key:
-        return Key(self.homomorphism)
+        return Key(self.crypto_params)
 
     def __eq__(self, other):
-        return isinstance(other, Key) and self.homomorphism == other.homomorphism
+        return isinstance(other, Key) and self.crypto_params == other.crypto_params
 
 
 class Proof(Array):
@@ -1681,8 +1686,8 @@ class AnnotatedTypeName(AST):
         return AnnotatedTypeName(TypeName.cipher_type(plain_type, hom))
 
     @staticmethod
-    def key_type(hom: Homomorphism):
-        return AnnotatedTypeName(TypeName.key_type(hom))
+    def key_type(crypto_params: CryptoParams):
+        return AnnotatedTypeName(TypeName.key_type(crypto_params))
 
     @staticmethod
     def proof_type():

@@ -9,6 +9,7 @@ from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.manifest import Manifest
 from zkay.config import cfg, zk_print_banner
 from zkay.my_logging.log_context import log_context
+from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.int_casts import __convert as int_cast
 from zkay.transaction.interface import BlockChainError, ZkayHomomorphicCryptoInterface, ZkayKeystoreInterface
 from zkay.transaction.runtime import Runtime
@@ -31,26 +32,26 @@ class StateDict:
     def __init__(self, api) -> None:
         self.api = api
         self.__state: Dict[str, Any] = {}
-        self.__constructors: Dict[str, (bool, Homomorphism, Callable)] = {}
+        self.__constructors: Dict[str, (bool, CryptoParams, Callable)] = {}
 
     def clear(self):
         self.__state.clear()
 
     def decl(self, name, constructor: Callable = lambda x: x, *,
-             cipher: bool = False, hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC):
+             cipher: bool = False, crypto_backend: str = cfg.main_crypto_backend):
         """Define the wrapper constructor for a state variable."""
         assert name not in self.__constructors
-        self.__constructors[name] = (cipher, hom, constructor)
+        self.__constructors[name] = (cipher, CryptoParams(crypto_backend), constructor)
 
     @property
     def names(self) -> List[str]:
         return list(self.__constructors.keys())
 
     def get_plain(self, name: str, *indices):
-        is_cipher, homomorphism, constr = self.__constructors[name]
+        is_cipher, crypto_params, constr = self.__constructors[name]
         val = self.__get((name, *indices), cache=False)
         if is_cipher:
-            ret, _ = self.api.dec(val, constr, homomorphism)
+            ret, _ = self.api.dec(val, constr, crypto_params.crypto_name)
             return ret
         else:
             return val
@@ -94,11 +95,11 @@ class StateDict:
         if cache and loc in self.__state:
             return self.__state[loc]
         else:
-            is_cipher, homomorphism, constr = self.__constructors[var]
+            is_cipher, crypto_params, constr = self.__constructors[var]
             try:
                 if is_cipher:
-                    cipher_len = cfg.get_crypto_params(homomorphism).cipher_len
-                    val = CipherValue(self.api._req_state_var(var, *indices, count=cipher_len), hom=homomorphism)
+                    cipher_len = crypto_params.cipher_len
+                    val = CipherValue(self.api._req_state_var(var, *indices, count=cipher_len), params=crypto_params)
                 else:
                     val = constr(self.api._req_state_var(var, *indices))
             except BlockChainError:
@@ -297,9 +298,9 @@ class ApiWrapper:
         self.__crypto = {}
         self.__prover = Runtime.prover()
 
-        for hom in Homomorphism:  # TODO: Only used homomorphisms?
-            self.__keystore[hom] = Runtime.keystore(cfg.get_crypto_params(hom))
-            self.__crypto[hom] = Runtime.crypto(cfg.get_crypto_params(hom))
+        for crypto_params in cfg.all_crypto_params():
+            self.__keystore[crypto_params.crypto_name] = Runtime.keystore(crypto_params)
+            self.__crypto[crypto_params.crypto_name] = Runtime.crypto(crypto_params)
 
         self.__project_dir = project_dir
         self.__contract_name = contract_name
@@ -347,16 +348,17 @@ class ApiWrapper:
 
     @property
     def keystore(self) -> ZkayKeystoreInterface:
-        return self.get_keystore(Homomorphism.NON_HOMOMORPHIC)
+        # Method only exists for compatibility, new code generators only generate calls to get_keystore
+        return self.get_keystore(cfg.main_crypto_backend)
 
-    def get_keystore(self, hom: Homomorphism):
-        return self.__keystore[hom]
+    def get_keystore(self, crypto_backend: str):
+        return self.__keystore[crypto_backend]
 
-    def get_my_sk(self, hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> PrivateKeyValue:
-        return self.__keystore[hom].sk(self.user_address)
+    def get_my_sk(self, crypto_backend: str = cfg.main_crypto_backend) -> PrivateKeyValue:
+        return self.__keystore[crypto_backend].sk(self.user_address)
 
-    def get_my_pk(self, hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> PublicKeyValue:
-        return self.__keystore[hom].pk(self.user_address)
+    def get_my_pk(self, crypto_backend: str = cfg.main_crypto_backend) -> PublicKeyValue:
+        return self.__keystore[crypto_backend].pk(self.user_address)
 
     def call_fct(self, sec_offset, fct, *args) -> Any:
         with self.__call_ctx(sec_offset):
@@ -392,8 +394,8 @@ class ApiWrapper:
             return tuple([self.__get_decrypted_retval(retval, is_cipher, homomorphism, constr)
                           for retval, (is_cipher, homomorphism, constr) in zip(retvals, ret_val_constructors)])
 
-    def __get_decrypted_retval(self, raw_value, is_cipher, homomorphism, constructor):
-        return self.dec(CipherValue(raw_value, hom=homomorphism), constructor)[0] if is_cipher else constructor(raw_value)
+    def __get_decrypted_retval(self, raw_value, is_cipher, crypto_params, constructor):
+        return self.dec(CipherValue(raw_value, params=crypto_params), constructor)[0] if is_cipher else constructor(raw_value)
 
     def get_special_variables(self) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         assert self.__current_msg is not None and self.__current_block is not None and self.__current_tx is not None
@@ -406,25 +408,23 @@ class ApiWrapper:
         self.__current_msg, self.__current_block, self.__current_tx = None, None, None
 
     def enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None,
-            hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> Tuple[CipherValue, Optional[RandomnessValue]]:
+            crypto_backend: str = cfg.main_crypto_backend) -> Tuple[CipherValue, Optional[RandomnessValue]]:
         target_addr = self.__user_addr if target_addr is None else target_addr
-        return self.__crypto[hom].enc(plain, self.__user_addr, target_addr)
+        return self.__crypto[crypto_backend].enc(plain, self.__user_addr, target_addr)
 
     def dec(self, cipher: CipherValue, constr: Callable[[int], Any],
-            hom: Homomorphism = Homomorphism.NON_HOMOMORPHIC) -> Tuple[Any, Optional[RandomnessValue]]:
-        res = self.__crypto[hom].dec(cipher, self.__user_addr)
+            crypto_backend: str = cfg.main_crypto_backend) -> Tuple[Any, Optional[RandomnessValue]]:
+        res = self.__crypto[crypto_backend].dec(cipher, self.__user_addr)
         return constr(res[0]), res[1]
 
-    def do_homomorphic_op(self, op: str, hom: Homomorphism, target_addr: AddressValue, *args: List[CipherValue]):
-        if hom == Homomorphism.NON_HOMOMORPHIC:
-            raise ValueError('Cannot perform non-homomorphic homomorphic operation')
-        pk = self.get_keystore(hom).getPk(target_addr)
-        params = cfg.get_crypto_params(hom)
+    def do_homomorphic_op(self, op: str, crypto_backend: str, target_addr: AddressValue, *args: List[CipherValue]):
+        params = CryptoParams(crypto_backend)
+        pk = self.__keystore[params.crypto_name].getPk(target_addr)
         for arg in args:
             if isinstance(arg, CipherValue) and params.crypto_name != arg.params.crypto_name:
                 raise ValueError('CipherValues from different crypto backends used in homomorphic operation')
 
-        crypto_inst = self.__crypto[hom]
+        crypto_inst = self.__crypto[params.crypto_name]
         assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface)
         result = crypto_inst.do_op(op, pk[:], *[list(arg) if isinstance(arg, CipherValue) else arg for arg in args])
         return CipherValue(result, params=params)
