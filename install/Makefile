@@ -1,6 +1,6 @@
 # all commands involving docker use sudo, which is typically required to use docker commands
 
-TAG := version-1.3
+TAG := version-1.4
 IMAGE := ethsrilab/zkay-prerequisites
 FULL_IMAGE := ethsrilab/zkay
 FULL_CONTAINER := zkay-container
