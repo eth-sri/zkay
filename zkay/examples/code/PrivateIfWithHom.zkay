@@ -1,0 +1,22 @@
+pragma zkay >=0.2.0;
+
+contract IfWithHomomorphism {
+	final address master;
+	uint@master a;
+	uint@master<+> b;
+
+	constructor() public {
+		master = me;
+	}
+
+	function f(bool@me branch, uint@me trueVal, uint@me falseVal) public {
+		require(master == me);
+		if (branch) {
+			a = trueVal;
+			b = trueVal;
+		} else {
+			a = falseVal;
+			b = falseVal;
+		}
+	}
+}

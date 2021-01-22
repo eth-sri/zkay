@@ -308,10 +308,11 @@ class CircuitHelper:
                 # side effect affects location outside statement and has privacy @me
                 assert ast.before_analysis.same_partition(var.privacy, Expression.me_expr())
                 assert isinstance(var.target, (Parameter, VariableDeclaration, StateVariableDeclaration))
-                t = var.target.annotated_type.zkay_type.type_name
-                if not t.is_primitive_type():
+                t = var.target.annotated_type.zkay_type
+                if not t.type_name.is_primitive_type():
                     raise NotImplementedError('Reference types inside private if statements are not supported')
-                ret_param = IdentifierExpr(var.target.idf.clone(), AnnotatedTypeName(t, Expression.me_expr())).override(target=var.target)
+                ret_t = AnnotatedTypeName(t.type_name, Expression.me_expr(), t.homomorphism)  # t, but @me
+                ret_param = IdentifierExpr(var.target.idf.clone(), ret_t).override(target=var.target)
                 ret_param.statement = astmt
                 ret_params.append(ret_param)
 
@@ -336,7 +337,7 @@ class CircuitHelper:
         for ret_arg in ret_args.elements:
             ret_arg.statement = astmt
         ret_arg_outs = [
-            self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr(), Homomorphism.NON_HOMOMORPHIC)  # TODO
+            self._get_circuit_output_for_private_expression(ret_arg, Expression.me_expr(), ret_param.annotated_type.homomorphism)
             for ret_param, ret_arg in zip(ret_params, ret_args.elements)
         ]
 
