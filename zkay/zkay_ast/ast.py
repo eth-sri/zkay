@@ -424,7 +424,7 @@ class BuiltinFunction(Expression):
         :return: true if operation itself can be run inside a circuit \
                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
         """
-        return self.op not in ['**', '%', '/']
+        return self.op != '**'
 
     def select_homomorphic_overload(self, arg_types: List[AnnotatedTypeName], analysis: PartitionState[PrivacyLabelExpr]):
         """

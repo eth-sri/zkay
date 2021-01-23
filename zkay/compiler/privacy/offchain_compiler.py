@@ -142,6 +142,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
         from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, RequireException
         from zkay.transaction.int_casts import *
+        from zkay.transaction.solidity_math import *
 
         me = None
 

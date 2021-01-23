@@ -1,0 +1,47 @@
+pragma zkay >=0.2.0;
+
+contract DivAndMod {
+
+	function testUintDiv() public {
+		uint@me five = 5;
+		uint@me four = 4;
+		uint@me two = 2;
+
+		require(reveal(four / two == two, all));
+		require(reveal(five / two == two, all));
+	}
+
+	function testIntDiv() public {
+		int248@me plusFive = 5;
+		int248@me minusFive = -5;
+		int248@me plusTwo = 2;
+		int248@me minusTwo = -2;
+
+		require(reveal(plusFive / plusTwo == plusTwo, all));
+		require(reveal(minusFive / plusTwo == minusTwo, all));
+		require(reveal(plusFive / minusTwo == minusTwo, all));
+		require(reveal(minusFive / minusTwo == plusTwo, all));
+	}
+
+	function testUintMod() public {
+		uint@me three = 3;
+		uint@me two = 2;
+		uint@me one = 1;
+		uint@me zero = 0;
+
+		require(reveal(three % two == one, all));
+		require(reveal(two % two == zero, all));
+	}
+
+	function testIntMod() public {
+		int248@me plusTwo = 2;
+		int248@me minusTwo = -2;
+		int248@me plusOne = 1;
+		int248@me minusOne = -1;
+
+		require(reveal(plusOne % plusTwo == plusOne, all));
+		require(reveal(minusOne % plusTwo == minusOne, all));
+		require(reveal(plusOne % minusTwo == plusOne, all));
+		require(reveal(minusOne % minusTwo == minusOne, all));
+	}
+}

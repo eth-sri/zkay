@@ -218,7 +218,9 @@ class PythonCodeVisitor(CodeVisitor):
                 elif ast.func.op == '!':
                     fstr = 'not {}'
                 elif ast.func.op == '/':
-                    fstr = '{} // {}'
+                    fstr = 'zk__div({}, {})'
+                elif ast.func.op == '%':
+                    fstr = 'zk__mod({}, {})'
                 elif ast.func.is_ite():
                     fstr = '({1} if {0} else {2})'
             else:
