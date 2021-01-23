@@ -384,7 +384,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
                     plain_t = cipher.plain_type.type_name
                     crypto_params = cipher.crypto_params
                     crypto_str = f'crypto_backend="{crypto_params.crypto_name}"'
-                    if plain_t.is_signed_numeric:
+                    if plain_t.is_signed_numeric and crypto_params.enc_signed_as_unsigned:
                         plain_val = self.handle_cast(pname, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
                     enc_param_str += f'{self.get_priv_value(arg.idf.name)} = {plain_val}\n'
                     if crypto_params.is_symmetric_cipher():
@@ -580,11 +580,8 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         crypto_str = f'crypto_backend="{crypto_params.crypto_name}"'
         plain = self.visit(ast.expr)
         plain_t = ast.expr.annotated_type.type_name
-        if plain_t.is_signed_numeric:
-            if crypto_params.enc_signed_as_unsigned:
-                plain = self.handle_cast(plain, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
-            else:
-                plain = self.handle_cast(plain, IntTypeName(f'int{plain_t.elem_bitwidth}'))
+        if plain_t.is_signed_numeric and crypto_params.enc_signed_as_unsigned:
+            plain = self.handle_cast(plain, UintTypeName(f'uint{plain_t.elem_bitwidth}'))
         return f'{api("enc")}({plain}, {priv_str}, {crypto_str})'
 
     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
