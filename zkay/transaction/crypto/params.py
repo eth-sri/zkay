@@ -47,10 +47,6 @@ class CryptoParams:
     def cipher_bytes_payload(self) -> int:
         return cryptoparams[self.crypto_name]['cipher_payload_bytes']
 
-    @property
-    def cipher_bytes_meta(self) -> int:
-        return cryptoparams[self.crypto_name]['cipher_meta_bytes']
-
     def is_symmetric_cipher(self) -> bool:
         return cryptoparams[self.crypto_name]['symmetric']
 
