@@ -22,7 +22,7 @@ from zkay.zkay_ast.pointers.pointer_exceptions import UnknownIdentifierException
 from zkay.zkay_ast.pointers.symbol_table import link_identifiers as link
 
 
-def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
+def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[SourceUnit, str]:
     with print_step("Parsing"):
         try:
             ast = build_ast(code)
@@ -41,7 +41,7 @@ def get_parsed_ast_and_fake_code(code, solc_check=True) -> Tuple[AST, str]:
     return ast, fake_code
 
 
-def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True, solc_check=True) -> AST:
+def get_processed_ast(code, parents=True, link_identifiers=True, check_return=True, alias_analysis=True, type_check=True, solc_check=True) -> SourceUnit:
     ast, _ = get_parsed_ast_and_fake_code(code, solc_check=solc_check)
 
     # Zkay preprocessing and type checking

@@ -234,8 +234,9 @@ class ContractSimulator:
     def initialize_keys_for(address: Union[bytes, str]):
         """Generate/Load keys for the given address."""
         account = AddressValue(address)
-        for crypto_params in cfg.all_crypto_params():  # TODO: Only used homomorphisms?
-            Runtime.crypto(crypto_params).generate_or_load_key_pair(account)
+        for crypto_params in cfg.all_crypto_params():
+            if not Runtime.keystore(crypto_params).has_initialized_keys_for(AddressValue(address)):
+                Runtime.crypto(crypto_params).generate_or_load_key_pair(account)
 
     @staticmethod
     def use_config_from_manifest(project_dir: str):

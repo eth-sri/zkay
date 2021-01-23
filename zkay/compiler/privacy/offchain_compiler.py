@@ -218,15 +218,13 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             def connect(address: Union[bytes, str], user: Union[str, bytes], project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> {name}:
                 c = {name}(project_dir, AddressValue(user))
                 {api("connect", "c")}(AddressValue(address))
-                if not {api("keystore", "c")}.has_initialized_keys_for(AddressValue(user)):
-                    ContractSimulator.initialize_keys_for(user)
+                ContractSimulator.initialize_keys_for(user)
                 return c
 
             @staticmethod
             def deploy({c_params}*, user: Union[str, bytes]{val_param}, project_dir: str = os.path.dirname(os.path.realpath(__file__))) -> {name}:
                 c = {name}(project_dir, AddressValue(user))
-                if not {api("keystore", "c")}.has_initialized_keys_for(AddressValue(user)):
-                    ContractSimulator.initialize_keys_for(user)
+                ContractSimulator.initialize_keys_for(user)
                 {deploy_cmd}
                 return c
             '''

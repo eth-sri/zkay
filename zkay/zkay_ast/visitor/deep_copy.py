@@ -89,6 +89,8 @@ class DeepCopyVisitor(AstVisitor):
         'original_body',
         'original_code',
         'return_var_decls',
+        'used_homomorphisms',
+        'used_crypto_backends',
 
         'pre_statements',
         'excluded_from_simulation',

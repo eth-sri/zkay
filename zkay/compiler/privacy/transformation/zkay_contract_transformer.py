@@ -7,6 +7,7 @@ from typing import Dict, Optional, List, Tuple
 from zkay.compiler.privacy.circuit_generation.circuit_helper import CircuitHelper
 from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.compiler.privacy.transformation.internal_call_transformer import transform_internal_calls, compute_transitive_circuit_io_sizes
+from zkay.zkay_ast.analysis.used_homomorphisms import UsedHomomorphismsVisitor
 from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.transformer_visitor import AstTransformerVisitor
 from zkay.compiler.privacy.transformation.zkay_transformer import ZkayVarDeclTransformer, ZkayExpressionTransformer, ZkayCircuitTransformer, \
@@ -24,7 +25,7 @@ from zkay.zkay_ast.pointers.symbol_table import link_identifiers
 from zkay.zkay_ast.visitor.deep_copy import deep_copy
 
 
-def transform_ast(ast: AST) -> Tuple[AST, Dict[ConstructorOrFunctionDefinition, CircuitHelper]]:
+def transform_ast(ast: SourceUnit) -> Tuple[SourceUnit, Dict[ConstructorOrFunctionDefinition, CircuitHelper]]:
     """
     Convert zkay to solidity AST + proof circuits
 
@@ -178,7 +179,7 @@ class ZkayTransformer(AstTransformerVisitor):
         :return: list of all constant state variable declarations for the pki contract + all the verification contracts
         """
         contract_var_decls = []
-        for crypto_params in cfg.all_crypto_params():  # TODO: Only used crypto backends?
+        for crypto_params in c.used_crypto_backends:
             contract_name = cfg.get_pki_contract_name(crypto_params)
             contract_var_decls.append(self.create_contract_variable(contract_name))
 
@@ -206,7 +207,10 @@ class ZkayTransformer(AstTransformerVisitor):
         return CircuitHelper(fct, global_owners, ZkayExpressionTransformer, ZkayCircuitTransformer, internal_circ)
 
     def visitSourceUnit(self, ast: SourceUnit):
-        for crypto_params in cfg.all_crypto_params():  # TODO: Only used crypto backends?
+        # Figure out which crypto backends were used
+        UsedHomomorphismsVisitor().visit(ast)
+
+        for crypto_params in ast.used_crypto_backends:
             self.import_contract(cfg.get_pki_contract_name(crypto_params), ast)
 
         for c in ast.contracts:
@@ -425,6 +429,7 @@ class ZkayTransformer(AstTransformerVisitor):
         new_f.requires_verification_when_external = True
         new_f.called_functions = f.called_functions
         new_f.called_functions[f] = None
+        new_f.used_crypto_backends = f.used_crypto_backends
         new_f.body = self.create_external_wrapper_body(f, circuit, original_params, requires_proof)
 
         # Add out and proof parameter to external wrapper
@@ -452,6 +457,7 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts = []
 
         for crypto_params in args_backends:
+            assert crypto_params in int_fct.used_crypto_backends
             # If there are any private arguments with homomorphism 'hom', we need the public key for that crypto backend
             ext_circuit._require_public_key_for_label_at(None, Expression.me_expr(), crypto_params)
         for crypto_params in cfg.all_crypto_params():
@@ -483,7 +489,7 @@ class ZkayTransformer(AstTransformerVisitor):
                 (keys[0], keys[glob_me_key_index]) = (keys[glob_me_key_index], keys[0])
 
             tmp_keys = {}
-            for crypto_params in cfg.all_crypto_params():  # TODO: Only used crypto backends
+            for crypto_params in int_fct.used_crypto_backends:
                 tmp_key_var = Identifier(f'_tmp_key_{crypto_params.identifier_name}')
                 key_req_stmts.append(tmp_key_var.decl_var(AnnotatedTypeName.key_type(crypto_params)))
                 tmp_keys[crypto_params] = tmp_key_var

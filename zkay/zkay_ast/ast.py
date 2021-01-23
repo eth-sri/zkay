@@ -1816,6 +1816,8 @@ class ConstructorOrFunctionDefinition(NamespaceDefinition):
         self.is_recursive = False
         self.has_static_body = True
         self.can_be_private = True
+        self.used_homomorphisms: Optional[Set[Homomorphism]] = None
+        self.used_crypto_backends: Optional[List[CryptoParams]] = None
 
         # True if this function contains private expressions
         self.requires_verification = False
@@ -1935,6 +1937,7 @@ class ContractDefinition(NamespaceDefinition):
         self.function_definitions = function_definitions
         self.enum_definitions = enum_definitions
         self.struct_definitions = [] if struct_definitions is None else struct_definitions
+        self.used_crypto_backends: Optional[List[CryptoParams]] = None
 
     def process_children(self, f: Callable[[T], T]):
         super().process_children(f)
@@ -1967,6 +1970,8 @@ class SourceUnit(AST):
         self.pragma_directive = pragma_directive
         self.contracts = contracts
         self.used_contracts = [] if used_contracts is None else used_contracts
+        self.used_homomorphisms: Optional[Set[Homomorphism]] = None
+        self.used_crypto_backends: Optional[List[CryptoParams]] = None
 
         self.original_code: List[str] = []
 

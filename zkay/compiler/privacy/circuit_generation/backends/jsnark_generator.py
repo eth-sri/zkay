@@ -207,7 +207,7 @@ class JsnarkGenerator(CircuitGenerator):
 
         # Generate java code to add used crypto backends by calling addCryptoBackend
         crypto_init_stmts = []
-        for params in cfg.all_crypto_params():
+        for params in circuit.fct.used_crypto_backends:
             init_stmt = f'addCryptoBackend("{params.crypto_name}", "{params.crypto_name}", {params.key_bits});'
             crypto_init_stmts.append(init_stmt)
 

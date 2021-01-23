@@ -106,7 +106,7 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     # Dump libraries
     with print_step("Write library contract files"):
         with cfg.library_compilation_environment():
-            for crypto_params in cfg.all_crypto_params():  # TODO: Only used homomorphisms?
+            for crypto_params in ast.used_crypto_backends:
                 # Write pki contract
                 pki_contract_code = library_contracts.get_pki_contract(crypto_params)
                 pki_contract_file = f'{cfg.get_pki_contract_name(crypto_params)}.sol'
@@ -140,6 +140,11 @@ def compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs
     # Generate manifest
     if not import_keys:
         with print_step("Writing manifest file"):
+            # Set crypto backends for unused homomorphisms to None
+            for hom in Homomorphism:
+                if hom not in ast.used_homomorphisms:
+                    cfg.set_crypto_backend(hom, None)
+
             manifest = {
                 Manifest.zkay_version: cfg.zkay_version,
                 Manifest.solc_version: cfg.solc_version,

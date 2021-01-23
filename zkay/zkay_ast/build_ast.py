@@ -20,7 +20,7 @@ def build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonToken
     return v.visit(parse_tree)
 
 
-def build_ast(code):
+def build_ast(code) -> ast.SourceUnit:
     p = MyParser(code)
     full_ast = build_ast_from_parse_tree(p.tree, p.tokens, code)
     assert isinstance(full_ast, ast.SourceUnit)

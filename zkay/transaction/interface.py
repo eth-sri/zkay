@@ -295,7 +295,7 @@ class ZkayBlockchainInterface(metaclass=ABCMeta):
 
         # Check integrity of all pki contracts
         self._pki_contract = {}
-        for crypto_params in cfg.all_crypto_params():  # TODO: Only for used homomorphisms?
+        for crypto_params in cfg.all_crypto_params():
             contract_name = cfg.get_pki_contract_name(crypto_params)
             pki_address = self._req_state_var(contract_on_chain, f'{contract_name}_inst')
             pki_verifier_addresses[contract_name] = AddressValue(pki_address)
