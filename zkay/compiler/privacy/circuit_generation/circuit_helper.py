@@ -405,11 +405,12 @@ class CircuitHelper:
         :return: HybridArgumentIdf which references the plaintext value of the newly added input
         """
         privacy = expr.annotated_type.privacy_annotation.privacy_annotation_label() if expr.annotated_type.is_private() else Expression.all_expr()
-        homomorphism = expr.annotated_type.zkay_type.homomorphism
+        is_public = privacy == Expression.all_expr()
 
         expr_text = expr.code()
         input_expr = self._expr_trafo.visit(expr)
         t = input_expr.annotated_type.type_name
+        locally_decrypted_idf = None
 
         # If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
         # rather than introducing an unnecessary public circuit input (expensive)
@@ -428,30 +429,23 @@ class CircuitHelper:
             t_suffix = f'_{expr.idf.name}'
 
         # Generate circuit inputs
-        if privacy == Expression.all_expr():
+        if is_public:
             tname = f'{self._in_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
             return_idf = input_idf = self._in_name_factory.add_idf(tname, expr.annotated_type.type_name)
             self._phi.append(CircComment(f'{input_idf.name} = {expr_text}'))
-        elif privacy == Expression.me_expr() or homomorphism == Homomorphism.NON_HOMOMORPHIC:  # TODO: This breaks
+        else:
             # Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
             tname = f'{self._secret_input_name_factory.get_new_name(expr.annotated_type.type_name)}{t_suffix}'
             return_idf = locally_decrypted_idf = self._secret_input_name_factory.add_idf(tname, expr.annotated_type.type_name)
             cipher_t = TypeName.cipher_type(input_expr.annotated_type, expr.annotated_type.homomorphism)
             tname = f'{self._in_name_factory.get_new_name(cipher_t)}{t_suffix}'
             input_idf = self._in_name_factory.add_idf(tname, cipher_t, IdentifierExpr(locally_decrypted_idf))
-        else:
-            # Homomorphic state variables get moved into the circuit as-is, i.e. by including the ciphertext directly
-            # (there cannot be non-@me parameters, and @me cannot occur as a state variable)
-            cipher_t = TypeName.cipher_type(input_expr.annotated_type, expr.annotated_type.homomorphism)
-            tname = f'{self._in_name_factory.get_new_name(cipher_t)}{t_suffix}'
-            return_idf = input_idf = self._in_name_factory.add_idf(tname, cipher_t)
-            self._phi.append(CircComment(f'{input_idf.name} = {expr_text}'))
 
         # Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         # but also signals the offchain simulator to perform decryption if necessary
         expr.statement.pre_statements.append(CircuitInputStatement(input_idf.get_loc_expr(), input_expr))
 
-        if privacy != Expression.all_expr() and homomorphism == Homomorphism.NON_HOMOMORPHIC:
+        if not is_public:
             # Check if the secret plain input corresponds to the decrypted cipher value
             crypto_params = cfg.get_crypto_params(expr.annotated_type.homomorphism)
             self._phi.append(CircComment(f'{locally_decrypted_idf} = dec({expr_text}) [{input_idf.name}]'))
@@ -460,8 +454,8 @@ class CircuitHelper:
 
         # Cache circuit input for later reuse if possible
         if cfg.opt_cache_circuit_inputs and isinstance(expr, IdentifierExpr):
-            # TODO: Check if this makes sense
-            # assert expr.annotated_type.type_name.is_primitive_type()
+            # TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
+            #       This works for now because we never perform homomorphic operations on variables we can decrypt.
             self._remapper.remap(expr.target.idf, return_idf)
 
         return return_idf
