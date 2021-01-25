@@ -1,0 +1,26 @@
+pragma zkay >=0.2.0;
+
+contract HomomorphicMultiplication {
+
+	final address owner;
+	int248@owner<+> a;
+	int248 b;
+	int248@owner<+> productPosPos;
+	int248@owner<+> productPosNeg;
+	int248@owner<+> productNegPos;
+	int248@owner<+> productNegNeg;
+
+	constructor(int248@me _a, int248 _b) public {
+		owner = me;
+		a = _a;
+		b = _b;
+	}
+
+	function f() public {
+		int248@owner<+> aNeg = -a;
+		productPosPos = a * b;
+		productPosNeg = a * (-b);
+		productNegPos = aNeg * b;
+		productNegNeg = aNeg * (-b);
+	}
+}
