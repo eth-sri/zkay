@@ -8,7 +8,7 @@ contract HomomorphicAddition {
 	int248@owner<+> sum;
 	int248@owner<+> diff;
 
-	constructor(int248@me _a, int248@me _b) public {
+	constructor(int248@me<+> _a, int248@me<+> _b) public {
 		owner = me;
 		a = _a;
 		b = _b;
