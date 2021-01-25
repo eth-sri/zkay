@@ -1,9 +1,8 @@
-from typing import List, Set
+from typing import Dict, List, Set
 
 from zkay.config import cfg
 from zkay.transaction.crypto.params import CryptoParams
-from zkay.zkay_ast.ast import AST, AnnotatedTypeName, ConstructorOrFunctionDefinition, ContractDefinition, \
-    EnumDefinition, \
+from zkay.zkay_ast.ast import AST, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, \
     Expression, IdentifierDeclaration, SourceUnit, StructDefinition
 from zkay.zkay_ast.homomorphism import Homomorphism
 from zkay.zkay_ast.visitor.visitor import AstVisitor
@@ -45,15 +44,40 @@ class UsedHomomorphismsVisitor(AstVisitor):
         used_homs = self.visitChildren(ast)
         # Now all constructors or functions have been visited and we can do some post-processing
         # If some function f calls some function g, and g uses crypto-backend c, f also uses crypto-backend c
-        for f in sum([c.constructor_definitions + c.function_definitions for c in ast.contracts], []):
-            for g in f.called_functions:
-                if g.used_homomorphisms is None:
-                    # Not visited, some external / special function? Make sure we don't miss anything!
-                    f.used_homomorphisms |= self.visit(g)
-                else:
-                    f.used_homomorphisms |= g.used_homomorphisms
+        # We have to do this for all transitively called functions g, being careful around recursive function calls
+        all_fcts = sum([c.constructor_definitions + c.function_definitions for c in ast.contracts], [])
+        self.compute_transitive_homomorphisms(all_fcts)
+        for f in all_fcts:
             f.used_crypto_backends = self.used_crypto_backends(f.used_homomorphisms)
         return used_homs
+
+    def compute_transitive_homomorphisms(self, fcts: List[ConstructorOrFunctionDefinition]):
+        callers: Dict[ConstructorOrFunctionDefinition, List[ConstructorOrFunctionDefinition]] = {}
+        for f in fcts:
+            callers[f] = []
+        for f in fcts:
+            for g in f.called_functions:
+                if g.used_homomorphisms is None:
+                    # Called function not analyzed, (try to) make sure this is a built-in like transfer, send
+                    assert not g.requires_verification and not g.body.statements
+                    continue
+                callers[g].append(f)
+
+        dirty = set(fcts)
+        while dirty:
+            f = dirty.pop()
+            if not f.used_homomorphisms:
+                continue
+
+            # Add all of f's used homomorphisms to all of its callers g.
+            # If this added a new homomorphism to g, mark g as dirty (if not already).
+            for g in callers[f]:
+                if f == g:
+                    continue
+                old_len = len(g.used_homomorphisms)
+                g.used_homomorphisms |= f.used_homomorphisms
+                if len(g.used_homomorphisms) > old_len:
+                    dirty.add(g)
 
     def visitAST(self, ast: AST) -> Set[Homomorphism]:
         # Base case, make sure we don't miss any annotated types
