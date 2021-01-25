@@ -15,7 +15,7 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
     params = CryptoParams('paillier')
 
     def _generate_or_load_key_pair(self, address: str) -> KeyPair:
-        key_file = os.path.join(cfg.data_dir, 'keys', f'paillier_{address}.bin')
+        key_file = os.path.join(cfg.data_dir, 'keys', f'paillier_{self.params.key_bits}_{address}.bin')
         os.makedirs(os.path.dirname(key_file), exist_ok=True)
         if not os.path.exists(key_file):
             print(f'Key pair not found, generating new Paillier secret...')
