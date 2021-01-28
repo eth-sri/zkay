@@ -51,7 +51,9 @@ class UsedHomomorphismsVisitor(AstVisitor):
             f.used_crypto_backends = self.used_crypto_backends(f.used_homomorphisms)
         return used_homs
 
-    def compute_transitive_homomorphisms(self, fcts: List[ConstructorOrFunctionDefinition]):
+    @staticmethod
+    def compute_transitive_homomorphisms(fcts: List[ConstructorOrFunctionDefinition]):
+        # Invert called_functions relation
         callers: Dict[ConstructorOrFunctionDefinition, List[ConstructorOrFunctionDefinition]] = {}
         for f in fcts:
             callers[f] = []
@@ -63,20 +65,18 @@ class UsedHomomorphismsVisitor(AstVisitor):
                     continue
                 callers[g].append(f)
 
-        dirty = set(fcts)
+        # If a function uses any homomorphisms and gets called, propagate its homomorphisms to its callers
+        dirty = set([f for f in fcts if f.used_homomorphisms and callers[f]])
         while dirty:
             f = dirty.pop()
-            if not f.used_homomorphisms:
-                continue
-
             # Add all of f's used homomorphisms to all of its callers g.
-            # If this added a new homomorphism to g, mark g as dirty (if not already).
+            # If this added a new homomorphism to g, mark g as dirty (if not already) -> iterate to fixed point
             for g in callers[f]:
                 if f == g:
                     continue
                 old_len = len(g.used_homomorphisms)
                 g.used_homomorphisms |= f.used_homomorphisms
-                if len(g.used_homomorphisms) > old_len:
+                if len(g.used_homomorphisms) > old_len and callers[g]:
                     dirty.add(g)
 
     def visitAST(self, ast: AST) -> Set[Homomorphism]:
