@@ -15,7 +15,7 @@ def _read_file(path: str) -> str:
 antlr_version = '4.8'
 file_dir = os.path.dirname(os.path.realpath(__file__))
 zkay_version = _read_file(os.path.join(file_dir, 'zkay', 'VERSION'))
-zkay_libsnark_commit_hash = '366e8606e166ad0723bb32516ab723774208da69'
+zkay_libsnark_commit_hash = 'ec640cd4e4bb061f89d6f070ebff1c1c7536a24e'
 packages = find_packages()
 
 
@@ -39,7 +39,7 @@ def build_libsnark_backend(target_dir: str):
     import stat
     from tempfile import TemporaryDirectory
     with TemporaryDirectory() as d:
-        subprocess.check_call(['git', 'clone', '--recursive', 'https://github.com/rogermb/zkay-libsnark.git', 'snark'], cwd=d)
+        subprocess.check_call(['git', 'clone', '--recursive', 'https://github.com/eth-sri/zkay-libsnark.git', 'snark'], cwd=d)
         subprocess.check_call(['git', 'checkout', zkay_libsnark_commit_hash], cwd=os.path.join(d, 'snark'))
         subprocess.check_call(['./build.sh', str(multiprocessing.cpu_count())], cwd=os.path.join(d, 'snark'))
         shutil.copyfile(os.path.join(d, 'snark', 'build', 'libsnark', 'zkay_interface', 'run_snark'), os.path.join(target_dir, 'run_snark'))
