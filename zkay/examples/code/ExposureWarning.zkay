@@ -1,0 +1,32 @@
+pragma zkay ^0.2.0;
+
+/*
+ * Imagine for this contract that everyone is assigned some pseudonymous address.
+ * Phones share these addresses among each other using Bluethooth (or similar).
+ * If someone is infected, the hospital assigns them a second address which they
+ * can use to notify people they have been in contact with about their exposure.
+ */
+contract ExposureWarning {
+
+	final address hospital;
+	mapping(address => bool) is_infected;
+	mapping(address!x => uint@x<+>) exposures;
+
+	constructor() public {
+		hospital = me;
+	}
+
+	function setInfected(address who) public {
+		require(me == hospital);
+		is_infected[who] = true;
+	}
+
+	function notifyAboutExposure(address target) public {
+		require(is_infected[me]);
+		exposures[target]++;
+	}
+
+	function queryExposures() public view returns (uint@me) {
+		return exposures[me];
+	}
+}

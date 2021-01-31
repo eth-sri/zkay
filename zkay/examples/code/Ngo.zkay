@@ -1,0 +1,50 @@
+pragma zkay ^0.2.0;
+
+/*
+ * An NGO that wants to keep the contributions it receives (even the total of all contributions) secret,
+ * while also being able to prove to potential donors that the contributions it receives get paid to
+ * supported parties / causes in the ratios it claims.
+ * Assumes that NGO and lobbying / directAid do not conspire to cheat.
+ */
+contract NGO {
+
+	final address ngo;
+
+	final address lobbying;
+	final uint minPercentPaidToLobbying = 50;
+	final address directAid;
+	final uint minPercentPaidToDirectAid = 30;
+
+	uint@ngo<+> totalContributions;
+
+	mapping(address => uint@ngo<+>) actualReceived;
+	mapping(address => uint@ngo<+>) minReceived;
+
+	uint correctnessLastProved;
+
+	constructor(address _lobbying, address _directAid) public {
+		ngo = me;
+		lobbying = _lobbying;
+		directAid = _directAid;
+		totalContributions = 0;
+		correctnessLastProved = now;
+	}
+
+	function contribute() public payable {
+		totalContributions += msg.value;
+		minReceived[lobbying] = totalContributions * minPercentPaidToLobbying;
+		minReceived[directAid] = totalContributions * minPercentPaidToDirectAid;
+	}
+
+	function reportReceivedContributions(uint@me amountReceived) public {
+		require(me == lobbying || me == directAid);
+		actualReceived[me] = reveal(amountReceived * 100, ngo);
+	}
+
+	function proveMinContributions() public {
+		require(me == ngo);
+		require(reveal(actualReceived[lobbying] >= minReceived[lobbying], all));
+		require(reveal(actualReceived[directAid] >= minReceived[directAid], all));
+		correctnessLastProved = now;
+	}
+}

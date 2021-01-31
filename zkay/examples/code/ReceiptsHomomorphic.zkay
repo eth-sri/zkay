@@ -1,0 +1,38 @@
+pragma zkay >=0.2.0;
+
+// Description: Track and audit cash receipts
+// Domain: Retail
+contract Receipts {
+
+	final address business;
+	mapping(uint => uint@business) in_receipts;
+	mapping(uint => uint@business) out_receipts;
+	uint@business income;
+	uint@business<+> costs;
+	int248@business<+> balance;
+
+	constructor() public {
+		business = me;
+		income = 0;
+		costs = 0;
+		balance = 0;
+	}
+
+	function give_receipt(uint id, uint@me amount) public {
+		require(business == me);
+		out_receipts[id] = amount;
+		income = income + amount;
+		balance += int248(amount);
+	}
+
+	function receive_receipt(uint id, uint@me amount) public {
+		in_receipts[id] = reveal(amount, business);
+		costs += reveal(amount, business);
+		balance -= reveal(int248(amount), business);
+	}
+
+	function check(uint id) public {
+		require(business == me);
+		require(reveal(in_receipts[id] == out_receipts[id], all));
+	}
+}

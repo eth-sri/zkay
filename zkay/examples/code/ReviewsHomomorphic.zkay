@@ -1,0 +1,55 @@
+pragma zkay >=0.2.0;
+
+// Description: Blind paper reviews and acceptance decisions
+// Now comes with a variable number of reviewers, acceptance is judged on the average score a paper received.
+// Domain: Academia
+contract Reviews {
+
+	final address pc;
+
+	uint required_reviews = 2;
+	uint threshold = 3; // required average score
+	// Q: Why this mapping? This disallows multiple papers per author. Is uint@pc not allowed as a key type?
+	// If not, what about mapping(uint => address@pc)? If address must be public, mapping(uint => uint160@pc) and cast back-and-forth? address == uint160
+	mapping(address => uint@pc) paperForAuthor;
+	mapping(address!x => bool@x) accepted;
+
+	uint num_reviewers = 0;
+	mapping(address => bool) is_reviewer;
+	mapping(uint => uint) num_reviews;
+	mapping(uint => uint@pc<+>) sum_of_reviews;
+	mapping(address => mapping(uint => bool)) reviewer_has_reviewed;
+
+	constructor() public {
+		pc = me;
+	}
+
+	function registerReviewer(address reviewer) public {
+		require(me == pc);
+		num_reviewers++;
+		is_reviewer[reviewer] = true;
+	}
+
+	function registerPaper(uint@me paperId) public {
+		paperForAuthor[me] = reveal(paperId, pc);
+	}
+
+	function recordReview(uint paperId, uint@me score) public {
+		require(is_reviewer[me]);
+		require(!reviewer_has_reviewed[me][paperId]);
+		require(reveal(score >= 0 && score <= 5, all));
+		num_reviews[paperId]++;
+		sum_of_reviews[paperId] += reveal(score, pc); // What if sum_of_reviews[paperId] was uninit-zero? Requires correct handling!
+		reviewer_has_reviewed[me][paperId] = true;
+	}
+
+	function decideAcceptance(address author) public {
+		require(pc == me);
+		uint paperId = reveal(paperForAuthor[author], all);
+		require(num_reviews[paperId] >= required_reviews);
+
+		uint count = num_reviews[paperId];
+		uint@me sum = sum_of_reviews[paperId];
+		accepted[author] = reveal(sum >= count * threshold, author);
+	}
+}

@@ -8,6 +8,7 @@ contract Token {
 	mapping(address => bool) registered;
 
 	function register() public {
+		require(!registered[me]);
 		balance[me] = 0;
 		registered[me] = true;
 	}

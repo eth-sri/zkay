@@ -1,0 +1,64 @@
+pragma zkay >=0.2.0;
+
+contract Interest {
+
+	final uint DAY = 24 * 60 * 60;
+	final uint INVESTMENT_PERIOD = 30 * DAY;
+	final uint PAYOUT_PERCENT = 105;
+
+	final address bank;
+	uint@bank<+> bank_total_investments; // bank has to know how many tokens it may use
+
+	mapping(address => bool) registered;
+	mapping(address!x => uint@x<+>) checkings;
+	mapping(address!x => uint@x) investments;
+	mapping(address!x => uint@x) investment_deadline;
+
+	uint _now = now; // For testing purposes only, need to be able to advance time
+
+	constructor() public {
+		bank = me;
+	}
+
+	function register() public {
+		require(!registered[me]);
+		checkings[me] = 0;
+		investments[me] = 0;
+		registered[me] = true;
+	}
+
+	function buy() public payable {
+		require(registered[me]);
+		checkings[me] += msg.value;
+	}
+
+	function send_tokens(uint@me v, address receiver) public {
+		require(registered[me] && registered[receiver]);
+		require(reveal(checkings[me] > v, all));
+		checkings[me] -= v;
+		checkings[receiver] += reveal(v, receiver);
+	}
+
+	function invest(uint@me amount) public {
+		require(reveal(investments[me] == 0, all));
+		require(reveal(checkings[me] >= amount, all));
+		checkings[me] -= amount;
+		investments[me] = amount;
+		investment_deadline[me] = _now + INVESTMENT_PERIOD;
+		bank_total_investments += reveal(amount, bank);
+	}
+
+	function pay_out_investment() public {
+		require(reveal(investment_deadline[me] <= _now, all)); // waited long enough
+		require(reveal(investments[me] > 0, all));
+		bank_total_investments -= reveal(investments[me], bank);
+		checkings[me] += (investments[me] * PAYOUT_PERCENT) / 100;
+		investments[me] = 0;
+		investment_deadline[me] = 0;
+	}
+
+	function _test_advance_time() public {
+		require(me == bank);
+		_now += INVESTMENT_PERIOD;
+	}
+}
