@@ -272,11 +272,13 @@ def _recursive_update(lhs, rhs, analysis: PartitionState, merge: bool):
     else:
         lhs = lhs.privacy_annotation_label()
         rhs = rhs.privacy_annotation_label()
-        if lhs and rhs:
+        if lhs and rhs and analysis.has(rhs):
             if merge:
                 analysis.merge(lhs, rhs)
             else:
                 analysis.move_to(lhs, rhs)
+        elif lhs:
+            analysis.move_to_separate(lhs)
 
 
 def recursive_merge(lhs, rhs, analysis: PartitionState):
