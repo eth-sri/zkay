@@ -63,15 +63,15 @@ class TestOffchainBase(TestScenarios):
         # Deploy contract and connect all users
         users = {}
         deployment_transaction = self.scenario.deployment_transaction()
+        deployment_args = [user_addresses[user] if user in user_addresses else user for user in deployment_transaction.args]
         owner = deployment_transaction.user
         contract_address = None
         for user, address in user_addresses.items():
             if user == owner:
                 if deployment_transaction.amount is None:
-                    contract = oc.deploy(*deployment_transaction.args, user=address)
+                    contract = oc.deploy(*deployment_args, user=address)
                 else:
-                    contract = oc.deploy(*deployment_transaction.args, user=address,
-                                         wei_amount=deployment_transaction.amount)
+                    contract = oc.deploy(*deployment_args, user=address, wei_amount=deployment_transaction.amount)
                 self.assertIsNotNone(contract)
                 contract_address = contract.address
                 users[owner] = contract
