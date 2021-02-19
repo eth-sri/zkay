@@ -357,6 +357,12 @@ class TypeCheckVisitor(AstVisitor):
 
     @staticmethod
     def implicitly_converted_to(expr: Expression, t: TypeName) -> Expression:
+        if isinstance(expr, ReclassifyExpr) and not expr.privacy.is_all_expr():
+            # Cast the argument of the ReclassifyExpr instead
+            expr.expr = TypeCheckVisitor.implicitly_converted_to(expr.expr, t)
+            expr.annotated_type.type_name = expr.expr.annotated_type.type_name
+            return expr
+
         assert expr.annotated_type.type_name.is_primitive_type()
         cast = PrimitiveCastExpr(t.clone(), expr, is_implicit=True).override(
             parent=expr.parent, statement=expr.statement, line=expr.line, column=expr.column)
