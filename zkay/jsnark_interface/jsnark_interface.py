@@ -6,9 +6,8 @@ from zkay.config import cfg
 from zkay.utils.helpers import hash_file
 from zkay.utils.run_command import run_command
 from zkay.zkay_ast.ast import indent
-from zkay.zkay_ast.homomorphism import Homomorphism
 
-# path jo jsnark interface jar
+# path to jsnark interface jar
 circuit_builder_jar = os.path.join(os.path.dirname(os.path.realpath(__file__)),  'JsnarkCircuitBuilder.jar')
 circuit_builder_jar_hash = hash_file(circuit_builder_jar).hex()
 
