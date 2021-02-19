@@ -5,7 +5,7 @@ from typing import Tuple, Any, List, Union
 from Crypto.Math.Primality import generate_probable_prime
 from Crypto.Random.random import getrandbits
 
-from zkay.config import cfg
+from zkay.config import cfg, zk_print
 from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import ZkayHomomorphicCryptoInterface
 from zkay.transaction.types import KeyPair, PublicKeyValue, PrivateKeyValue
@@ -18,13 +18,13 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
         key_file = os.path.join(cfg.data_dir, 'keys', f'paillier_{self.params.key_bits}_{address}.bin')
         os.makedirs(os.path.dirname(key_file), exist_ok=True)
         if not os.path.exists(key_file):
-            print(f'Key pair not found, generating new Paillier secret...')
+            zk_print(f'Key pair not found, generating new Paillier secret...')
             pk, sk = self._generate_key_pair()
             self._write_key_pair(key_file, pk, sk)
-            print('Done')
+            zk_print('Done')
         else:
             # Restore saved key pair
-            print(f'Paillier secret found, loading from file {key_file}')
+            zk_print(f'Paillier secret found, loading from file {key_file}')
             pk, sk = self._read_key_pair(key_file)
 
         return KeyPair(PublicKeyValue(pk, params=self.params), PrivateKeyValue(sk))

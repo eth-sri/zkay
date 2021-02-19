@@ -1,0 +1,8 @@
+pragma zkay >=0.2.0;
+
+contract PaillierBenchmark {
+
+	constructor() public {
+		uint@me val = 1;
+	}
+}
