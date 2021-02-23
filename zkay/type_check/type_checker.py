@@ -1,7 +1,8 @@
 from zkay.type_check.contains_private import contains_private
 from zkay.type_check.final_checker import check_final
 from zkay.type_check.type_exceptions import TypeMismatchException, TypeException
-from zkay.zkay_ast.ast import IdentifierExpr, ReturnStatement, IfStatement, AnnotatedTypeName, Expression, TypeName, \
+from zkay.zkay_ast.ast import FunctionTypeName, IdentifierExpr, ReturnStatement, IfStatement, AnnotatedTypeName, \
+    Expression, TypeName, \
     StateVariableDeclaration, Mapping, AssignmentStatement, MeExpr, ReclassifyExpr, FunctionCallExpr, \
     BuiltinFunction, VariableDeclarationStatement, RequireStatement, MemberAccessExpr, TupleType, IndexExpr, Array, \
     LocationExpr, NewExpr, TupleExpr, ConstructorOrFunctionDefinition, WhileStatement, ForStatement, NumberLiteralType, \
@@ -21,17 +22,17 @@ def type_check(ast):
 
 class TypeCheckVisitor(AstVisitor):
 
-    def get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName, allow_rehom: bool = False):
+    def get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName):
         if isinstance(rhs, TupleExpr):
             if not isinstance(rhs, TupleExpr) or not isinstance(expected_type.type_name, TupleType) or len(rhs.elements) != len(expected_type.type_name.types):
                 raise TypeMismatchException(expected_type, rhs.annotated_type, rhs)
-            exprs = [self.get_rhs(a, e, allow_rehom) for e, a, in zip(expected_type.type_name.types, rhs.elements)]
+            exprs = [self.get_rhs(a, e) for e, a, in zip(expected_type.type_name.types, rhs.elements)]
             return replace_expr(rhs, TupleExpr(exprs)).as_type(TupleType([e.annotated_type for e in exprs]))
 
         require_rehom = False
         instance = rhs.instanceof(expected_type)
 
-        if not instance and allow_rehom:
+        if not instance:
             require_rehom = True
             expected_matching_hom = expected_type.with_homomorphism(rhs.annotated_type.homomorphism)
             instance = rhs.instanceof(expected_matching_hom)
@@ -82,7 +83,7 @@ class TypeCheckVisitor(AstVisitor):
             raise TypeException("Assignment target is not a location", ast.lhs)
 
         expected_type = ast.lhs.annotated_type
-        ast.rhs = self.get_rhs(ast.rhs, expected_type, allow_rehom=True)
+        ast.rhs = self.get_rhs(ast.rhs, expected_type)
 
         # prevent modifying final
         f = ast.function
@@ -91,7 +92,7 @@ class TypeCheckVisitor(AstVisitor):
 
     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
         if ast.expr:
-            ast.expr = self.get_rhs(ast.expr, ast.variable_declaration.annotated_type, allow_rehom=True)
+            ast.expr = self.get_rhs(ast.expr, ast.variable_declaration.annotated_type)
 
     @staticmethod
     def has_private_type(ast: Expression):
@@ -134,8 +135,8 @@ class TypeCheckVisitor(AstVisitor):
                 false_type = ast.args[2].annotated_type.with_homomorphism(hom)
                 p = true_type.combined_privacy(ast.analysis, false_type)
                 a = res_t.annotate(p).with_homomorphism(hom)
-            ast.args[1] = self.get_rhs(ast.args[1], a, allow_rehom=True)
-            ast.args[2] = self.get_rhs(ast.args[2], a, allow_rehom=True)
+            ast.args[1] = self.get_rhs(ast.args[1], a)
+            ast.args[2] = self.get_rhs(ast.args[2], a)
 
             ast.annotated_type = a
             return
@@ -217,9 +218,9 @@ class TypeCheckVisitor(AstVisitor):
             # Add implicit casts for arguments
             arg_pt = arg_t.annotate(p)
             if func.is_shiftop() and p is not None:
-                ast.args[0] = self.get_rhs(ast.args[0], arg_pt, allow_rehom=True)
+                ast.args[0] = self.get_rhs(ast.args[0], arg_pt)
             else:
-                ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt, allow_rehom=True), ast.args)
+                ast.args[:] = map(lambda argument: self.get_rhs(argument, arg_pt), ast.args)
 
         ast.annotated_type = out_t.annotate(p)
 
@@ -245,7 +246,7 @@ class TypeCheckVisitor(AstVisitor):
         expected_arg_types = homomorphic_func.input_types()
 
         # Check that the argument types are correct
-        ast.args[:] = map(lambda arg, arg_pt: self.get_rhs(arg, arg_pt, allow_rehom=True),
+        ast.args[:] = map(lambda arg, arg_pt: self.get_rhs(arg, arg_pt),
                           ast.args, expected_arg_types)
 
     @staticmethod
@@ -382,6 +383,7 @@ class TypeCheckVisitor(AstVisitor):
             ast.annotated_type = self.handle_cast(ast.args[0], ast.func.target.annotated_type.type_name)
         elif isinstance(ast.func, LocationExpr):
             ft = ast.func.annotated_type.type_name
+            assert(isinstance(ft, FunctionTypeName))
 
             if len(ft.parameters) != len(ast.args):
                 raise TypeException("Wrong number of arguments", ast.func)
@@ -477,9 +479,9 @@ class TypeCheckVisitor(AstVisitor):
         if ast.expr is None:
             self.get_rhs(TupleExpr([]), rt)
         elif not isinstance(ast.expr, TupleExpr):
-            ast.expr = self.get_rhs(TupleExpr([ast.expr]), rt, allow_rehom=True)
+            ast.expr = self.get_rhs(TupleExpr([ast.expr]), rt)
         else:
-            ast.expr = self.get_rhs(ast.expr, rt, allow_rehom=True)
+            ast.expr = self.get_rhs(ast.expr, rt)
 
     def visitTupleExpr(self, ast: TupleExpr):
         ast.annotated_type = AnnotatedTypeName(TupleType([elem.annotated_type.clone() for elem in ast.elements]))
