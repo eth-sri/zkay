@@ -7,6 +7,7 @@ from zkay.compiler.privacy.library_contracts import bn128_scalar_field
 from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair, RandomnessValue, \
     ZkayHomomorphicCryptoInterface
+from zkay.transaction.types import CipherValue
 
 
 class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
@@ -34,9 +35,9 @@ class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
             plain = plain - bn128_scalar_field
         return plain, list(RandomnessValue(params=self.params)[:])
 
-    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[List[int], int]) -> List[int]:
-        def deserialize(operand: Union[List[int], int]) -> int:
-            if isinstance(operand, List):
+    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[CipherValue, int]) -> List[int]:
+        def deserialize(operand: Union[CipherValue, int]) -> int:
+            if isinstance(operand, CipherValue):
                 val = operand[0]
                 return val - 1 if val != 0 else 0
             else:

@@ -8,8 +8,8 @@ from zkay.zkay_ast.ast import CodeVisitor, Block, IndentBlock, IfStatement, inde
     ElementaryTypeName, TypeName, UserDefinedTypeName, \
     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
-    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, DoWhileStatement, \
-    EnumDefinition, EnumTypeName, StructTypeName, get_privacy_expr_from_label
+    StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, \
+    DoWhileStatement, EnumDefinition, EnumTypeName, StructTypeName, get_privacy_expr_from_label
 from zkay.config import cfg
 from zkay.zkay_ast.homomorphism import Homomorphism
 
@@ -226,7 +226,7 @@ class PythonCodeVisitor(CodeVisitor):
             else:
                 target_address = ast.annotated_type.zkay_type.privacy_annotation
                 target_expr = get_privacy_expr_from_label(target_address.privacy_annotation_label())
-                target_code = self.visit(target_expr.clone())
+                target_code = 'msg.sender' if target_expr.is_me_expr() else self.visit(target_expr.clone())
                 crypto_backend = cfg.get_crypto_params(homomorphism).crypto_name
                 fstr = f"self.api.do_homomorphic_op('{ast.func.op}', '{crypto_backend}', {target_code}{', {}' * ast.func.arity()})"
 

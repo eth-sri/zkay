@@ -59,6 +59,11 @@ cryptoparams = {
         'enc_signed_as_unsigned': True,
     },
 
+    # WARNING: Not cryptographically secure. Values retained for developer sanity.
+    # Recommended values:
+    # - key_bits: 2048
+    # - cipher_payload_bytes: 4096 // 8
+    # - rnd_bytes: 2048 // 8
     'paillier': {
         'key_bits': 320,  # 320-bit n
         'cipher_payload_bytes': 640 // 8,  # cipher is mod n^2, thus at most twice the bit length

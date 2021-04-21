@@ -7,7 +7,7 @@ import textwrap
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import IntEnum
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 from os import linesep
 from typing import List, Dict, Union, Optional, Callable, Set, TypeVar
 
@@ -442,14 +442,15 @@ class BuiltinFunction(Expression):
         inaccessible_arg_types = list(filter(lambda x: not x.is_accessible(analysis), arg_types))
         if len(inaccessible_arg_types) == 0:  # Else we would not have selected a homomorphic operation
             raise ValueError('Cannot select proper homomorphic function if all arguments are public or @me-private')
-        first_inaccessible_type = inaccessible_arg_types[0]
+        elem_type = reduce(lambda l, r: l.combined_type(r, True), map(lambda a: a.type_name, arg_types))
+        base_type = AnnotatedTypeName(elem_type, inaccessible_arg_types[0].privacy_annotation)
         public_args = list(map(AnnotatedTypeName.is_public, arg_types))
 
         for hom in homomorphic_builtin_functions:
             # Can have more public arguments, but not fewer (hom.public_args[i] implies public_args[i])
             args_match = [(not h) or a for a, h in zip(public_args, hom.public_args)]
             if self.op == hom.op and all(args_match):
-                target_type = first_inaccessible_type.with_homomorphism(hom.homomorphism)
+                target_type = base_type.with_homomorphism(hom.homomorphism)
                 return HomomorphicBuiltinFunction(target_type, hom.public_args)
         else:
             return None
@@ -2311,8 +2312,19 @@ class CodeVisitor(AstVisitor):
             lexpr, rexpr = self.visit(lhs.arr), self.visit(rhs.arr)
             lbase = '' if lhs.base is None else f'{self.visit(lhs.base)} + '
             rbase = '' if rhs.base is None else f'{self.visit(rhs.base)} + '
-            for i in range(lhs.size):
-                s += fstr.format(f'{lexpr}[{lbase}{lhs.start_offset + i}]', op, f'{rexpr}[{rbase}{rhs.start_offset + i}]') + '\n'
+            if lhs.size <= 3:
+                for i in range(lhs.size):
+                    s += fstr.format(f'{lexpr}[{lbase}{lhs.start_offset + i}]', op,
+                                     f'{rexpr}[{rbase}{rhs.start_offset + i}]') + '\n'
+            else:
+                i = cfg.reserved_name_prefix + 'i'
+                if lhs.start_offset != 0:
+                    lbase += f'{lhs.start_offset} + '
+                if rhs.start_offset != 0:
+                    rbase += f'{rhs.start_offset} + '
+                s += f'for (uint {i} = 0; {i} < {lhs.size}; ++{i}) {{\n'
+                s += indent(fstr.format(f'{lexpr}[{lbase}{i}]', op, f'{rexpr}[{rbase}{i}]')) + '\n'
+                s += '}\n'
             return s[:-1]
         else:
             lhs = self.visit(lhs)

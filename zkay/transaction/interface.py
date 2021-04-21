@@ -632,7 +632,7 @@ class ZkayCryptoInterface(metaclass=ABCMeta):
 class ZkayHomomorphicCryptoInterface(ZkayCryptoInterface):
 
     @abstractmethod
-    def do_op(self, op: str, public_key: List[int], *args: Union[List[int], int]) -> List[int]:
+    def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:
         pass
 
 

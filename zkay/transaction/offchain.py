@@ -427,7 +427,7 @@ class ApiWrapper:
 
         crypto_inst = self.__crypto[params.crypto_name]
         assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface)
-        result = crypto_inst.do_op(op, pk[:], *[list(arg) if isinstance(arg, CipherValue) else arg for arg in args])
+        result = crypto_inst.do_op(op, pk[:], *args)
         return CipherValue(result, params=params)
 
     def _req_state_var(self, name: str, *indices, count=0) -> Any:

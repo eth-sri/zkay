@@ -3,12 +3,12 @@ from math import gcd
 from typing import Tuple, Any, List, Union
 
 from Crypto.Math.Primality import generate_probable_prime
-from Crypto.Random.random import getrandbits
+from Crypto.Random.random import randrange
 
 from zkay.config import cfg, zk_print
 from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import ZkayHomomorphicCryptoInterface
-from zkay.transaction.types import KeyPair, PublicKeyValue, PrivateKeyValue
+from zkay.transaction.types import CipherValue, KeyPair, PublicKeyValue, PrivateKeyValue
 
 
 class PaillierCrypto(ZkayHomomorphicCryptoInterface):
@@ -67,20 +67,26 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
 
         return n_chunks, p_chunks + q_chunks
 
-    def _enc(self, plain: int, _: int, target_pk: int) -> Tuple[List[int], List[int]]:
-        n = target_pk
-        n_sqr = n * n
-        plain = plain % n  # handle negative numbers
+    @staticmethod
+    def sample_below(n: int, co_prime: bool = False):
         while True:
-            random = getrandbits(n.bit_length())
-            if 0 < random < n and (gcd(random, n) == 1):
-                break
+            random = randrange(n)
+            if not co_prime or (gcd(random, n) == 1):
+                return random
 
+    def _enc_with_rand(self, plain: int, random: int, n: int) -> List[int]:
+        n_sqr = n * n
         g_pow_plain = n * plain + 1
         rand_pow_n = pow(random, n, n_sqr)
         cipher = (g_pow_plain * rand_pow_n) % n_sqr
+        return self.serialize_pk(cipher, self.params.cipher_bytes_payload)
 
-        cipher_chunks = self.serialize_pk(cipher, self.params.cipher_bytes_payload)
+    def _enc(self, plain: int, _: int, target_pk: int, is_public: bool) -> Tuple[List[int], List[int]]:
+        n = target_pk
+        plain = plain % n  # handle negative numbers
+        random = 1 if is_public else self.sample_below(n, co_prime=True)
+
+        cipher_chunks = self._enc_with_rand(plain, random, n)
         random_chunks = self.serialize_pk(random, self.params.rnd_bytes)
 
         return cipher_chunks, random_chunks
@@ -125,12 +131,12 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
 
         return plain, random_chunks
 
-    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[List[int], int]) -> List[int]:
+    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[CipherValue, int]) -> List[int]:
         n = self.deserialize_pk(public_key)
         n_sqr = n * n
 
-        def deserialize(operand: Union[List[int], int]) -> int:
-            if isinstance(operand, List):
+        def deserialize(operand: Union[CipherValue, int]) -> int:
+            if isinstance(operand, CipherValue):
                 val = self.deserialize_pk(operand[:])
                 return val if val != 0 else 1  # If ciphertext is 0, return 1 == Enc(0, 0)
             else:
@@ -138,14 +144,19 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
         operands = [deserialize(arg) for arg in args]
 
         if op == 'sign-':
+            assert isinstance(args[0], CipherValue)
             result = pow(operands[0], -1, n_sqr)
         elif op == '+':
+            assert isinstance(args[0], CipherValue) and isinstance(args[1], CipherValue)
             result = (operands[0] * operands[1]) % n_sqr
         elif op == '-':
+            assert isinstance(args[0], CipherValue) and isinstance(args[1], CipherValue)
             result = (operands[0] * pow(operands[1], -1, n_sqr)) % n_sqr
         elif op == '*' and isinstance(args[1], int):
+            assert isinstance(args[0], CipherValue)
             result = pow(operands[0], operands[1], n_sqr)
         elif op == '*' and isinstance(args[0], int):
+            assert isinstance(args[1], CipherValue)
             result = pow(operands[1], operands[0], n_sqr)
         else:
             raise ValueError(f'Unsupported operation {op}')
