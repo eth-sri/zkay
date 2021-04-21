@@ -81,10 +81,10 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
         cipher = (g_pow_plain * rand_pow_n) % n_sqr
         return self.serialize_pk(cipher, self.params.cipher_bytes_payload)
 
-    def _enc(self, plain: int, _: int, target_pk: int, is_public: bool) -> Tuple[List[int], List[int]]:
+    def _enc(self, plain: int, _: int, target_pk: int) -> Tuple[List[int], List[int]]:
         n = target_pk
         plain = plain % n  # handle negative numbers
-        random = 1 if is_public else self.sample_below(n, co_prime=True)
+        random = self.sample_below(n, co_prime=True)
 
         cipher_chunks = self._enc_with_rand(plain, random, n)
         random_chunks = self.serialize_pk(random, self.params.rnd_bytes)
