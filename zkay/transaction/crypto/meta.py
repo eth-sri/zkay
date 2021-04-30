@@ -72,5 +72,15 @@ cryptoparams = {
         'rnd_bytes': 320 // 8,  # random value mod n, thus same size as n
         'rnd_chunk_size': 120 // 8,  # LongElement.CHUNK_SIZE / sizeof(byte)
         'enc_signed_as_unsigned': False,
+    },
+
+    'elgamal': {
+        'key_bits': 2*253,                  # two BabyJubJub coordinates
+        'cipher_payload_bytes': 128,        # four BabyJubJub coordinates
+        'cipher_chunk_size': 32,            # one BabyJubJub coordinate
+        'symmetric': False,
+        'rnd_bytes': 32,                    # one element from the BabyJubJub scalar field
+        'rnd_chunk_size': 32,
+        'enc_signed_as_unsigned': False,
     }
 }

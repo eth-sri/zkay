@@ -9,6 +9,7 @@ from zkay.transaction.crypto.ecdh_aes import EcdhAesCrypto
 from zkay.transaction.crypto.dummy import DummyCrypto
 from zkay.transaction.crypto.rsa_pkcs15 import RSAPKCS15Crypto
 from zkay.transaction.crypto.rsa_oaep import RSAOAEPCrypto
+from zkay.transaction.crypto.elgamal import ElgamalCrypto
 from zkay.transaction.keystore import *
 from zkay.transaction.prover import *
 
@@ -19,7 +20,8 @@ _crypto_classes = {
     'rsa-oaep': RSAOAEPCrypto,
     'ecdh-aes': EcdhAesCrypto,
     'ecdh-chaskey': EcdhChaskeyCrypto,
-    'paillier': PaillierCrypto
+    'paillier': PaillierCrypto,
+    'elgamal': ElgamalCrypto
 }
 
 _prover_classes = {
