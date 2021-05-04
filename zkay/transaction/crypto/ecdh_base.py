@@ -1,7 +1,7 @@
 import os
 import secrets
 
-from zkay.config import cfg
+from zkay.config import cfg, zk_print
 from zkay.jsnark_interface.jsnark_interface import circuit_builder_jar
 from zkay.transaction.interface import PrivateKeyValue, PublicKeyValue, KeyPair
 from zkay.transaction.interface import ZkayCryptoInterface
@@ -27,16 +27,16 @@ class EcdhBase(ZkayCryptoInterface):
         os.makedirs(os.path.dirname(key_file), exist_ok=True)
         if not os.path.exists(key_file):
             # Generate fresh randomness for ec private key
-            print(f'Key pair not found, generating new EC secret...')
+            zk_print(f'Key pair not found, generating new EC secret...')
             rnd = secrets.token_bytes(32)
 
             # Store randomness so that address will have the same key every time
             with open(key_file, 'wb') as f:
                 f.write(rnd)
-            print('done')
+            zk_print('done')
         else:
             # Restore saved randomness
-            print(f'EC secret found, loading from file {key_file}')
+            zk_print(f'EC secret found, loading from file {key_file}')
             with open(key_file, 'rb') as f:
                 rnd = f.read()
 

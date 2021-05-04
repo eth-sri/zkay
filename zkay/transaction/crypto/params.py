@@ -25,7 +25,7 @@ class CryptoParams:
 
     @property
     def key_bytes(self) -> int:
-        return self.key_bits // 8
+        return int(math.ceil(self.key_bits / 8))
 
     @property
     def key_len(self) -> int:

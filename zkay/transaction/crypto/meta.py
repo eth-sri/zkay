@@ -75,7 +75,7 @@ cryptoparams = {
     },
 
     'elgamal': {
-        'key_bits': 2*253,                  # two BabyJubJub coordinates
+        'key_bits': 2*254,                  # two BabyJubJub coordinates (fit into 254 bits each)
         'cipher_payload_bytes': 128,        # four BabyJubJub coordinates
         'cipher_chunk_size': 32,            # one BabyJubJub coordinate
         'symmetric': False,
