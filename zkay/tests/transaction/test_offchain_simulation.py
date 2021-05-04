@@ -176,3 +176,11 @@ class TestOffchainPaillierEnc(TestOffchainBase):
     def test_offchain_simulation_paillier(self):
         with _mock_config('paillier', None, True):
             self.run_scenario(suffix='Paillier', use_cache=cfg.use_circuit_cache_during_testing_with_encryption)
+
+
+@parameterized_class(('name', 'scenario'), all_scenarios)
+class TestOffchainElgamal(TestOffchainBase):
+    @unittest.skipIf(False, "No reason")
+    def test_offchain_simulation_elgamal(self):
+        with _mock_config('elgamal', 'elgamal', False):
+            self.run_scenario()
