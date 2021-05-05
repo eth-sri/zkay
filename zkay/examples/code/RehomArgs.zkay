@@ -3,20 +3,20 @@ pragma zkay >=0.2.0;
 contract RehomArgs {
 
 	final address owner;
-	uint@owner<+> y;
-	uint@owner    z;
+	uint32@owner<+> y;
+	uint32@owner    z;
 
 	constructor() public {
 		owner = me;
 	}
 
-	function add_hom(uint@me x) public returns (uint@me<+>) {
+	function add_hom(uint32@me x) public returns (uint32@me<+>) {
 		require(me == owner);
 		y = addhom(x);
 		return y;
 	}
 
-	function un_hom(uint@me<+> x) public returns (uint@me) {
+	function un_hom(uint32@me<+> x) public returns (uint32@me) {
 		require(me == owner);
 		z = unhom(x);
 		return z;

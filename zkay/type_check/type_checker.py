@@ -73,12 +73,6 @@ class TypeCheckVisitor(AstVisitor):
                 self.check_final(fct, elem)
 
     def visitAssignmentStatement(self, ast: AssignmentStatement):
-        # NB TODO? Should we optionally disallow writes to variables which are owned by someone else (with e.g. a new modifier)
-        #if ast.lhs.annotated_type.is_private():
-        #    expected_rhs_type = AnnotatedTypeName(ast.lhs.annotated_type.type_name, Expression.me_expr())
-        #    if not ast.lhs.instanceof(expected_rhs_type):
-        #        raise TypeException("Only owner can assign to its private variables", ast)
-
         if not isinstance(ast.lhs, (TupleExpr, LocationExpr)):
             raise TypeException("Assignment target is not a location", ast.lhs)
 
@@ -587,6 +581,14 @@ class TypeCheckVisitor(AstVisitor):
         if ast.privacy_annotation != Expression.all_expr():
             if not ast.type_name.can_be_private():
                 raise TypeException(f'Currently, we do not support private {str(ast.type_name)}', ast)
+            if ast.homomorphism != Homomorphism.NON_HOMOMORPHIC:
+                # only support uint8, uint16, uint24, uint32 homomorphic data types
+                if not ast.type_name.is_numeric:
+                    raise TypeException(f'Homomorphic type not supported for {str(ast.type_name)}: Only numeric types supported', ast)
+                elif ast.type_name.signed:
+                    raise TypeException(f'Homomorphic type not supported for {str(ast.type_name)}: Only unsigned types supported', ast)
+                elif ast.type_name.elem_bitwidth > 32:
+                    raise TypeException(f'Homomorphic type not supported for {str(ast.type_name)}: Only up to 32-bit numeric types supported', ast)
 
         p = ast.privacy_annotation
         if isinstance(p, IdentifierExpr):

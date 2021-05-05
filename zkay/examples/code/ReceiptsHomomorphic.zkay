@@ -5,11 +5,11 @@ pragma zkay >=0.2.0;
 contract Receipts {
 
 	final address business;
-	mapping(uint => uint@business) in_receipts;
-	mapping(uint => uint@business) out_receipts;
-	uint@business income;
-	uint@business<+> costs;
-	int248@business<+> balance;
+	mapping(uint32 => uint32@business) in_receipts;
+	mapping(uint32 => uint32@business) out_receipts;
+	uint32@business income;
+	uint32@business<+> costs;
+	uint32@business<+> balance;
 
 	constructor() public {
 		business = me;
@@ -18,20 +18,20 @@ contract Receipts {
 		balance = 0;
 	}
 
-	function give_receipt(uint id, uint@me amount) public {
+	function give_receipt(uint32 id, uint32@me amount) public {
 		require(business == me);
 		out_receipts[id] = amount;
 		income = income + amount;
-		balance += int248(amount);
+		balance += amount;
 	}
 
-	function receive_receipt(uint id, uint@me amount) public {
+	function receive_receipt(uint32 id, uint32@me amount) public {
 		in_receipts[id] = reveal(amount, business);
 		costs += reveal(amount, business);
-		balance -= reveal(int248(amount), business);
+		balance -= reveal(amount, business);
 	}
 
-	function check(uint id) public {
+	function check(uint32 id) public {
 		require(business == me);
 		require(reveal(in_receipts[id] == out_receipts[id], all));
 	}

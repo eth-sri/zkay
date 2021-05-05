@@ -12,12 +12,12 @@ contract Referendum {
 	final address counter1;
 	final address counter2;
 	final address counter3;
-	mapping(address!x => int128@x<+>) votes;
+	mapping(address!x => uint32@x<+>) votes;
 	mapping(address => bool) hasVoted;
 
 	uint resultsAnnounced;
-	mapping(address => int128) results;
-	int128 combinedResult;
+	mapping(address => uint32) results;
+	uint32 combinedResult;
 
 	constructor(address c1, address c2, address c3) public {
 		counter1 = c1;
@@ -25,10 +25,10 @@ contract Referendum {
 		counter3 = c3;
 	}
 
-	function vote(int128@me my_vote, int64@me rand1, int64@me rand2, int64@me rand3) public {
+	function vote(uint32@me my_vote, uint32@me rand1, uint32@me rand2, uint32@me rand3) public {
 		require(!hasVoted[me]);
 		require(resultsAnnounced == 0);
-		require(reveal(my_vote == -1 || my_vote == 1, all));
+		require(reveal(my_vote == -1 || my_vote == 1, all));    // TODO: fix to work with unsigned votes
 
 		votes[counter1] += reveal(my_vote + rand1 - rand2, counter1);
 		votes[counter2] += reveal(my_vote + rand2 - rand3, counter2);
@@ -43,7 +43,7 @@ contract Referendum {
 		resultsAnnounced++;
 	}
 
-	function getResult() public returns (int128) {
+	function getResult() public returns (uint32) {
 		require(resultsAnnounced == 3);
 		combinedResult = (results[counter1] + results[counter2] + results[counter3]) / 3;
 		return combinedResult;

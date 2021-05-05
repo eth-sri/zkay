@@ -8,7 +8,7 @@ contract RevealHomomorphic {
 		other = me;
 	}
 
-	function f(uint@me a) public {
-		uint@other<+> x = reveal(addhom(a), other);
+	function f(uint32@me a) public {
+		uint32@other<+> x = reveal(addhom(a), other);
 	}
 }

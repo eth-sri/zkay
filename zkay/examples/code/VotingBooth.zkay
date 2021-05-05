@@ -16,8 +16,8 @@ contract VotingBooth {
 	}
 
 	final address owner;
-	uint@owner<+> votesForA;
-	uint@owner<+> votesForB;
+	uint32@owner<+> votesForA;
+	uint32@owner<+> votesForB;
 	mapping(address => bool) hasVoted;
 	bool resultAnnounced;
 
@@ -28,14 +28,14 @@ contract VotingBooth {
 		resultAnnounced = false;
 	}
 
-	function vote(uint@me vote) public {
+	function vote(uint32@me vote) public {
 		require(!hasVoted[me]);
 		require(!resultAnnounced);
 
-		uint@me voteA = (vote == 0) ? 1 : 0;
-		uint@me voteB = (vote == 1) ? 1 : 0;
-		uint@owner<+> voteAHomomorphic = reveal(voteA, owner);
-		uint@owner<+> voteBHomomorphic = reveal(voteB, owner);
+		uint32@me voteA = (vote == 0) ? 1 : 0;
+		uint32@me voteB = (vote == 1) ? 1 : 0;
+		uint32@owner<+> voteAHomomorphic = reveal(voteA, owner);
+		uint32@owner<+> voteBHomomorphic = reveal(voteB, owner);
 		votesForA += voteAHomomorphic;
 		votesForB += voteBHomomorphic;
 		hasVoted[me] = true;

@@ -5,10 +5,10 @@ contract Inheritance {
 	final uint DAY = 24 * 60 * 60;
 	final uint timeUntilAssumedDead = 120 * DAY;
 
-	mapping(address!x => uint@x<+>) balance;
-	mapping(address!x => uint@x<+>) total_inheritance_pledged;
-	mapping(address => mapping(address!x => uint@x)) inheritance_pledged_recv;
-	mapping(address!x => mapping(address => uint@x)) inheritance_pledged_send;
+	mapping(address!x => uint32@x<+>) balance;
+	mapping(address!x => uint32@x<+>) total_inheritance_pledged;
+	mapping(address => mapping(address!x => uint32@x)) inheritance_pledged_recv;
+	mapping(address!x => mapping(address => uint32@x)) inheritance_pledged_send;
 	mapping(address => bool) registered;
 	mapping(address => uint) last_seen;
 
@@ -23,11 +23,11 @@ contract Inheritance {
 
 	function buy() public payable {
 		require(registered[me]);
-		balance[me] += msg.value;
+		balance[me] += uint32(msg.value);
 		keep_alive();
 	}
 
-	function send_tokens(uint@me v, address receiver) public {
+	function send_tokens(uint32@me v, address receiver) public {
 		require(registered[me] && registered[receiver]);
 		require(reveal(balance[me] - total_inheritance_pledged[me] >= v, all));
 
@@ -36,8 +36,8 @@ contract Inheritance {
 		keep_alive();
 	}
 
-	function pledge_inheritance(address recipient, uint@me amount) public {
-		uint@me old_amount = inheritance_pledged_send[me][recipient];
+	function pledge_inheritance(address recipient, uint32@me amount) public {
+		uint32@me old_amount = inheritance_pledged_send[me][recipient];
 		require(reveal(balance[me] - total_inheritance_pledged[me] + old_amount >= amount, all));
 
 		inheritance_pledged_send[me][recipient] = amount;
@@ -49,7 +49,7 @@ contract Inheritance {
 	function claim_inheritance(address sender) public {
 		require(_now - last_seen[sender] >= timeUntilAssumedDead);
 
-		uint@me amount = inheritance_pledged_recv[sender][me];
+		uint32@me amount = inheritance_pledged_recv[sender][me];
 		balance[me] += amount;
 		balance[sender] -= reveal(amount, sender);
 		total_inheritance_pledged[sender] -= reveal(amount, sender);

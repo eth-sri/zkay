@@ -4,7 +4,7 @@ pragma zkay >=0.2.0;
 // Domain: Finance
 contract Token {
 
-	mapping(address!x => uint@x<+>) balance;
+	mapping(address!x => uint32@x<+>) balance;
 	mapping(address => bool) registered;
 
 	function register() public {
@@ -13,13 +13,13 @@ contract Token {
 		registered[me] = true;
 	}
 
-	function buy(uint amount) public payable {
+	function buy(uint32 amount) public payable {
 		require(registered[me]);
 		// amount should actually be computed based on the payed value
 		balance[me] += amount;
 	}
 
-	function send_tokens(uint@me v, final address receiver) public {
+	function send_tokens(uint32@me v, final address receiver) public {
 		require(registered[me] && registered[receiver]);
 		require(reveal(balance[me] > v, all));
 

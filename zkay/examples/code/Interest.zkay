@@ -4,14 +4,14 @@ contract Interest {
 
 	final uint DAY = 24 * 60 * 60;
 	final uint INVESTMENT_PERIOD = 30 * DAY;
-	final uint PAYOUT_PERCENT = 105;
+	final uint32 PAYOUT_PERCENT = 105;
 
 	final address bank;
-	uint@bank<+> bank_total_investments; // bank has to know how many tokens it may use
+	uint32@bank<+> bank_total_investments; // bank has to know how many tokens it may use
 
 	mapping(address => bool) registered;
-	mapping(address!x => uint@x<+>) checkings;
-	mapping(address!x => uint@x) investments;
+	mapping(address!x => uint32@x<+>) checkings;
+	mapping(address!x => uint32@x) investments;
 	mapping(address!x => uint@x) investment_deadline;
 
 	uint _now = now; // For testing purposes only, need to be able to advance time
@@ -29,17 +29,17 @@ contract Interest {
 
 	function buy() public payable {
 		require(registered[me]);
-		checkings[me] += msg.value;
+		checkings[me] += uint32(msg.value);
 	}
 
-	function send_tokens(uint@me v, address receiver) public {
+	function send_tokens(uint32@me v, address receiver) public {
 		require(registered[me] && registered[receiver]);
 		require(reveal(checkings[me] > v, all));
 		checkings[me] -= v;
 		checkings[receiver] += reveal(v, receiver);
 	}
 
-	function invest(uint@me amount) public {
+	function invest(uint32@me amount) public {
 		require(reveal(investments[me] == 0, all));
 		require(reveal(checkings[me] >= amount, all));
 		checkings[me] -= amount;

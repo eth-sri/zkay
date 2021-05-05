@@ -3,22 +3,22 @@ pragma zkay >=0.2.0;
 contract IndexFund {
 
 	final address admin;
-	mapping(address => uint) stocks_in_fund;
+	mapping(address => uint32) stocks_in_fund;
 
-	mapping(address => uint) stock_price;
-	uint current_fund_price;
+	mapping(address => uint32) stock_price;
+	uint32 current_fund_price;
 
-	mapping(address!x => uint@x<+>) balance;
-	mapping(address!x => uint@x<+>) shares;
-	uint@admin<+> total_shares;
+	mapping(address!x => uint32@x<+>) balance;
+	mapping(address!x => uint32@x<+>) shares;
+	uint32@admin<+> total_shares;
 
-	mapping(address => uint@admin) reported_stocks_bought;
+	mapping(address => uint32@admin) reported_stocks_bought;
 
 	constructor() public {
 		admin = me;
 	}
 
-	function add_stocks_to_fund(address stock, uint amount, uint initial_price) public {
+	function add_stocks_to_fund(address stock, uint32 amount, uint32 initial_price) public {
 		require(me == admin);
 		require(stocks_in_fund[stock] == 0);
 		stocks_in_fund[stock] = amount;
@@ -27,36 +27,36 @@ contract IndexFund {
 	}
 
 	function pay_into() public payable {
-		balance[me] += msg.value;
+		balance[me] += uint32(msg.value);
 	}
 
-	function buy_shares(uint@me num_shares) public {
+	function buy_shares(uint32@me num_shares) public {
 		require(reveal(balance[me] >= num_shares * current_fund_price, all));
 		total_shares += reveal(num_shares, admin);
 		shares[me] += num_shares;
 		balance[me] -= num_shares * current_fund_price;
 	}
 
-	function sell_shares(uint@me num_shares) public {
+	function sell_shares(uint32@me num_shares) public {
 		require(reveal(shares[me] >= num_shares, all));
 		total_shares -= reveal(num_shares, admin);
 		shares[me] -= num_shares;
 		balance[me] += num_shares * current_fund_price;
 	}
 
-	function report_new_stock_price(uint new_price) public {
+	function report_new_stock_price(uint32 new_price) public {
 		require(stocks_in_fund[me] > 0);
-		uint old_price = stock_price[me];
+		uint32 old_price = stock_price[me];
 		stock_price[me] = new_price;
 		current_fund_price = current_fund_price - old_price * stocks_in_fund[me] + new_price * stocks_in_fund[me];
 	}
 
-	function pay_dividends(final address recipient, uint amount) public {
+	function pay_dividends(final address recipient, uint32 amount) public {
 		require(stocks_in_fund[me] > 0);
 		balance[recipient] += shares[recipient] * stocks_in_fund[me] * amount;
 	}
 
-	function report_stocks_bought(uint@me amount) public {
+	function report_stocks_bought(uint32@me amount) public {
 		require(stocks_in_fund[me] > 0);
 		reported_stocks_bought[me] = reveal(amount, admin);
 	}

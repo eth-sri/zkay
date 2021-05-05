@@ -10,7 +10,7 @@ contract ExposureWarning {
 
 	final address hospital;
 	mapping(address => bool) is_infected;
-	mapping(address!x => uint@x<+>) exposures;
+	mapping(address!x => uint32@x<+>) exposures;
 
 	constructor() public {
 		hospital = me;

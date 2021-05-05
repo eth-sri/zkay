@@ -17,7 +17,7 @@ contract Reviews {
 	uint num_reviewers = 0;
 	mapping(address => bool) is_reviewer;
 	mapping(uint => uint) num_reviews;
-	mapping(uint => uint@pc<+>) sum_of_reviews;
+	mapping(uint => uint32@pc<+>) sum_of_reviews;
 	mapping(address => mapping(uint => bool)) reviewer_has_reviewed;
 
 	constructor() public {
@@ -34,7 +34,7 @@ contract Reviews {
 		paperForAuthor[me] = reveal(paperId, pc);
 	}
 
-	function recordReview(uint paperId, uint@me score) public {
+	function recordReview(uint paperId, uint32@me score) public {
 		require(is_reviewer[me]);
 		require(!reviewer_has_reviewed[me][paperId]);
 		require(reveal(score >= 0 && score <= 5, all));

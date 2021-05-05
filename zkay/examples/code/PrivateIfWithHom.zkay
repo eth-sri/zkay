@@ -2,14 +2,14 @@ pragma zkay >=0.2.0;
 
 contract IfWithHomomorphism {
 	final address master;
-	uint@master a;
-	uint@master<+> b;
+	uint32@master a;
+	uint32@master<+> b;
 
 	constructor() public {
 		master = me;
 	}
 
-	function f(bool@me branch, uint@me trueVal, uint@me falseVal) public {
+	function f(bool@me branch, uint32@me trueVal, uint32@me falseVal) public {
 		require(master == me);
 		if (branch) {
 			a = trueVal;

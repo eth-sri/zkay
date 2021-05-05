@@ -3,7 +3,7 @@ pragma zkay >=0.2.0;
 contract Unhom {
 
 	function f() public{
-		uint@me<+> x = 0;
-		uint@me y = unhom(x);
+		uint32@me<+> x = 0;
+		uint32@me y = unhom(x);
 	}
 }

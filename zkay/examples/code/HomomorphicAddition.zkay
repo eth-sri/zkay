@@ -3,12 +3,12 @@ pragma zkay >=0.2.0;
 contract HomomorphicAddition {
 
 	final address owner;
-	int248@owner<+> a;
-	int248@owner<+> b;
-	int248@owner<+> sum;
-	int248@owner<+> diff;
+	uint32@owner<+> a;
+	uint32@owner<+> b;
+	uint32@owner<+> sum;
+	uint32@owner<+> diff;
 
-	constructor(int248@me<+> _a, int248@me<+> _b) public {
+	constructor(uint32@me<+> _a, uint32@me<+> _b) public {
 		owner = me;
 		a = _a;
 		b = _b;
