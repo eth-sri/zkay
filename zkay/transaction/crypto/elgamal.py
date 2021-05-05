@@ -60,7 +60,7 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         plain = self._de_embed(plain_embedded)
 
         # TODO randomness misused for the secret key, which is an extremely ugly hack...
-        return plain, sk
+        return plain, [sk]
 
     def _de_embed(self, plain_embedded: babyjubjub.Point) -> int:
         # TODO implement more efficient baby-step giant-step algorithm

@@ -387,7 +387,7 @@ class ApiWrapper:
     def transact(self, fname: str, args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None) -> Any:
         return self.__conn.transact(self.__contract_handle, self.__user_addr, fname, args, should_encrypt, wei_amount=wei_amount)
 
-    def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Homomorphism, Callable]]):
+    def call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, str, Callable]]):
         retvals = self.__conn.call(self.__contract_handle, self.__user_addr, fname, *args)
         if len(ret_val_constructors) == 1:
             return self.__get_decrypted_retval(retvals, *ret_val_constructors[0])
@@ -395,8 +395,8 @@ class ApiWrapper:
             return tuple([self.__get_decrypted_retval(retval, is_cipher, homomorphism, constr)
                           for retval, (is_cipher, homomorphism, constr) in zip(retvals, ret_val_constructors)])
 
-    def __get_decrypted_retval(self, raw_value, is_cipher, crypto_params, constructor):
-        return self.dec(CipherValue(raw_value, params=crypto_params), constructor)[0] if is_cipher else constructor(raw_value)
+    def __get_decrypted_retval(self, raw_value, is_cipher, crypto_params_name, constructor):
+        return self.dec(CipherValue(raw_value, params=CryptoParams(crypto_params_name)), constructor, crypto_backend=crypto_params_name)[0] if is_cipher else constructor(raw_value)
 
     def get_special_variables(self) -> Tuple[MsgStruct, BlockStruct, TxStruct]:
         assert self.__current_msg is not None and self.__current_block is not None and self.__current_tx is not None

@@ -461,9 +461,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             for retparam in ast.return_parameters:
                 t = retparam.annotated_type.type_name
                 if isinstance(t, CipherText):
-                    constr = f'(True, {self._get_type_constr(t.plain_type.type_name)})'
+                    constr = f'(True, "{t.crypto_params.crypto_name}", {self._get_type_constr(t.plain_type.type_name)})'
                 else:
-                    constr = f'(False, {self._get_type_constr(t)})'
+                    constr = f'(False, None, {self._get_type_constr(t)})'
                 constructors.append(constr)
             constructors = f"[{', '.join(constructors)}]"
 
