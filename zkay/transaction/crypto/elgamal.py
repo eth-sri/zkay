@@ -53,8 +53,22 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         return cipher_chunks, [r]
 
     def _dec(self, cipher: Tuple[int, ...], sk: Any) -> Tuple[int, List[int]]:
-        # TODO implement
-        pass
+        c1 = babyjubjub.Point(babyjubjub.Fq(cipher[0]), babyjubjub.Fq(cipher[1]))
+        c2 = babyjubjub.Point(babyjubjub.Fq(cipher[2]), babyjubjub.Fq(cipher[3]))
+        shared_secret = c1 * babyjubjub.Fr(sk)
+        plain_embedded = c2 + shared_secret.negate()
+        plain = self._de_embed(plain_embedded)
+
+        # TODO randomness misused for the secret key, which is an extremely ugly hack...
+        return plain, sk
+
+    def _de_embed(self, plain_embedded: babyjubjub.Point) -> int:
+        # TODO implement more efficient baby-step giant-step algorithm
+        for plain in range(0, 100):
+            check_embedded = babyjubjub.Point.GENERATOR * babyjubjub.Fr(plain)
+            if check_embedded.u.s == plain_embedded.u.s and check_embedded.v.s == plain_embedded.v.s:
+                return plain
+        raise Exception("could not de-embed message")
 
     def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:
         # TODO handle uninitialized ciphertext 0

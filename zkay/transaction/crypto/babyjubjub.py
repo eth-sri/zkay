@@ -125,6 +125,9 @@ class Point(object):
     def double(self):
         return self + self
 
+    def negate(self):
+        return Point(-self.u, self.v)
+
     def __mul__(self, s):
         s = format(s.s, '0256b')
         ret = self.ZERO
