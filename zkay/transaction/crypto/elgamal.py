@@ -9,6 +9,25 @@ from zkay.transaction.crypto.params import CryptoParams
 from zkay.transaction.interface import ZkayHomomorphicCryptoInterface
 from zkay.transaction.types import KeyPair, CipherValue, PrivateKeyValue, PublicKeyValue
 
+import babygiant
+
+
+def to_le_32_hex_bytes(num):
+    hx = "{0:0{1}x}".format(num, 32*2)
+    b = "".join(reversed(["".join(x) for x in zip(*[iter(hx)] * 2)]))
+    return b
+
+
+dlog_cache = {}
+
+
+def get_dlog(x: int, y: int):
+    global dlog_cache
+    if (x, y) not in dlog_cache:
+        dlog_cache[(x, y)] = int(babygiant.compute_dlog(to_le_32_hex_bytes(x), to_le_32_hex_bytes(y)))
+    return dlog_cache[(x, y)]
+
+
 
 class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
     params = CryptoParams('elgamal')
@@ -63,12 +82,7 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         return plain, [sk]
 
     def _de_embed(self, plain_embedded: babyjubjub.Point) -> int:
-        # TODO implement more efficient baby-step giant-step algorithm
-        for plain in range(0, 100):
-            check_embedded = babyjubjub.Point.GENERATOR * babyjubjub.Fr(plain)
-            if check_embedded.u.s == plain_embedded.u.s and check_embedded.v.s == plain_embedded.v.s:
-                return plain
-        raise Exception("could not de-embed message")
+        return get_dlog(plain_embedded.u.s, plain_embedded.v.s)
 
     def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:
         # TODO handle uninitialized ciphertext 0
