@@ -26,6 +26,14 @@ RUN apt-get update && apt-get install -y \
 		default-jdk-headless \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
 
+########
+# RUST #
+########
+# required to build babygiant-lib
+RUN apt-get update && apt-get install -y curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && curl https://sh.rustup.rs -sSf | sh -s -- -y
+
 ##########
 # PYTHON #
 ##########

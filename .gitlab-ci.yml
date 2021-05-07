@@ -4,7 +4,7 @@ variables:
 default:
   # To run locally:
   # $ sudo docker run -it -v=$(pwd):/zkay --workdir=/zkay --rm ethsrilab/zkay-prerequisites:version-1.3
-  image: ethsrilab/zkay-prerequisites:version-1.3
+  image: ethsrilab/zkay-prerequisites:version-1.4
 
 
 # BUILD
