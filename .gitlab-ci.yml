@@ -9,13 +9,18 @@ default:
 
 # BUILD
 
+debug_stage:
+  stage: build
+  script:
+    - printenv
+    - cargo --version
+    - rustc --version
+
 create_zkay_venv:
   stage: build
   script:
     - virtualenv venv
     - source venv/bin/activate
-    - cargo --version
-    - rustc --version
     - pip3 install -r install/requirements.txt # Use fixed version dependencies
     - pip3 install -e .
     - pip3 install -r babygiant-lib/requirements.txt
