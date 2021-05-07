@@ -101,13 +101,19 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         if op == '+':
             e1 = args[0][0] + args[1][0]
             e2 = args[0][1] + args[1][1]
-            return [e1.u.s, e1.v.s, e2.u.s, e2.v.s]
         elif op == '-':
             e1 = args[0][0] + args[1][0].negate()
             e2 = args[0][1] + args[1][1].negate()
-            return [e1.u.s, e1.v.s, e2.u.s, e2.v.s]
+        elif op == '*' and isinstance(args[1], int):
+            e1 = args[0][0] * babyjubjub.Fr(args[1])
+            e2 = args[0][1] * babyjubjub.Fr(args[1])
+        elif op == '*' and isinstance(args[0], int):
+            e1 = args[1][0] * babyjubjub.Fr(args[0])
+            e2 = args[1][1] * babyjubjub.Fr(args[0])
         else:
             raise ValueError(f'Unsupported operation {op}')
+
+        return [e1.u.s, e1.v.s, e2.u.s, e2.v.s]
 
     def _enc_with_rand(self, plain: int, random: int, pk: List[int]) -> List[int]:
         plain_embedded = babyjubjub.Point.GENERATOR * babyjubjub.Fr(plain)
