@@ -88,7 +88,7 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         def deserialize(operand: Union[CipherValue, int]) -> Union[Tuple[babyjubjub.Point, babyjubjub.Point], int]:
             if isinstance(operand, CipherValue):
                 # if ciphertext is 0, return (Point.ZERO, Point.ZERO) == Enc(0, 0)
-                if operand == CipherValue([0]*4):
+                if operand == CipherValue([0]*4, params=operand.params):
                     return babyjubjub.Point.ZERO, babyjubjub.Point.ZERO
                 else:
                     c1 = babyjubjub.Point(babyjubjub.Fq(operand[0]), babyjubjub.Fq(operand[1]))
