@@ -131,13 +131,16 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
 
         return plain, random_chunks
 
-    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[CipherValue]) -> List[int]:
+    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[CipherValue, int]) -> List[int]:
         n = self.deserialize_pk(public_key)
         n_sqr = n * n
 
         def deserialize(operand: Union[CipherValue, int]) -> int:
-            val = self.deserialize_pk(operand[:])
-            return val if val != 0 else 1  # If ciphertext is 0, return 1 == Enc(0, 0)
+            if isinstance(operand, CipherValue):
+                val = self.deserialize_pk(operand[:])
+                return val if val != 0 else 1  # If ciphertext is 0, return 1 == Enc(0, 0)
+            else:
+                return operand  # Return plaintext arguments as-is
         operands = [deserialize(arg) for arg in args]
 
         if op == 'sign-':

@@ -84,19 +84,27 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
     def _de_embed(self, plain_embedded: babyjubjub.Point) -> int:
         return get_dlog(plain_embedded.u.s, plain_embedded.v.s)
 
-    def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue,]) -> List[int]:
-        def remap_zero(operand: Union[CipherValue]) -> Tuple[int, int, int, int]:
-            # if ciphertext is 0, return (0, 1, 0, 1) == Enc(0, 0)
-            return operand if operand != (0, 0, 0, 0) else (0, 1, 0, 1)
-        args = [remap_zero(arg) for arg in args]
+    def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:
+        def deserialize(operand: Union[CipherValue, int]) -> Union[Tuple[babyjubjub.Point, babyjubjub.Point], int]:
+            if isinstance(operand, CipherValue):
+                # if ciphertext is 0, return (Point.ZERO, Point.ZERO) == Enc(0, 0)
+                if operand == CipherValue([0]*4):
+                    return babyjubjub.Point.ZERO, babyjubjub.Point.ZERO
+                else:
+                    c1 = babyjubjub.Point(babyjubjub.Fq(operand[0]), babyjubjub.Fq(operand[1]))
+                    c2 = babyjubjub.Point(babyjubjub.Fq(operand[2]), babyjubjub.Fq(operand[3]))
+                    return c1, c2
+            else:
+                return operand
+        args = [deserialize(arg) for arg in args]
 
         if op == '+':
-            c1 = babyjubjub.Point(babyjubjub.Fq(args[0][0]), babyjubjub.Fq(args[0][1]))
-            c2 = babyjubjub.Point(babyjubjub.Fq(args[0][2]), babyjubjub.Fq(args[0][3]))
-            d1 = babyjubjub.Point(babyjubjub.Fq(args[1][0]), babyjubjub.Fq(args[1][1]))
-            d2 = babyjubjub.Point(babyjubjub.Fq(args[1][2]), babyjubjub.Fq(args[1][3]))
-            e1 = c1 + d1
-            e2 = c2 + d2
+            e1 = args[0][0] + args[1][0]
+            e2 = args[0][1] + args[1][1]
+            return [e1.u.s, e1.v.s, e2.u.s, e2.v.s]
+        elif op == '-':
+            e1 = args[0][0] + args[1][0].negate()
+            e2 = args[0][1] + args[1][1].negate()
             return [e1.u.s, e1.v.s, e2.u.s, e2.v.s]
         else:
             raise ValueError(f'Unsupported operation {op}')

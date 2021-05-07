@@ -418,7 +418,7 @@ class ApiWrapper:
         res = self.__crypto[crypto_backend].dec(cipher, self.__user_addr)
         return constr(res[0]), res[1]
 
-    def do_homomorphic_op(self, op: str, crypto_backend: str, target_addr: AddressValue, *args: List[CipherValue]):
+    def do_homomorphic_op(self, op: str, crypto_backend: str, target_addr: AddressValue, *args: Union[CipherValue, int]):
         params = CryptoParams(crypto_backend)
         pk = self.__keystore[params.crypto_name].getPk(target_addr)
         for arg in args:
