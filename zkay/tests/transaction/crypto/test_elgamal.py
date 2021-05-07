@@ -20,6 +20,16 @@ class TestElgamal(ZkayTestCase):
                     15995926508900361671313404296634773295236345482179714831868518062689263430374]
         self.assertEqual(cipher, expected)
 
+    def test_enc_with_zero(self):
+        eg = ElgamalCrypto(None)
+        plain = 0
+        random = 0
+        pk = [2543111965495064707612623550577403881714453669184859408922451773306175031318,
+              20927827475527585117296730644692999944545060105133073020125343132211068382185]
+        cipher = eg._enc_with_rand(plain, random, pk)
+        expected = [0, 1, 0, 1]
+        self.assertEqual(cipher, expected)
+
     def test_de_embed(self):
         eg = ElgamalCrypto(None)
         embedded = [141579968252753561777903806704988380915591798817413028638954837858390837201,

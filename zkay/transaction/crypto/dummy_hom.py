@@ -35,13 +35,10 @@ class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
             plain = plain - bn128_scalar_field
         return plain, list(RandomnessValue(params=self.params)[:])
 
-    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[CipherValue, int]) -> List[int]:
-        def deserialize(operand: Union[CipherValue, int]) -> int:
-            if isinstance(operand, CipherValue):
-                val = operand[0]
-                return val - 1 if val != 0 else 0
-            else:
-                return operand
+    def do_op(self, op: str, public_key: Union[List[int], int], *args: Union[CipherValue]) -> List[int]:
+        def deserialize(operand: Union[CipherValue]) -> int:
+            val = operand[0]
+            return val - 1 if val != 0 else 0
 
         operands = [deserialize(arg) for arg in args]
         if op == 'sign-':

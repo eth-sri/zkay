@@ -84,10 +84,13 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
     def _de_embed(self, plain_embedded: babyjubjub.Point) -> int:
         return get_dlog(plain_embedded.u.s, plain_embedded.v.s)
 
-    def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:
-        # TODO handle uninitialized ciphertext 0
+    def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue,]) -> List[int]:
+        def remap_zero(operand: Union[CipherValue]) -> Tuple[int, int, int, int]:
+            # if ciphertext is 0, return (0, 1, 0, 1) == Enc(0, 0)
+            return operand if operand != (0, 0, 0, 0) else (0, 1, 0, 1)
+        args = [remap_zero(arg) for arg in args]
+
         if op == '+':
-            assert isinstance(args[0], CipherValue) and isinstance(args[1], CipherValue)
             c1 = babyjubjub.Point(babyjubjub.Fq(args[0][0]), babyjubjub.Fq(args[0][1]))
             c2 = babyjubjub.Point(babyjubjub.Fq(args[0][2]), babyjubjub.Fq(args[0][3]))
             d1 = babyjubjub.Point(babyjubjub.Fq(args[1][0]), babyjubjub.Fq(args[1][1]))
