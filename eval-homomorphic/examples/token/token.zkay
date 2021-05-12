@@ -1,0 +1,22 @@
+pragma zkay >=0.2.0;
+
+contract Token {
+	mapping(address!x => uint32@x<+>) balance;
+
+	function buy() public payable {
+        require(msg.value <= 100000);
+		balance[me] += uint32(msg.value);
+	}
+
+	function transfer(uint32@me<+> value, address to) public {
+		require(reveal(value <= balance[me], all));
+		balance[me] -= value;
+		balance[to] += reveal(value, to);
+	}
+
+	function sell(uint32@me<+> amount) public {
+        require(reveal(amount <= balance[me], all));
+        balance[me] -= amount;
+        msg.sender.transfer(reveal(amount, all));
+	}
+}

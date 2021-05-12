@@ -124,7 +124,7 @@ class UserConfig:
         """
         Additively homomorphic encryption backend to use.
 
-        Available Options: [dummy-hom, paillier]
+        Available Options: [dummy-hom, paillier, elgamal]
         """
         return self._crypto_backends[Homomorphism.ADDITIVE]
 

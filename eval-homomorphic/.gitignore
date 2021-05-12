@@ -1,0 +1,9 @@
+/examples/*/compiled*
+/examples/*/old*
+/examples/*/truffle-app
+/examples/*/scenario
+*.csv
+*.pdf
+
+# lines of code output
+/loc.txt
