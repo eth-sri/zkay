@@ -1,0 +1,45 @@
+pragma zkay ^0.2.0;
+
+/*
+ * Call vote(0) to vote for A, vote(1) to vote for B.
+ * Every eligible address can only vote once. Votes can only be cast before the result is announced.
+ * What someone voted for is secret; but whether someone has voted is not. Only the contract owner knows the votes.
+ */
+contract Voting {
+	enum Result {
+		A_WINS, B_WINS, TIE
+	}
+
+	final address owner;
+	uint32@owner<+> votesForA;
+	uint32@owner<+> votesForB;
+	mapping(address => bool) hasVoted;
+	bool resultAnnounced;
+
+	constructor() public {
+		owner = me;
+		votesForA = 0;
+		votesForB = 0;
+		resultAnnounced = false;
+	}
+
+	function vote(uint32@me<+> vote) public {
+		require(!hasVoted[me]);
+		require(!resultAnnounced);
+		uint32@me<+> voteA = (vote == 0) ? 1 : 0;
+		uint32@me<+> voteB = (vote == 1) ? 1 : 0;
+		votesForA += reveal(voteA, owner);
+		votesForB += reveal(voteB, owner);
+		hasVoted[me] = true;
+	}
+
+	function declareWinner() public returns (Result) {
+		require(me == owner);
+		resultAnnounced = true;
+		Result result;
+		if (reveal(votesForA > votesForB, all)) result = Result.A_WINS;
+		else if (reveal(votesForB > votesForA, all)) result = Result.B_WINS;
+		else result = Result.TIE;
+		return result;
+	}
+}
