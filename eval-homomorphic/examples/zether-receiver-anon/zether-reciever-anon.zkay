@@ -1,0 +1,54 @@
+pragma zkay ^0.2.0;
+
+// Modified Zether contract with basic receiver anonymity (but not sender anonymity)
+contract ZetherReceiverAnon {
+    uint32 MAX = 4294967295;
+    uint EPOCH_SIZE = 1;
+
+    uint total;
+    mapping(address => uint) lastrollover;
+    mapping(address!x => uint32@x<+>) balance;
+    mapping(address!x => uint32@x<+>) pending;
+
+    function fund() public payable {
+        rollover(me);
+        require(total + msg.value <= MAX);
+        balance[me] = balance[me] + uint32(msg.value);
+        total = total + msg.value;
+    }
+
+    function transfer(address a1, address a2, uint32@me v1, uint32@me v2) public {
+        rollover(me);
+        rollover(a1);
+        rollover(a2);
+
+        uint32@me sum = v1 + v2;
+        uint32@me nonzero = 0;
+        nonzero += (v1 > 0) ? 1 : 0;
+        nonzero += (v2 > 0) ? 1 : 0;
+        require(reveal(nonzero == 1, all));
+
+        require(reveal(sum <= balance[me], all));
+        balance[me] = balance[me] - sum;
+
+        pending[a1] += reveal(v1, a1);
+        pending[a2] += reveal(v2, a2);
+    }
+
+    function burn(uint32 val) public {
+        rollover(me);
+        require(reveal(val <= balance[me], all));
+        balance[me] = balance[me] - val;
+        msg.sender.transfer(val);
+        total = total - val;
+    }
+
+    function rollover(address y) internal {
+        uint e = block.number / EPOCH_SIZE;
+        if (lastrollover[y] < e) {
+            balance[y] = balance[y] + pending[y];
+            pending[y] = 0;
+            lastrollover[y] = e;
+        }
+    }
+}
