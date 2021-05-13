@@ -183,5 +183,5 @@ class TestOffchainElgamal(TestOffchainBase):
     @unittest.skipIf(
         False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_elgamal(self):
-        with _mock_config('elgamal', 'elgamal', False):
+        with _mock_config('dummy', 'elgamal', False):
             self.run_scenario()
