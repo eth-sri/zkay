@@ -1,0 +1,44 @@
+pragma zkay >=0.2.0;
+
+// Basic confidential Zether contract without locking functionality
+contract ZetherConfidential {
+    uint32 MAX = 4294967295;
+    uint EPOCH_SIZE = 1;
+
+    uint total;
+    mapping(address => uint) lastrollover;
+    mapping(address!x => uint32@x<+>) balance;
+    mapping(address!x => uint32@x<+>) pending;
+
+    function fund() public payable {
+        rollover(me);
+        require(total + msg.value <= MAX);
+        balance[me] = balance[me] + uint32(msg.value);
+        total = total + msg.value;
+    }
+
+    function transfer(address to, uint32@me<+> val) public {
+        rollover(me);
+        rollover(to);
+        require(reveal(val <= balance[me], all));
+        balance[me] = balance[me] - val;
+        pending[to] = pending[to] + reveal(val, to);
+    }
+
+    function burn(uint32 val) public {
+        rollover(me);
+        require(reveal(val <= balance[me], all));
+        balance[me] = balance[me] - val;
+        msg.sender.transfer(val);
+        total = total - val;
+    }
+
+    function rollover(address y) internal {
+        uint e = block.number / EPOCH_SIZE;
+        if (lastrollover[y] < e) {
+            balance[y] = balance[y] + pending[y];
+            pending[y] = 0;
+            lastrollover[y] = e;
+        }
+    }
+}

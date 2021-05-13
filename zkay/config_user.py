@@ -41,7 +41,7 @@ class UserConfig:
         self._snark_backend_values = ['jsnark']
 
         # These only exist for the auto-generated help strings in __main__ and should not be used directly
-        self._main_crypto_backend = 'ecdh-aes'
+        self._main_crypto_backend = 'ecdh-chaskey'
         self._main_crypto_backend_values = [None, 'dummy', 'dummy-hom', 'rsa-pkcs1.5', 'rsa-oaep', 'ecdh-aes', 'ecdh-chaskey', 'paillier', 'elgamal']
         self._addhom_crypto_backend = 'elgamal'
         self._addhom_crypto_backend_values = [None, 'dummy-hom', 'paillier', 'elgamal']
