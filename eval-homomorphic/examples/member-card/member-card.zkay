@@ -1,0 +1,33 @@
+pragma zkay ^0.2.0;
+
+contract MemberCard {
+    address issuer;
+    final address owner;
+    uint32@owner<+> spent;
+    uint32 threshold;
+    uint bonus;
+
+    constructor(address _owner) public {
+    	owner =_owner;
+		issuer = me;
+		threshold = 100;
+	}
+
+    // issuer pays small bonus whenever owner spends
+    // money at the issuer
+	function updateBalance(uint32@me<+> amount) public payable {
+	    require(me == issuer);
+        spent += reveal(amount, owner);
+        bonus += msg.value;
+	}
+
+	// if the spent exceeds the threshold, the owner can redeem
+	// the bonus locked to the member card
+	function redeemBonus() public {
+	    require(me == owner);
+	    require(reveal(spent >= threshold, all));
+	    spent = 0;
+        msg.sender.transfer(bonus);
+        bonus = 0;
+	}
+}
