@@ -180,7 +180,8 @@ class TestOffchainPaillierEnc(TestOffchainBase):
 
 @parameterized_class(('name', 'scenario'), all_scenarios)
 class TestOffchainElgamal(TestOffchainBase):
-    @unittest.skipIf(False, "No reason")
+    @unittest.skipIf(
+        False or 'ZKAY_SKIP_REAL_ENC_TESTS' in os.environ and os.environ['ZKAY_SKIP_REAL_ENC_TESTS'] == '1', 'real encryption tests disabled')
     def test_offchain_simulation_elgamal(self):
         with _mock_config('elgamal', 'elgamal', False):
             self.run_scenario()
