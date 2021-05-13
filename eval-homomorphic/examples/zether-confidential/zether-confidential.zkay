@@ -1,4 +1,4 @@
-pragma zkay >=0.2.0;
+pragma zkay ^0.2.0;
 
 // Basic confidential Zether contract without locking functionality
 contract ZetherConfidential {
