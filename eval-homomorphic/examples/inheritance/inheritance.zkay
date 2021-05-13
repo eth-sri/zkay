@@ -1,0 +1,64 @@
+pragma zkay ^0.2.0;
+
+contract Inheritance {
+
+	final uint DAY = 24 * 60 * 60;
+	final uint timeUntilAssumedDead = 120 * DAY;
+
+	mapping(address!x => uint32@x<+>) balance;
+	mapping(address!x => uint32@x<+>) total_inheritance_pledged;    // total amount of pledged balance is locked (balance always sufficient for claiming inheritance)
+	mapping(address => mapping(address!x => uint32@x)) inheritance_pledged_recv;
+	mapping(address!x => mapping(address => uint32@x)) inheritance_pledged_send;
+	mapping(address => uint) last_seen;
+
+	uint _now = now;    // for testing purposes only--use blockchain time for real deployment
+
+	function buy() public payable {
+		balance[me] += uint32(msg.value);
+		keep_alive();
+	}
+
+	function sell(uint32 v) public {
+	    require(reveal(balance[me] - total_inheritance_pledged[me] >= v, all));
+	    balance[me] -= v;
+	    msg.sender.transfer(v);
+	    keep_alive();
+	}
+
+	function transfer(uint32@me v, address receiver) public {
+		require(reveal(balance[me] - total_inheritance_pledged[me] >= v, all));
+		balance[me] -= v;
+		balance[receiver] += reveal(v, receiver);
+		keep_alive();
+	}
+
+	function pledge_inheritance(address recipient, uint32@me amount) public {
+		uint32@me old_amount = inheritance_pledged_send[me][recipient];
+		require(reveal(balance[me] - total_inheritance_pledged[me] + old_amount >= amount, all));
+
+		inheritance_pledged_send[me][recipient] = amount;
+		inheritance_pledged_recv[me][recipient] = reveal(amount, recipient);
+		total_inheritance_pledged[me] += amount - old_amount;
+		keep_alive();
+	}
+
+	function claim_inheritance(address sender) public {
+		require(_now - last_seen[sender] >= timeUntilAssumedDead);
+
+		uint32@me amount = inheritance_pledged_recv[sender][me];
+		balance[me] += amount;
+		balance[sender] -= reveal(amount, sender);
+		total_inheritance_pledged[sender] -= reveal(amount, sender);
+		inheritance_pledged_recv[sender][me] = 0;
+		inheritance_pledged_send[sender][me] = 0;
+		keep_alive();
+	}
+
+	function keep_alive() public {
+		last_seen[me] = _now;
+	}
+
+	function _test_advance_time() public {
+		_now += timeUntilAssumedDead;
+	}
+}
