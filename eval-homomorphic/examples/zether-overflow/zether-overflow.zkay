@@ -1,0 +1,53 @@
+pragma zkay ^0.2.0;
+
+// Modified confidential Zether contract with support for more than uint32 wei amount
+contract ZetherOverflow {
+    uint EPOCH_SIZE = 1;
+
+    mapping(address => uint) lastrollover;
+    mapping(address!x => uint32@x<+>) balance;
+    mapping(address!x => uint32@x<+>) pending;
+    mapping(address!x => uint128@x) vault;      // allow up to 2^128-1 wei in the vault
+
+    function fund() public payable {
+        rollover(me);
+        balance[me] = balance[me] + uint32(msg.value);
+    }
+
+    function transfer(address to, uint32@me<+> val) public {
+        rollover(me);
+        rollover(to);
+        require(reveal(val <= balance[me], all));
+        balance[me] = balance[me] - val;
+        pending[to] = pending[to] + reveal(val, to);
+    }
+
+    function burn(uint32 val) public {
+        rollover(me);
+        require(reveal(val <= balance[me], all));
+        balance[me] = balance[me] - val;
+        msg.sender.transfer(val);
+    }
+
+    function into_vault(uint32@me val) public {
+        rollover(me);
+        require(reveal(val <= balance[me], all));
+        vault[me] = vault[me] + val;
+        balance[me] = balance[me] - val;
+    }
+
+    function from_vault(uint32@me val) public {
+        require(reveal(val <= vault[me], all));
+        vault[me] = vault[me] - val;
+        balance[me] = balance[me] + val;
+    }
+
+    function rollover(address y) internal {
+        uint e = block.number / EPOCH_SIZE;
+        if (lastrollover[y] < e) {
+            balance[y] = balance[y] + pending[y];
+            pending[y] = 0;
+            lastrollover[y] = e;
+        }
+    }
+}
