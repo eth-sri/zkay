@@ -18,3 +18,7 @@ ark-ec = "0.2.0"
 ark-ed-on-bn254 = "0.2.0"
 ark-std = "0.2.0"
 hex = "0.4.3"
+
+[profile.dev]
+opt-level = 3
+overflow-checks = false

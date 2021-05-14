@@ -6,7 +6,7 @@ This is a rust extension used to efficiently compute discrete logarithms for sma
 
 Requires rust compiler (install using `rustup` first).
 
-_Note:_ Using the `-e` flag compiles the library in debug mode, which makes it significantly slower.
+_Note:_ Using the `-e` flag compiles the library in debug mode.
 
 ```bash
 pip install .
