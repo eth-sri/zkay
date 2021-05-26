@@ -426,10 +426,10 @@ class BuiltinFunction(Expression):
         """
         return self.op != '**'
 
-    def select_homomorphic_overload(self, arg_types: List[AnnotatedTypeName], analysis: PartitionState[PrivacyLabelExpr]):
+    def select_homomorphic_overload(self, args: List[Expression], analysis: PartitionState[PrivacyLabelExpr]):
         """
         Finds a homomorphic builtin that performs the correct operation and which can be applied
-        on the given argument types, if any exist.
+        on the arguments, if any exist.
 
         :return: A HomomorphicBuiltinFunction that can be used to query the required input types and
                  the resulting output type of the homomorphic operation, or None
@@ -439,6 +439,7 @@ class BuiltinFunction(Expression):
         # self.op and the public arguments determine which homomorphic builtin is selected
         # We may want to rethink this in the future if we also implement other homomorphisms (e.g. multiplicative)
 
+        arg_types = list(map(lambda x: x.annotated_type, args))
         inaccessible_arg_types = list(filter(lambda x: not x.is_accessible(analysis), arg_types))
         if len(inaccessible_arg_types) == 0:  # Else we would not have selected a homomorphic operation
             raise ValueError('Cannot select proper homomorphic function if all arguments are public or @me-private')
@@ -452,6 +453,14 @@ class BuiltinFunction(Expression):
             if self.op == hom.op and all(args_match):
                 target_type = base_type.with_homomorphism(hom.homomorphism)
                 return HomomorphicBuiltinFunction(target_type, hom.public_args)
+        if self.op == '*'\
+            and not args[0].annotated_type.is_accessible(analysis)\
+            and not args[1].annotated_type.is_accessible(analysis)\
+            and (isinstance(args[0], ReclassifyExpr) and not isinstance(args[1], ReclassifyExpr)) \
+                or (isinstance(args[1], ReclassifyExpr) and not isinstance(args[0], ReclassifyExpr)):
+            # special case: private scalar multiplication using additive homomorphism
+            target_type = base_type.with_homomorphism(Homomorphism.ADDITIVE)
+            return HomomorphicBuiltinFunction(target_type, [False, False])
         else:
             return None
 

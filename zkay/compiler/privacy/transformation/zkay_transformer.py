@@ -453,10 +453,25 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
                 crypto_params = cfg.get_crypto_params(ast.func.homomorphism)
                 recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
                 ast.public_key = self.gen._require_public_key_for_label_at(ast.statement, recipient, crypto_params)
-                # We require all non-public arguments to be present as ciphertexts
-                for arg in ast.args:
-                    if arg.annotated_type.is_private():
-                        arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type, ast.func.homomorphism)
+
+                if ast.func.op == '*':
+                    # special case: private scalar multiplication using additive homomorphism
+                    # TODO ugly hack below removes ReclassifyExpr
+                    # TODO implement re-randomization
+                    new_args = []
+                    for arg in ast.args:
+                        if isinstance(arg, ReclassifyExpr):
+                            arg = arg.expr
+                        elif arg.annotated_type.is_private():
+                            arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type,
+                                                                               ast.func.homomorphism)
+                        new_args.append(arg)
+                    ast.args = new_args
+                else:
+                    # We require all non-public arguments to be present as ciphertexts
+                    for arg in ast.args:
+                        if arg.annotated_type.is_private():
+                            arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type, ast.func.homomorphism)
 
             # Builtin functions are supported natively by the circuit
             return self.visit_children(ast)

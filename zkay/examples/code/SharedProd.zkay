@@ -1,0 +1,15 @@
+pragma zkay ^0.2.0;
+
+contract SharedProd {
+    final address owner;
+    uint32@owner<+> secret;
+
+    constructor() public {
+        owner = me;
+        secret = 3;
+    }
+
+    function foo(uint32@me x) public {
+        secret = secret * reveal(x, owner);
+    }
+}

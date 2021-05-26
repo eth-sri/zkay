@@ -225,8 +225,7 @@ class TypeCheckVisitor(AstVisitor):
                 if not arg.instanceof_data_type(t):
                     raise TypeMismatchException(t, arg.annotated_type.type_name, arg)
 
-        provided_arg_types = list(map(lambda x: x.annotated_type, ast.args))
-        homomorphic_func = func.select_homomorphic_overload(provided_arg_types, ast.analysis)
+        homomorphic_func = func.select_homomorphic_overload(ast.args, ast.analysis)
         if homomorphic_func is None:
             raise TypeException(f'Operation \'{func.op}\' requires all arguments to be accessible, '
                                 f'i.e. @all or provably equal to @me', ast)
