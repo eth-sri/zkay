@@ -1,6 +1,10 @@
 pragma zkay ^0.2.0;
 
-// Basic lottery where the winning chance can be increased by an increasing bet
+// META-NAME weighted-lottery
+// META-DESC Lottery where the winning chance can be increased by higher bids.
+// META-ADD
+// META-MIXED
+
 contract WeightedLottery {
     final address admin;
 

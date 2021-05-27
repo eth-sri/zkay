@@ -1,6 +1,9 @@
 pragma zkay ^0.2.0;
 
-// Basic confidential Zether contract without locking functionality
+// META-NAME zether-confidential
+// META-DESC Confidential transactions with pending array (analogous to Zether~\cite{bunz_zether_2019}).
+// META-ADD
+
 contract ZetherConfidential {
     uint32 MAX = 4294967295;
     uint EPOCH_SIZE = 1;

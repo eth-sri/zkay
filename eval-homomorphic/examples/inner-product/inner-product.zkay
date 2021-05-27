@@ -1,5 +1,10 @@
 pragma zkay ^0.2.0;
 
+// META-NAME inner-product
+// META-DESC Contract for computing the inner product of two secret vectors with different owners.
+// META-ADD
+// META-MULT
+
 contract InnerProduct {
     final address receiver;
     mapping(uint => uint32@receiver<+>) vec;

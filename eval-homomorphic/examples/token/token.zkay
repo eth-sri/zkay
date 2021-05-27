@@ -1,5 +1,9 @@
 pragma zkay >=0.2.0;
 
+// META-NAME token
+// META-DESC Private token wallet supporting confidential transactions.
+// META-ADD
+
 contract Token {
 	mapping(address!x => uint32@x<+>) balance;
 

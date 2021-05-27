@@ -1,5 +1,10 @@
 pragma zkay ^0.2.0;
 
+// META-NAME reviews
+// META-DESC Blind academic paper reviews with secret scores.
+// META-ADD
+// META-MIXED
+
 contract Reviews {
 	final address pc;
 

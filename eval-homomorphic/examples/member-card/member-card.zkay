@@ -1,5 +1,9 @@
 pragma zkay ^0.2.0;
 
+// META-NAME member-card
+// META-DESC Member card with bonus credit redeemable only upon reaching a threshold.
+// META-ADD
+
 contract MemberCard {
     address issuer;
     final address owner;

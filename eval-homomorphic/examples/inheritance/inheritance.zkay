@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME inheritance
-// META-DESC A wallet with inheritable balance
+// META-DESC A container for inheritable wallets. Owners can pledge secret inheritable amounts to recipients.
 // META-ADD
 // META-MIXED
 

@@ -1,5 +1,10 @@
 pragma zkay ^0.2.0;
 
+// META-NAME oblivious-transfer
+// META-DESC Contract for 1-out-of-2 oblivious transfer.
+// META-ADD
+// META-MULT
+
 contract ObliviousTransfer {
     final address receiver;
     uint32@receiver<+> b1;

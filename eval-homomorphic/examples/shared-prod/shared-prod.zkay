@@ -1,5 +1,10 @@
 pragma zkay ^0.2.0;
 
+// META-NAME shared-prod
+// META-DESC Contract for increasing a shared number using multiplication.
+// META-ADD
+// META-MULT
+
 contract SharedProd {
     final address owner;
     uint32@owner<+> secret;

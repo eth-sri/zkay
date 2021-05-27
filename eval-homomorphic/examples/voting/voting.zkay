@@ -1,5 +1,9 @@
 pragma zkay ^0.2.0;
 
+// META-NAME voting
+// META-DESC Basic voting booth.
+// META-ADD
+
 /*
  * Call vote(0) to vote for A, vote(1) to vote for B.
  * Every eligible address can only vote once. Votes can only be cast before the result is announced.

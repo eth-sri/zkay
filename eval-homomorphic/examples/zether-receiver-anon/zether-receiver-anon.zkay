@@ -1,6 +1,9 @@
 pragma zkay ^0.2.0;
 
-// Modified Zether contract with basic receiver anonymity (but not sender anonymity)
+// META-NAME zether-receiver-anon
+// META-DESC Modification of zether-confidential with receiver anonymity.
+// META-ADD
+
 contract ZetherReceiverAnon {
     uint32 MAX = 4294967295;
     uint EPOCH_SIZE = 1;
