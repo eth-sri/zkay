@@ -1,5 +1,9 @@
 pragma zkay ^0.2.0;
 
+// META-NAME index-funds
+// META-DESC An index funds operated by an administrator and allowing to privately buy and sell shares
+// META-ADD
+
 contract IndexFunds {
 	final address admin;
 	mapping(address => uint32) stocks_in_funds;

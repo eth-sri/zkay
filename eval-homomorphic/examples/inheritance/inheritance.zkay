@@ -1,5 +1,10 @@
 pragma zkay ^0.2.0;
 
+// META-NAME inheritance
+// META-DESC A wallet with inheritable balance
+// META-ADD
+// META-MIXED
+
 contract Inheritance {
 
 	final uint DAY = 24 * 60 * 60;
