@@ -1,0 +1,25 @@
+pragma zkay ^0.2.0;
+
+contract InnerProduct {
+    final address receiver;
+    mapping(uint => uint32@receiver<+>) vec;
+    uint32@receiver<+> result;
+
+    constructor() public {
+        receiver = me;
+    }
+
+    function set_entry(uint idx, uint32@me val) public {
+        require(me == receiver);
+        require(idx < 3);
+        require(reveal(val <= 10, all));
+        vec[idx] = val;
+    }
+
+    function compute(uint32@me<+> x0, uint32@me<+> x1, uint32@me<+> x2) public {
+        require(reveal(x0 <= 10, all));
+        require(reveal(x1 <= 10, all));
+        require(reveal(x2 <= 10, all));
+        result = vec[0] * reveal(x0, receiver) + vec[1] * reveal(x1, receiver) + vec[2] * reveal(x2, receiver);
+    }
+}

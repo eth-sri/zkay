@@ -23,10 +23,13 @@ dlog_cache = {}
 
 def get_dlog(x: int, y: int):
     global dlog_cache
+    zk_print(f'Fetching discrete log for {x}, {y}...')
     if (x, y) not in dlog_cache:
-        dlog_cache[(x, y)] = int(babygiant.compute_dlog(to_le_32_hex_bytes(x), to_le_32_hex_bytes(y)))
+        xb = to_le_32_hex_bytes(x)
+        yb = to_le_32_hex_bytes(y)
+        zk_print(f'Running babygiant with arguments {xb}, {yb}...')
+        dlog_cache[(x, y)] = int(babygiant.compute_dlog(xb, yb))
     return dlog_cache[(x, y)]
-
 
 
 class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
