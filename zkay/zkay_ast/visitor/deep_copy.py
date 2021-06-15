@@ -68,6 +68,7 @@ class DeepCopyVisitor(AstVisitor):
         'instantiated_key',
         'function',
         'is_private',
+        'rerand_using',
         'homomorphism',
         'evaluate_privately',
         'has_side_effects',

@@ -152,6 +152,10 @@ class JsnarkVisitor(AstVisitor):
                 else:
                     assert len(args) == 2
                     fstr = f'{f_start}{{}}, {o}, {{}})'
+                    if op == "*" and ast.func.rerand_using is not None:
+                        # re-randomize homomorphic scalar multiplication
+                        rnd = self.visit(ast.func.rerand_using)
+                        fstr = f'o_rerand({fstr}, "{crypto_backend}", "{public_key_name}", {rnd})'
 
             return fstr.format(*args)
         elif ast.is_cast and isinstance(ast.func.target, EnumDefinition):

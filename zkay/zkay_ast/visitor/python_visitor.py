@@ -230,6 +230,12 @@ class PythonCodeVisitor(CodeVisitor):
                 crypto_backend = cfg.get_crypto_params(homomorphism).crypto_name
                 fstr = f"self.api.do_homomorphic_op('{ast.func.op}', '{crypto_backend}', {target_code}{', {}' * ast.func.arity()})"
 
+                if ast.func.op == "*" and ast.func.rerand_using is not None:
+                    # re-randomize homomorphic scalar multiplication
+                    rand = self.visit(ast.func.rerand_using.idf)
+                    # TODO do not hardcode zk__priv here
+                    fstr = f"self.api.do_rerand({fstr}, '{crypto_backend}', {target_code}, zk__priv, '{rand}')"
+
             return fstr.format(*args)
         else:
             f = self.visit(ast.func)

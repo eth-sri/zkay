@@ -162,3 +162,6 @@ class PaillierCrypto(ZkayHomomorphicCryptoInterface):
             raise ValueError(f'Unsupported operation {op}')
 
         return self.serialize_pk(result, self.params.cipher_bytes_payload)
+
+    def do_rerand(self, arg: CipherValue, public_key: List[int]) -> Tuple[List[int], List[int]]:
+        raise NotImplementedError("Rerandomization not implemented for Paillier backend")

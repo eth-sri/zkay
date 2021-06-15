@@ -635,6 +635,14 @@ class ZkayHomomorphicCryptoInterface(ZkayCryptoInterface):
     def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:
         pass
 
+    @abstractmethod
+    def do_rerand(self, arg: CipherValue, public_key: List[int]) -> Tuple[List[int], List[int]]:
+        """
+        Re-randomizes the given argument.
+        Returns (new_cipher, randomness).
+        """
+        pass
+
 
 class ZkayProverInterface(metaclass=ABCMeta):
     """API to generate zero knowledge proofs for a particular circuit and arguments."""

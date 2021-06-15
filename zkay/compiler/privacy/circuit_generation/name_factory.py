@@ -21,6 +21,8 @@ class BaseNameFactory:
             postfix = 'key'
         elif t.is_cipher():
             postfix = 'cipher'
+        elif t.is_randomness():
+            postfix = 'rnd'
         else:
             postfix = 'plain'
         name = f'{self.base_name}{self.count}_{postfix}'

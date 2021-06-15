@@ -430,6 +430,18 @@ class ApiWrapper:
         result = crypto_inst.do_op(op, pk[:], *args)
         return CipherValue(result, params=params)
 
+    def do_rerand(self, arg: CipherValue, crypto_backend: str, target_addr: AddressValue, data: Dict, rnd_key: str):
+        """
+        Re-randomizes arg using fresh randomness, which is stored in data[rnd_key] (side-effect!)
+        """
+        params = CryptoParams(crypto_backend)
+        pk = self.__keystore[params.crypto_name].getPk(target_addr)
+        crypto_inst = self.__crypto[params.crypto_name]
+        assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface)
+        result, rand = crypto_inst.do_rerand(arg, pk[:])
+        data[rnd_key] = RandomnessValue(rand, params=params)    # store randomness
+        return CipherValue(result, params=params)
+
     def _req_state_var(self, name: str, *indices, count=0) -> Any:
         if self.__contract_handle is None:
             # TODO check this statically in the type checker

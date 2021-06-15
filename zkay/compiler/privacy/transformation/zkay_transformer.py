@@ -457,11 +457,11 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
                 if ast.func.op == '*':
                     # special case: private scalar multiplication using additive homomorphism
                     # TODO ugly hack below removes ReclassifyExpr
-                    # TODO implement re-randomization
                     new_args = []
                     for arg in ast.args:
                         if isinstance(arg, ReclassifyExpr):
                             arg = arg.expr
+                            ast.func.rerand_using = self.gen.get_randomness_for_rerand(ast)  # result requires re-randomization
                         elif arg.annotated_type.is_private():
                             arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type,
                                                                                ast.func.homomorphism)

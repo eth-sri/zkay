@@ -261,6 +261,10 @@ class CircuitHelper:
         self._ensure_encryption(insert_loc_stmt, plain_idf, Expression.me_expr(),
                                 param.annotated_type.type_name.crypto_params, cipher_idf, True, False)
 
+    def get_randomness_for_rerand(self, expr: Expression) -> IdentifierExpr:
+        idf = self._secret_input_name_factory.get_new_idf(TypeName.rnd_type(expr.annotated_type.type_name.crypto_params))
+        return IdentifierExpr(idf)
+
     def evaluate_expr_in_circuit(self, expr: Expression, new_privacy: PrivacyLabelExpr,
                                  homomorphism: Homomorphism) -> LocationExpr:
         """

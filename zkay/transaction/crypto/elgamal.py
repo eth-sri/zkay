@@ -118,6 +118,12 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
 
         return [e1.u.s, e1.v.s, e2.u.s, e2.v.s]
 
+    def do_rerand(self, arg: CipherValue, public_key: List[int]) -> Tuple[List[int], List[int]]:
+        # homomorphically add encryption of zero to re-randomize
+        r = randrange(babyjubjub.CURVE_ORDER)
+        enc_zero = CipherValue(self._enc_with_rand(0, r, public_key), params=arg.params)
+        return self.do_op('+', public_key, arg, enc_zero), [r]
+
     def _enc_with_rand(self, plain: int, random: int, pk: List[int]) -> List[int]:
         plain_embedded = babyjubjub.Point.GENERATOR * babyjubjub.Fr(plain)
         shared_secret = babyjubjub.Point(babyjubjub.Fq(pk[0]), babyjubjub.Fq(pk[1])) * babyjubjub.Fr(random)

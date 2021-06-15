@@ -55,3 +55,6 @@ class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
         else:
             raise ValueError(f'Unsupported operation {op}')
         return [(result + 1) % bn128_scalar_field]
+
+    def do_rerand(self, arg: CipherValue, public_key: List[int]) -> Tuple[List[int], List[int]]:
+        return [arg], [0]

@@ -328,9 +328,13 @@ class BuiltinFunction(Expression):
     def __init__(self, op: str):
         super().__init__()
         self.op = op
-        # both set later by type checker
+
+        # set later by type checker
         self.is_private: bool = False
         self.homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC
+
+        # set later by transformation
+        self.rerand_using: Optional['IdentifierExpr'] = None
 
         # input validation
         if op not in builtin_functions:
