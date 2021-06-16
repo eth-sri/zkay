@@ -21,6 +21,6 @@ contract SharedProd {
 
     function show_result() public {
         require(me == owner);
-        result = secret;
+        result = reveal(secret, all);
     }
 }
