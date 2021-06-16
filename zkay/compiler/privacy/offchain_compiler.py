@@ -143,6 +143,7 @@ class PythonOffchainVisitor(PythonCodeVisitor):
         from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, RequireException
         from zkay.transaction.int_casts import *
         from zkay.transaction.solidity_math import *
+        from zkay.utils.timer import time_measure
 
         me = None
 
@@ -495,7 +496,9 @@ class PythonOffchainVisitor(PythonCodeVisitor):
             func_ctx_params.append('wei_amount=wei_amount')
         if ast.can_be_external:
             func_ctx_params.append(f'name={fname}')
-        return f'with self._function_ctx({", ".join(func_ctx_params)}) as {IS_EXTERNAL_CALL}:\n' + indent(code)
+            code = 'with time_measure("transaction_full", skip=not zk__is_ext):\n' + indent(code)
+        code = f'with self._function_ctx({", ".join(func_ctx_params)}) as {IS_EXTERNAL_CALL}:\n' + indent(code)
+        return code
 
     def visitStatementList(self, ast: StatementList):
         if ast.excluded_from_simulation:

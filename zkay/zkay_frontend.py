@@ -187,11 +187,11 @@ def load_transaction_interface_from_directory(contract_dir: str) -> Any:
 
 
 @contextmanager
-def transaction_benchmark_ctx(contract_dir: str) -> ContextManager[Any]:
+def transaction_benchmark_ctx(contract_dir: str, log_filename='log') -> ContextManager[Any]:
     use_configuration_from_manifest(contract_dir)
     cfg.verbosity = 0
     cfg.log_dir = contract_dir
-    log_file = my_logging.get_log_file(filename='log', include_timestamp=False, label=None)
+    log_file = my_logging.get_log_file(filename=log_filename, include_timestamp=False, label=None)
     my_logging.prepare_logger(log_file)
     with time_measure('all_transactions', should_print=True):
         yield load_transaction_interface_from_directory(contract_dir)

@@ -3,8 +3,8 @@ from zkay.utils.helpers import lines_of_code
 
 example_code = """pragma solidity ^0.6.0;
 
-// Description: Record medical statistics on patients
-// Domain: Healthcare
+    // Description: Record medical statistics on patients
+    // Domain: Healthcare
 contract MedStats {
     final address hospital;
     uint@hospital count;
@@ -31,4 +31,4 @@ class TestHelpers(ZkayTestCase):
 
     def test_lines_of_code(self):
         loc = lines_of_code(example_code)
-        self.assertEqual(loc, 22)
+        self.assertEqual(loc, 18)

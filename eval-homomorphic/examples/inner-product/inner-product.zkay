@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME inner-product
-// META-DESC Contract for computing the inner product of two secret vectors with different owners.
+// META-DESC Computing inner products of two secret vectors with different owners.
 // META-ADD
 // META-MULT
 
@@ -14,7 +14,7 @@ contract InnerProduct {
         receiver = me;
     }
 
-    function set_entry(uint idx, uint32@me val) public {
+    function set_entry(uint idx, uint32@me<+> val) public {
         require(me == receiver);
         require(idx < 3);
         require(reveal(val <= 10, all));

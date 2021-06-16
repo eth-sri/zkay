@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 17, "context": ["shared-prod.zkay"]}
+{"key": "time_circuit_compilation", "value": 1.5601038932800293, "context": ["shared-prod.zkay"]}
+{"key": "time_key_generation", "value": 23.06799077987671, "context": ["shared-prod.zkay"]}
+{"key": "time_compileFull", "value": 26.398388385772705, "context": ["shared-prod.zkay"]}

@@ -3,7 +3,7 @@ import sys
 from zkay.zkay_frontend import transaction_benchmark_ctx
 
 # Scenario
-with transaction_benchmark_ctx(sys.argv[1]) as g:
+with transaction_benchmark_ctx(sys.argv[1], log_filename=sys.argv[2]) as g:
 	admin_addr, user_addr, stock_1_addr, stock_2_addr = g.create_dummy_accounts(4)
 
 	admin = g.deploy(user=admin_addr)

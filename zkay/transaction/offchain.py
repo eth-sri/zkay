@@ -271,7 +271,7 @@ class ContractSimulator:
                 t_idx = self.tidx.get(name, 0)
                 self.tidx[name] = t_idx + 1
 
-            with nullcontext() if not is_external else log_context('transaction', f'{name}_{t_idx}'):
+            with nullcontext() if not is_external else log_context(f'{name}_{t_idx}'):
                 prev_locals = self.locals
                 self.locals = LocalsDict()
 

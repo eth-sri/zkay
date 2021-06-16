@@ -1,0 +1,27 @@
+{"key": "gas", "value": 213848, "context": ["deploy_pki", "elgamal"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.4969799518585205, "context": ["constructor_0"]}
+{"key": "time_libsnark_gen_proof", "value": 3.1085777282714844, "context": ["constructor_0"]}
+{"key": "time_generate_proof", "value": 3.607038736343384, "context": ["constructor_0"]}
+{"key": "gas", "value": 826543, "context": ["constructor_0", "constructor", "zk__Verify_SharedProd_foo"]}
+{"key": "time_transaction_full", "value": 0.05082416534423828, "context": ["constructor_0", "constructor", "zk__Verify_SharedProd_foo"]}
+{"key": "gas", "value": 826303, "context": ["constructor_0", "constructor", "zk__Verify_SharedProd_show_result"]}
+{"key": "time_transaction_full", "value": 0.04734992980957031, "context": ["constructor_0", "constructor", "zk__Verify_SharedProd_show_result"]}
+{"key": "gas", "value": 826531, "context": ["constructor_0", "constructor", "zk__Verify_SharedProd_constructor"]}
+{"key": "time_transaction_full", "value": 0.05831503868103027, "context": ["constructor_0", "constructor", "zk__Verify_SharedProd_constructor"]}
+{"key": "gas", "value": 730846, "context": ["constructor_0", "constructor", "SharedProd"]}
+{"key": "time_transaction_full", "value": 5.0526556968688965, "context": ["constructor_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.159743785858154, "context": ["foo_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.9918835163116455, "context": ["foo_0"]}
+{"key": "time_libsnark_gen_proof", "value": 10.108275413513184, "context": ["foo_0"]}
+{"key": "time_generate_proof", "value": 11.103841543197632, "context": ["foo_0"]}
+{"key": "gas", "value": 74953, "context": ["foo_0"]}
+{"key": "time_transaction_full", "value": 18.984575510025024, "context": ["foo_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.154505491256714, "context": ["show_result_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.5047428607940674, "context": ["show_result_0"]}
+{"key": "time_libsnark_gen_proof", "value": 3.0216193199157715, "context": ["show_result_0"]}
+{"key": "time_generate_proof", "value": 3.5283122062683105, "context": ["show_result_0"]}
+{"key": "gas", "value": 70656, "context": ["show_result_0"]}
+{"key": "time_transaction_full", "value": 9.90333104133606, "context": ["show_result_0"]}
+{"key": "time_all_transactions", "value": 35.92766785621643, "context": []}

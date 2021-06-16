@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 46, "context": ["zether-large.zkay"]}
+{"key": "time_circuit_compilation", "value": 3.6969733238220215, "context": ["zether-large.zkay"]}
+{"key": "time_key_generation", "value": 135.2775673866272, "context": ["zether-large.zkay"]}
+{"key": "time_compileFull", "value": 144.06557631492615, "context": ["zether-large.zkay"]}

@@ -299,7 +299,7 @@ def main():
             print(f'Compiling file {input_path.name}:')
 
             # compile
-            with log_context('inputfile', os.path.basename(a.input)):
+            with log_context(os.path.basename(a.input)):
                 try:
                     frontend.compile_zkay_file(str(input_path), str(output_dir))
                 except ZkayCompilerError as e:

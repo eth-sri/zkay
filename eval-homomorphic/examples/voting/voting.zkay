@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME voting
-// META-DESC Basic voting booth.
+// META-DESC Basic voting booth with two options.
 // META-ADD
 
 /*

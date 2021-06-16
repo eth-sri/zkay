@@ -13,6 +13,9 @@ contract ZetherConfidential {
     mapping(address!x => uint32@x<+>) balance;
     mapping(address!x => uint32@x<+>) pending;
 
+    constructor() public {
+	}
+
     function fund() public payable {
         rollover(me);
         require(total + msg.value <= MAX);

@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME index-funds
-// META-DESC An index funds operated by an administrator and allowing to privately buy and sell shares.
+// META-DESC Index funds allowing to privately buy and sell shares.
 // META-ADD
 
 contract IndexFunds {
@@ -39,7 +39,7 @@ contract IndexFunds {
 	}
 
     // it is assumed that the admin buys the number of shares at the stock market
-	function buy_shares(uint32@me num_shares) public {
+	function buy_shares(uint32@me<+> num_shares) public {
 		require(reveal(balance[me] >= num_shares * current_funds_price, all));
 		total_shares += reveal(num_shares, admin);
 		shares[me] += num_shares;
@@ -47,7 +47,7 @@ contract IndexFunds {
 	}
 
     // it is assumed that the admin sells the number of shares at the stock market
-	function sell_shares(uint32@me num_shares) public {
+	function sell_shares(uint32@me<+> num_shares) public {
 		require(reveal(shares[me] >= num_shares, all));
 		total_shares -= reveal(num_shares, admin);
 		shares[me] -= num_shares;

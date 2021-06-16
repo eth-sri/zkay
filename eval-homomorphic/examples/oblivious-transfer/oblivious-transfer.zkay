@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME oblivious-transfer
-// META-DESC Contract for 1-out-of-2 oblivious transfer.
+// META-DESC 1-out-of-2 oblivious transfer.
 // META-ADD
 // META-MULT
 
@@ -22,7 +22,7 @@ contract ObliviousTransfer {
         b2 = s2;
     }
 
-    function send(uint32@me x1, uint32@me x2) public {
+    function send(uint32@me<+> x1, uint32@me<+> x2) public {
         result = b1 * reveal(x1, receiver) + b2 * reveal(x2, receiver);
     }
 }

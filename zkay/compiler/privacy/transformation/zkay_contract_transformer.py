@@ -571,7 +571,7 @@ class ZkayTransformer(AstTransformerVisitor):
         stmts.append(Comment())
 
         # Call verifier
-        if requires_proof:
+        if requires_proof and not cfg.disable_verification:
             verifier = IdentifierExpr(cfg.get_contract_var_name(ext_circuit.verifier_contract_type.code()))
             verifier_args = [IdentifierExpr(cfg.proof_param_name), IdentifierExpr(cfg.zk_in_name), IdentifierExpr(cfg.zk_out_name)]
             verify = ExpressionStatement(verifier.call(cfg.verification_function_name, verifier_args))

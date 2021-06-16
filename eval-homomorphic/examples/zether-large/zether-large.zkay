@@ -1,17 +1,20 @@
 pragma zkay ^0.2.0;
 
-// META-NAME zether-overflow
-// META-DESC Modification of zether-confidential with vault supporting balances more than $2^{32}$.
+// META-NAME zether-large
+// META-DESC Modification of zether-confidential for balances larger than $2^{32}$.
 // META-ADD
 // META-MIXED
 
-contract ZetherOverflow {
+contract ZetherLarge {
     uint EPOCH_SIZE = 1;
 
     mapping(address => uint) lastrollover;
     mapping(address!x => uint32@x<+>) balance;
     mapping(address!x => uint32@x<+>) pending;
     mapping(address!x => uint128@x) vault;      // allow up to 2^128-1 wei in the vault
+
+    constructor() public {
+	}
 
     function fund() public payable {
         rollover(me);

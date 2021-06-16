@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 19, "context": ["oblivious-transfer.zkay"]}
+{"key": "time_circuit_compilation", "value": 1.549649953842163, "context": ["oblivious-transfer.zkay"]}
+{"key": "time_key_generation", "value": 33.0528838634491, "context": ["oblivious-transfer.zkay"]}
+{"key": "time_compileFull", "value": 36.632275342941284, "context": ["oblivious-transfer.zkay"]}

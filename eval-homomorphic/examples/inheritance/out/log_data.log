@@ -1,0 +1,94 @@
+{"key": "gas", "value": 213428, "context": ["deploy_pki", "ecdh-chaskey"]}
+{"key": "gas", "value": 213848, "context": ["deploy_pki", "elgamal"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89300, "context": ["announcePk"]}
+{"key": "gas", "value": 826327, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_buy"]}
+{"key": "time_transaction_full", "value": 0.04784989356994629, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_buy"]}
+{"key": "gas", "value": 826543, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_sell"]}
+{"key": "time_transaction_full", "value": 0.05166816711425781, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_sell"]}
+{"key": "gas", "value": 826567, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_transfer"]}
+{"key": "time_transaction_full", "value": 0.05016827583312988, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_transfer"]}
+{"key": "gas", "value": 826327, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_pledge_inheritance"]}
+{"key": "time_transaction_full", "value": 0.047626495361328125, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_pledge_inheritance"]}
+{"key": "gas", "value": 826339, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_claim_inheritance"]}
+{"key": "time_transaction_full", "value": 0.0472412109375, "context": ["constructor_0", "constructor", "zk__Verify_Inheritance_claim_inheritance"]}
+{"key": "gas", "value": 2786919, "context": ["constructor_0", "constructor", "Inheritance"]}
+{"key": "time_transaction_full", "value": 1.3836948871612549, "context": ["constructor_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.5814714431762695, "context": ["buy_0"]}
+{"key": "time_libsnark_gen_proof", "value": 4.999961853027344, "context": ["buy_0"]}
+{"key": "time_generate_proof", "value": 5.583325386047363, "context": ["buy_0"]}
+{"key": "gas", "value": 363404, "context": ["buy_0"]}
+{"key": "time_transaction_full", "value": 7.332064151763916, "context": ["buy_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.6239750385284424, "context": ["buy_1"]}
+{"key": "time_libsnark_gen_proof", "value": 4.9924681186676025, "context": ["buy_1"]}
+{"key": "time_generate_proof", "value": 5.618509531021118, "context": ["buy_1"]}
+{"key": "gas", "value": 363440, "context": ["buy_1"]}
+{"key": "time_transaction_full", "value": 7.411885738372803, "context": ["buy_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.6636295318603516, "context": ["buy_2"]}
+{"key": "time_libsnark_gen_proof", "value": 4.95660924911499, "context": ["buy_2"]}
+{"key": "time_generate_proof", "value": 5.622112035751343, "context": ["buy_2"]}
+{"key": "gas", "value": 363440, "context": ["buy_2"]}
+{"key": "time_transaction_full", "value": 7.362543821334839, "context": ["buy_2"]}
+{"key": "time_elgamal_decrypt", "value": 6.184414863586426, "context": ["pledge_inheritance_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.4357054233551025, "context": ["pledge_inheritance_0"]}
+{"key": "time_libsnark_gen_proof", "value": 19.82222580909729, "context": ["pledge_inheritance_0"]}
+{"key": "time_generate_proof", "value": 21.261978149414062, "context": ["pledge_inheritance_0"]}
+{"key": "gas", "value": 512201, "context": ["pledge_inheritance_0"]}
+{"key": "time_transaction_full", "value": 30.196470499038696, "context": ["pledge_inheritance_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.08466362953186, "context": ["pledge_inheritance_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.239712953567505, "context": ["pledge_inheritance_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.1378443241119385, "context": ["pledge_inheritance_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.4257616996765137, "context": ["pledge_inheritance_1"]}
+{"key": "time_libsnark_gen_proof", "value": 20.21465802192688, "context": ["pledge_inheritance_1"]}
+{"key": "time_generate_proof", "value": 21.64527702331543, "context": ["pledge_inheritance_1"]}
+{"key": "gas", "value": 443825, "context": ["pledge_inheritance_1"]}
+{"key": "time_transaction_full", "value": 42.95374894142151, "context": ["pledge_inheritance_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.119876861572266, "context": ["sell_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.155678749084473, "context": ["sell_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.1264967918396, "context": ["sell_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.970134973526001, "context": ["sell_0"]}
+{"key": "time_libsnark_gen_proof", "value": 9.572431087493896, "context": ["sell_0"]}
+{"key": "time_generate_proof", "value": 10.545284271240234, "context": ["sell_0"]}
+{"key": "gas", "value": 295766, "context": ["sell_0"]}
+{"key": "time_transaction_full", "value": 30.79076075553894, "context": ["sell_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.15047550201416, "context": ["transfer_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.1252360343933105, "context": ["transfer_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.973093748092651, "context": ["transfer_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.478015422821045, "context": ["transfer_0"]}
+{"key": "time_libsnark_gen_proof", "value": 19.329503297805786, "context": ["transfer_0"]}
+{"key": "time_generate_proof", "value": 20.811659336090088, "context": ["transfer_0"]}
+{"key": "gas", "value": 339000, "context": ["transfer_0"]}
+{"key": "time_transaction_full", "value": 42.23212003707886, "context": ["transfer_0"]}
+{"key": "gas", "value": 28571, "context": ["_test_advance_time_0"]}
+{"key": "time_transaction_full", "value": 0.10567116737365723, "context": ["_test_advance_time_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.137454271316528, "context": ["claim_inheritance_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.7284138202667236, "context": ["claim_inheritance_0"]}
+{"key": "time_libsnark_gen_proof", "value": 22.495941162109375, "context": ["claim_inheritance_0"]}
+{"key": "time_generate_proof", "value": 24.228854179382324, "context": ["claim_inheritance_0"]}
+{"key": "gas", "value": 403655, "context": ["claim_inheritance_0"]}
+{"key": "time_transaction_full", "value": 34.63965654373169, "context": ["claim_inheritance_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.3382768630981445, "context": ["claim_inheritance_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.5949862003326416, "context": ["claim_inheritance_1"]}
+{"key": "time_libsnark_gen_proof", "value": 22.581673860549927, "context": ["claim_inheritance_1"]}
+{"key": "time_generate_proof", "value": 24.18129301071167, "context": ["claim_inheritance_1"]}
+{"key": "gas", "value": 403679, "context": ["claim_inheritance_1"]}
+{"key": "time_transaction_full", "value": 34.77257513999939, "context": ["claim_inheritance_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.1338112354278564, "context": ["sell_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.065168857574463, "context": ["sell_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.8813443183898926, "context": ["sell_1"]}
+{"key": "time_libsnark_gen_proof", "value": 9.784615755081177, "context": ["sell_1"]}
+{"key": "time_generate_proof", "value": 10.668318271636963, "context": ["sell_1"]}
+{"key": "gas", "value": 295766, "context": ["sell_1"]}
+{"key": "time_transaction_full", "value": 24.757164239883423, "context": ["sell_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.159525394439697, "context": ["sell_2"]}
+{"key": "time_elgamal_decrypt", "value": 6.196117877960205, "context": ["sell_2"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.9978306293487549, "context": ["sell_2"]}
+{"key": "time_libsnark_gen_proof", "value": 9.791628360748291, "context": ["sell_2"]}
+{"key": "time_generate_proof", "value": 10.79197883605957, "context": ["sell_2"]}
+{"key": "gas", "value": 295742, "context": ["sell_2"]}
+{"key": "time_transaction_full", "value": 25.002662181854248, "context": ["sell_2"]}
+{"key": "time_all_transactions", "value": 300.66862654685974, "context": []}

@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 39, "context": ["zether-confidential.zkay"]}
+{"key": "time_circuit_compilation", "value": 2.7938029766082764, "context": ["zether-confidential.zkay"]}
+{"key": "time_key_generation", "value": 79.57561922073364, "context": ["zether-confidential.zkay"]}
+{"key": "time_compileFull", "value": 85.92315697669983, "context": ["zether-confidential.zkay"]}

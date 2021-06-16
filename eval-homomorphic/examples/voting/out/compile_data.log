@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 40, "context": ["voting.zkay"]}
+{"key": "time_circuit_compilation", "value": 2.0669524669647217, "context": ["voting.zkay"]}
+{"key": "time_key_generation", "value": 51.304510831832886, "context": ["voting.zkay"]}
+{"key": "time_compileFull", "value": 56.09195351600647, "context": ["voting.zkay"]}

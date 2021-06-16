@@ -78,6 +78,8 @@ class UserConfig:
         self._use_circuit_cache_during_testing_with_encryption: bool = True
         self._verbosity: int = 1
 
+        self._disable_verification: bool = False
+
     @property
     def proving_scheme(self) -> str:
         """
@@ -384,3 +386,13 @@ class UserConfig:
     def verbosity(self, val: int):
         _type_check(val, int)
         self._verbosity = val
+
+    @property
+    def disable_verification(self) -> bool:
+        """If true, proof verification in output contract is disabled (only for benchmarks)"""
+        return self._disable_verification
+
+    @disable_verification.setter
+    def disable_verification(self, val: bool):
+        _type_check(val, bool)
+        self._disable_verification = val

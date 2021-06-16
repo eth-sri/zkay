@@ -1,0 +1,83 @@
+{"key": "gas", "value": 213428, "context": ["deploy_pki", "ecdh-chaskey"]}
+{"key": "gas", "value": 213848, "context": ["deploy_pki", "elgamal"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89300, "context": ["announcePk"]}
+{"key": "gas", "value": 869122, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_start"]}
+{"key": "time_transaction_full", "value": 0.045614004135131836, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_start"]}
+{"key": "gas", "value": 826555, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_buy"]}
+{"key": "time_transaction_full", "value": 0.045984745025634766, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_buy"]}
+{"key": "gas", "value": 826351, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_sell"]}
+{"key": "time_transaction_full", "value": 0.04457664489746094, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_sell"]}
+{"key": "gas", "value": 826531, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_bet"]}
+{"key": "time_transaction_full", "value": 0.04569673538208008, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_bet"]}
+{"key": "gas", "value": 826555, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_add_winner"]}
+{"key": "time_transaction_full", "value": 0.04418206214904785, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_add_winner"]}
+{"key": "gas", "value": 826123, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_publish"]}
+{"key": "time_transaction_full", "value": 0.046244144439697266, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_publish"]}
+{"key": "gas", "value": 826159, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_win"]}
+{"key": "time_transaction_full", "value": 0.04443717002868652, "context": ["constructor_0", "constructor", "zk__Verify_WeightedLottery_win"]}
+{"key": "gas", "value": 2472022, "context": ["constructor_0", "constructor", "WeightedLottery"]}
+{"key": "time_transaction_full", "value": 1.7411789894104004, "context": ["constructor_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.6075196266174316, "context": ["buy_0"]}
+{"key": "time_libsnark_gen_proof", "value": 4.82309889793396, "context": ["buy_0"]}
+{"key": "time_generate_proof", "value": 5.432470083236694, "context": ["buy_0"]}
+{"key": "gas", "value": 129916, "context": ["buy_0"]}
+{"key": "time_transaction_full", "value": 6.252213716506958, "context": ["buy_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.6116580963134766, "context": ["buy_1"]}
+{"key": "time_libsnark_gen_proof", "value": 4.810653924942017, "context": ["buy_1"]}
+{"key": "time_generate_proof", "value": 5.4240334033966064, "context": ["buy_1"]}
+{"key": "gas", "value": 129916, "context": ["buy_1"]}
+{"key": "time_transaction_full", "value": 6.280519247055054, "context": ["buy_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.3581216335296631, "context": ["start_0"]}
+{"key": "time_libsnark_gen_proof", "value": 2.1848087310791016, "context": ["start_0"]}
+{"key": "time_generate_proof", "value": 2.544076442718506, "context": ["start_0"]}
+{"key": "gas", "value": 175649, "context": ["start_0"]}
+{"key": "time_transaction_full", "value": 2.967639684677124, "context": ["start_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.953551292419434, "context": ["bet_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.949077367782593, "context": ["bet_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.6387648582458496, "context": ["bet_0"]}
+{"key": "time_libsnark_gen_proof", "value": 24.51305842399597, "context": ["bet_0"]}
+{"key": "time_generate_proof", "value": 26.15634799003601, "context": ["bet_0"]}
+{"key": "gas", "value": 327858, "context": ["bet_0"]}
+{"key": "time_transaction_full", "value": 41.143097162246704, "context": ["bet_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.967421531677246, "context": ["bet_1"]}
+{"key": "time_elgamal_decrypt", "value": 5.958623647689819, "context": ["bet_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.5402824878692627, "context": ["bet_1"]}
+{"key": "time_libsnark_gen_proof", "value": 23.2925546169281, "context": ["bet_1"]}
+{"key": "time_generate_proof", "value": 24.838271141052246, "context": ["bet_1"]}
+{"key": "gas", "value": 259554, "context": ["bet_1"]}
+{"key": "time_transaction_full", "value": 39.837411403656006, "context": ["bet_1"]}
+{"key": "gas", "value": 26289, "context": ["_test_advance_time_0"]}
+{"key": "time_transaction_full", "value": 0.06505155563354492, "context": ["_test_advance_time_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.7827553749084473, "context": ["add_winner_0"]}
+{"key": "time_libsnark_gen_proof", "value": 9.172985792160034, "context": ["add_winner_0"]}
+{"key": "time_generate_proof", "value": 9.958132982254028, "context": ["add_winner_0"]}
+{"key": "gas", "value": 109951, "context": ["add_winner_0"]}
+{"key": "time_transaction_full", "value": 11.26085114479065, "context": ["add_winner_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.945589303970337, "context": ["publish_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.7369503974914551, "context": ["publish_0"]}
+{"key": "time_libsnark_gen_proof", "value": 6.342170000076294, "context": ["publish_0"]}
+{"key": "time_generate_proof", "value": 7.081099033355713, "context": ["publish_0"]}
+{"key": "gas", "value": 76067, "context": ["publish_0"]}
+{"key": "time_transaction_full", "value": 13.744958400726318, "context": ["publish_0"]}
+{"key": "gas", "value": 26289, "context": ["_test_advance_time_1"]}
+{"key": "time_transaction_full", "value": 0.06287789344787598, "context": ["_test_advance_time_1"]}
+{"key": "time_elgamal_decrypt", "value": 5.947192668914795, "context": ["win_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.635385274887085, "context": ["win_0"]}
+{"key": "time_libsnark_gen_proof", "value": 4.896940469741821, "context": ["win_0"]}
+{"key": "time_generate_proof", "value": 5.5342395305633545, "context": ["win_0"]}
+{"key": "gas", "value": 60482, "context": ["win_0"]}
+{"key": "time_transaction_full", "value": 12.499979972839355, "context": ["win_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.948260545730591, "context": ["sell_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.980597734451294, "context": ["sell_0"]}
+{"key": "time_elgamal_decrypt", "value": 5.9614458084106445, "context": ["sell_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.0490405559539795, "context": ["sell_0"]}
+{"key": "time_libsnark_gen_proof", "value": 10.739301919937134, "context": ["sell_0"]}
+{"key": "time_generate_proof", "value": 11.790972232818604, "context": ["sell_0"]}
+{"key": "gas", "value": 74245, "context": ["sell_0"]}
+{"key": "time_transaction_full", "value": 31.10062861442566, "context": ["sell_0"]}
+{"key": "time_all_transactions", "value": 178.5403265953064, "context": []}

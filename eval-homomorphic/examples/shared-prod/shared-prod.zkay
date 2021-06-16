@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME shared-prod
-// META-DESC Contract for increasing a shared number using multiplication.
+// META-DESC Increasing a shared number using multiplication.
 // META-ADD
 // META-MULT
 
@@ -15,7 +15,7 @@ contract SharedProd {
         secret = 3;
     }
 
-    function foo(uint32@me x) public {
+    function foo(uint32@me<+> x) public {
         secret = secret * reveal(x, owner);
     }
 

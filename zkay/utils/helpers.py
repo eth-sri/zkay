@@ -59,5 +59,5 @@ def prepend_to_lines(text: str, pre: str):
 
 def lines_of_code(code: str):
     lines = code.split('\n')
-    lines = [l for l in lines if not l.startswith('//')]
+    lines = [l for l in lines if not l.strip().startswith('//') and l.strip() != ""]
     return len(lines)

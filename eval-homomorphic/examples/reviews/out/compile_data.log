@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 40, "context": ["reviews.zkay"]}
+{"key": "time_circuit_compilation", "value": 2.0188844203948975, "context": ["reviews.zkay"]}
+{"key": "time_key_generation", "value": 48.18911170959473, "context": ["reviews.zkay"]}
+{"key": "time_compileFull", "value": 52.7860267162323, "context": ["reviews.zkay"]}

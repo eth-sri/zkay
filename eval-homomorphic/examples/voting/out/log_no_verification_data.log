@@ -1,0 +1,55 @@
+{"key": "gas", "value": 213428, "context": ["deploy_pki", "ecdh-chaskey"]}
+{"key": "gas", "value": 213848, "context": ["deploy_pki", "elgamal"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89300, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89300, "context": ["announcePk"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.6085844039916992, "context": ["constructor_0"]}
+{"key": "time_libsnark_gen_proof", "value": 4.855133533477783, "context": ["constructor_0"]}
+{"key": "time_generate_proof", "value": 5.4653778076171875, "context": ["constructor_0"]}
+{"key": "gas", "value": 826375, "context": ["constructor_0", "constructor", "zk__Verify_Voting_vote"]}
+{"key": "time_transaction_full", "value": 0.044944047927856445, "context": ["constructor_0", "constructor", "zk__Verify_Voting_vote"]}
+{"key": "gas", "value": 826483, "context": ["constructor_0", "constructor", "zk__Verify_Voting_declareWinner"]}
+{"key": "time_transaction_full", "value": 0.04544377326965332, "context": ["constructor_0", "constructor", "zk__Verify_Voting_declareWinner"]}
+{"key": "gas", "value": 826543, "context": ["constructor_0", "constructor", "zk__Verify_Voting_constructor"]}
+{"key": "time_transaction_full", "value": 0.048718929290771484, "context": ["constructor_0", "constructor", "zk__Verify_Voting_constructor"]}
+{"key": "gas", "value": 1192106, "context": ["constructor_0", "constructor", "Voting"]}
+{"key": "time_transaction_full", "value": 7.530817031860352, "context": ["constructor_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.2582409381866455, "context": ["vote_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.25391626358032227, "context": ["vote_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.25201416015625, "context": ["vote_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.661592960357666, "context": ["vote_0"]}
+{"key": "time_libsnark_gen_proof", "value": 21.439342975616455, "context": ["vote_0"]}
+{"key": "time_generate_proof", "value": 23.105358600616455, "context": ["vote_0"]}
+{"key": "gas", "value": 137514, "context": ["vote_0"]}
+{"key": "time_transaction_full", "value": 27.494482278823853, "context": ["vote_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.2557179927825928, "context": ["vote_1"]}
+{"key": "time_elgamal_decrypt", "value": 0.2542872428894043, "context": ["vote_1"]}
+{"key": "time_elgamal_decrypt", "value": 0.2517223358154297, "context": ["vote_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.6348676681518555, "context": ["vote_1"]}
+{"key": "time_libsnark_gen_proof", "value": 21.420653343200684, "context": ["vote_1"]}
+{"key": "time_generate_proof", "value": 23.05998730659485, "context": ["vote_1"]}
+{"key": "gas", "value": 137502, "context": ["vote_1"]}
+{"key": "time_transaction_full", "value": 27.35164165496826, "context": ["vote_1"]}
+{"key": "time_elgamal_decrypt", "value": 0.27309322357177734, "context": ["vote_2"]}
+{"key": "time_elgamal_decrypt", "value": 0.261476993560791, "context": ["vote_2"]}
+{"key": "time_elgamal_decrypt", "value": 0.26650452613830566, "context": ["vote_2"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.7204060554504395, "context": ["vote_2"]}
+{"key": "time_libsnark_gen_proof", "value": 21.827205896377563, "context": ["vote_2"]}
+{"key": "time_generate_proof", "value": 23.55194067955017, "context": ["vote_2"]}
+{"key": "gas", "value": 137526, "context": ["vote_2"]}
+{"key": "time_transaction_full", "value": 28.01054286956787, "context": ["vote_2"]}
+{"key": "time_elgamal_decrypt", "value": 0.26150965690612793, "context": ["declareWinner_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.253885269165039, "context": ["declareWinner_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.150521993637085, "context": ["declareWinner_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.27208948135375977, "context": ["declareWinner_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.9286189079284668, "context": ["declareWinner_0"]}
+{"key": "time_libsnark_gen_proof", "value": 9.66848111152649, "context": ["declareWinner_0"]}
+{"key": "time_generate_proof", "value": 10.599512100219727, "context": ["declareWinner_0"]}
+{"key": "gas", "value": 84137, "context": ["declareWinner_0"]}
+{"key": "time_transaction_full", "value": 23.918798446655273, "context": ["declareWinner_0"]}
+{"key": "time_all_transactions", "value": 123.66696453094482, "context": []}

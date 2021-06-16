@@ -1,0 +1,4 @@
+{"key": "originalLoc", "value": 71, "context": ["weighted-lottery.zkay"]}
+{"key": "time_circuit_compilation", "value": 3.6653969287872314, "context": ["weighted-lottery.zkay"]}
+{"key": "time_key_generation", "value": 85.45111203193665, "context": ["weighted-lottery.zkay"]}
+{"key": "time_compileFull", "value": 92.97081732749939, "context": ["weighted-lottery.zkay"]}

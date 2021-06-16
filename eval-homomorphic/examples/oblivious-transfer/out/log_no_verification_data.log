@@ -1,0 +1,41 @@
+{"key": "gas", "value": 213428, "context": ["deploy_pki", "ecdh-chaskey"]}
+{"key": "gas", "value": 213848, "context": ["deploy_pki", "elgamal"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 66547, "context": ["announcePk"]}
+{"key": "gas", "value": 89288, "context": ["announcePk"]}
+{"key": "gas", "value": 826363, "context": ["constructor_0", "constructor", "zk__Verify_ObliviousTransfer_prepare"]}
+{"key": "time_transaction_full", "value": 0.04721355438232422, "context": ["constructor_0", "constructor", "zk__Verify_ObliviousTransfer_prepare"]}
+{"key": "gas", "value": 826555, "context": ["constructor_0", "constructor", "zk__Verify_ObliviousTransfer_send"]}
+{"key": "time_transaction_full", "value": 0.045667171478271484, "context": ["constructor_0", "constructor", "zk__Verify_ObliviousTransfer_send"]}
+{"key": "gas", "value": 768267, "context": ["constructor_0", "constructor", "ObliviousTransfer"]}
+{"key": "time_transaction_full", "value": 0.55423903465271, "context": ["constructor_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.24071478843688965, "context": ["prepare_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.24457240104675293, "context": ["prepare_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 0.9111106395721436, "context": ["prepare_0"]}
+{"key": "time_libsnark_gen_proof", "value": 8.913304328918457, "context": ["prepare_0"]}
+{"key": "time_generate_proof", "value": 9.827304124832153, "context": ["prepare_0"]}
+{"key": "gas", "value": 224427, "context": ["prepare_0"]}
+{"key": "time_transaction_full", "value": 11.636821508407593, "context": ["prepare_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.24806022644043, "context": ["send_0"]}
+{"key": "time_elgamal_decrypt", "value": 6.288650751113892, "context": ["send_0"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.3886685371398926, "context": ["send_0"]}
+{"key": "time_libsnark_gen_proof", "value": 15.637657642364502, "context": ["send_0"]}
+{"key": "time_generate_proof", "value": 17.030471563339233, "context": ["send_0"]}
+{"key": "gas", "value": 164925, "context": ["send_0"]}
+{"key": "time_transaction_full", "value": 32.94659996032715, "context": ["send_0"]}
+{"key": "time_elgamal_decrypt", "value": 0.2656693458557129, "context": ["prepare_1"]}
+{"key": "time_elgamal_decrypt", "value": 0.266467809677124, "context": ["prepare_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.0187740325927734, "context": ["prepare_1"]}
+{"key": "time_libsnark_gen_proof", "value": 8.790388345718384, "context": ["prepare_1"]}
+{"key": "time_generate_proof", "value": 9.811972618103027, "context": ["prepare_1"]}
+{"key": "gas", "value": 87615, "context": ["prepare_1"]}
+{"key": "time_transaction_full", "value": 11.774060487747192, "context": ["prepare_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.123680591583252, "context": ["send_1"]}
+{"key": "time_elgamal_decrypt", "value": 6.286738634109497, "context": ["send_1"]}
+{"key": "time_jsnark_prepare_proof", "value": 1.4075508117675781, "context": ["send_1"]}
+{"key": "time_libsnark_gen_proof", "value": 15.767708778381348, "context": ["send_1"]}
+{"key": "time_generate_proof", "value": 17.178773880004883, "context": ["send_1"]}
+{"key": "gas", "value": 96477, "context": ["send_1"]}
+{"key": "time_transaction_full", "value": 33.01596927642822, "context": ["send_1"]}
+{"key": "time_all_transactions", "value": 92.47709488868713, "context": []}

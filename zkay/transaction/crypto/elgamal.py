@@ -11,6 +11,8 @@ from zkay.transaction.types import KeyPair, CipherValue, PrivateKeyValue, Public
 
 import babygiant
 
+from zkay.utils.timer import time_measure
+
 
 def to_le_32_hex_bytes(num):
     hx = "{0:0{1}x}".format(num, 32*2)
@@ -18,18 +20,13 @@ def to_le_32_hex_bytes(num):
     return b
 
 
-dlog_cache = {}
-
-
 def get_dlog(x: int, y: int):
-    global dlog_cache
-    zk_print(f'Fetching discrete log for {x}, {y}...')
-    if (x, y) not in dlog_cache:
-        xb = to_le_32_hex_bytes(x)
-        yb = to_le_32_hex_bytes(y)
-        zk_print(f'Running babygiant with arguments {xb}, {yb}...')
-        dlog_cache[(x, y)] = int(babygiant.compute_dlog(xb, yb))
-    return dlog_cache[(x, y)]
+    zk_print(f'Fetching discrete log for {x}, {y}...', verbosity_level=2)
+    xb = to_le_32_hex_bytes(x)
+    yb = to_le_32_hex_bytes(y)
+    zk_print(f'Running babygiant with arguments {xb}, {yb}...', verbosity_level=2)
+
+    return int(babygiant.compute_dlog(xb, yb))
 
 
 class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
@@ -75,11 +72,12 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         return cipher_chunks, [r]
 
     def _dec(self, cipher: Tuple[int, ...], sk: Any) -> Tuple[int, List[int]]:
-        c1 = babyjubjub.Point(babyjubjub.Fq(cipher[0]), babyjubjub.Fq(cipher[1]))
-        c2 = babyjubjub.Point(babyjubjub.Fq(cipher[2]), babyjubjub.Fq(cipher[3]))
-        shared_secret = c1 * babyjubjub.Fr(sk)
-        plain_embedded = c2 + shared_secret.negate()
-        plain = self._de_embed(plain_embedded)
+        with time_measure("elgamal_decrypt"):
+            c1 = babyjubjub.Point(babyjubjub.Fq(cipher[0]), babyjubjub.Fq(cipher[1]))
+            c2 = babyjubjub.Point(babyjubjub.Fq(cipher[2]), babyjubjub.Fq(cipher[3]))
+            shared_secret = c1 * babyjubjub.Fr(sk)
+            plain_embedded = c2 + shared_secret.negate()
+            plain = self._de_embed(plain_embedded)
 
         # TODO randomness misused for the secret key, which is an extremely ugly hack...
         return plain, [sk]

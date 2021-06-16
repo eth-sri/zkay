@@ -1,7 +1,7 @@
 pragma zkay ^0.2.0;
 
 // META-NAME inheritance
-// META-DESC A container for inheritable wallets. Owners can pledge secret inheritable amounts to recipients.
+// META-DESC Container for inheritable wallets with secret allotted portions.
 // META-ADD
 // META-MIXED
 
@@ -17,6 +17,9 @@ contract Inheritance {
 	mapping(address => uint) last_seen;
 
 	uint _now = now;    // for testing purposes only--use blockchain time for real deployment
+
+	constructor() public {
+	}
 
 	function buy() public payable {
 		balance[me] += uint32(msg.value);

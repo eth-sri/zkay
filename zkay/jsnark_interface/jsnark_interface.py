@@ -20,15 +20,21 @@ def compile_circuit(circuit_dir: str, javacode: str):
     :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
     :raise SubprocessError: if compilation fails
     """
-    jfile = os.path.join(circuit_dir, cfg.jsnark_circuit_classname + ".java")
+    class_name = cfg.jsnark_circuit_classname
+    jfile = os.path.join(circuit_dir, class_name + ".java")
     with open(jfile, 'w') as f:
         f.write(javacode)
 
-    # Compile the circuit java file
-    run_command(['javac', '-cp', f'{circuit_builder_jar}', jfile], cwd=circuit_dir)
+    compile_and_run_with_circuit_builder(circuit_dir, class_name, jfile, ['compile'])
 
+
+def compile_and_run_with_circuit_builder(working_dir, class_name, java_file_name, args: List[str]):
+    # Compile the circuit java file
+    run_command(['javac', '-cp', f'{circuit_builder_jar}', java_file_name], cwd=working_dir)
     # Run jsnark to generate the circuit
-    run_command(['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{circuit_dir}', cfg.jsnark_circuit_classname, 'compile'], cwd=circuit_dir, allow_verbose=True)
+    return run_command(
+        ['java', '-Xms4096m', '-Xmx16384m', '-cp', f'{circuit_builder_jar}:{working_dir}', class_name, *args],
+        cwd=working_dir, allow_verbose=True)
 
 
 def prepare_proof(circuit_dir: str, output_dir: str, serialized_args: List[int]):

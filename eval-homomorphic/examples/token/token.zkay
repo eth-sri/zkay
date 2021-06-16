@@ -1,11 +1,14 @@
 pragma zkay >=0.2.0;
 
 // META-NAME token
-// META-DESC Private token wallet supporting confidential transactions.
+// META-DESC Private token wallet with confidential transactions (extension of \cref{fig:overview-input}).
 // META-ADD
 
 contract Token {
 	mapping(address!x => uint32@x<+>) balance;
+
+	constructor() public {
+	}
 
 	function buy() public payable {
         require(msg.value <= 100000);
