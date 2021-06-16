@@ -57,4 +57,4 @@ class DummyHomCrypto(ZkayHomomorphicCryptoInterface):
         return [(result + 1) % bn128_scalar_field]
 
     def do_rerand(self, arg: CipherValue, public_key: List[int]) -> Tuple[List[int], List[int]]:
-        return [arg], [0]
+        return arg, [0]
