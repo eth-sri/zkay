@@ -21,10 +21,10 @@ create_zkay_venv:
   script:
     - virtualenv venv
     - source venv/bin/activate
-    - pip3 install -r install/requirements.txt # Use fixed version dependencies
-    - pip3 install -e .
     - pip3 install -r babygiant-lib/requirements.txt
     - pip3 install ./babygiant-lib
+    - pip3 install -r install/requirements.txt # Use fixed version dependencies
+    - pip3 install -e .
   artifacts:
     paths:
       - zkay/solidity_parser/generated/*.py
