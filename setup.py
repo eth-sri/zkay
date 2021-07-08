@@ -80,7 +80,7 @@ setup(
     # Metadata
     name='zkay',
     version=zkay_version,
-    author='Nick Baumann, SRI Lab ETH Zurich',
+    author='Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich',
     url='https://github.com/eth-sri/zkay',
     license='MIT',
     description='Zkay is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and non-interactive zero-knowledge (NIZK) proofs. The zkay package provides a toolchain for compiling, deploying and using zkay contracts.',

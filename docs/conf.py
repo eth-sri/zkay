@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'zkay'
-copyright = '2020, Nick Baumann, SRI Lab ETH Zurich'
-author = 'Nick Baumann, SRI Lab ETH Zurich'
+copyright = '2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich'
+author = 'Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich'
 version = '0.2.0'
 
 
