@@ -26,25 +26,32 @@ The AST transformation system was adjusted such that the different ciphers, keys
 
 **Relevant code**:
 - [zkay/compiler/privacy/circuit_generation/circuit_helper.py](zkay/compiler/privacy/circuit_generation/circuit_helper.py):  Contains the main AST transformation changes.
-- [zkay/compiler/privacy/circuit_generation/backends/jsnark_generator.py](zkay/compiler/privacy/circuit_generation/backends/jsnark_generator.py): Contains changes specific to the abstract circuit generation.
+- [zkay/compiler/privacy/circuit_generation/backends/jsnark_generator.py](zkay/compiler/privacy/circuit_generation/backends/jsnark_generator.py): Contains changes specific to the abstract circuit generation. Emits `o_rerand` for re-randomization of private scalar multiplications.
 - [zkay/compiler/privacy/library_contracts.py](zkay/compiler/privacy/library_contracts.py): Updated public-key infrastructure (PKI) contract template.
 - [zkay/compiler/privacy/transformation/zkay_contract_transformer.py](zkay/compiler/privacy/transformation/zkay_contract_transformer.py): Improved key management and PKI library imports based on homomorphisms used in function and contract.
+- [zkay/compiler/privacy/transformation/zkay_transformer.py](zkay/compiler/privacy/transformation/zkay_transformer.py): Added somewhat ugly hack to support private homomorphic scalar multiplication.
 
 ## Transaction Interface Generation
 
 The relevant API methods in `ApiWrapper` were extended with a parameter to specify which encryption scheme to use.
 
 **Relevant code**:
-- [zkay/transaction/offchain.py](zkay/transaction/offchain.py): Updated API with support for multiple crypto back-ends. Also contains a new `do_homomorphic_op` method to perform homomorphic operations on suitable ciphertexts.
+- [zkay/transaction/offchain.py](zkay/transaction/offchain.py): Updated API with support for multiple crypto back-ends. Contains a new `do_homomorphic_op` method to perform homomorphic operations on suitable ciphertexts. Further,  includes a `do_rerand` function for re-randomization of ciphertext after private scalar multiplication.
 - [zkay/transaction/crypto/paillier.py](zkay/transaction/crypto/paillier.py): Contains the implementation of the additively homomorphic Paillier encryption scheme, including the code perform homomorphic operations.
-- [zkay/transaction/crypto/params.py](zkay/transaction/crypto/params.py): New `CryptoParams` class used throughout the code to encapsulate the values in [meta.py](zkay/transaction/crypto/meta.py) instead of going through a global, shared `cfg` object.. 
+- [zkay/transaction/crypto/babyjubjub.py](zkay/transaction/crypto/babyjubjub.py): Implementation of elliptic curve operations on Baby Jubjub (required for ElGamal encryption).
+- [zkay/transaction/crypto/elgamal.py](zkay/transaction/crypto/elgamal.py): Implementation of the additively homomorphic exponential ElGamal encryption scheme over Baby Jubjub.
+- [zkay/transaction/crypto/params.py](zkay/transaction/crypto/params.py): New `CryptoParams` class used throughout the code to encapsulate the values in [meta.py](zkay/transaction/crypto/meta.py) instead of going through a global, shared `cfg` object.
+- [babygiant-lib](babygiant-lib): A rust extension to efficiently compute small discrete logarithms (required for ElGamal decryption).
 
 ## Concrete Circuit Generation / Proving Back-End
 
-The code to turn an abstract circuit into a concrete circuit can be found in the [zkay-jsnark repository](https://github.com/eth-sri/zkay-jsnark). `ZkayCircuitBase` was modified to support multiple encryption schemes, which are now encapsulated in the `CryptoBackend` class and its subclasses. For additively homomorphic encryption, the Paillier encryption scheme as well as an insecure homomorphic dummy encryption scheme were implemented.
+The code to turn an abstract circuit into a concrete circuit can be found in the [zkay-jsnark repository](https://github.com/eth-sri/zkay-jsnark). `ZkayCircuitBase` was modified to support multiple encryption schemes, which are now encapsulated in the `CryptoBackend` class and its subclasses. For additively homomorphic encryption, Paillier, ElGamal, as well as an insecure homomorphic dummy encryption scheme were implemented. Because ElGamal encryption does not allow extracting the randomness used to form a ciphertext, we cannot re-use the encryption gadget for decryption but need a separate decryption gadget.
 
 **Relevant code**:
 - **ZkayPaillierEncGadget** and **ZkayPaillierFastEncGadget**:  Contain the implementation to perform a Paillier encryption enc(x, r) := g^x * r^n mod n^2 for a public key (n, g) in the arithmetic circuit. The "Fast" variant uses a hardcoded generator g = n + 1, which lets us save one modular exponentiation.
+- **ZkayBabyJubJubGadget**: Gadget for operations on the embedded Baby Jubjub elliptic curve.
+- **ZkayElgamalAddGadget**, **ZkayElgamalDecGadget**, **ZkayElgamalEncGadget**, **ZkayElgamalMulGadget** and **ZkayElgamalRerandGadget**: Gadgets to perform exponential ElGamal homomorphic addition, multiplication, encryption, decryption and rerandomization.
 - **PaillierBackend**: The `CryptoBackend` for the Paillier encryption scheme. Contains the code to perform homomorphic operations on Paillier ciphertexts.
+- **ElgamalBackend**: The `CryptoBackend` for the exponential ElGamal encryption scheme.
 - **ZkayDummyHomEncryptionGadget**: Implementation of a homomorphic dummy encryption scheme, which "encrypts" values as enc(x, r) := x * p + 1 mod FIELD_PRIME for some prime "key" p. 1 is added to the ciphertext to prevent the encryption of 0 from creating an invalid ciphertext of 0.
 - **DummyHomBackend**: The `CryptoBackend` for the homomorphic dummy encryption scheme. Again, contains the code to perform homomorphic operations on these ciphertexts.
