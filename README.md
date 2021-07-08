@@ -1,12 +1,13 @@
 # zkay: A Blockchain Privacy Language
 
-Zkay (pronounced as `[zi: keɪ]`) is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and non-interactive zero-knowledge (NIZK) proofs. This repository provides a toolchain for compiling, deploying and using zkay contracts.
+Zkay (pronounced as `[zi: keɪ]`) is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging (homomorphic) encryption and non-interactive zero-knowledge (NIZK) proofs. This repository provides a toolchain for compiling, deploying and using zkay contracts.
 
 In addition to the instructions below, we refer to the following resources:
 
 - The original [research paper][zkay-ccs], which introduces the core concepts of zkay.
 - The [online documentation][zkay-docs], which provides a tutorial, language reference and API documentation.
 - The [technical report][zkay-techreport], which describes the features and implementation of zkay v0.2.
+- The most recent research paper (coming soon), which describes the integration of homomorphic encryption in zkay v0.3.
 
 ## Warning / Security Disclaimer
 
@@ -14,7 +15,7 @@ Zkay is a research project and its implementation should **not** be considered s
 
 ## Prerequisites
 
-Zkay requires python version 3.8 or later to be installed. Additionally, install the following dependencies using your system's package manager:
+Zkay requires python version 3.8 or later. In addition, install the following dependencies using your system's package manager:
 
 #### Debian/Ubuntu
 ```bash
@@ -31,9 +32,21 @@ If you only want to use zkay as a tool, you can install it as follows.
 
 ```bash
 git clone https://github.com/eth-sri/zkay.git
+
+# first, install the babygiant library
+bash ./babygiant-lib/install.sh
+
+# then, install zkay
 cd zkay
-python3 setup.py sdist
-pip3 install --no-binary zkay ./dist/zkay-*.tar.gz
+pip install --no-binary zkay .
+```
+
+### Using Docker
+
+Alternatively, you can run zkay in a docker container using the provided Dockerfile in the `install` subdirectory:
+
+```bash
+make -C ./install run
 ```
 
 ## Installation for Developers
@@ -41,18 +54,9 @@ For development of zkay, install zkay in editable mode as follows.
 
 ```bash
 git clone https://github.com/eth-sri/zkay.git
-cd zkay
-pip3 install -e .
-```
-
-### Using Docker
-
-Alternatively, you can also set up zkay in a docker container using the provided Dockerfile in the `install` subdirectory.
-
-To build and run the image, you can simply use:
-
-```bash
-make -C ./install run
+bash ./babygiant-lib/install.sh
+cd ../zkay
+pip install -e .
 ```
 
 ### Unit Tests

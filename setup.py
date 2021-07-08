@@ -97,7 +97,7 @@ setup(
         'appdirs>=1.4,<1.5',
         'argcomplete>=1,<2',
         'semantic-version>=2.8.4,<2.9',
-
+        'babygiant-lib==1.0',
         'pysha3>=1.0.2,<1.1', # Console script doesn't work without this even though it is not required
     ],
 

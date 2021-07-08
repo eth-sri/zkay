@@ -4,7 +4,11 @@ This is a rust extension to efficiently compute discrete logarithms for small ex
 
 ## Install
 
-### From wheel (recommended)
+### Automatic (recommended)
+
+Use `./install.sh` to automatically install babygiant-lib (uses wheels in a best-effort manner).
+
+### From wheel
 
 Install using precompiled binary (select `whl` file matching your platform; use `pip debug --verbose` to show compatible tags):
 
