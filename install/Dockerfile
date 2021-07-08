@@ -56,7 +56,7 @@ RUN pip3 install virtualenv
 ###################
 RUN if [ "$INSTALL_ZKAY" = "1" ]; then \
 		git clone https://github.com/eth-sri/zkay.git && \
+		    sh ./babygiant-lib/install.sh && \
 			cd zkay && \
-			python3 setup.py sdist && \
-			pip3 install --no-binary zkay dist/zkay-*.tar.gz; \
+			pip install --no-binary zkay .; \
 	fi
