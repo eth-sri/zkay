@@ -1,6 +1,12 @@
 Release Notes
 ================================
 
+v0.3.0 (xxxx-xx-xx)
+--------------------
+
+- Introduced homomorphic encryption schemes (Paillier, ElGamal)
+- Support for operations on foreign values: addition, subtraction, and scalar multiplication by public or self-owned scalars
+
 v0.2.0 (2020-09-01)
 --------------------
 
@@ -24,5 +30,6 @@ v0.2.0 (2020-09-01)
 
 v0.1.0 (2019-09-20)
 --------------------
+
 Original proof of concept release for CCS2019.
 See `publication <https://www.sri.inf.ethz.ch/publications/steffen2019zkay>`_.

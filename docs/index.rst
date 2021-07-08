@@ -6,7 +6,7 @@
 Welcome to zkay's documentation!
 ================================
 
-Zkay is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging encryption and non-interactive zero-knowledge (NIZK) proofs. The zkay package provides a toolchain for compiling, deploying and using zkay contracts.
+Zkay is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging (homomorphic) encryption and non-interactive zero-knowledge (NIZK) proofs. The zkay package provides a toolchain for compiling, deploying and using zkay contracts.
 
 The zkay language is closely related to Solidity and allows convenient specification of data ownership, reclassification, and private computations. Given a zkay contract, zkay's compiler automatically transforms it to a Solidity contract that realizes the privacy specification and can be deployed to an Ethereum blockchain.
 

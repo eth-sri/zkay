@@ -26,66 +26,67 @@ Any primitive type variable can be turned into a *private* variable by annotatin
 
     type@owner identifier;
 
-Which ownership labels are available depends on the scope:
+Private variables are encrypted on the blockchain such that they can only be read by the designated owner. Which ownership labels are available depends on the scope:
 
 - local variables: any final or constant address state variable, as well as the special value *me* (which corresponds to the address of msg.sender) can be used as an ownership label
 - state variables: only final or constant state variables are allowed
 - function parameters: only *me* is allowed
 - function return parameters: in general only *me*, for private/internal functions also any final or constant state address variable
 
-It is also possible to declare mappings where the privacy annotation of a value depends on the key:
+If a variable is declared private to *me*, it is called *self-owned*.
+
+It is also possible to declare mappings where the privacy annotation of a value depends on the key. In the following example, the entry :code:`private_values[alice]` is owned by :code:`alice`:
 
 .. code-block:: zkay
 
     mapping(address!x => uint@x) private_values;
 
-Private variables are **always encrypted** on the the chain such that they can only be read by the designated owner.
 
 Reclassification
 ================
 
-If the transaction issuer owns a variable, it is possible to reveal its value to another owner or to make a private value public.
+To prevent implicit information leaks, private expressions cannot be assigned to a different owner. However, you can explicitly reveal a self-owned expression to a different address, or to the public (using the dedicated :code:`all` owner):
 
 .. code-block:: zkay
 
     uint@me x;
-    uint@bob x_bob; x_bob = reveal(x, bob);
-    uint x_public = reveal(x, all)
+    uint@bob x_bob;
+    x_bob = reveal(x, bob);
+    uint x_public = reveal(x, all);
 
-Revealing to *all* will decrypt the value and publish the plaintext, whereas revealing to another owner will reencrypt the value for the new owner.
+Revealing to *all* will decrypt the value, whereas revealing to another owner will re-encrypt the value for the new owner.
 
-When assigning a public value to a private variable, zkay implicitly classifies the value, i.e.:
+It is possible to implicitly make a public expression private. For example:
 
 .. code-block:: zkay
 
     uint@me x = 5; // <=> uint@me x = reveal(5, me)
 
-Private Computations
-====================
+Private Computation on Self-owned Variables
+===========================================
 
-One of zkay's most powerful features is the ability to express computations over private values.
-
-Any variable for which the compiler can statically prove that the ownership label is equivalent to *@me* can be used within an expression. e.g.:
+Many operations in zkay can be evaluated on expressions where all variables are self-owned (owner *me*). This allows performing computation on private data. For example:
 
 .. code-block:: zkay
 
     uint@me val;
     uint@me res = 2 * val + 5;
 
-Mere assignment is also possible for values which are not owned by `msg.sender`, as this does not require decryption e.g.:
+Sometimes, the owner of a variable is syntactically different from *me*, but is guaranteed to evaluate to the caller address at runtime. In the example below, zkay detects that the variable a is actually self-owned.
 
 .. code-block:: zkay
 
-    uint@owner x;
-    uint@owner y;
-    x = y;
+    uint@alice a;
+    uint@me x;
+    require(me == alice);
+    x = a + x;
 
 Limitations
 ------------
 
 - Private expressions are not allowed within loops or recursive functions (and vice versa).
 - Private expressions must not contain side effects.
-- If the condition of an if statement is a private expression, then the only allowed side-effects within the branches are assignments to primitive-type variables owned by *@me*.
+- If the condition of an if statement is a private expression, then the only allowed side-effects within the branches are assignments to primitive-type variables owned by *me*.
 - Private bitwise operations cannot be used with 256-bit types.
 - When bit-shifting private values, the shift amount needs to be a constant literal.
 - Address members (balance, send, transfer) are not accessible on private addresses.
@@ -95,9 +96,75 @@ Warning
 ------------
 - Private 256-bit values overflow at a large prime (~253.5 bits).
 - | Comparison of private 256-bit values >= 2^252 may fail.
-  | **!!! If you cannot guarantee that the operands of a comparison stay below that threshold (i.e. if the values are freely controllable by untrusted users), use a smaller integer type to preserve correctness !!!**
+  | **If you cannot guarantee that the operands of a comparison stay below that threshold (i.e. if the values are freely controllable by untrusted users), use a smaller integer type to preserve correctness.** This does only apply to 256-bit values and is due to internal zk-SNARK circuit limitations. Smaller types are not affected.
 
-This does only apply to 256-bit values and is due to internal zk-SNARK circuit limitations. Smaller types are not affected.
+Private Computation on Foreign Variables
+========================================
+
+Homomorphism Tags
+-----------------
+
+Using :code:`<+>`, a variable can be declared to allow addition-based modifications by other parties (see below). Such variables will be encrypted using an additively homomorphic encryption scheme. Due to limitations imposed by the encryption scheme, these variables must be unsigned integers of at most 32 bits. For example, we can declare:
+
+.. code-block:: zkay
+
+    uint32@alice<+> x;
+
+Foreign Addition and Subtraction
+--------------------------------
+
+Relying on homomorphic encryption, zkay allows performing addition and subtraction operations on variables owned by an account other than *me*, provided the variables are declared with :code:`<+>`. For example:
+
+.. code-block:: zkay
+
+    uint32@alice<+> val;
+    val = val + 1;
+    val = val - 1;
+
+Mixing two different non-public owners is not allowed, so the following is rejected by zkay:
+
+.. code-block:: zkay
+
+    uint32@alice<+> a;
+    uint32@bob<+> b;
+    a = a + b;          // ! type error
+
+Foreign Multiplication
+----------------------
+
+Zkay also allows multiplying foreign values by constant scalars, or by values which are owned by *me* and immediately revealed to the other party. For example:
+
+.. code-block:: zkay
+
+    uint32@me x;
+    uint32@alice<+> val;
+    val = val * 2;
+    val = val * reveal(x, alice);
+
+Switching Tags
+--------------
+
+Zkay can automatically switch between homomorphism tags of self-owned expressions. For the following code snippet, zkay would automatically re-encrypt the value of x using a non-homomorphic encryption scheme before storing the result into y:
+
+.. code-block:: zkay
+
+    uint32@me x;
+    uint32@me<+> y;
+    y = x;
+
+Typically, zkay can automatically figure out where to introduce such a switch of encryption schemes. However, if this fails, you may always explicitly instruct zkay to change the homomorphism tag of a self-owned expression using the *unhom* and *addhom* expressions exemplified below:
+
+.. code-block:: zkay
+
+    uint32@me x;
+    uint32@me<+> y;
+    y = addhom(x);
+    x = unhom(y);
+
+
+Warning
+------------
+The result of a homomorphic addition or multiplication may overflow the 32 bit length restriction of the encryption scheme. Similarly, the result of a homomorphic subtraction may underflow below 0. In these cases, decryption of the variable will fail in zkay. **The contract is expected to contain application-specific logic ensuring these over- and underflows cannot happen.**
 
 --------------------------
 General Language Features
