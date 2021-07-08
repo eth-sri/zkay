@@ -1,4 +1,4 @@
-pragma zkay ^0.2.0;
+pragma zkay ^0.3.0;
 
 // META-NAME oblivious-transfer
 // META-DESC 1-out-of-2 oblivious transfer.

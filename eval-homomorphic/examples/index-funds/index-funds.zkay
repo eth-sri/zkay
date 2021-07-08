@@ -1,4 +1,4 @@
-pragma zkay ^0.2.0;
+pragma zkay ^0.3.0;
 
 // META-NAME index-funds
 // META-DESC Index funds allowing to privately buy and sell shares.

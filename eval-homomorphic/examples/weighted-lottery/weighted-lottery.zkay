@@ -1,4 +1,4 @@
-pragma zkay ^0.2.0;
+pragma zkay ^0.3.0;
 
 // META-NAME weighted-lottery
 // META-DESC Lottery where the winning chance can be increased by higher bids.

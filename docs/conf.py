@@ -20,7 +20,7 @@
 project = 'zkay'
 copyright = '2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich'
 author = 'Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich'
-version = '0.2.0'
+version = '0.3.0'
 
 
 # -- General configuration ---------------------------------------------------

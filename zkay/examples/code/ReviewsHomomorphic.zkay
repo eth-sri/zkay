@@ -1,4 +1,4 @@
-pragma zkay >=0.2.0;
+pragma zkay ^0.3.0;
 
 // Description: Blind paper reviews and acceptance decisions
 // Now comes with a variable number of reviewers, acceptance is judged on the average score a paper received.

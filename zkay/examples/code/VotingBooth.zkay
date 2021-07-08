@@ -1,4 +1,4 @@
-pragma zkay ^0.2.0;
+pragma zkay ^0.3.0;
 
 /*
  * Call vote(0) to vote for A, vote(1) to vote for B.

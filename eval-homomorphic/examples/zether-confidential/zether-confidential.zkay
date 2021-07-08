@@ -1,4 +1,4 @@
-pragma zkay ^0.2.0;
+pragma zkay ^0.3.0;
 
 // META-NAME zether-confidential
 // META-DESC Confidential transactions with pending array (analogous to Zether~\cite{bunz_zether_2019}).

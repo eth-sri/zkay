@@ -1,4 +1,4 @@
-pragma zkay >=0.2.0;
+pragma zkay ^0.3.0;
 
 // META-NAME token
 // META-DESC Private token wallet with confidential transactions (extension of \cref{fig:overview-input}).

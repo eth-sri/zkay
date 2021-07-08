@@ -1,4 +1,4 @@
-pragma zkay ^0.2.0;
+pragma zkay ^0.3.0;
 
 // META-NAME reviews
 // META-DESC Blind academic paper reviews with secret scores.
