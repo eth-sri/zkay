@@ -10,4 +10,4 @@ libsnark/
 __pycache__
 
 *.egg-info
-dist
+/dist

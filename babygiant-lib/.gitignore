@@ -1,5 +1,4 @@
 build/
-dist/
 *.pyd
 babygiant_lib.egg-info/
 target/
