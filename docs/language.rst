@@ -1,3 +1,5 @@
+.. _language-overview-label:
+
 ================================
 Language Overview
 ================================

@@ -3,48 +3,42 @@ Tutorial
 ================================
 
 -----------------
-Example Problem
+Example Contract
 -----------------
 
-Let's assume we want to conduct a survey where users can pick between the 3 options a, b, and c.
-With zkay it is possible to do this on-chain such that:
+Assume we want to conduct a survey where users can pick between three options a, b, and c. It is possible to express such a survey in zkay such that:
 
-1. Only the voter and the survey organizer get to see the value of a vote
+1. Only the voter and the survey organizer can see the value of a vote
 2. Everyone can verify that all votes were counted correctly
 
-The following example contract shows, how such an implementation could look like:
+The contract below contains a zkay implementation of this survey system. See the :ref:`language-overview-label` for details on the individual language constructs. We assume that this contract is stored in the file `survey.zkay` in the current directory.
 
 .. code-block:: zkay
 
-    pragma zkay ^0.2.0;
+    pragma zkay ^0.3.0;
 
     contract Survey {
         enum Choice {
-            None, a, b, c
+            none, a, b, c
         }
 
         final address organizer;
 
-        // Votes of the individual users (only readable by the respective user)
+        // Votes of the individual users (current_votes[a] is only visible to a)
         mapping(address!x => Choice@x) current_votes;
 
-        // Current vote to be processed by organizer
-        bool pending_vote;
-        Choice@organizer new_vote;
+        // Private vote counts allowing homomorphic operations (only visible to the organizer)
+        uint32@organizer<+> a_count;
+        uint32@organizer<+> b_count;
+        uint32@organizer<+> c_count;
 
-        // Encrypted counts
-        uint64@organizer a_count;
-        uint64@organizer b_count;
-        uint64@organizer c_count;
-
-        // The minimum number of paticipants before the vote can be closed
+        // The minimum number of participants before the vote can be closed
         uint min_votes;
 
         // Total number of votes
         uint vote_count;
 
-        // Published results (after vote is closed and result published by organizer),
-        // packed into a single uint
+        // Published results (after vote is closed and result published by organizer)
         uint packed_results;
 
         constructor(uint _min_votes) public {
@@ -56,35 +50,20 @@ The following example contract shows, how such an implementation could look like
         // State altering functions
 
         function vote(Choice@me votum) public {
-            require(!pending_vote);
-            require(reveal(votum != Choice.None && current_votes[me] == Choice.None, all));
+            require(reveal(votum != Choice.none && current_votes[me] == Choice.none, all));
             require(!is_result_published());
-
             current_votes[me] = votum;
-            new_vote = reveal(votum, organizer);
-            pending_vote = true;
-        }
-
-        function count_vote() public {
-            require(me == organizer);
-            require(pending_vote);
-
-            if (new_vote == Choice.a) {
-                a_count++;
-            } else if (new_vote == Choice.b) {
-                b_count++;
-            } else {
-                c_count++;
-            }
-
-            pending_vote = false;
-            vote_count++;
+            vote_count += 1;
+            a_count = a_count + reveal(votum == Choice.a ? 1 : 0, organizer);
+            b_count = b_count + reveal(votum == Choice.b ? 1 : 0, organizer);
+            c_count = c_count + reveal(votum == Choice.c ? 1 : 0, organizer);
         }
 
         function publish_results() public {
             require(me == organizer);
-            require(!pending_vote && min_votes_reached());
-            packed_results = reveal((uint192(c_count) << 128) | (uint192(b_count) << 64) | uint192(a_count), all);
+            require(min_votes_reached());
+            require(!is_result_published());
+            packed_results = reveal((uint192(unhom(c_count)) << 128) | (uint192(unhom(b_count)) << 64) | uint192(unhom(a_count)), all);
         }
 
         // Queries
@@ -92,14 +71,14 @@ The following example contract shows, how such an implementation could look like
         function get_result_for(Choice option) public view returns(uint64) {
             require(is_result_published());
             uint64 res;
-            if (option != Choice.None) {
+            if (option != Choice.none) {
                 res = uint64(packed_results >> 64*(uint(option)-1));
             }
             return res;
         }
 
         function get_winning_choice() public view returns(Choice) {
-            Choice c = Choice.None;
+            Choice c = Choice.none;
             uint votes = 0;
             for (uint i = uint(Choice.a); i <= uint(Choice.c); ++i) {
                 uint res = get_result_for(Choice(i));
@@ -127,13 +106,12 @@ The following example contract shows, how such an implementation could look like
     }
 
 
-From now on, we assume that this contract is stored in the file `survey.zkay` in the current directory.
 
 -----------------
 Compilation
 -----------------
 
-To compile the contract with the default encryption algorithm (ecdh-aes) and with output directory `survey_compiled`, you can simply use:
+To compile the contract with default encryption algorithms to the output directory `survey_compiled`, you can use:
 
 .. code-block:: bash
 
@@ -184,9 +162,7 @@ You can now issue some zkay transactions by calling the corresponding member fun
 .. code-block:: python
 
     >>> user_a.vote(Survey.Choice.a)
-    >>> survey_organizer.count_vote()
     >>> user_b.vote(Survey.Choice.a)
-    >>> survey_organizer.count_vote()
     >>> survey_organizer.publish_results()
 
 It is also possible to call public read-only (pure/view) contract functions which don't require a transaction.
@@ -211,21 +187,25 @@ It is also possible to manually retrieve the value of any state variable:
 
     >>> user_a.state.get_plain('current_votes', user_a.api.user_address)
         Choice.a
-    >>> user_a.state.get_plain('pending_vote')
-        False
 
-While `state.get_plain` automatically decrypts the value, it is also possible to use `state.get_raw`, to retrieve the unmodified cipher text instead.
+While `state.get_plain` automatically decrypts any private values, you can use `state.get_raw` to retrieve the original ciphertext.
 
-If an exception occurs during transaction simulation (e.g. require assertion fails), an appropriate error will be displayed.
+If an exception occurs during transaction simulation (e.g. require assertion fails), an appropriate error will be displayed:
+
+.. code-block:: python
+
+    >>> user_a.vote(Survey.Choice.none)
+        ERROR: require(reveal(votum != Choice.none && current_votes[me] == Choice.none, all)) failed
+
 If you are unsure which functions are available in a given contract, you can type `help()` to get a list of all available commands.
 
 -----------------
 Deployment
 -----------------
 
-While the eth-tester backend is nice for quick testing, at some point you might want to use a zkay contract in conjunction with a standalone Ethereum client.
+You can also use a zkay contract in conjunction with a standalone Ethereum client.
 
-You can test this scenario using zkay's `w3-ganache` backend and `ganache <https://www.trufflesuite.com/ganache>`_, which simulates an Ethereum client for a local test blockchain.
+For example, you can test this scenario using zkay's `w3-ganache` backend and `ganache <https://www.trufflesuite.com/ganache>`_, which simulates an Ethereum client for a local test blockchain.
 
 Once you have ganache set up and running, you need to tell zkay to use it. You can either do this via command line flags, or by creating a configuration file '~/.config/zkay/config.json' (global) or './config.json' (local) with the following contents:
 
@@ -236,15 +216,13 @@ Once you have ganache set up and running, you need to tell zkay to use it. You c
         "blockchain_node_uri":"http://{ganache_ip}:{ganache_port}"
     }
 
-Before you can deploy a zkay contract, you need to know the blockchain addresses of the deployed PKI and zkay library contracts which should be used by your contract.
-PKI contracts are crypto-backend specific, if there is no PKI contract on your chain yet, you can deploy it using:
+Before you can deploy a zkay contract, you need to know the blockchain addresses of the deployed PKI and zkay library contracts which should be used by your contract. PKI contracts are crypto-backend specific. If there is no PKI contract on your chain yet, you can deploy it using:
 
 .. code-block:: bash
 
     zkay deploy-pki <account_address_to_deploy_from>
 
-Similarly, if the proving-scheme which you selected requires library contracts which are not yet deployed (the default groth16 scheme has no library dependencies),
-you can deploy them using:
+Similarly, if the proving-scheme which you selected requires library contracts which are not yet deployed (the default groth16 scheme has no library dependencies), you can deploy them using:
 
 .. code-block:: bash
 
@@ -261,7 +239,7 @@ Once the contracts are deployed, you can tell zkay to use those contract address
         "blockchain_crypto_lib_addresses": "<blank_for_groth16>"
     }
 
-Once this is done, you can then deploy the above Survey contract using (space separated constructor args at the end):
+Once this is done, you can then deploy the above Survey contract using (space-separated constructor args at the end):
 
 .. code-block:: bash
 
@@ -278,9 +256,7 @@ For contracts deployed in this way, you can open an interactive transaction shel
 
     zkay connect --account <sender_account_to_use> ./survey_compiled <deployed_contract_address>
 
-In contrast to `zkay run`, the shell directly starts in the context of a contract interface object,
-i.e. all contract functions are directly available in the global scope (see help()).
-The address specified via the --account flag is used to send transactions. It can be accessed in the shell via the global 'me' variable.
+In contrast to `zkay run`, the shell directly starts in the context of a contract interface object, i.e. all contract functions are directly available in the global scope (see help()). The address specified via the --account flag is used to send transactions. It can be accessed in the shell via the global 'me' variable.
 
 Example:
 
@@ -289,15 +265,13 @@ Example:
     >>> vote(Choice.a)
     >>> is_result_published()
         False
-    >>> state.get_plain('pending_vote')
-        True
 
 
 ------------------------
 Contract Distribution
 ------------------------
 
-Each user which should be able to connect to and use a deployed zkay contract needs access to the corresponding compilation output. (For integrity verification and because the output contains the proving keys required to generate zero-knowledge proofs)
+Users who want to interact with a deployed zkay contract need access to the corresponding compilation output, because the output contains the proving keys required to generate zero-knowledge proofs.
 
 To simplify the distribution process, zkay can automatically pack a compiled contract into a standardized archive format which other users can import on their machine.
 
@@ -310,36 +284,34 @@ To export a contract package into a file `contract.zkp`, use:
 
     zkay export ./survey_compiled -o contract.zkp
 
-The file `contract.zkp` can then be hosted somewhere where other users can download it.
+The file `contract.zkp` can then be distributed to users.
 
 Import
 -------
 
-Each user needs to download `contract.zkp` and then unpack and compile it to a location <path/to/my_survey_compiled> using:
+Users can unpack `contract.zkp` to a location <path/to/my_survey_compiled> as follows:
 
 .. code-block:: bash
 
     zkay import contract.zkp -o <path/to/my_survey_compiled>
 
-The contract should then be usable just like on your local machine (assuming the other user's zkay configuration points to the same blockchain) via:
+A deployed contract at <deployed_contract_address> can then be accessed via:
 
 .. code-block:: bash
 
-    zkay connect --account <other_users_sender_account_to_use> <path/to/my_survey_compiled> <deployed_contract_address>
+    zkay connect --account <sender_account_to_use> <path/to/my_survey_compiled> <deployed_contract_address>
 
-The correct zkay configuration (compiler settings, crypto-backend, etc.) is loaded automatically from the manifest file which was also included with the contract package.
-It is also not necessary to specify the PKI contract address, as it will be automatically read from the contract on-chain.
+The correct zkay configuration (compiler settings, crypto-backend, etc.) is loaded automatically from the manifest file included with the contract package. It is also not necessary to specify the PKI contract address.
 
 
 **Note**:
-The connect command will automatically verify whether the contract at <deployed_contract_address> matches the imported contract sources.
-If there is a mismatch, zkay automatically terminates with an error message.
+The `connect` command automatically verifies whether the contract at <deployed_contract_address> matches the imported contract sources.
 
 ------------------
 Programmatic Use
 ------------------
 
-Most command line features which were described in this tutorial are also available via an API.
+Most command line features described in this tutorial are also available via an API.
 
 See :py:mod:`.zkay_frontend`
 
