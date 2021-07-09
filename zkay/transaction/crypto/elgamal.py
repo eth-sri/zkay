@@ -83,6 +83,11 @@ class ElgamalCrypto(ZkayHomomorphicCryptoInterface):
         return plain, [sk]
 
     def _de_embed(self, plain_embedded: babyjubjub.Point) -> int:
+        # handle basic special cases without expensive discrete log computation
+        if plain_embedded == babyjubjub.Point.ZERO:
+            return 0
+        if plain_embedded == babyjubjub.Point.GENERATOR:
+            return 1
         return get_dlog(plain_embedded.u.s, plain_embedded.v.s)
 
     def do_op(self, op: str, public_key: List[int], *args: Union[CipherValue, int]) -> List[int]:

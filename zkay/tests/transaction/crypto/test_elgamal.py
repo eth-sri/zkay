@@ -31,7 +31,19 @@ class TestElgamal(ZkayTestCase):
         expected = [0, 1, 0, 1]
         self.assertEqual(cipher, expected)
 
-    def test_de_embed(self):
+    def test_de_embed_0(self):
+        eg = ElgamalCrypto(None)
+        plain = eg._de_embed(babyjubjub.Point.ZERO)
+        expected = 0
+        self.assertEqual(plain, expected)
+
+    def test_de_embed_1(self):
+        eg = ElgamalCrypto(None)
+        plain = eg._de_embed(babyjubjub.Point.GENERATOR)
+        expected = 1
+        self.assertEqual(plain, expected)
+
+    def test_de_embed_other(self):
         eg = ElgamalCrypto(None)
         embedded = [141579968252753561777903806704988380915591798817413028638954837858390837201,
                     8211442360329077616485844356105856211290554633036363698328149195845491718472]
