@@ -171,78 +171,78 @@ df_gas = pd.DataFrame(gas_data)
 df_t = df_mem[df_mem.mem_c_peak == df_mem.mem_c_peak.max()]
 print("% Maximum compilation peak memory")
 print("\\newcommand{\\evalcompmaxmemname}{" + df_t['name'].item() + "}")
-print("\\newcommand{\\evalcompmaxmem}{$%.2f$}" % df_t['mem_c_peak'].item())
+print("\\newcommand{\\evalcompmaxmem}{%.2f}" % df_t['mem_c_peak'].item())
 print()
 
 df_t = df_compile[df_compile.time_c_full == df_compile.time_c_full.max()]
 print("% Maximum compilation time")
 print("\\newcommand{\\evalcompmaxtimename}{" + df_t['name'].item() + "}")
-print("\\newcommand{\\evalcompmaxtime}{$%.1f$}" % df_t['time_c_full'].item())
+print("\\newcommand{\\evalcompmaxtime}{%.1f}" % df_t['time_c_full'].item())
 print()
 
 df_t = df_compile[df_compile.time_c_full == df_compile.time_c_full.min()]
 print("% Minimum compilation time")
 print("\\newcommand{\\evalcompmintimename}{" + df_t['name'].item() + "}")
-print("\\newcommand{\\evalcompmintime}{$%.1f$}" % df_t['time_c_full'].item())
+print("\\newcommand{\\evalcompmintime}{%.1f}" % df_t['time_c_full'].item())
 print()
 
 print("% Average compilation time")
-print("\\newcommand{\\evalcompavgtime}{$%.1f$}" % df_compile.time_c_full.mean())
+print("\\newcommand{\\evalcompavgtime}{%.1f}" % df_compile.time_c_full.mean())
 print()
 
 print("% Average key generation time fraction:")
-print("\\newcommand{\\evalcompkeygenavgpercent}{$%.0f$}" % (df_compile.frac_time_c_keygen.mean() * 100))
+print("\\newcommand{\\evalcompkeygenavgpercent}{%.0f}" % (df_compile.frac_time_c_keygen.mean() * 100))
 print()
 
 df_t = df_transact[df_transact.time_tx_full == df_transact.time_tx_full.max()]
 print("% Maximum transaction generation time")
 print("\\newcommand{\\evaltxmaxtimename}{" + df_t['name'].item() + "}")
-print("\\newcommand{\\evaltxmaxtime}{$%.1f$}" % df_t['time_tx_full'].item())
+print("\\newcommand{\\evaltxmaxtime}{%.1f}" % df_t['time_tx_full'].item())
 print()
 
 frac_proof = (df_transact.time_tx_proof.sum() / df_transact.time_tx_full.sum()) * 100
 print("% Transaction generation time: proof fraction")
-print("\\newcommand{\\evaltxfracprooftime}{$%.0f$}" % frac_proof)
+print("\\newcommand{\\evaltxfracprooftime}{%.0f}" % frac_proof)
 print()
 
 print("% Transaction generation time: decrypt fraction")
 frac_decrypt = (df_transact.time_tx_decrypt.sum() / df_transact.time_tx_full.sum()) * 100
-print("\\newcommand{\\evaltxfracdecrypttime}{$%.0f$}" % frac_decrypt)
+print("\\newcommand{\\evaltxfracdecrypttime}{%.0f}" % frac_decrypt)
 print()
 
 print("% Maximum single decryption time")
-print("\\newcommand{\\evalmaxsingledecryptiontime}{$%.0f$~s}" % math.ceil(max(all_decrypt_times)))
+print("\\newcommand{\\evalmaxsingledecryptiontime}{%.0f~s}" % math.ceil(max(all_decrypt_times)))
 print()
 
 df_t = df_mem[df_mem.mem_t_peak == df_mem.mem_t_peak.max()]
 print("% Maximum transaction generation peak memory")
 print("\\newcommand{\\evaltxmaxmemname}{" + df_t['name'].item() + "}")
-print("\\newcommand{\\evaltxmaxmem}{$%.1f$}" % df_t['mem_t_peak'].item())
+print("\\newcommand{\\evaltxmaxmem}{%.1f}" % df_t['mem_t_peak'].item())
 print()
 
 df_t = df_gas.sort_values(by='gas', ascending=False)
 print("% Maximum transaction gas (incl. deployment)")
 print("\\newcommand{\\evaltxmaxgasdeployname}{" + df_t.iloc[0, :]["name"] + "}")
-print("\\newcommand{\\evaltxmaxgasdeploy}{$%.2f$~M}" % (df_t.iloc[0, :]["gas"] / 1.0e6))
+print("\\newcommand{\\evaltxmaxgasdeploy}{%.2f~M}" % (df_t.iloc[0, :]["gas"] / 1.0e6))
 print("\\newcommand{\\evaltxmaxgasdeploynamesecond}{" + df_t.iloc[1, :]["name"] + "}")
-print("\\newcommand{\\evaltxmaxgasdeploysecond}{$%.2f$~M}" % (df_t.iloc[1, :]["gas"] / 1.0e6))
+print("\\newcommand{\\evaltxmaxgasdeploysecond}{%.2f~M}" % (df_t.iloc[1, :]["gas"] / 1.0e6))
 print()
 
 df_t = df_gas[df_gas.is_deployment == False]
 df_t = df_t[df_t.gas == df_t.gas.max()]
 print("% Maximum transaction gas (excl. deployment)")
 print("\\newcommand{\\evaltxmaxgasname}{" + df_t['name'].item() + "}")
-print("\\newcommand{\\evaltxmaxgas}{$%.2f$~k}" % (df_t['gas'].item() / 1.0e3))
+print("\\newcommand{\\evaltxmaxgas}{%.2f~k}" % (df_t['gas'].item() / 1.0e3))
 print()
 
 df_t = df_gas[df_gas.is_deployment == False]
 print("% Average transaction gas (excl. deployment)")
-print("\\newcommand{\\evaltxavggas}{$%.0f$~k}" % (df_t.gas.mean() / 1.0e3))
+print("\\newcommand{\\evaltxavggas}{%.0f~k}" % (df_t.gas.mean() / 1.0e3))
 print()
 
 df_t = df_gas.query('name == "zether-confidential" & tx_call == "transfer_0"')
 print("% Gas for zether-confidential, transfer")
-print("\\newcommand{\\evaltxgastransfer}{$%.2f$~k}" % (df_t['gas'].item() / 1.0e3))
+print("\\newcommand{\\evaltxgastransfer}{%.2f~k}" % (df_t['gas'].item() / 1.0e3))
 print()
 
 
