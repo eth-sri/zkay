@@ -18,6 +18,7 @@ pd.set_option('display.max_rows', None)
 EXAMPLE_X_GAP = 3
 TX_X_GAP = 1.2
 FONT_SIZE = 9
+FONT_SIZE_LEGEND = 8
 
 COLOR_T_DECRYPT = "#12356D"
 COLOR_T_PROOF_GEN = "#547BB9"
@@ -275,16 +276,17 @@ add_x_pos(df_gas)
 # setup plots
 sph.configure_plots("IEEE", FONT_SIZE)
 
-fig, axes = sph.subplots(2, 1, figsize=(18, 11), gridspec_kw={'height_ratios': [2.5, 2]})
+fig, axes = sph.subplots(2, 1, figsize=(19, 7.5), gridspec_kw={'height_ratios': [3, 2]})
 
 # transaction plot
-offset = next_bar_stack(axes[0], df_transact['plot_x_pos'], df_transact['time_tx_proof'], 0, "proof generation", color=COLOR_T_PROOF_GEN)
+offset = next_bar_stack(axes[0], df_transact['plot_x_pos'], df_transact['time_tx_proof'], 0, "proof gen.", color=COLOR_T_PROOF_GEN)
 offset = next_bar_stack(axes[0], df_transact['plot_x_pos'], df_transact['time_tx_decrypt'], offset, "decryption", color=COLOR_T_DECRYPT)
 offset = next_bar_stack(axes[0], df_transact['plot_x_pos'], df_transact['time_tx_rest'], offset, "other", color=COLOR_T_REST)
 axes[0].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)     # remove x ticks
 for example_idx, _ in enumerate(example_names):
-    axes[0].text(x_pos_center[example_idx], -3, "\\textbf{" + str(example_idx + 1) + "}", ha='center', va='center')
+    axes[0].text(x_pos_center[example_idx], -5, "\\textbf{" + str(example_idx + 1) + "}", ha='center', va='center')
 axes[0].set_ylabel("time [s]")
+axes[0].yaxis.set_major_locator(plt.MultipleLocator(10))   # set spacing of y-grid
 
 # memory plot
 ax_mem = axes[0].twinx()
@@ -300,31 +302,36 @@ for example_idx, _ in enumerate(example_names):
     ax_mem.hlines(df_mem[df_mem['idx'] == example_idx]['mem_t_peak'].values, x_pos_start[example_idx] - 0.5, x_pos_end[example_idx] + 0.5, colors=COLOR_MEM)
 
 # combine legends
-proxy_line = plt.Line2D([], [], color=COLOR_MEM, label="peak memory")
+proxy_line = plt.Line2D([], [], color=COLOR_MEM, label="peak mem.")
 h, _ = axes[0].get_legend_handles_labels()
 h = [h[2], h[1], h[0], proxy_line]      # re-order legend
-axes[0].legend(handles=h, loc=(0.425, 0.61))
+axes[0].legend(handles=h, bbox_to_anchor=(1.06, 1.05), fontsize=FONT_SIZE_LEGEND)
 
 # gas plot
 df_gas_deploy = df_gas[df_gas.is_deployment == True]
 next_bar_stack(axes[1], df_gas_deploy['plot_x_pos'], df_gas_deploy['gas'], 0, "deployment", color=COLOR_GAS_DEPLOY)
 
 df_gas_reg = df_gas[df_gas.is_deployment == False]
-offset = next_bar_stack(axes[1], df_gas_reg['plot_x_pos'], df_gas_reg['gas_verify'], 0, "proof verification", color=COLOR_GAS_VERIFY)
+offset = next_bar_stack(axes[1], df_gas_reg['plot_x_pos'], df_gas_reg['gas_verify'], 0, "proof verif.", color=COLOR_GAS_VERIFY)
 offset = next_bar_stack(axes[1], df_gas_reg['plot_x_pos'], df_gas_reg['gas_rest'], offset, "other", color=COLOR_GAS_REST)
 
 axes[1].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)     # remove x ticks
 for example_idx, _ in enumerate(example_names):
-    axes[1].text(x_pos_center[example_idx], -150000, "\\textbf{" + str(example_idx + 1) + "}", ha='center', va='center')
+    axes[1].text(x_pos_center[example_idx], -120000, "\\textbf{" + str(example_idx + 1) + "}", ha='center', va='center')
 h, _ = axes[1].get_legend_handles_labels()
-axes[1].legend(handles=[h[0], h[2], h[1]], loc=(0.2, 0.6))
+axes[1].legend(handles=[h[0], h[2], h[1]], bbox_to_anchor=(1.06, 1.05), fontsize=FONT_SIZE_LEGEND)
 axes[1].set_ylabel("costs [gas]")
-axes[1].set_ylim([0, 2e6])
+axes[1].yaxis.set_major_locator(plt.MultipleLocator(0.25e6))   # set spacing of y-grid
 
-# numbers for outliers
-axes[1].text(x_pos_for[1][5], 2.05e6, "%.2f" % (get_for_idx(df_gas, 1, 5, "gas") / 1e6), ha='center', fontsize=8, color=COLOR_GAS_DEPLOY)
-axes[1].text(x_pos_for[9][7], 2.05e6, "%.2f" % (get_for_idx(df_gas, 9, 7, "gas") / 1e6), ha='center', fontsize=8, color=COLOR_GAS_DEPLOY)
-axes[1].text(x_pos_for[11][5], 2.05e6, "%.2f" % (get_for_idx(df_gas, 11, 5, "gas") / 1e6), ha='center', fontsize=8, color=COLOR_GAS_DEPLOY)
+# configure clipping, numbers for outliers
+y_clipping_limit = 1e6
+axes[1].set_ylim([0, y_clipping_limit])
+for i in range(0, len(x_pos_for)):
+    for j in range(0, len(x_pos_for[i])):
+        y_val = get_for_idx(df_gas, i, j, "gas")
+        if y_val >= y_clipping_limit:
+            axes[1].text(x_pos_for[i][j], y_clipping_limit + 0.05e6, "%.2f" % (y_val / 1e6),
+                         ha='center', fontsize=8, color=COLOR_GAS_DEPLOY)
 
 # fix layout
 fig.tight_layout()
