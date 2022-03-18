@@ -1,6 +1,6 @@
 # Implementation Notes: Homomorphic Encryption in v0.3
 
-This file gives an overview of where the various homomorphic features of zkay v0.3 are implemented. The changes compared to v0.2 are grouped by subsystem, see Fig. 2 (p. 12) of the [zkay 0.2 tech report](https://arxiv.org/pdf/2009.01020.pdf).
+This file gives an overview of where the various homomorphic features of zkay v0.3 are implemented. The changes compared to v0.2 are grouped by subsystem, see Fig. 2 (p. 12) of the [zkay 0.2 technical report](https://arxiv.org/pdf/2009.01020.pdf).
 
 ## Parsing
 

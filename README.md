@@ -1,13 +1,17 @@
-# zkay: A Blockchain Privacy Language
+# zkay: A Language for Private Smart Contracts on Ethereum
 
 Zkay (pronounced as `[zi: keɪ]`) is a programming language which enables automatic compilation of intuitive data privacy specifications to Ethereum smart contracts leveraging (homomorphic) encryption and non-interactive zero-knowledge (NIZK) proofs. This repository provides a toolchain for compiling, deploying and using zkay contracts.
 
 In addition to the instructions below, we refer to the following resources:
 
-- The original [research paper][zkay-ccs], which introduces the core concepts of zkay.
+- The original [research paper (zkay)][zkay-ccs], which introduces the core concepts of zkay.
+- The follow-up [research paper (ZeeStar)][zkay-sp], which discusses how homomorphic encryption is introduced in zkay v0.3.
 - The [online documentation][zkay-docs], which provides a tutorial, language reference and API documentation.
-- The [technical report][zkay-techreport], which describes the features and implementation of zkay v0.2.
-- The most recent research paper (coming soon), which describes the integration of homomorphic encryption in zkay v0.3.
+
+Further, the following documents describe the implementation details of zkay:
+
+- The implementation of zkay v0.2 is discussed in a [technical report][zkay-techreport].
+- The implementation of zkay v0.3 is described in [these notes](./impl-notes-v0.3.md).
 
 ## Warning / Security Disclaimer
 
@@ -199,6 +203,9 @@ See [LICENSE-3RD-PARTIES](LICENSE-3RD-PARTIES) for license information on third-
 
 The contracts evaluated in the [CCS 2019 paper][zkay-ccs] can be found in the folder `eval-ccs2019`. The scenarios have been adapted to use zkay's new frontend. The original artifact (zkay version 0.1) evaluated in the CCS 2019 paper can be found under the tag [ccs2019](https://github.com/eth-sri/zkay/tree/ccs2019).
 
+## S&P 2022 Evaluation
+
+The artifact evaluated in the  [S&P 2022 paper][zkay-sp] (ZeeStar) can be found under the tag [sp2022](https://github.com/eth-sri/zkay/tree/sp2022). The example contracts and instructions on how to reproduce the results can be found in the folder `eval-sp2022`.
 
 ## Citing this Work
 
@@ -221,6 +228,16 @@ You are encouraged to cite the following [research paper][zkay-ccs] if you use z
 }
 ```
 
+The following [research paper][zkay-sp] presents how zkay is extended by homomorphic encryption (implemented in version 0.3 of zkay).
+```
+@inproceedings{steffen2022zeestar
+    author = {Steffen, Samuel and Bichsel, Benjamin and Baumgartner, Roger and Vechev, Martin},
+    title = {ZeeStar: Private Smart Contracts by Homomorphic Encryption and Zero-knowledge Proofs},
+    year = {2022},
+    booktitle={2022 IEEE Symposium on Security and Privacy (SP)}, 
+}
+```
+
 The following [technical report][zkay-techreport] describes version 0.2 of zkay, which introduces many vital features such as real encryption.
 ```
 @techreport{baumann2020zkay,
@@ -233,6 +250,7 @@ The following [technical report][zkay-techreport] describes version 0.2 of zkay,
 ```
 
 
+[zkay-sp]: #TODO
 [zkay-ccs]: https://www.sri.inf.ethz.ch/publications/steffen2019zkay
 [zkay-docs]: https://eth-sri.github.io/zkay/
 [zkay-techreport]: https://arxiv.org/abs/2009.01020
