@@ -92,7 +92,7 @@ Limitations
 - Private bitwise operations cannot be used with 256-bit types.
 - When bit-shifting private values, the shift amount needs to be a constant literal.
 - Address members (balance, send, transfer) are not accessible on private addresses.
-- Division, modulo and exponentiation oeprators are not supported within private expressions.
+- Division, modulo and exponentiation operators are not supported within private expressions.
 
 Warning
 ------------

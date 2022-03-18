@@ -1,6 +1,6 @@
 FROM debian:10
 ARG INSTALL_ZKAY=0
-ARG PYTHON_VERSION=3.8.7
+ARG PYTHON_VERSION=3.8.12
 
 #############
 # LIBSNARK #
@@ -26,15 +26,6 @@ RUN apt-get update && apt-get install -y \
 		default-jdk-headless \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
 
-########
-# RUST #
-########
-# required to build babygiant-lib
-RUN apt-get update && apt-get install -y curl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-
 ##########
 # PYTHON #
 ##########
@@ -49,14 +40,16 @@ RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSIO
     && cd Python-$PYTHON_VERSION \
     && ./configure --enable-optimizations \
     && make install
-RUN pip3 install virtualenv
+RUN ln -s /usr/local/bin/pip3 /usr/local/bin/pip && \
+	ln -s /usr/local/bin/python3 /usr/local/bin/python
 
 ###################
 # ZKAY (OPTIONAL) #
 ###################
 RUN if [ "$INSTALL_ZKAY" = "1" ]; then \
 		git clone https://github.com/eth-sri/zkay.git && \
-		    sh ./babygiant-lib/install.sh && \
-			cd zkay && \
-			pip install --no-binary zkay .; \
+			cd zkay/babygiant-lib && \
+		    sh ./install.sh && \
+			cd .. && \
+			pip install -e .; \
 	fi

@@ -27,9 +27,11 @@ You can then build and install zkay as follows:
 .. code-block:: bash
 
 	git clone https://github.com/eth-sri/zkay.git
-	bash ./babygiant-lib/install.sh
-	cd zkay
-	pip install --no-binary zkay .
+	cd zkay/babygiant-lib
+	bash ./install.sh
+
+	cd ../zkay
+	pip install -e .
 
 
 **Note**: zkay requires Python >= 3.8.
