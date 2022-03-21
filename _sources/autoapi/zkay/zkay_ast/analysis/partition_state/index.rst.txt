@@ -1,0 +1,112 @@
+:mod:`zkay.zkay_ast.analysis.partition_state`
+=============================================
+
+.. py:module:: zkay.zkay_ast.analysis.partition_state
+
+
+
+
+Module Contents
+---------------
+
+.. data:: T
+   
+
+   
+
+.. py:class:: PartitionState
+
+   Bases: :class:`Generic[T]`
+
+   Supports operations on partitions
+
+   * insert: create a new partition with a single element
+   * merge: merge partitions
+   * ...
+
+   .. method:: insert(self, x)
+
+
+
+   .. method:: _insert_partition(self, p)
+
+
+
+   .. method:: get_index(self, x: T)
+
+
+      Return index for element x.
+
+      :param x:
+      :return: the index of the partition containing x
+
+
+   .. method:: has(self, x: T)
+
+
+
+   .. method:: same_partition(self, x: T, y: T)
+
+
+
+   .. method:: merge(self, x: T, y: T)
+
+
+
+   .. method:: remove(self, x: T)
+
+
+      Removes x from its partition
+
+      :param x:
+      :return:
+
+
+   .. method:: move_to(self, x: T, y: T)
+
+
+      Moves x to the partition of y
+
+      :param x:
+      :param y:
+
+
+   .. method:: move_to_separate(self, x: T)
+
+
+      Moves x to a fresh partition
+
+      :param x:
+
+
+   .. method:: separate_all(self)
+
+
+
+   .. method:: join(self, other: PartitionState[T])
+
+
+      Combine two states.
+      Overlaps in partitions between self and other will be preserved.
+      e.g. if self contains (a, b, c), (x) and other contains (a, b), (c, x), new state will contain (a, b), (c), (x)
+
+      :param other: other state, must contain the same values as self (partitions can be different)
+      :return: joined state
+
+
+   .. method:: copy(self, project=None)
+
+
+      Create a shallow copy of the partition state.
+
+      :param project: (iterator) if not None, only keep entries that are in project
+      :return:
+
+
+   .. method:: __str__(self)
+
+
+      Return str(self).
+
+
+

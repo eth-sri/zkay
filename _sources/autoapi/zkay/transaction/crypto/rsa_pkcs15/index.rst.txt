@@ -1,0 +1,26 @@
+:mod:`zkay.transaction.crypto.rsa_pkcs15`
+=========================================
+
+.. py:module:: zkay.transaction.crypto.rsa_pkcs15
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: RSAPKCS15Crypto(keystore: ZkayKeystoreInterface)
+
+   Bases: :class:`zkay.transaction.crypto.rsa_base.RSACrypto`
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. method:: _enc(self, plain: int, _: int, target_pk: int)
+
+
+
+   .. method:: _dec(self, cipher: Tuple[int, ...], sk: RSA.RsaKey)
+
+
+
+

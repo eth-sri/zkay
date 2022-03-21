@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.type_check.type_checker &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
@@ -94,243 +47,235 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.type_check.type_checker</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.type_check.type_checker">
-<span id="zkay-type-check-type-checker"></span><h1><a class="reference internal" href="#module-zkay.type_check.type_checker" title="zkay.type_check.type_checker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.type_check.type_checker</span></code></a><a class="headerlink" href="#module-zkay.type_check.type_checker" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-type-check-type-checker"></span><h1><a class="reference internal" href="#module-zkay.type_check.type_checker" title="zkay.type_check.type_checker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.type_check.type_checker</span></code></a><a class="headerlink" href="#module-zkay.type_check.type_checker" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.type_check.type_checker.type_check">
-<code class="sig-prename descclassname">zkay.type_check.type_checker.</code><code class="sig-name descname">type_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.type_check" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.type_check">
+<span class="sig-prename descclassname"><span class="pre">zkay.type_check.type_checker.</span></span><span class="sig-name descname"><span class="pre">type_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.type_check" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.type_check.type_checker.</code><code class="sig-name descname">TypeCheckVisitor</code><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../zkay_ast/visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.type_check.type_checker.</span></span><span class="sig-name descname"><span class="pre">TypeCheckVisitor</span></span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../zkay_ast/visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.get_rhs">
-<code class="sig-name descname">get_rhs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">rhs</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">expected_type</span><span class="p">:</span> <span class="n">AnnotatedTypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.get_rhs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.get_rhs">
+<span class="sig-name descname"><span class="pre">get_rhs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AnnotatedTypeName" title="zkay.zkay_ast.ast.AnnotatedTypeName"><span class="pre">zkay.zkay_ast.ast.AnnotatedTypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.get_rhs" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.check_for_invalid_private_type">
-<em class="property">static </em><code class="sig-name descname">check_for_invalid_private_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.check_for_invalid_private_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.check_for_invalid_private_type">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_for_invalid_private_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.check_for_invalid_private_type" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.check_final">
-<code class="sig-name descname">check_final</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">fct</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.check_final" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.check_final">
+<span class="sig-name descname"><span class="pre">check_final</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fct</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.check_final" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitAssignmentStatement">
-<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitAssignmentStatement">
+<span class="sig-name descname"><span class="pre">visitAssignmentStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AssignmentStatement" title="zkay.zkay_ast.ast.AssignmentStatement"><span class="pre">zkay.zkay_ast.ast.AssignmentStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitAssignmentStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitVariableDeclarationStatement">
-<code class="sig-name descname">visitVariableDeclarationStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclarationStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitVariableDeclarationStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitVariableDeclarationStatement">
+<span class="sig-name descname"><span class="pre">visitVariableDeclarationStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.VariableDeclarationStatement" title="zkay.zkay_ast.ast.VariableDeclarationStatement"><span class="pre">zkay.zkay_ast.ast.VariableDeclarationStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitVariableDeclarationStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.make_private_if_not_already">
-<code class="sig-name descname">make_private_if_not_already</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.make_private_if_not_already" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.has_private_type">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_private_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.has_private_type" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.has_private_type">
-<em class="property">static </em><code class="sig-name descname">has_private_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.has_private_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.has_literal_type">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_literal_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.has_literal_type" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.has_literal_type">
-<em class="property">static </em><code class="sig-name descname">has_literal_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.has_literal_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.handle_builtin_function_call">
+<span class="sig-name descname"><span class="pre">handle_builtin_function_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.BuiltinFunction" title="zkay.zkay_ast.ast.BuiltinFunction"><span class="pre">zkay.zkay_ast.ast.BuiltinFunction</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.handle_builtin_function_call" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.handle_builtin_function_call">
-<code class="sig-name descname">handle_builtin_function_call</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em>, <em class="sig-param"><span class="n">func</span><span class="p">:</span> <span class="n">BuiltinFunction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.handle_builtin_function_call" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.handle_unhom_builtin_function_call">
+<span class="sig-name descname"><span class="pre">handle_unhom_builtin_function_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.BuiltinFunction" title="zkay.zkay_ast.ast.BuiltinFunction"><span class="pre">zkay.zkay_ast.ast.BuiltinFunction</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.handle_unhom_builtin_function_call" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.is_accessible_by_invoker">
-<em class="property">static </em><code class="sig-name descname">is_accessible_by_invoker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.is_accessible_by_invoker" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.handle_homomorphic_builtin_function_call">
+<span class="sig-name descname"><span class="pre">handle_homomorphic_builtin_function_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.BuiltinFunction" title="zkay.zkay_ast.ast.BuiltinFunction"><span class="pre">zkay.zkay_ast.ast.BuiltinFunction</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.handle_homomorphic_builtin_function_call" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.make_private">
-<em class="property">static </em><code class="sig-name descname">make_private</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">privacy</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.make_private" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.is_accessible_by_invoker">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_accessible_by_invoker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.is_accessible_by_invoker" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.implicitly_converted_to">
-<em class="property">static </em><code class="sig-name descname">implicitly_converted_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">TypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.implicitly_converted_to" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.combine_homomorphism">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">combine_homomorphism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lhs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../zkay_ast/homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a></span></span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.combine_homomorphism" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.can_rehom">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">can_rehom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.can_rehom" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitPrimitiveCastExpr">
-<code class="sig-name descname">visitPrimitiveCastExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">PrimitiveCastExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitPrimitiveCastExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.try_rehom">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">try_rehom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AnnotatedTypeName" title="zkay.zkay_ast.ast.AnnotatedTypeName"><span class="pre">zkay.zkay_ast.ast.AnnotatedTypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.try_rehom" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.handle_cast">
-<code class="sig-name descname">handle_cast</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span></em>, <em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">TypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.handle_cast" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.make_rehom">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_rehom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AnnotatedTypeName" title="zkay.zkay_ast.ast.AnnotatedTypeName"><span class="pre">zkay.zkay_ast.ast.AnnotatedTypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.make_rehom" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitNewExpr">
-<code class="sig-name descname">visitNewExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">NewExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitNewExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.make_private">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_private</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">privacy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">homomorphism</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.make_private" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitMemberAccessExpr">
-<code class="sig-name descname">visitMemberAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">MemberAccessExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitMemberAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.assign_location">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">assign_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.assign_location" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitReclassifyExpr">
-<code class="sig-name descname">visitReclassifyExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReclassifyExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitReclassifyExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.implicitly_converted_to">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">implicitly_converted_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.TypeName" title="zkay.zkay_ast.ast.TypeName"><span class="pre">zkay.zkay_ast.ast.TypeName</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.implicitly_converted_to" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitIfStatement">
-<code class="sig-name descname">visitIfStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IfStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitIfStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitWhileStatement">
-<code class="sig-name descname">visitWhileStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">WhileStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitWhileStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitPrimitiveCastExpr">
+<span class="sig-name descname"><span class="pre">visitPrimitiveCastExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.PrimitiveCastExpr" title="zkay.zkay_ast.ast.PrimitiveCastExpr"><span class="pre">zkay.zkay_ast.ast.PrimitiveCastExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitPrimitiveCastExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitForStatement">
-<code class="sig-name descname">visitForStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ForStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitForStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.handle_cast">
+<span class="sig-name descname"><span class="pre">handle_cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.TypeName" title="zkay.zkay_ast.ast.TypeName"><span class="pre">zkay.zkay_ast.ast.TypeName</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AnnotatedTypeName" title="zkay.zkay_ast.ast.AnnotatedTypeName"><span class="pre">zkay.zkay_ast.ast.AnnotatedTypeName</span></a></span></span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.handle_cast" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitReturnStatement">
-<code class="sig-name descname">visitReturnStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReturnStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitReturnStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitNewExpr">
+<span class="sig-name descname"><span class="pre">visitNewExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.NewExpr" title="zkay.zkay_ast.ast.NewExpr"><span class="pre">zkay.zkay_ast.ast.NewExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitNewExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitTupleExpr">
-<code class="sig-name descname">visitTupleExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">TupleExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitTupleExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitMemberAccessExpr">
+<span class="sig-name descname"><span class="pre">visitMemberAccessExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.MemberAccessExpr" title="zkay.zkay_ast.ast.MemberAccessExpr"><span class="pre">zkay.zkay_ast.ast.MemberAccessExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitMemberAccessExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitMeExpr">
-<code class="sig-name descname">visitMeExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">MeExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitMeExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitReclassifyExpr">
+<span class="sig-name descname"><span class="pre">visitReclassifyExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ReclassifyExpr" title="zkay.zkay_ast.ast.ReclassifyExpr"><span class="pre">zkay.zkay_ast.ast.ReclassifyExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitReclassifyExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitIdentifierExpr">
-<code class="sig-name descname">visitIdentifierExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitIdentifierExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitIfStatement">
+<span class="sig-name descname"><span class="pre">visitIfStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.IfStatement" title="zkay.zkay_ast.ast.IfStatement"><span class="pre">zkay.zkay_ast.ast.IfStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitIfStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitIndexExpr">
-<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IndexExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitWhileStatement">
+<span class="sig-name descname"><span class="pre">visitWhileStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.WhileStatement" title="zkay.zkay_ast.ast.WhileStatement"><span class="pre">zkay.zkay_ast.ast.WhileStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitWhileStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitConstructorOrFunctionDefinition">
-<code class="sig-name descname">visitConstructorOrFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitForStatement">
+<span class="sig-name descname"><span class="pre">visitForStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ForStatement" title="zkay.zkay_ast.ast.ForStatement"><span class="pre">zkay.zkay_ast.ast.ForStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitForStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitEnumDefinition">
-<code class="sig-name descname">visitEnumDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">EnumDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitEnumDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitReturnStatement">
+<span class="sig-name descname"><span class="pre">visitReturnStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ReturnStatement" title="zkay.zkay_ast.ast.ReturnStatement"><span class="pre">zkay.zkay_ast.ast.ReturnStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitReturnStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitEnumValue">
-<code class="sig-name descname">visitEnumValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">EnumValue</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitEnumValue" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitTupleExpr">
+<span class="sig-name descname"><span class="pre">visitTupleExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.TupleExpr" title="zkay.zkay_ast.ast.TupleExpr"><span class="pre">zkay.zkay_ast.ast.TupleExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitTupleExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitStateVariableDeclaration">
-<code class="sig-name descname">visitStateVariableDeclaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StateVariableDeclaration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitStateVariableDeclaration" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitMeExpr">
+<span class="sig-name descname"><span class="pre">visitMeExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.MeExpr" title="zkay.zkay_ast.ast.MeExpr"><span class="pre">zkay.zkay_ast.ast.MeExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitMeExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitMapping">
-<code class="sig-name descname">visitMapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitMapping" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitIdentifierExpr">
+<span class="sig-name descname"><span class="pre">visitIdentifierExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.IdentifierExpr" title="zkay.zkay_ast.ast.IdentifierExpr"><span class="pre">zkay.zkay_ast.ast.IdentifierExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitIdentifierExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitRequireStatement">
-<code class="sig-name descname">visitRequireStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">RequireStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitRequireStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitIndexExpr">
+<span class="sig-name descname"><span class="pre">visitIndexExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.IndexExpr" title="zkay.zkay_ast.ast.IndexExpr"><span class="pre">zkay.zkay_ast.ast.IndexExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitIndexExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.type_check.type_checker.TypeCheckVisitor.visitAnnotatedTypeName">
-<code class="sig-name descname">visitAnnotatedTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AnnotatedTypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitAnnotatedTypeName" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitConstructorOrFunctionDefinition">
+<span class="sig-name descname"><span class="pre">visitConstructorOrFunctionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitEnumDefinition">
+<span class="sig-name descname"><span class="pre">visitEnumDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.EnumDefinition" title="zkay.zkay_ast.ast.EnumDefinition"><span class="pre">zkay.zkay_ast.ast.EnumDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitEnumDefinition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitEnumValue">
+<span class="sig-name descname"><span class="pre">visitEnumValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.EnumValue" title="zkay.zkay_ast.ast.EnumValue"><span class="pre">zkay.zkay_ast.ast.EnumValue</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitEnumValue" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitStateVariableDeclaration">
+<span class="sig-name descname"><span class="pre">visitStateVariableDeclaration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.StateVariableDeclaration" title="zkay.zkay_ast.ast.StateVariableDeclaration"><span class="pre">zkay.zkay_ast.ast.StateVariableDeclaration</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitStateVariableDeclaration" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitMapping">
+<span class="sig-name descname"><span class="pre">visitMapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Mapping" title="zkay.zkay_ast.ast.Mapping"><span class="pre">zkay.zkay_ast.ast.Mapping</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitMapping" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitRequireStatement">
+<span class="sig-name descname"><span class="pre">visitRequireStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.RequireStatement" title="zkay.zkay_ast.ast.RequireStatement"><span class="pre">zkay.zkay_ast.ast.RequireStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitRequireStatement" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.type_check.type_checker.TypeCheckVisitor.visitAnnotatedTypeName">
+<span class="sig-name descname"><span class="pre">visitAnnotatedTypeName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AnnotatedTypeName" title="zkay.zkay_ast.ast.AnnotatedTypeName"><span class="pre">zkay.zkay_ast.ast.AnnotatedTypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.type_check.type_checker.TypeCheckVisitor.visitAnnotatedTypeName" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -340,49 +285,30 @@
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

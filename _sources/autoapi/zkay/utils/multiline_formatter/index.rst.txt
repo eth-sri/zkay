@@ -1,0 +1,60 @@
+:mod:`zkay.utils.multiline_formatter`
+=====================================
+
+.. py:module:: zkay.utils.multiline_formatter
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: MultiLineFormatter(indent_str=' ' * 4)
+
+   \* operator -> add de-dented text (+ \\n), if operand is a list -> add \\n-joined elements
+
+   % operator -> add de-dented text (+ \\n), if operand is a list -> add ,-joined elements
+
+   / operator -> increase indentation level and add text (+ \\n)
+
+   // operator -> decrease indentation level and add text (+ \\n)
+
+   .. method:: __mul__(self, other: Union[str, List[str]])
+
+
+
+   .. method:: __mod__(self, other: Union[str, List[str]])
+
+
+
+   .. method:: __truediv__(self, other: str)
+
+
+
+   .. method:: __floordiv__(self, other)
+
+
+
+   .. method:: __str__(self)
+
+
+      Return str(self).
+
+
+   .. method:: append(self, txt: str, sep='\n')
+
+
+
+   .. method:: append_lines(self, lines, sep='\n')
+
+
+
+   .. method:: indent(self)
+
+
+
+   .. method:: dedent(self)
+
+
+
+

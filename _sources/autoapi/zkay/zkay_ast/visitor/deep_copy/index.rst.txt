@@ -1,0 +1,76 @@
+:mod:`zkay.zkay_ast.visitor.deep_copy`
+======================================
+
+.. py:module:: zkay.zkay_ast.visitor.deep_copy
+
+
+
+
+Module Contents
+---------------
+
+.. data:: T
+   
+
+   
+
+.. function:: deep_copy(ast: T, with_types=False, with_analysis=False) -> T
+
+   :param ast:
+   :param with_types: (optional)
+   :return: a deep copy of `ast`
+
+   Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
+
+
+.. function:: replace_expr(old_expr: Expression, new_expr: Expression, copy_type: bool = False)
+
+   Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
+
+
+.. function:: _replace_ast(old_ast: AST, new_ast: AST)
+
+
+.. py:class:: DeepCopyVisitor(with_types, with_analysis)
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. attribute:: setting_later
+      
+
+      
+
+   .. method:: copy_ast_fields(ast, ast_copy)
+      :staticmethod:
+
+
+
+   .. method:: visitChildren(self, ast)
+
+
+
+   .. method:: visitAnnotatedTypeName(self, ast)
+
+
+
+   .. method:: visitUserDefinedTypeName(self, ast: UserDefinedTypeName)
+
+
+
+   .. method:: visitBuiltinFunction(self, ast)
+
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+
+   .. method:: visitStatement(self, ast: Statement)
+
+
+
+   .. method:: copy_field(self, field)
+
+
+
+

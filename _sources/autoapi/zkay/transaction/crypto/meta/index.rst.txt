@@ -1,0 +1,16 @@
+:mod:`zkay.transaction.crypto.meta`
+===================================
+
+.. py:module:: zkay.transaction.crypto.meta
+
+
+
+
+Module Contents
+---------------
+
+.. data:: cryptoparams
+   
+
+   
+

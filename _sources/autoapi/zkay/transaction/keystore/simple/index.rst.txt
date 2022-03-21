@@ -1,0 +1,18 @@
+:mod:`zkay.transaction.keystore.simple`
+=======================================
+
+.. py:module:: zkay.transaction.keystore.simple
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: SimpleKeystore(conn: ZkayBlockchainInterface)
+
+   Bases: :class:`zkay.transaction.interface.ZkayKeystoreInterface`
+
+   API to add and retrieve local key pairs, and to request public keys.
+
+

@@ -1,0 +1,218 @@
+:mod:`zkay.zkay_ast.build_ast`
+==============================
+
+.. py:module:: zkay.zkay_ast.build_ast
+
+
+
+
+Module Contents
+---------------
+
+.. function:: build_ast_from_parse_tree(parse_tree: ParserRuleContext, tokens: CommonTokenStream, code: str) -> ast.AST
+
+
+.. function:: build_ast(code)
+
+
+.. py:class:: BuildASTVisitor(tokens: CommonTokenStream, code: str)
+
+   Bases: :class:`zkay.solidity_parser.generated.SolidityVisitor.SolidityVisitor`
+
+   .. method:: visit(self, tree)
+
+
+
+   .. method:: visitChildren(self, ctx: ParserRuleContext)
+
+
+
+   .. method:: handle_field(self, field)
+
+
+
+   .. method:: visitIdentifier(self, ctx: SolidityParser.IdentifierContext)
+
+
+
+   .. method:: visitPragmaDirective(self, ctx: SolidityParser.PragmaDirectiveContext)
+
+
+
+   .. method:: visitVersionPragma(self, ctx: SolidityParser.VersionPragmaContext)
+
+
+
+   .. method:: visitContractDefinition(self, ctx: SolidityParser.ContractDefinitionContext)
+
+
+
+   .. method:: handle_fdef(self, ctx)
+
+
+
+   .. method:: visitFunctionDefinition(self, ctx: SolidityParser.FunctionDefinitionContext)
+
+
+
+   .. method:: visitConstructorDefinition(self, ctx: SolidityParser.ConstructorDefinitionContext)
+
+
+
+   .. method:: visitEnumDefinition(self, ctx: SolidityParser.EnumDefinitionContext)
+
+
+
+   .. method:: visitEnumValue(self, ctx: SolidityParser.EnumValueContext)
+
+
+
+   .. method:: visitNumberLiteralExpr(self, ctx: SolidityParser.NumberLiteralExprContext)
+
+
+
+   .. method:: visitBooleanLiteralExpr(self, ctx: SolidityParser.BooleanLiteralExprContext)
+
+
+
+   .. method:: visitStringLiteralExpr(self, ctx: SolidityParser.StringLiteralExprContext)
+
+
+
+   .. method:: visitTupleExpr(self, ctx: SolidityParser.TupleExprContext)
+
+
+
+   .. method:: visitModifier(self, ctx: SolidityParser.ModifierContext)
+
+
+
+   .. method:: visitAnnotatedTypeName(self, ctx: SolidityParser.AnnotatedTypeNameContext)
+
+
+
+   .. method:: visitElementaryTypeName(self, ctx: SolidityParser.ElementaryTypeNameContext)
+
+
+
+   .. method:: visitIndexExpr(self, ctx: SolidityParser.IndexExprContext)
+
+
+
+   .. method:: visitParenthesisExpr(self, ctx: SolidityParser.ParenthesisExprContext)
+
+
+
+   .. method:: visitSignExpr(self, ctx: SolidityParser.SignExprContext)
+
+
+
+   .. method:: visitNotExpr(self, ctx: SolidityParser.NotExprContext)
+
+
+
+   .. method:: visitBitwiseNotExpr(self, ctx: SolidityParser.BitwiseNotExprContext)
+
+
+
+   .. method:: _visitBinaryExpr(self, ctx)
+
+
+
+   .. method:: _visitBoolExpr(self, ctx)
+
+
+
+   .. method:: visitPowExpr(self, ctx: SolidityParser.PowExprContext)
+
+
+
+   .. method:: visitMultDivModExpr(self, ctx: SolidityParser.MultDivModExprContext)
+
+
+
+   .. method:: visitPlusMinusExpr(self, ctx: SolidityParser.PlusMinusExprContext)
+
+
+
+   .. method:: visitCompExpr(self, ctx: SolidityParser.CompExprContext)
+
+
+
+   .. method:: visitEqExpr(self, ctx: SolidityParser.EqExprContext)
+
+
+
+   .. method:: visitAndExpr(self, ctx: SolidityParser.AndExprContext)
+
+
+
+   .. method:: visitOrExpr(self, ctx: SolidityParser.OrExprContext)
+
+
+
+   .. method:: visitBitwiseOrExpr(self, ctx: SolidityParser.BitwiseOrExprContext)
+
+
+
+   .. method:: visitBitShiftExpr(self, ctx: SolidityParser.BitShiftExprContext)
+
+
+
+   .. method:: visitBitwiseAndExpr(self, ctx: SolidityParser.BitwiseAndExprContext)
+
+
+
+   .. method:: visitBitwiseXorExpr(self, ctx: SolidityParser.BitwiseXorExprContext)
+
+
+
+   .. method:: visitIteExpr(self, ctx: SolidityParser.IteExprContext)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ctx: SolidityParser.FunctionCallExprContext)
+
+
+
+   .. method:: visitIfStatement(self, ctx: SolidityParser.IfStatementContext)
+
+
+
+   .. method:: visitWhileStatement(self, ctx: SolidityParser.WhileStatementContext)
+
+
+
+   .. method:: visitDoWhileStatement(self, ctx: SolidityParser.DoWhileStatementContext)
+
+
+
+   .. method:: visitForStatement(self, ctx: SolidityParser.ForStatementContext)
+
+
+
+   .. method:: is_expr_stmt(self, ctx: SolidityParser.ExpressionContext)
+
+
+
+   .. method:: visitAssignmentExpr(self, ctx: SolidityParser.AssignmentExprContext)
+
+
+
+   .. method:: _handle_crement_expr(self, ctx, kind: str)
+
+
+
+   .. method:: visitPreCrementExpr(self, ctx: SolidityParser.PreCrementExprContext)
+
+
+
+   .. method:: visitPostCrementExpr(self, ctx: SolidityParser.PostCrementExprContext)
+
+
+
+   .. method:: visitExpressionStatement(self, ctx: SolidityParser.ExpressionStatementContext)
+
+
+
+

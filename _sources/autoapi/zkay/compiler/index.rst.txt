@@ -1,0 +1,43 @@
+:mod:`zkay.compiler`
+====================
+
+.. py:module:: zkay.compiler
+
+.. autoapi-nested-parse::
+
+   This package deals with code compilation.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.name_remapper`: Helper class for name versioning (to simulate static single assignment).
+
+   ===========
+   Subpackages
+   ===========
+   * :py:mod:`.privacy`: Zkay compilation
+   * :py:mod:`.solidity`: Solidity compilation
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+   :hidden:
+
+   privacy/index.rst
+
+   solidity/index.rst
+
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   name_remapper/index.rst
+
+
+
+
+

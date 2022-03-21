@@ -1,0 +1,361 @@
+:mod:`zkay.transaction.offchain`
+================================
+
+.. py:module:: zkay.transaction.offchain
+
+
+
+
+Module Contents
+---------------
+
+.. data:: bn128_scalar_field
+   
+
+   
+
+.. data:: _bn128_comp_scalar_field
+   
+
+   
+
+.. py:exception:: RequireException
+
+   Bases: :class:`Exception`
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:class:: StateDict(api)
+
+   Dictionary which wraps access to state variables
+
+   .. method:: clear(self)
+
+
+
+   .. method:: decl(self, name, constructor: Callable = lambda x: x, *, cipher: bool = False)
+
+
+      Define the wrapper constructor for a state variable.
+
+
+   .. method:: names(self)
+      :property:
+
+
+
+   .. method:: get_plain(self, name: str, *indices)
+
+
+
+   .. method:: get_raw(self, name: str, *indices)
+
+
+
+   .. method:: __getitem__(self, key: Union[str, Tuple])
+
+
+      Return value of the state variable (or index of state variable) key
+
+      :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
+      :raise KeyError: if location does not exist on the chain
+      :return: The requested value
+
+
+   .. method:: __setitem__(self, key, value)
+
+
+      Assign value to state variable (or to index of state variable)
+
+      :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
+      :param value: Correctly wrapped value which should be assigned to the specified state location
+
+
+   .. method:: __get(self, key: Union[str, Tuple], cache: bool)
+
+
+
+
+.. py:class:: LocalsDict
+
+   Dictionary which supports multiple scopes with name shadowing.
+
+   This is needed since python does not natively support c-style nested local scopes.
+
+   .. method:: push_scope(self)
+
+
+      Introduce a new scope.
+
+
+   .. method:: pop_scope(self)
+
+
+      End the current scope.
+
+
+   .. method:: decl(self, name, val)
+
+
+      Introduce a new local variable with the given name and value into the current scope.
+
+
+   .. method:: __getitem__(self, key)
+
+
+      Return the value of the local variable which is referenced by the identifier key in the current scope.
+
+      If there are multiple variables with the name key in different scopes,
+      the variable with the lowest declaration scope is used.
+
+
+   .. method:: __setitem__(self, key, value)
+
+
+      Assign value to the local variable which is referenced by the identifier key in the current scope.
+
+      If there are multiple variables with the name key in different scopes, the variable with the lowest declaration scope is used.
+
+
+
+.. py:class:: ContractSimulator(project_dir: str, user_addr: AddressValue, contract_name: str)
+
+   .. attribute:: tidx
+      :annotation: :Dict[str, int]
+
+      
+
+   .. attribute:: locals
+      :annotation: :Optional[LocalsDict]
+
+      Hierarchical dictionary (scopes are managed internally) which holds the currently accessible local variables
+
+
+   .. attribute:: state
+      :annotation: :StateDict
+
+      Dict which stores stores state variable values. Empty at the beginning of a transaction.
+      State variable read: 1. if not in dict -> request from chain and insert into dict, 2. return dict value
+      State variable write: store in dict
+
+
+   .. method:: address(self)
+      :property:
+
+
+
+   .. method:: _scope(self)
+
+
+      Return context manager which manages the lifetime of a local scope.
+
+
+   .. method:: help(module, contract, contract_name)
+      :staticmethod:
+
+
+
+   .. method:: reduced_help(contract)
+      :staticmethod:
+
+
+
+   .. method:: default_address()
+      :staticmethod:
+
+
+      Return default wallet address (if supported by backend, otherwise empty address is returned).
+
+
+   .. method:: initialize_keys_for(address: Union[bytes, str])
+      :staticmethod:
+
+
+      Generate/Load keys for the given address.
+
+
+   .. method:: use_config_from_manifest(project_dir: str)
+      :staticmethod:
+
+
+      Override zkay configuration with values from the manifest file in project_dir.
+
+
+   .. method:: create_dummy_accounts(count: int)
+      :staticmethod:
+
+
+      Create count pre-funded dummy accounts (if supported by backend)
+
+      :param count: # of accounts to create
+      :return: if count == 1 -> returns a address, otherwise returns a tuple of count addresses
+
+
+   .. method:: _function_ctx(self, trans_sec_size=-1, *, wei_amount: int = 0, name: str = '?')
+
+
+
+
+.. py:class:: ApiWrapper(project_dir, contract_name, user_addr)
+
+   .. attribute:: __contract_handle
+      
+
+      Handle which refers to the deployed contract, this is passed to the blockchain interface when e.g. issuing transactions.
+
+
+   .. attribute:: __user_addr
+      
+
+      From address for all transactions which are issued by this ContractSimulator
+
+
+   .. attribute:: __current_tx
+      :annotation: :Optional[TxStruct]
+
+      Builtin variable (msg, block, tx) values for the current transaction
+
+
+   .. attribute:: current_priv_values
+      :annotation: :Dict[str, Union[int, bool, RandomnessValue]]
+
+      Dictionary which stores the private circuit values (secret inputs) for the current function (no transitivity)
+
+
+   .. attribute:: all_priv_values
+      :annotation: :Optional[List[Union[int, bool, RandomnessValue]]]
+
+      List which stores all secret circuit inputs for the current transaction in correct order (order of use)
+
+
+   .. attribute:: current_all_index
+      :annotation: :Optional[int]
+
+      Index which designates where in all_priv_values the secret circuit inputs of the current function should be inserted.
+      This is basically private analogue of the start_index parameters which are passed to functions which require verification
+      to designate where in the public IO arrays the functions should store/retrieve public circuit inputs/outputs.
+
+
+   .. attribute:: is_external
+      :annotation: :Optional[bool]
+
+      True whenever simulation is inside a function which was directly (without transitivity) called by the user.
+      This is mostly used for some checks (e.g. to prevent the user from calling internal functions), or to change
+      function behavior depending on whether a call is external or not (e.g. encrypting parameters or not)
+
+
+   .. method:: address(self)
+      :property:
+
+
+
+   .. method:: user_address(self)
+      :property:
+
+
+
+   .. method:: keystore(self)
+      :property:
+
+
+
+   .. method:: get_my_sk(self)
+
+
+
+   .. method:: get_my_pk(self)
+
+
+
+   .. method:: call_fct(self, sec_offset, fct, *args)
+
+
+
+   .. method:: range_checked(val: int)
+      :staticmethod:
+
+
+      Check whether a comparison with value 'val' can be evaluated correctly in the circuit.
+
+      :param val: the value to check
+      :raises ValueError:
+
+
+   .. method:: deploy(self, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None)
+
+
+
+   .. method:: connect(self, address: AddressValue)
+
+
+
+   .. method:: transact(self, fname: str, args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None)
+
+
+
+   .. method:: call(self, fname: str, args: List, ret_val_constructors: List[Tuple[bool, Callable]])
+
+
+
+   .. method:: __get_decrypted_retval(self, raw_value, is_cipher, constructor)
+
+
+
+   .. method:: get_special_variables(self)
+
+
+
+   .. method:: update_special_variables(self, wei_amount: int)
+
+
+
+   .. method:: clear_special_variables(self)
+
+
+
+   .. method:: enc(self, plain: Union[int, AddressValue], target_addr: Optional[AddressValue] = None)
+
+
+
+   .. method:: dec(self, cipher: CipherValue, constr: Callable[[int], Any])
+
+
+
+   .. method:: _req_state_var(self, name: str, *indices, count=0)
+
+
+
+   .. method:: __serialize_val(val: Any, bitwidth: int)
+      :staticmethod:
+
+
+
+   .. method:: __serialize_circuit_array(data: dict, target_array: List, target_out_start_idx: int, elem_bitwidths: List[int])
+      :staticmethod:
+
+
+
+   .. method:: serialize_circuit_outputs(self, zk_data: dict, out_elem_bitwidths: List[int])
+
+
+
+   .. method:: serialize_private_inputs(self, zk_priv: dict, priv_elem_bitwidths: List[int])
+
+
+
+   .. method:: gen_proof(self, fname: str, in_vals: List, out_vals: List[Union[int, CipherValue]])
+
+
+
+   .. method:: __call_ctx(self, sec_offset)
+
+
+      Return context manager which sets the correct current_all_index for the given sec_offset during its lifetime.
+
+
+   .. method:: api_function_ctx(self, trans_sec_size, wei_amount)
+
+
+
+

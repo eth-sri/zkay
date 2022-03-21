@@ -1,0 +1,77 @@
+:mod:`zkay.zkay_ast.global_defs`
+================================
+
+.. py:module:: zkay.zkay_ast.global_defs
+
+
+
+
+Module Contents
+---------------
+
+.. data:: array_length_member
+   
+
+   
+
+.. py:class:: GlobalDefs
+
+   .. attribute:: address_struct
+      :annotation: :StructDefinition
+
+      
+
+   .. attribute:: address_payable_struct
+      :annotation: :StructDefinition
+
+      
+
+   .. attribute:: can_be_private
+      :annotation: = False
+
+      
+
+   .. attribute:: msg_struct
+      :annotation: :StructDefinition
+
+      
+
+   .. attribute:: block_struct
+      :annotation: :StructDefinition
+
+      
+
+   .. attribute:: tx_struct
+      :annotation: :StructDefinition
+
+      
+
+
+.. py:class:: GlobalVars
+
+   .. attribute:: msg
+      :annotation: :StateVariableDeclaration
+
+      
+
+   .. attribute:: parent
+      
+
+      
+
+   .. attribute:: block
+      :annotation: :StateVariableDeclaration
+
+      
+
+   .. attribute:: tx
+      :annotation: :StateVariableDeclaration
+
+      
+
+   .. attribute:: now
+      :annotation: :StateVariableDeclaration
+
+      
+
+

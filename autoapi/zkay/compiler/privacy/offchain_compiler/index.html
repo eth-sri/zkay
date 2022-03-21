@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.compiler.privacy.offchain_compiler &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../_static/jquery.js"></script>
         <script src="../../../../../_static/underscore.js"></script>
         <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
@@ -94,95 +47,57 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.offchain_compiler</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.compiler.privacy.offchain_compiler">
-<span id="zkay-compiler-privacy-offchain-compiler"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.offchain_compiler" title="zkay.compiler.privacy.offchain_compiler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.offchain_compiler</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.offchain_compiler" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-compiler-privacy-offchain-compiler"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.offchain_compiler" title="zkay.compiler.privacy.offchain_compiler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.offchain_compiler</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.offchain_compiler" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.compiler.privacy.offchain_compiler.api">
-<code class="sig-prename descclassname">zkay.compiler.privacy.offchain_compiler.</code><code class="sig-name descname">api</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">invoker</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'self'</span></em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.api" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.api">
+<span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.offchain_compiler.</span></span><span class="sig-name descname"><span class="pre">api</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invoker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'self'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.api" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="zkay.compiler.privacy.offchain_compiler.PRIV_VALUES_NAME">
-<code class="sig-prename descclassname">zkay.compiler.privacy.offchain_compiler.</code><code class="sig-name descname">PRIV_VALUES_NAME</code><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PRIV_VALUES_NAME" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PRIV_VALUES_NAME">
+<span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.offchain_compiler.</span></span><span class="sig-name descname"><span class="pre">PRIV_VALUES_NAME</span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PRIV_VALUES_NAME" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="zkay.compiler.privacy.offchain_compiler.IS_EXTERNAL_CALL">
-<code class="sig-prename descclassname">zkay.compiler.privacy.offchain_compiler.</code><code class="sig-name descname">IS_EXTERNAL_CALL</code><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.IS_EXTERNAL_CALL" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.IS_EXTERNAL_CALL">
+<span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.offchain_compiler.</span></span><span class="sig-name descname"><span class="pre">IS_EXTERNAL_CALL</span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.IS_EXTERNAL_CALL" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="zkay.compiler.privacy.offchain_compiler.SCALAR_FIELD_NAME">
-<code class="sig-prename descclassname">zkay.compiler.privacy.offchain_compiler.</code><code class="sig-name descname">SCALAR_FIELD_NAME</code><em class="property"> = bn128_scalar_field</em><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.SCALAR_FIELD_NAME" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.SCALAR_FIELD_NAME">
+<span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.offchain_compiler.</span></span><span class="sig-name descname"><span class="pre">SCALAR_FIELD_NAME</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">bn128_scalar_field</span></em><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.SCALAR_FIELD_NAME" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.offchain_compiler.</code><code class="sig-name descname">PythonOffchainVisitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">circuits</span><span class="p">:</span> <span class="n">List<span class="p">[</span>CircuitHelper<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../../zkay_ast/visitor/python_visitor/index.html#zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor" title="zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.offchain_compiler.</span></span><span class="sig-name descname"><span class="pre">PythonOffchainVisitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../circuit_generation/circuit_helper/index.html#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../../zkay_ast/visitor/python_visitor/index.html#zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor" title="zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor</span></code></a></p>
 <p>This visitor generates python code which is able to deploy, connect to and issue transactions for the specified contract.</p>
 <p>The generated code includes both a class corresponding to the contract, as well as a main function for interactive use.</p>
 <p>The class has the following two static methods:</p>
@@ -203,80 +118,80 @@ Required foreign public keys are also downloaded from the PKI contract on the bl
 <p>The main function simply loads the zkay configuration from the circuit’s manifest, generates encryption keys if necessary
 and enters an interactive python shell.</p>
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_forbidden_words">
-<em class="property">property </em><code class="sig-name descname">_get_forbidden_words</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_forbidden_words" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_forbidden_words">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_forbidden_words</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_forbidden_words" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_type_constr">
-<code class="sig-name descname">_get_type_constr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">TypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_type_constr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_type_constr">
+<span class="sig-name descname"><span class="pre">_get_type_constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.TypeName" title="zkay.zkay_ast.ast.TypeName"><span class="pre">zkay.zkay_ast.ast.TypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor._get_type_constr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_constructor_args_and_params">
-<code class="sig-name descname">get_constructor_args_and_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ContractDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_constructor_args_and_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_constructor_args_and_params">
+<span class="sig-name descname"><span class="pre">get_constructor_args_and_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ContractDefinition" title="zkay.zkay_ast.ast.ContractDefinition"><span class="pre">zkay.zkay_ast.ast.ContractDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_constructor_args_and_params" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitSourceUnit">
-<code class="sig-name descname">visitSourceUnit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">SourceUnit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitSourceUnit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitSourceUnit">
+<span class="sig-name descname"><span class="pre">visitSourceUnit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitSourceUnit" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.generate_constructors">
-<code class="sig-name descname">generate_constructors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ContractDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.generate_constructors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.generate_constructors">
+<span class="sig-name descname"><span class="pre">generate_constructors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ContractDefinition" title="zkay.zkay_ast.ast.ContractDefinition"><span class="pre">zkay.zkay_ast.ast.ContractDefinition</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.generate_constructors" title="Permalink to this definition"></a></dt>
 <dd><p>Generate class constructor (!= contract constructor) and static connect/deploy methods.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.is_special_var">
-<em class="property">static </em><code class="sig-name descname">is_special_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idf</span><span class="p">:</span> <span class="n">Identifier</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.is_special_var" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.is_special_var">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_special_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Identifier" title="zkay.zkay_ast.ast.Identifier"><span class="pre">zkay.zkay_ast.ast.Identifier</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.is_special_var" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_priv_value">
-<em class="property">static </em><code class="sig-name descname">get_priv_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">idf</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_priv_value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_priv_value">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_priv_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_priv_value" title="Permalink to this definition"></a></dt>
 <dd><p>Retrieve value of private circuit variable from private-value dictionary</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_loc_value">
-<code class="sig-name descname">get_loc_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">arr</span><span class="p">:</span> <span class="n">Identifier</span></em>, <em class="sig-param"><span class="n">indices</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_loc_value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_loc_value">
+<span class="sig-name descname"><span class="pre">get_loc_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Identifier" title="zkay.zkay_ast.ast.Identifier"><span class="pre">zkay.zkay_ast.ast.Identifier</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_loc_value" title="Permalink to this definition"></a></dt>
 <dd><p>Get the location of the given identifier/array element.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_value">
-<code class="sig-name descname">get_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">idf</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em>, <em class="sig-param"><span class="n">indices</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_value">
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.IdentifierExpr" title="zkay.zkay_ast.ast.IdentifierExpr"><span class="pre">zkay.zkay_ast.ast.IdentifierExpr</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_value" title="Permalink to this definition"></a></dt>
 <dd><p>Get code corresponding to the rvalue location of an identifier or index expression.</p>
 <p>e.g. idf = x and indices = [some_addr, 5] corresponds to x[some_addr][5]
 State variable values are downloaded from the chain if their value is not yet present in the local state variable dict.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitContractDefinition">
-<code class="sig-name descname">visitContractDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ContractDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitContractDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitContractDefinition">
+<span class="sig-name descname"><span class="pre">visitContractDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ContractDefinition" title="zkay.zkay_ast.ast.ContractDefinition"><span class="pre">zkay.zkay_ast.ast.ContractDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitContractDefinition" title="Permalink to this definition"></a></dt>
 <dd><p>Generate a python class with methods for each function and constructor definition and nested classes for each enum definition.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitConstructorOrFunctionDefinition">
-<code class="sig-name descname">visitConstructorOrFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitConstructorOrFunctionDefinition">
+<span class="sig-name descname"><span class="pre">visitConstructorOrFunctionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitParameter">
-<code class="sig-name descname">visitParameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Parameter</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitParameter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitParameter">
+<span class="sig-name descname"><span class="pre">visitParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Parameter" title="zkay.zkay_ast.ast.Parameter"><span class="pre">zkay.zkay_ast.ast.Parameter</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitParameter" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_params">
-<code class="sig-name descname">handle_function_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Parameter<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_params">
+<span class="sig-name descname"><span class="pre">handle_function_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Parameter" title="zkay.zkay_ast.ast.Parameter"><span class="pre">zkay.zkay_ast.ast.Parameter</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_params" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.do_if_external">
-<em class="property">static </em><code class="sig-name descname">do_if_external</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">extern_elems</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">intern_elems</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.do_if_external" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.do_if_external">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">do_if_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extern_elems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intern_elems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.do_if_external" title="Permalink to this definition"></a></dt>
 <dd><p>Wrap the python statements in extern_elems and intern_elems such that extern_elems are only executed if the surrounding function
 (python function corresponding to ast) is called externally and intern_elems are only executed if it is not called externally.</p>
 <dl class="field-list simple">
@@ -294,8 +209,8 @@ State variable values are downloaded from the chain if their value is not yet pr
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_body">
-<code class="sig-name descname">handle_function_body</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_body" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_body">
+<span class="sig-name descname"><span class="pre">handle_function_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_function_body" title="Permalink to this definition"></a></dt>
 <dd><p>Return offchain simulation python code for the body of function ast.</p>
 <p>In addition to what the original code does, the generated python code also:</p>
 <ul class="simple">
@@ -310,80 +225,80 @@ State variable values are downloaded from the chain if their value is not yet pr
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitStatementList">
-<code class="sig-name descname">visitStatementList</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">StatementList</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitStatementList" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitStatementList">
+<span class="sig-name descname"><span class="pre">visitStatementList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.StatementList" title="zkay.zkay_ast.ast.StatementList"><span class="pre">zkay.zkay_ast.ast.StatementList</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitStatementList" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitBlock">
-<code class="sig-name descname">visitBlock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Block</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitBlock" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitBlock">
+<span class="sig-name descname"><span class="pre">visitBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Block" title="zkay.zkay_ast.ast.Block"><span class="pre">zkay.zkay_ast.ast.Block</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitBlock" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitReturnStatement">
-<code class="sig-name descname">visitReturnStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReturnStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitReturnStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitReturnStatement">
+<span class="sig-name descname"><span class="pre">visitReturnStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ReturnStatement" title="zkay.zkay_ast.ast.ReturnStatement"><span class="pre">zkay.zkay_ast.ast.ReturnStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitReturnStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitInputStatement">
-<code class="sig-name descname">visitCircuitInputStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">CircuitInputStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitInputStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitInputStatement">
+<span class="sig-name descname"><span class="pre">visitCircuitInputStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.CircuitInputStatement" title="zkay.zkay_ast.ast.CircuitInputStatement"><span class="pre">zkay.zkay_ast.ast.CircuitInputStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitInputStatement" title="Permalink to this definition"></a></dt>
 <dd><p>Generate code which assigns the specified value to a circuit input variable.</p>
 <p>If the circuit input is encrypted, this will also generate code to add a decrypted
 version + the corresponding randomness to the private circuit input dict.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitComputationStatement">
-<code class="sig-name descname">visitCircuitComputationStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">CircuitComputationStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitComputationStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitComputationStatement">
+<span class="sig-name descname"><span class="pre">visitCircuitComputationStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.CircuitComputationStatement" title="zkay.zkay_ast.ast.CircuitComputationStatement"><span class="pre">zkay.zkay_ast.ast.CircuitComputationStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCircuitComputationStatement" title="Permalink to this definition"></a></dt>
 <dd><p>Generate code which simulates the evaluation of a private expression.</p>
 <p>The expression is evaluated with finite field semantics and its (encrypted) result
 is assigned to the corresponding circuit output variable.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEnterPrivateKeyStatement">
-<code class="sig-name descname">visitEnterPrivateKeyStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">EnterPrivateKeyStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEnterPrivateKeyStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEnterPrivateKeyStatement">
+<span class="sig-name descname"><span class="pre">visitEnterPrivateKeyStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.EnterPrivateKeyStatement" title="zkay.zkay_ast.ast.EnterPrivateKeyStatement"><span class="pre">zkay.zkay_ast.ast.EnterPrivateKeyStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEnterPrivateKeyStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEncryptionExpression">
-<code class="sig-name descname">visitEncryptionExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">EncryptionExpression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEncryptionExpression" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEncryptionExpression">
+<span class="sig-name descname"><span class="pre">visitEncryptionExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.EncryptionExpression" title="zkay.zkay_ast.ast.EncryptionExpression"><span class="pre">zkay.zkay_ast.ast.EncryptionExpression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitEncryptionExpression" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitPrimitiveCastExpr">
-<code class="sig-name descname">visitPrimitiveCastExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">PrimitiveCastExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitPrimitiveCastExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitPrimitiveCastExpr">
+<span class="sig-name descname"><span class="pre">visitPrimitiveCastExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.PrimitiveCastExpr" title="zkay.zkay_ast.ast.PrimitiveCastExpr"><span class="pre">zkay.zkay_ast.ast.PrimitiveCastExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitPrimitiveCastExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKeyLiteralExpr">
-<code class="sig-name descname">visitKeyLiteralExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">KeyLiteralExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKeyLiteralExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKeyLiteralExpr">
+<span class="sig-name descname"><span class="pre">visitKeyLiteralExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.KeyLiteralExpr" title="zkay.zkay_ast.ast.KeyLiteralExpr"><span class="pre">zkay.zkay_ast.ast.KeyLiteralExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKeyLiteralExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_cast">
-<code class="sig-name descname">handle_cast</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">TypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_cast" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_cast">
+<span class="sig-name descname"><span class="pre">handle_cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.TypeName" title="zkay.zkay_ast.ast.TypeName"><span class="pre">zkay.zkay_ast.ast.TypeName</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_cast" title="Permalink to this definition"></a></dt>
 <dd><p>Return python expr which corresponds to expr converted to type t.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitMemberAccessExpr">
-<code class="sig-name descname">visitMemberAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">MemberAccessExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitMemberAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitMemberAccessExpr">
+<span class="sig-name descname"><span class="pre">visitMemberAccessExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.MemberAccessExpr" title="zkay.zkay_ast.ast.MemberAccessExpr"><span class="pre">zkay.zkay_ast.ast.MemberAccessExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitMemberAccessExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIdentifierExpr">
-<code class="sig-name descname">visitIdentifierExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IdentifierExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIdentifierExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIdentifierExpr">
+<span class="sig-name descname"><span class="pre">visitIdentifierExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.IdentifierExpr" title="zkay.zkay_ast.ast.IdentifierExpr"><span class="pre">zkay.zkay_ast.ast.IdentifierExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIdentifierExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIndexExpr">
-<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">IndexExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIndexExpr">
+<span class="sig-name descname"><span class="pre">visitIndexExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.IndexExpr" title="zkay.zkay_ast.ast.IndexExpr"><span class="pre">zkay.zkay_ast.ast.IndexExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitIndexExpr" title="Permalink to this definition"></a></dt>
 <dd><p>Convert an index expression.</p>
 <p>Since Index.arr can be an IndexExpr, it is possible that this IndexExpr is actually part of a nested index expression.
 e.g. when we have x[p][i], this will be parsed as IndexExpr(IndexExpr(x, p), i) and the outer IndexExpr will be visited first.
@@ -397,19 +312,19 @@ Evaluation of IndexExpr.key for all encountered IndexExpr is also delayed until 
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_default_value">
-<code class="sig-name descname">get_default_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">TypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_default_value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_default_value">
+<span class="sig-name descname"><span class="pre">get_default_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.TypeName" title="zkay.zkay_ast.ast.TypeName"><span class="pre">zkay.zkay_ast.ast.TypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.get_default_value" title="Permalink to this definition"></a></dt>
 <dd><p>Return python expression corresponding to the default value of the given type.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitVariableDeclarationStatement">
-<code class="sig-name descname">visitVariableDeclarationStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclarationStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitVariableDeclarationStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitVariableDeclarationStatement">
+<span class="sig-name descname"><span class="pre">visitVariableDeclarationStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.VariableDeclarationStatement" title="zkay.zkay_ast.ast.VariableDeclarationStatement"><span class="pre">zkay.zkay_ast.ast.VariableDeclarationStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitVariableDeclarationStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_var_decl_expr">
-<code class="sig-name descname">handle_var_decl_expr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclarationStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_var_decl_expr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_var_decl_expr">
+<span class="sig-name descname"><span class="pre">handle_var_decl_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.VariableDeclarationStatement" title="zkay.zkay_ast.ast.VariableDeclarationStatement"><span class="pre">zkay.zkay_ast.ast.VariableDeclarationStatement</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.handle_var_decl_expr" title="Permalink to this definition"></a></dt>
 <dd><p>Return python expression corresponding to the variable declaration statement’s expression.</p>
 <p>If the declaration has no expression (default initialization in solidity), an expression
 corresponding to the declaration type’s default value is returned
@@ -417,28 +332,28 @@ corresponding to the declaration type’s default value is returned
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCipherText">
-<code class="sig-name descname">visitCipherText</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">_</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCipherText" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCipherText">
+<span class="sig-name descname"><span class="pre">visitCipherText</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitCipherText" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKey">
-<code class="sig-name descname">visitKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">_</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKey" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKey">
+<span class="sig-name descname"><span class="pre">visitKey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitKey" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitRandomness">
-<code class="sig-name descname">visitRandomness</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">_</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitRandomness" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitRandomness">
+<span class="sig-name descname"><span class="pre">visitRandomness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitRandomness" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitAddressTypeName">
-<code class="sig-name descname">visitAddressTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AddressTypeName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitAddressTypeName" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitAddressTypeName">
+<span class="sig-name descname"><span class="pre">visitAddressTypeName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.AddressTypeName" title="zkay.zkay_ast.ast.AddressTypeName"><span class="pre">zkay.zkay_ast.ast.AddressTypeName</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.visitAddressTypeName" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_ctx">
-<code class="sig-name descname">circuit_ctx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_ctx" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_ctx">
+<span class="sig-name descname"><span class="pre">circuit_ctx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ContextManager</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_ctx" title="Permalink to this definition"></a></dt>
 <dd><p>Return a context manager which sets the sets the current function, circuit and parameter fields to match the specified function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -451,8 +366,8 @@ corresponding to the declaration type’s default value is returned
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_computation">
-<code class="sig-name descname">circuit_computation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">flatten_hybrid_args</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_computation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_computation">
+<span class="sig-name descname"><span class="pre">circuit_computation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_hybrid_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ContextManager</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.offchain_compiler.PythonOffchainVisitor.circuit_computation" title="Permalink to this definition"></a></dt>
 <dd><p>Return a context manager which enables the inside_circuit flag and sets the flatten_hybrid_args flag as specified
 for the duration of its lifetime.</p>
 <dl class="field-list simple">
@@ -473,49 +388,30 @@ replaced by that private expression (recursively) during the lifetime of this co
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

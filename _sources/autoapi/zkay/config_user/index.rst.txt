@@ -1,0 +1,216 @@
+:mod:`zkay.config_user`
+=======================
+
+.. py:module:: zkay.config_user
+
+.. autoapi-nested-parse::
+
+   This module defines the zkay options which are configurable by the user via command line arguments.
+
+   The argument parser in :py:mod:`.__main__` uses the docstrings, type hints and _values for the help
+    strings and the _values fields for autocompletion
+
+   WARNING: This is one of the only zkay modules that is imported before argcomplete.autocomplete is called. For performance reasons it should thus not have any import side-effects or perform any expensive operations during import.
+
+
+
+
+Module Contents
+---------------
+
+.. function:: _check_is_one_of(val: str, legal_vals)
+
+
+.. function:: _type_check(val: Any, t)
+
+
+.. py:class:: UserConfig
+
+   .. method:: proving_scheme(self)
+      :property:
+
+
+      NIZK proving scheme to use.
+
+      Available Options: [gm17]
+
+
+   .. method:: snark_backend(self)
+      :property:
+
+
+      Snark backend to use.
+
+      Available Options: [jsnark]
+
+
+   .. method:: crypto_backend(self)
+      :property:
+
+
+      Encryption backend to use.
+
+      Available Options: [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey]
+
+
+   .. method:: blockchain_backend(self)
+      :property:
+
+
+      Backend to use when interacting with the blockchain.
+
+      Running unit tests is only supported with w3-eth-tester and w3-ganache at the moment (because they need pre-funded dummy accounts).
+      See https://web3py.readthedocs.io/en/stable/providers.html for more information.
+
+      Available Options: [w3-eth-tester, w3-ganache, w3-ipc, w3-websocket, w3-http, w3-custom]
+
+
+   .. method:: blockchain_node_uri(self)
+      :property:
+
+
+      Backend specific location of the ethereum node
+      w3-eth-tester : unused
+      w3-ganache    : url
+      w3-ipc        : path to ipc socket file
+      w3-websocket  : web socket uri
+      w3-http       : url
+      w3-custom     : web3 instance, must not be None
+
+
+   .. method:: blockchain_pki_address(self)
+      :property:
+
+
+      Address of the deployed pki contract.
+
+      Must be specified for backends other than w3-eth-tester.
+      This library can be deployed using ``zkay deploy-pki``.
+
+
+   .. method:: blockchain_crypto_lib_addresses(self)
+      :property:
+
+
+      Comma separated list of the addresses of the deployed crypto library contracts required for the current proving_scheme.
+      e.g. "0xAb31...,0xec32C..."
+
+      Must be specified for backends other than w3-eth-tester.
+      The libraries can be deployed using ``zkay deploy-crypto-libs``.
+      The addresses in the list must appear in the same order as the corresponding
+      libraries were deployed by that command.
+
+
+   .. method:: blockchain_default_account(self)
+      :property:
+
+
+      Address of the wallet which should be made available under the name 'me' in contract.py.
+
+      If None -> must always specify a sender, empty blockchain_pki_address is invalid
+      If int -> use eth.accounts[int]
+      If str -> use address str
+
+
+   .. method:: indentation(self)
+      :property:
+
+
+      Specifies the identation which should be used for the generated code output.
+
+
+   .. method:: libsnark_check_verify_locally_during_proof_generation(self)
+      :property:
+
+
+      If true, the libsnark interface verifies locally whether the proof can be verified during proof generation.
+
+
+   .. method:: opt_solc_optimizer_runs(self)
+      :property:
+
+
+      SOLC: optimize for how many times to run the code
+
+
+   .. method:: opt_hash_threshold(self)
+      :property:
+
+
+      If there are more than this many public circuit inputs (in uints), the hashing optimization will be enabled.
+
+      This means that only the hash of all public inputs will be passed as public input,
+      public inputs are passed as private circuit inputs and the circuit verifies
+      that the hash matches to ensure correctness.
+
+      When hashing is enabled -> cheaper on-chain costs for verification (O(1) in #public args instead of O(n)),
+      but much higher off-chain costs (key and proof generation time, memory consumption).
+
+
+   .. method:: opt_eval_constexpr_in_circuit(self)
+      :property:
+
+
+      If true, literal expressions are folded and the result is baked into the circuit as a constant
+      (as opposed to being evaluated outside the circuit and the result being moved in as an additional circuit input)
+
+
+   .. method:: opt_cache_circuit_inputs(self)
+      :property:
+
+
+      If true, identifier circuit inputs will be cached
+      (i.e. if an identifier is referenced multiple times within a private expression,
+      or multiple times in different private expressions without being publicly written to in between,
+      then the identifier will only be added to the circuit inputs once and all private
+      uses will share the same input variable.
+
+
+   .. method:: opt_cache_circuit_outputs(self)
+      :property:
+
+
+      Normally, the value cached in the circuit for a particular identifier must be invalidated whenever the
+      identifier is assigned to in public code.
+
+      If this optimization is enabled, assignments where the lhs is an Identifier and the rhs is a private expression
+      will update the cached value stored in the circuit instead of invalidating it.
+      (since updated value == private expression result, the corresponding plaintext value is already
+      available in the circuit)
+
+
+   .. method:: data_dir(self)
+      :property:
+
+
+      Path to directory where to store user data (e.g. generated encryption keys).
+
+
+   .. method:: log_dir(self)
+      :property:
+
+
+      Path to default log directory.
+
+
+   .. method:: use_circuit_cache_during_testing_with_encryption(self)
+      :property:
+
+
+      If true, snark keys for the test cases are cached
+      (i.e. they are not regenerated on every run unless the circuit was modified)
+
+
+   .. method:: verbosity(self)
+      :property:
+
+
+      If 0, no output
+      If 1, normal output
+      If 2, verbose output
+
+      This includes for example snark key- and proof generation output and
+      information about intermediate transaction simulation steps.
+
+
+

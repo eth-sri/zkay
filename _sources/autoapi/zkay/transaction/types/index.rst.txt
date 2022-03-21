@@ -1,0 +1,213 @@
+:mod:`zkay.transaction.types`
+=============================
+
+.. py:module:: zkay.transaction.types
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: Value
+
+   Bases: :class:`tuple`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+   .. method:: __str__(self)
+
+
+      Return str(self).
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+   .. method:: __hash__(self)
+
+
+      Return hash(self).
+
+
+   .. method:: unwrap_values(v: Union[int, bool, 'Value', List, Dict])
+      :staticmethod:
+
+
+
+   .. method:: flatten(v: Collection)
+      :staticmethod:
+
+
+
+   .. method:: collection_to_string(v: Union[int, bool, 'Value', Dict, List, Tuple])
+      :staticmethod:
+
+
+
+
+.. py:class:: CipherValue
+
+   Bases: :class:`zkay.transaction.types.Value`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+   .. method:: __len__(self)
+
+
+      Return len(self).
+
+
+
+.. py:class:: PrivateKeyValue
+
+   Bases: :class:`zkay.transaction.types.Value`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+   .. method:: val(self)
+      :property:
+
+
+
+
+.. py:class:: PublicKeyValue
+
+   Bases: :class:`zkay.transaction.types.Value`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+
+.. py:class:: RandomnessValue
+
+   Bases: :class:`zkay.transaction.types.Value`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+
+.. py:class:: AddressValue
+
+   Bases: :class:`zkay.transaction.types.Value`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+   .. attribute:: get_balance
+      :annotation: :Optional[Callable[['AddressValue'], int]]
+
+      
+
+   .. method:: val(self)
+      :property:
+
+
+
+   .. method:: transfer(self, amount)
+
+
+
+   .. method:: send(self, amount)
+
+
+
+   .. method:: __str__(self)
+
+
+      Return str(self).
+
+
+   .. method:: balance(self)
+      :property:
+
+
+
+
+.. py:class:: KeyPair(pk: PublicKeyValue, sk: PrivateKeyValue)
+
+
+.. py:class:: MsgStruct(sender: AddressValue, value: int = 0)
+
+   .. method:: sender(self)
+      :property:
+
+
+
+   .. method:: value(self)
+      :property:
+
+
+
+
+.. py:class:: BlockStruct(coinbase: AddressValue, difficulty: int, gaslimit: int, number: int, timestamp: int)
+
+   .. method:: coinbase(self)
+      :property:
+
+
+
+   .. method:: difficulty(self)
+      :property:
+
+
+
+   .. method:: gaslimit(self)
+      :property:
+
+
+
+   .. method:: number(self)
+      :property:
+
+
+
+   .. method:: timestamp(self)
+      :property:
+
+
+
+
+.. py:class:: TxStruct(gasprice: int, origin: AddressValue)
+
+   .. method:: gasprice(self)
+      :property:
+
+
+
+   .. method:: origin(self)
+      :property:
+
+
+
+

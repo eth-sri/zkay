@@ -1,0 +1,63 @@
+:mod:`zkay.my_logging.logger`
+=============================
+
+.. py:module:: zkay.my_logging.logger
+
+
+
+
+Module Contents
+---------------
+
+.. data:: timestamp
+   
+
+   
+
+.. function:: shutdown(handler_list=None)
+
+
+.. data:: DATA
+   :annotation: = 5
+
+   
+
+.. function:: data(key, value)
+
+   Log (key, value) to log-level DATA
+
+
+.. function:: get_log_dir(parent_dir, label)
+
+   Convenience function for getting a log directory
+
+
+.. function:: get_log_file(label='default', parent_dir=None, filename='log', include_timestamp=True)
+
+
+.. function:: prepare_logger(log_file=None, silent=True)
+
+
+.. py:class:: OnlyData(name='')
+
+   Bases: :class:`logging.Filter`
+
+   Filter instances are used to perform arbitrary filtering of LogRecords.
+
+   Loggers and Handlers can optionally use Filter instances to filter
+   records as desired. The base filter class only allows events which are
+   below a certain point in the logger hierarchy. For example, a filter
+   initialized with "A.B" will allow events logged by loggers "A.B",
+   "A.B.C", "A.B.C.D", "A.B.D" etc. but not "A.BB", "B.A.B" etc. If
+   initialized with the empty string, all events are passed.
+
+   .. method:: filter(self, record)
+
+
+      Determine if the specified record is to be logged.
+
+      Is the specified record to be logged? Returns 0 for no, nonzero for
+      yes. If deemed appropriate, the record may be modified in-place.
+
+
+

@@ -1,0 +1,39 @@
+:mod:`zkay.type_check.type_exceptions`
+======================================
+
+.. py:module:: zkay.type_check.type_exceptions
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: TypeException
+
+   Bases: :class:`zkay.zkay_ast.ast.AstException`
+
+   Generic exception for type errors in the program
+
+
+.. py:class:: TypeMismatchException(expected, actual, ast)
+
+   Bases: :class:`zkay.type_check.type_exceptions.TypeException`
+
+   Generic exception for type errors in the program
+
+
+.. py:class:: RequireException
+
+   Bases: :class:`zkay.type_check.type_exceptions.TypeException`
+
+   Raised on invalid number of arguments for "require"
+
+
+.. py:exception:: ReclassifyException
+
+   Bases: :class:`Exception`
+
+   Raised on invalid number of arguments for "reveal"
+
+

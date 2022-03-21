@@ -1,0 +1,39 @@
+:mod:`zkay.type_check.final_checker`
+====================================
+
+.. py:module:: zkay.type_check.final_checker
+
+
+
+
+Module Contents
+---------------
+
+.. function:: check_final(ast)
+
+
+.. py:class:: FinalVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitContractDefinition(self, ast: ContractDefinition)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+

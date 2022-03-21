@@ -1,0 +1,109 @@
+:mod:`zkay.zkay_ast.analysis.side_effects`
+==========================================
+
+.. py:module:: zkay.zkay_ast.analysis.side_effects
+
+
+
+
+Module Contents
+---------------
+
+.. function:: has_side_effects(ast: AST) -> bool
+
+
+.. function:: compute_modified_sets(ast: AST)
+
+
+.. function:: check_for_undefined_behavior_due_to_eval_order(ast: AST)
+
+
+.. py:class:: SideEffectsDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+
+   .. method:: visitStatement(self, ast: Statement)
+
+
+
+   .. method:: visitAST(self, ast: AST)
+
+
+
+
+.. py:class:: DirectModificationDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: collect_modified_values(self, target: Union[Expression, Statement], expr: Union[TupleExpr, LocationExpr])
+
+
+
+   .. method:: visitLocationExpr(self, ast: LocationExpr)
+
+
+
+   .. method:: visitVariableDeclaration(self, ast: VariableDeclaration)
+
+
+
+   .. method:: visitAST(self, ast: AST)
+
+
+
+
+.. py:class:: IndirectModificationDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: iterate_until_fixed_point(self, ast)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitAST(self, ast: AST)
+
+
+
+
+.. py:class:: EvalOrderUBChecker
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visit_child_expressions(parent: AST, exprs: List[AST])
+      :staticmethod:
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+

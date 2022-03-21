@@ -1,0 +1,32 @@
+:mod:`zkay.zkay_ast.pointers`
+=============================
+
+.. py:module:: zkay.zkay_ast.pointers
+
+.. autoapi-nested-parse::
+
+   This package contains modules which resolve references to other AST elements.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.parent_setter`: Visitor which sets the parent, statement and function references for each element to the correct values.
+   * :py:mod:`.pointer_exceptions`: Exceptions raised within this module
+   * :py:mod:`.symbol_table`: Construct symbol table from AST and resolve identifier and user-defined-type targets.
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   parent_setter/index.rst
+
+   pointer_exceptions/index.rst
+
+   symbol_table/index.rst
+
+
+
+
+

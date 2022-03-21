@@ -1,0 +1,40 @@
+:mod:`zkay.utils`
+=================
+
+.. py:module:: zkay.utils
+
+.. autoapi-nested-parse::
+
+   This package contains helper functionality.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.helpers`: Miscellaneous operations (file reading, hashing, ...)
+   * :py:mod:`.multiline_formatter`: Helper class which makes heavy use of operator overloading to facilitate building multiline strings with different indentation levels.
+   * :py:mod:`.progress_printer`: Context managers for printing before and after context execution, and for colored terminal output.
+   * :py:mod:`.run_command`: Wrapper for executing arbitrary commands with captured output
+   * :py:mod:`.timer`: Context manager for measuring elapsed (wall clock) time
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   dict_wrapper/index.rst
+
+   helpers/index.rst
+
+   multiline_formatter/index.rst
+
+   progress_printer/index.rst
+
+   run_command/index.rst
+
+   timer/index.rst
+
+
+
+
+

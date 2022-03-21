@@ -1,0 +1,52 @@
+:mod:`zkay.compiler.privacy`
+============================
+
+.. py:module:: zkay.compiler.privacy
+
+.. autoapi-nested-parse::
+
+   This package deals with zkay compilation.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.library_contracts`: Stores strings which contain pki and library contract solidity code
+   * :py:mod:`.manifest` Defines the entries of the zkay manifest file which stores compilation metadata.
+   * :py:mod:`.offchain_compiler` Offchain simulation code generator.
+
+   ===========
+   Subpackages
+   ===========
+   * :py:mod:`.transformation`: Contains modules for transforming zkay ASTs into solidity ASTs + abstract proof circuits
+   * :py:mod:`.circuit_generation`: Contains modules for compiling abstract proof circuits into backend specific representations.
+   * :py:mod:`.proving_scheme`: Contains modules for generating verification contracts for different proving schemes.
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+   :hidden:
+
+   circuit_generation/index.rst
+
+   proving_scheme/index.rst
+
+   transformation/index.rst
+
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   library_contracts/index.rst
+
+   manifest/index.rst
+
+   offchain_compiler/index.rst
+
+
+
+
+

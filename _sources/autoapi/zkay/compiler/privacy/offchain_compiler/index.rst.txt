@@ -1,0 +1,284 @@
+:mod:`zkay.compiler.privacy.offchain_compiler`
+==============================================
+
+.. py:module:: zkay.compiler.privacy.offchain_compiler
+
+
+
+
+Module Contents
+---------------
+
+.. function:: api(name: str, invoker: str = 'self') -> str
+
+
+.. data:: PRIV_VALUES_NAME
+   
+
+   
+
+.. data:: IS_EXTERNAL_CALL
+   
+
+   
+
+.. data:: SCALAR_FIELD_NAME
+   :annotation: = bn128_scalar_field
+
+   
+
+.. py:class:: PythonOffchainVisitor(circuits: List[CircuitHelper])
+
+   Bases: :class:`zkay.zkay_ast.visitor.python_visitor.PythonCodeVisitor`
+
+   This visitor generates python code which is able to deploy, connect to and issue transactions for the specified contract.
+
+   The generated code includes both a class corresponding to the contract, as well as a main function for interactive use.
+
+   The class has the following two static methods:
+
+   * deploy: Compile all necessary contracts (main contract + libraries), deploy them onto a test chain and return a contract handle.
+   * connect: Get a handle for an already deployed contract (by specifying the on-chain address of the contract). This method automatically verifies the integrity of the remote contract.
+
+   If the visited AST contains only a single contract, global deploy and connect functions for that contract are also added to the python
+   code.
+
+   For every zkay function, the class has a corresponding instance method with matching name and (untransformed) signature.
+   To issue a zkay transaction, simply call one of these functions.
+   All private parameters will be encrypted automatically. The function will then simulate solidity execution and circuit computations
+   to obtain all required public circuit inputs. Finally it automatically generates the zero knowledge proof and issues a
+   transformed transaction (encrypted arguments, additional circuit output and proof arguments added).
+   If a require statement fails during simulation, a RequireException is raised.
+   When a state variable is read before it is written in a transaction, its initial value is pulled from the blockchain.
+   Required foreign public keys are also downloaded from the PKI contract on the block chain.
+
+   The main function simply loads the zkay configuration from the circuit's manifest, generates encryption keys if necessary
+   and enters an interactive python shell.
+
+   .. method:: _get_forbidden_words(self)
+      :property:
+
+
+
+   .. method:: _get_type_constr(self, t: TypeName)
+
+
+
+   .. method:: get_constructor_args_and_params(self, ast: ContractDefinition)
+
+
+
+   .. method:: visitSourceUnit(self, ast: SourceUnit)
+
+
+
+   .. method:: generate_constructors(self, ast: ContractDefinition)
+
+
+      Generate class constructor (!= contract constructor) and static connect/deploy methods.
+
+
+   .. method:: is_special_var(idf: Identifier)
+      :staticmethod:
+
+
+
+   .. method:: get_priv_value(idf: str)
+      :staticmethod:
+
+
+      Retrieve value of private circuit variable from private-value dictionary
+
+
+   .. method:: get_loc_value(self, arr: Identifier, indices: List[str])
+
+
+      Get the location of the given identifier/array element.
+
+
+   .. method:: get_value(self, idf: IdentifierExpr, indices: List[str])
+
+
+      Get code corresponding to the rvalue location of an identifier or index expression.
+
+      e.g. idf = x and indices = [some_addr, 5] corresponds to x[some_addr][5]
+      State variable values are downloaded from the chain if their value is not yet present in the local state variable dict.
+
+
+   .. method:: visitContractDefinition(self, ast: ContractDefinition)
+
+
+      Generate a python class with methods for each function and constructor definition and nested classes for each enum definition.
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitParameter(self, ast: Parameter)
+
+
+
+   .. method:: handle_function_params(self, ast: ConstructorOrFunctionDefinition, params: List[Parameter])
+
+
+
+   .. method:: do_if_external(ast: ConstructorOrFunctionDefinition, extern_elems: Optional[List[str]] = None, intern_elems: Optional[List[str]] = None)
+      :staticmethod:
+
+
+      Wrap the python statements in extern_elems and intern_elems such that extern_elems are only executed if the surrounding function
+      (python function corresponding to ast) is called externally and intern_elems are only executed if it is not called externally.
+
+      :param ast: the function to which extern_elems and intern_elems belong
+      :param extern_elems: list of python statements to execute when function is called externally
+      :param intern_elems: list of python statements to execute when function is called internally
+      :return: wrapped code
+
+
+   .. method:: handle_function_body(self, ast: ConstructorOrFunctionDefinition)
+
+
+      Return offchain simulation python code for the body of function ast.
+
+      In addition to what the original code does, the generated python code also:
+
+      * checks that internal functions are not called externally
+      * processes arguments (encryption, address wrapping for external calls),
+      * introduces msg, block and tx objects as local variables (populated with current blockchain state)
+      * serializes the public circuit outputs and the private circuit inputs, which are obtained during           simulation into int lists so that they can be passed to the proof generation
+      * generates the NIZK proof (if needed)
+      * calls/issues transaction with transformed arguments ((encrypted) original args, out array, proof)
+        (or deploys the contract in case of the constructor)
+
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+
+   .. method:: visitBlock(self, ast: Block)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: visitCircuitInputStatement(self, ast: CircuitInputStatement)
+
+
+      Generate code which assigns the specified value to a circuit input variable.
+
+      If the circuit input is encrypted, this will also generate code to add a decrypted
+      version + the corresponding randomness to the private circuit input dict.
+
+
+   .. method:: visitCircuitComputationStatement(self, ast: CircuitComputationStatement)
+
+
+      Generate code which simulates the evaluation of a private expression.
+
+      The expression is evaluated with finite field semantics and its (encrypted) result
+      is assigned to the corresponding circuit output variable.
+
+
+   .. method:: visitEnterPrivateKeyStatement(self, ast: EnterPrivateKeyStatement)
+
+
+
+   .. method:: visitEncryptionExpression(self, ast: EncryptionExpression)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+
+   .. method:: visitKeyLiteralExpr(self, ast: KeyLiteralExpr)
+
+
+
+   .. method:: handle_cast(self, expr: str, t: TypeName)
+
+
+      Return python expr which corresponds to expr converted to type t.
+
+
+   .. method:: visitMemberAccessExpr(self, ast: MemberAccessExpr)
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+      Convert an index expression.
+
+      Since Index.arr can be an IndexExpr, it is possible that this IndexExpr is actually part of a nested index expression.
+      e.g. when we have x[p][i], this will be parsed as IndexExpr(IndexExpr(x, p), i) and the outer IndexExpr will be visited first.
+      This is problematic in the case where x is a state variable, since the value has to be requested from the chain
+      using the call x(p, i).
+      One has to recursively visit all the IndexExpr.arr children to know which state variable to call, as the Index expressions
+      are basically visited in reverse order.
+
+      At the moment, this problem is solved by constructing the full, combined index expression in reverse order
+      (by keeping track of all index keys and their types in the list self.current_index until IndexExpr.arr is an IdentifierExpr, which terminates the recursion/nesting.
+      Evaluation of IndexExpr.key for all encountered IndexExpr is also delayed until then, since nested IndexExpr in the key expressions would otherwise break the current_index array).
+
+
+   .. method:: get_default_value(self, t: TypeName)
+
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: handle_var_decl_expr(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: visitCipherText(self, _)
+
+
+
+   .. method:: visitKey(self, _)
+
+
+
+   .. method:: visitRandomness(self, _)
+
+
+
+   .. method:: visitAddressTypeName(self, ast: AddressTypeName)
+
+
+
+   .. method:: circuit_ctx(self, ast: ConstructorOrFunctionDefinition)
+
+
+      Return a context manager which sets the sets the current function, circuit and parameter fields to match the specified function.
+
+      :param ast: function definition which will be visited within this context
+      :return: context manager
+
+
+   .. method:: circuit_computation(self, flatten_hybrid_args: bool = False)
+
+
+      Return a context manager which enables the inside_circuit flag and sets the flatten_hybrid_args flag as specified
+      for the duration of its lifetime.
+
+      :param flatten_hybrid_args: if true, all encountered HybridArgumentIdfs which have a private expression associated with them are
+                                  replaced by that private expression (recursively) during the lifetime of this context manager.
+      :return: context manager
+
+
+

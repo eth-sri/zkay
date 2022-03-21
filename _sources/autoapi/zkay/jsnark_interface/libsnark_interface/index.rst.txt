@@ -1,0 +1,44 @@
+:mod:`zkay.jsnark_interface.libsnark_interface`
+===============================================
+
+.. py:module:: zkay.jsnark_interface.libsnark_interface
+
+
+
+
+Module Contents
+---------------
+
+.. data:: libsnark_runner
+   
+
+   
+
+.. data:: proving_scheme_map
+   
+
+   
+
+.. function:: generate_keys(input_dir: str, output_dir: str, proving_scheme: str)
+
+   Generate prover and verification keys for the circuit in output_dir with the specified proving_scheme.
+
+   :param input_dir: path to directory where the circuit.arith and .in files are located
+   :param output_dir: path to the directory where the keys should be saved
+   :param proving_scheme: name of the proving scheme to use
+   :raise SubprocessError: if key generation fails
+   :raise KeyError: if proving scheme name is invalid
+
+
+.. function:: generate_proof(key_dir: str, input_dir: str, output_path: str, proving_scheme: str)
+
+   Generate a NIZK-proof for the circuit and input files in output_dir.
+
+   :param key_dir: directory where proving.key and verifying.key.bin are located
+   :param input_dir: directory where circuit.arith and circuit.in for this circuit are located.
+   :param output_path: output path for the generated proof file
+   :param proving_scheme: name of the proving scheme to use
+   :raise SubprocessError: if proof generation fails
+   :raise KeyError: if proving scheme name is invalid
+
+

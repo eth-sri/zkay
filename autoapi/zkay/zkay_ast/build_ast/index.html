@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.zkay_ast.build_ast &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
@@ -94,328 +47,300 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.build_ast</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.zkay_ast.build_ast">
-<span id="zkay-zkay-ast-build-ast"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.build_ast" title="zkay.zkay_ast.build_ast"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.build_ast</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.build_ast" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-zkay-ast-build-ast"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.build_ast" title="zkay.zkay_ast.build_ast"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.build_ast</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.build_ast" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.zkay_ast.build_ast.build_ast_from_parse_tree">
-<code class="sig-prename descclassname">zkay.zkay_ast.build_ast.</code><code class="sig-name descname">build_ast_from_parse_tree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parse_tree</span><span class="p">:</span> <span class="n">ParserRuleContext</span></em>, <em class="sig-param"><span class="n">tokens</span><span class="p">:</span> <span class="n">CommonTokenStream</span></em>, <em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; ast.AST<a class="headerlink" href="#zkay.zkay_ast.build_ast.build_ast_from_parse_tree" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.build_ast_from_parse_tree">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.build_ast.</span></span><span class="sig-name descname"><span class="pre">build_ast_from_parse_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parse_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.ParserRuleContext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.CommonTokenStream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></span><a class="headerlink" href="#zkay.zkay_ast.build_ast.build_ast_from_parse_tree" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt id="zkay.zkay_ast.build_ast.build_ast">
-<code class="sig-prename descclassname">zkay.zkay_ast.build_ast.</code><code class="sig-name descname">build_ast</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">code</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.build_ast" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.build_ast">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.build_ast.</span></span><span class="sig-name descname"><span class="pre">build_ast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></span><a class="headerlink" href="#zkay.zkay_ast.build_ast.build_ast" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.build_ast.</code><code class="sig-name descname">BuildASTVisitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tokens</span><span class="p">:</span> <span class="n">CommonTokenStream</span></em>, <em class="sig-param"><span class="n">code</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.solidity_parser.generated.SolidityVisitor.SolidityVisitor</span></code></p>
-<dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visit">
-<code class="sig-name descname">visit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">tree</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.build_ast.</span></span><span class="sig-name descname"><span class="pre">BuildASTVisitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.CommonTokenStream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.solidity_parser.generated.SolidityVisitor.SolidityVisitor</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.rehom_expressions">
+<span class="sig-name descname"><span class="pre">rehom_expressions</span></span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.rehom_expressions" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitChildren">
-<code class="sig-name descname">visitChildren</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">ParserRuleContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitChildren" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visit">
+<span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visit" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.handle_field">
-<code class="sig-name descname">handle_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">field</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.handle_field" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitChildren">
+<span class="sig-name descname"><span class="pre">visitChildren</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.ParserRuleContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitChildren" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIdentifier">
-<code class="sig-name descname">visitIdentifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.IdentifierContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIdentifier" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.handle_field">
+<span class="sig-name descname"><span class="pre">handle_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.handle_field" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPragmaDirective">
-<code class="sig-name descname">visitPragmaDirective</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.PragmaDirectiveContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPragmaDirective" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIdentifier">
+<span class="sig-name descname"><span class="pre">visitIdentifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.IdentifierContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIdentifier" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitVersionPragma">
-<code class="sig-name descname">visitVersionPragma</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.VersionPragmaContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitVersionPragma" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPragmaDirective">
+<span class="sig-name descname"><span class="pre">visitPragmaDirective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.PragmaDirectiveContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPragmaDirective" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitContractDefinition">
-<code class="sig-name descname">visitContractDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ContractDefinitionContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitContractDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitVersionPragma">
+<span class="sig-name descname"><span class="pre">visitVersionPragma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.VersionPragmaContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitVersionPragma" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.handle_fdef">
-<code class="sig-name descname">handle_fdef</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.handle_fdef" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitContractDefinition">
+<span class="sig-name descname"><span class="pre">visitContractDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ContractDefinitionContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitContractDefinition" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionDefinition">
-<code class="sig-name descname">visitFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.FunctionDefinitionContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.handle_fdef">
+<span class="sig-name descname"><span class="pre">handle_fdef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.handle_fdef" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitConstructorDefinition">
-<code class="sig-name descname">visitConstructorDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ConstructorDefinitionContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitConstructorDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionDefinition">
+<span class="sig-name descname"><span class="pre">visitFunctionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.FunctionDefinitionContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionDefinition" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumDefinition">
-<code class="sig-name descname">visitEnumDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.EnumDefinitionContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitConstructorDefinition">
+<span class="sig-name descname"><span class="pre">visitConstructorDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ConstructorDefinitionContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitConstructorDefinition" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumValue">
-<code class="sig-name descname">visitEnumValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.EnumValueContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumValue" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumDefinition">
+<span class="sig-name descname"><span class="pre">visitEnumDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.EnumDefinitionContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumDefinition" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitNumberLiteralExpr">
-<code class="sig-name descname">visitNumberLiteralExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.NumberLiteralExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitNumberLiteralExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumValue">
+<span class="sig-name descname"><span class="pre">visitEnumValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.EnumValueContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitEnumValue" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBooleanLiteralExpr">
-<code class="sig-name descname">visitBooleanLiteralExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.BooleanLiteralExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBooleanLiteralExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitNumberLiteralExpr">
+<span class="sig-name descname"><span class="pre">visitNumberLiteralExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.NumberLiteralExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitNumberLiteralExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitStringLiteralExpr">
-<code class="sig-name descname">visitStringLiteralExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.StringLiteralExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitStringLiteralExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBooleanLiteralExpr">
+<span class="sig-name descname"><span class="pre">visitBooleanLiteralExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.BooleanLiteralExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBooleanLiteralExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitTupleExpr">
-<code class="sig-name descname">visitTupleExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.TupleExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitTupleExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitStringLiteralExpr">
+<span class="sig-name descname"><span class="pre">visitStringLiteralExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.StringLiteralExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitStringLiteralExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitModifier">
-<code class="sig-name descname">visitModifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ModifierContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitModifier" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitTupleExpr">
+<span class="sig-name descname"><span class="pre">visitTupleExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.TupleExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitTupleExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitAnnotatedTypeName">
-<code class="sig-name descname">visitAnnotatedTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.AnnotatedTypeNameContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitAnnotatedTypeName" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitModifier">
+<span class="sig-name descname"><span class="pre">visitModifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ModifierContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitModifier" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitElementaryTypeName">
-<code class="sig-name descname">visitElementaryTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ElementaryTypeNameContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitElementaryTypeName" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitAnnotatedTypeName">
+<span class="sig-name descname"><span class="pre">visitAnnotatedTypeName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.AnnotatedTypeNameContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitAnnotatedTypeName" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIndexExpr">
-<code class="sig-name descname">visitIndexExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.IndexExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIndexExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitHomomorphismAnnotation">
+<span class="sig-name descname"><span class="pre">visitHomomorphismAnnotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.HomomorphismAnnotationContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitHomomorphismAnnotation" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitParenthesisExpr">
-<code class="sig-name descname">visitParenthesisExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ParenthesisExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitParenthesisExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitElementaryTypeName">
+<span class="sig-name descname"><span class="pre">visitElementaryTypeName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ElementaryTypeNameContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitElementaryTypeName" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitSignExpr">
-<code class="sig-name descname">visitSignExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.SignExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitSignExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIndexExpr">
+<span class="sig-name descname"><span class="pre">visitIndexExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.IndexExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIndexExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitNotExpr">
-<code class="sig-name descname">visitNotExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.NotExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitNotExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitParenthesisExpr">
+<span class="sig-name descname"><span class="pre">visitParenthesisExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ParenthesisExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitParenthesisExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseNotExpr">
-<code class="sig-name descname">visitBitwiseNotExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.BitwiseNotExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseNotExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitSignExpr">
+<span class="sig-name descname"><span class="pre">visitSignExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.SignExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitSignExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor._visitBinaryExpr">
-<code class="sig-name descname">_visitBinaryExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor._visitBinaryExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitNotExpr">
+<span class="sig-name descname"><span class="pre">visitNotExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.NotExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitNotExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor._visitBoolExpr">
-<code class="sig-name descname">_visitBoolExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor._visitBoolExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseNotExpr">
+<span class="sig-name descname"><span class="pre">visitBitwiseNotExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.BitwiseNotExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseNotExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPowExpr">
-<code class="sig-name descname">visitPowExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.PowExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPowExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor._visitBinaryExpr">
+<span class="sig-name descname"><span class="pre">_visitBinaryExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor._visitBinaryExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitMultDivModExpr">
-<code class="sig-name descname">visitMultDivModExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.MultDivModExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitMultDivModExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor._visitBoolExpr">
+<span class="sig-name descname"><span class="pre">_visitBoolExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor._visitBoolExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPlusMinusExpr">
-<code class="sig-name descname">visitPlusMinusExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.PlusMinusExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPlusMinusExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPowExpr">
+<span class="sig-name descname"><span class="pre">visitPowExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.PowExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPowExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitCompExpr">
-<code class="sig-name descname">visitCompExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.CompExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitCompExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitMultDivModExpr">
+<span class="sig-name descname"><span class="pre">visitMultDivModExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.MultDivModExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitMultDivModExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitEqExpr">
-<code class="sig-name descname">visitEqExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.EqExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitEqExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPlusMinusExpr">
+<span class="sig-name descname"><span class="pre">visitPlusMinusExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.PlusMinusExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPlusMinusExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitAndExpr">
-<code class="sig-name descname">visitAndExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.AndExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitAndExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitCompExpr">
+<span class="sig-name descname"><span class="pre">visitCompExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.CompExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitCompExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitOrExpr">
-<code class="sig-name descname">visitOrExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.OrExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitOrExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitEqExpr">
+<span class="sig-name descname"><span class="pre">visitEqExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.EqExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitEqExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseOrExpr">
-<code class="sig-name descname">visitBitwiseOrExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.BitwiseOrExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseOrExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitAndExpr">
+<span class="sig-name descname"><span class="pre">visitAndExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.AndExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitAndExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitShiftExpr">
-<code class="sig-name descname">visitBitShiftExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.BitShiftExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitShiftExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitOrExpr">
+<span class="sig-name descname"><span class="pre">visitOrExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.OrExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitOrExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseAndExpr">
-<code class="sig-name descname">visitBitwiseAndExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.BitwiseAndExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseAndExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseOrExpr">
+<span class="sig-name descname"><span class="pre">visitBitwiseOrExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.BitwiseOrExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseOrExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseXorExpr">
-<code class="sig-name descname">visitBitwiseXorExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.BitwiseXorExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseXorExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitShiftExpr">
+<span class="sig-name descname"><span class="pre">visitBitShiftExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.BitShiftExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitShiftExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIteExpr">
-<code class="sig-name descname">visitIteExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.IteExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIteExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseAndExpr">
+<span class="sig-name descname"><span class="pre">visitBitwiseAndExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.BitwiseAndExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseAndExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.FunctionCallExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseXorExpr">
+<span class="sig-name descname"><span class="pre">visitBitwiseXorExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.BitwiseXorExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitBitwiseXorExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIfStatement">
-<code class="sig-name descname">visitIfStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.IfStatementContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIfStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIteExpr">
+<span class="sig-name descname"><span class="pre">visitIteExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.IteExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIteExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitWhileStatement">
-<code class="sig-name descname">visitWhileStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.WhileStatementContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitWhileStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.FunctionCallExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitDoWhileStatement">
-<code class="sig-name descname">visitDoWhileStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.DoWhileStatementContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitDoWhileStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitIfStatement">
+<span class="sig-name descname"><span class="pre">visitIfStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.IfStatementContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitIfStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitForStatement">
-<code class="sig-name descname">visitForStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ForStatementContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitForStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitWhileStatement">
+<span class="sig-name descname"><span class="pre">visitWhileStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.WhileStatementContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitWhileStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.is_expr_stmt">
-<code class="sig-name descname">is_expr_stmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ExpressionContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.is_expr_stmt" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitDoWhileStatement">
+<span class="sig-name descname"><span class="pre">visitDoWhileStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.DoWhileStatementContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitDoWhileStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitAssignmentExpr">
-<code class="sig-name descname">visitAssignmentExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.AssignmentExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitAssignmentExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitForStatement">
+<span class="sig-name descname"><span class="pre">visitForStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ForStatementContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitForStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor._handle_crement_expr">
-<code class="sig-name descname">_handle_crement_expr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span></em>, <em class="sig-param"><span class="n">kind</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor._handle_crement_expr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.is_expr_stmt">
+<span class="sig-name descname"><span class="pre">is_expr_stmt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ExpressionContext</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.is_expr_stmt" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPreCrementExpr">
-<code class="sig-name descname">visitPreCrementExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.PreCrementExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPreCrementExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitAssignmentExpr">
+<span class="sig-name descname"><span class="pre">visitAssignmentExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.AssignmentExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitAssignmentExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPostCrementExpr">
-<code class="sig-name descname">visitPostCrementExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.PostCrementExprContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPostCrementExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor._handle_crement_expr">
+<span class="sig-name descname"><span class="pre">_handle_crement_expr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor._handle_crement_expr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitExpressionStatement">
-<code class="sig-name descname">visitExpressionStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ctx</span><span class="p">:</span> <span class="n">SolidityParser.ExpressionStatementContext</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitExpressionStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPreCrementExpr">
+<span class="sig-name descname"><span class="pre">visitPreCrementExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.PreCrementExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPreCrementExpr" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitPostCrementExpr">
+<span class="sig-name descname"><span class="pre">visitPostCrementExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.PostCrementExprContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitPostCrementExpr" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.build_ast.BuildASTVisitor.visitExpressionStatement">
+<span class="sig-name descname"><span class="pre">visitExpressionStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">zkay.solidity_parser.generated.SolidityParser.SolidityParser.ExpressionStatementContext</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.build_ast.BuildASTVisitor.visitExpressionStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -425,49 +350,30 @@
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

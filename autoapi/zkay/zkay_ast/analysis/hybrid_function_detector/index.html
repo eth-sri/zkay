@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.zkay_ast.analysis.hybrid_function_detector &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../_static/jquery.js"></script>
         <script src="../../../../../_static/underscore.js"></script>
         <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
@@ -94,74 +47,36 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.zkay_ast.analysis.hybrid_function_detector">
-<span id="zkay-zkay-ast-analysis-hybrid-function-detector"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.analysis.hybrid_function_detector" title="zkay.zkay_ast.analysis.hybrid_function_detector"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.analysis.hybrid_function_detector" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-zkay-ast-analysis-hybrid-function-detector"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.analysis.hybrid_function_detector" title="zkay.zkay_ast.analysis.hybrid_function_detector"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.analysis.hybrid_function_detector" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.detect_hybrid_functions">
-<code class="sig-prename descclassname">zkay.zkay_ast.analysis.hybrid_function_detector.</code><code class="sig-name descname">detect_hybrid_functions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.detect_hybrid_functions" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.detect_hybrid_functions">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector.</span></span><span class="sig-name descname"><span class="pre">detect_hybrid_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.detect_hybrid_functions" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>ast</strong> – </p>
@@ -173,54 +88,54 @@
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.hybrid_function_detector.</code><code class="sig-name descname">DirectHybridFunctionDetectionVisitor</code><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector.</span></span><span class="sig-name descname"><span class="pre">DirectHybridFunctionDetectionVisitor</span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitReclassifyExpr">
-<code class="sig-name descname">visitReclassifyExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ReclassifyExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitReclassifyExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitReclassifyExpr">
+<span class="sig-name descname"><span class="pre">visitReclassifyExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.ReclassifyExpr" title="zkay.zkay_ast.ast.ReclassifyExpr"><span class="pre">zkay.zkay_ast.ast.ReclassifyExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitReclassifyExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitPrimitiveCastExpr">
-<code class="sig-name descname">visitPrimitiveCastExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">PrimitiveCastExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitPrimitiveCastExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitPrimitiveCastExpr">
+<span class="sig-name descname"><span class="pre">visitPrimitiveCastExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.PrimitiveCastExpr" title="zkay.zkay_ast.ast.PrimitiveCastExpr"><span class="pre">zkay.zkay_ast.ast.PrimitiveCastExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitPrimitiveCastExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitAllExpr">
-<code class="sig-name descname">visitAllExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AllExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitAllExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitAllExpr">
+<span class="sig-name descname"><span class="pre">visitAllExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AllExpr" title="zkay.zkay_ast.ast.AllExpr"><span class="pre">zkay.zkay_ast.ast.AllExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitAllExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition">
-<code class="sig-name descname">visitConstructorOrFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.hybrid_function_detector.</code><code class="sig-name descname">IndirectHybridFunctionDetectionVisitor</code><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
-<dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition">
-<code class="sig-name descname">visitConstructorOrFunctionDefinition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition">
+<span class="sig-name descname"><span class="pre">visitConstructorOrFunctionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.DirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.hybrid_function_detector.</code><code class="sig-name descname">NonInlineableCallDetector</code><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector.</span></span><span class="sig-name descname"><span class="pre">IndirectHybridFunctionDetectionVisitor</span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition">
+<span class="sig-name descname"><span class="pre">visitConstructorOrFunctionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.IndirectHybridFunctionDetectionVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.hybrid_function_detector.</span></span><span class="sig-name descname"><span class="pre">NonInlineableCallDetector</span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.hybrid_function_detector.NonInlineableCallDetector.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -230,49 +145,30 @@
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

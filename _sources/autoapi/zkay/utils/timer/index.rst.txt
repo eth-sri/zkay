@@ -1,0 +1,23 @@
+:mod:`zkay.utils.timer`
+=======================
+
+.. py:module:: zkay.utils.timer
+
+
+
+
+Module Contents
+---------------
+
+.. function:: time_measure(key, should_print=False)
+
+
+.. py:class:: Timer(key)
+
+   Bases: :class:`object`
+
+   .. method:: __call__(self, method)
+
+
+
+

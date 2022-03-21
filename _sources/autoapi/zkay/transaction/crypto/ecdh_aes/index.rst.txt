@@ -1,0 +1,24 @@
+:mod:`zkay.transaction.crypto.ecdh_aes`
+=======================================
+
+.. py:module:: zkay.transaction.crypto.ecdh_aes
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: EcdhAesCrypto
+
+   Bases: :class:`zkay.transaction.crypto.ecdh_base.EcdhBase`
+
+   .. method:: _enc(self, plain: int, my_sk: int, target_pk: int)
+
+
+
+   .. method:: _dec(self, cipher: Tuple[int, ...], my_sk: Any)
+
+
+
+

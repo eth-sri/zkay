@@ -1,0 +1,50 @@
+:mod:`zkay.zkay_ast.pointers.parent_setter`
+===========================================
+
+.. py:module:: zkay.zkay_ast.pointers.parent_setter
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: ParentSetterVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   Links parents
+
+   .. method:: visitSourceUnit(self, ast: SourceUnit)
+
+
+
+   .. method:: visitNamespaceDefinition(self, ast: NamespaceDefinition)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitChildren(self, ast: AST)
+
+
+
+
+.. py:class:: ExpressionToStatementVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+
+   .. method:: visitStatement(self, ast: Statement)
+
+
+
+
+.. function:: set_parents(ast)
+
+

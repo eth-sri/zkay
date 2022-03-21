@@ -1,0 +1,28 @@
+:mod:`zkay.transaction.prover.jsnark`
+=====================================
+
+.. py:module:: zkay.transaction.prover.jsnark
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: JsnarkProver(proving_scheme: str = None)
+
+   Bases: :class:`zkay.transaction.interface.ZkayProverInterface`
+
+   API to generate zero knowledge proofs for a particular circuit and arguments.
+
+   .. method:: _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int])
+
+
+
+   .. method:: get_prover_key_hash(self, verifier_directory: str)
+
+
+      Return the hash of the prover key stored in the given verification contract output directory.
+
+
+

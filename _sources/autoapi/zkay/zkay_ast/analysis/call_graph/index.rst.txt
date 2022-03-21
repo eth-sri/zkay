@@ -1,0 +1,52 @@
+:mod:`zkay.zkay_ast.analysis.call_graph`
+========================================
+
+.. py:module:: zkay.zkay_ast.analysis.call_graph
+
+
+
+
+Module Contents
+---------------
+
+.. function:: call_graph_analysis(ast)
+
+   determines (indirectly) called functions for every function
+   and concludes from that whether a function has a static body
+
+
+.. py:class:: DirectCalledFunctionDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+
+.. py:class:: IndirectCalledFunctionDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+
+.. py:class:: IndirectDynamicBodyDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+

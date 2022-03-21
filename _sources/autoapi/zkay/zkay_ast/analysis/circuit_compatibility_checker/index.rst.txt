@@ -1,0 +1,125 @@
+:mod:`zkay.zkay_ast.analysis.circuit_compatibility_checker`
+===========================================================
+
+.. py:module:: zkay.zkay_ast.analysis.circuit_compatibility_checker
+
+
+
+
+Module Contents
+---------------
+
+.. function:: check_circuit_compliance(ast)
+
+   determines for every function whether it can be used inside a circuit
+
+
+.. py:class:: DirectCanBePrivateDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitLocationExpr(self, ast: LocationExpr)
+
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+
+   .. method:: visitStatement(self, ast: Statement)
+
+
+
+
+.. py:class:: IndirectCanBePrivateDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+
+.. py:class:: CircuitComplianceChecker
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: should_evaluate_public_expr_in_circuit(expr: Expression)
+      :staticmethod:
+
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+
+.. py:class:: PrivateSetter
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: set_evaluation(self, ast: Union[Expression, Statement], evaluate_privately: bool)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+
+
+.. function:: check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast: AST)
+
+
+.. py:class:: NonstaticOrIncompatibilityDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+

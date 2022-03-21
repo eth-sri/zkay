@@ -1,0 +1,189 @@
+:mod:`zkay.transaction.blockchain`
+==================================
+
+.. py:module:: zkay.transaction.blockchain
+
+.. autoapi-nested-parse::
+
+   This package contains the blockchain interaction backends
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.web3py`: Contains several web3-based backends.
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   web3py/index.rst
+
+
+
+
+
+Package Contents
+----------------
+
+.. py:class:: Web3TesterBlockchain
+
+   Bases: :class:`zkay.transaction.blockchain.web3py.Web3Blockchain`
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: is_debug_backend(cls)
+      :classmethod:
+
+
+
+   .. method:: _connect_libraries(self)
+
+
+
+   .. method:: _create_w3_instance(self)
+
+
+
+   .. method:: create_test_accounts(self, count: int)
+
+
+      Return addresses of pre-funded accounts (only implemented for w3-eth-tester and w3-ganache, for debugging).
+
+      :param count: how many accounts
+      :raise NotImplementedError: if the backend does not support dummy accounts
+      :raise ValueError: if not enough unused pre-funded accounts are available
+      :return: the account addresses (either a single value if count = 1 or a tuple otherwise)
+
+
+   .. method:: _gas_heuristic(self, sender, tx)
+
+
+
+
+.. py:class:: Web3HttpGanacheBlockchain
+
+   Bases: :class:`zkay.transaction.blockchain.web3py.Web3HttpBlockchain`
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: is_debug_backend(cls)
+      :classmethod:
+
+
+
+   .. method:: create_test_accounts(self, count: int)
+
+
+      Return addresses of pre-funded accounts (only implemented for w3-eth-tester and w3-ganache, for debugging).
+
+      :param count: how many accounts
+      :raise NotImplementedError: if the backend does not support dummy accounts
+      :raise ValueError: if not enough unused pre-funded accounts are available
+      :return: the account addresses (either a single value if count = 1 or a tuple otherwise)
+
+
+   .. method:: _gas_heuristic(self, sender, tx)
+
+
+
+
+.. py:class:: Web3IpcBlockchain
+
+   Bases: :class:`zkay.transaction.blockchain.web3py.Web3Blockchain`
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: _create_w3_instance(self)
+
+
+
+
+.. py:class:: Web3WebsocketBlockchain
+
+   Bases: :class:`zkay.transaction.blockchain.web3py.Web3Blockchain`
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: _create_w3_instance(self)
+
+
+
+
+.. py:class:: Web3HttpBlockchain
+
+   Bases: :class:`zkay.transaction.blockchain.web3py.Web3Blockchain`
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: _create_w3_instance(self)
+
+
+
+
+.. py:class:: Web3CustomBlockchain
+
+   Bases: :class:`zkay.transaction.blockchain.web3py.Web3Blockchain`
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: _create_w3_instance(self)
+
+
+
+

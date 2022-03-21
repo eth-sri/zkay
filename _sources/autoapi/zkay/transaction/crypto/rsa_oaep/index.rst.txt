@@ -1,0 +1,26 @@
+:mod:`zkay.transaction.crypto.rsa_oaep`
+=======================================
+
+.. py:module:: zkay.transaction.crypto.rsa_oaep
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: RSAOAEPCrypto(keystore: ZkayKeystoreInterface)
+
+   Bases: :class:`zkay.transaction.crypto.rsa_base.RSACrypto`
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. method:: _enc(self, plain: int, _: int, target_pk: int)
+
+
+
+   .. method:: _dec(self, cipher: Tuple[int, ...], sk: RSA.RsaKey)
+
+
+
+

@@ -1,0 +1,20 @@
+:mod:`zkay.compiler.privacy.proving_scheme.meta`
+================================================
+
+.. py:module:: zkay.compiler.privacy.proving_scheme.meta
+
+.. autoapi-nested-parse::
+
+   This module stores metadata about the different proving schemes, which is used by config.py
+
+
+
+
+Module Contents
+---------------
+
+.. data:: provingschemeparams
+   
+
+   
+

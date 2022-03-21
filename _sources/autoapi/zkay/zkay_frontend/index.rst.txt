@@ -1,0 +1,145 @@
+:mod:`zkay.zkay_frontend`
+=========================
+
+.. py:module:: zkay.zkay_frontend
+
+.. autoapi-nested-parse::
+
+   This module exposes functionality to compile and package zkay code
+
+
+
+
+Module Contents
+---------------
+
+.. data:: proving_scheme_classes
+   :annotation: :Dict[str, Type[ProvingScheme]]
+
+   
+
+.. data:: generator_classes
+   :annotation: :Dict[str, Type[CircuitGenerator]]
+
+   
+
+.. function:: compile_zkay_file(input_file_path: str, output_dir: str, import_keys: bool = False, **kwargs)
+
+   Parse, type-check and compile the given zkay contract file.
+
+   :param input_file_path: path to the zkay contract file
+   :param output_dir: path to a directory where the compilation output should be generated
+   :param import_keys: | if false, zk-snark of all modified circuits will be generated during compilation
+                       | if true, zk-snark keys for all circuits are expected to be already present in the output directory, and the compilation will use the provided keys to generate the verification contracts
+                       | This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+   :raise ZkayCompilerError: if any compilation stage fails
+   :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
+
+
+.. function:: compile_zkay(code: str, output_dir: str, import_keys: bool = False, **kwargs) -> Tuple[CircuitGenerator, str]
+
+   Parse, type-check and compile the given zkay code.
+
+   Note: If a SolcException is raised, this indicates a bug in zkay
+         (i.e. zkay produced solidity code which doesn't compile, without raising a ZkayCompilerError)
+
+   :param code: zkay code to compile
+   :param output_dir: path to a directory where the compilation output should be generated
+   :param import_keys: | if false, zk-snark of all modified circuits will be generated during compilation
+                       | if true, zk-snark keys for all circuits are expected to be already present in the output directory,                           and the compilation will use the provided keys to generate the verification contracts
+                       | This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
+   :raise ZkayCompilerError: if any compilation stage fails
+   :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
+
+
+.. function:: use_configuration_from_manifest(contract_dir: str) -> Any
+
+
+.. function:: load_transaction_interface_from_directory(contract_dir: str) -> Any
+
+   Load transaction interface module for contracts in contract_dir
+
+   :param contract_dir: directory with zkay contract compilation output
+   :return: module object
+
+
+.. function:: transaction_benchmark_ctx(contract_dir: str) -> ContextManager[Any]
+
+
+.. function:: load_contract_transaction_interface_from_module(contract_mod: Any, contract_name: Optional[str] = None) -> Type
+
+   Load contract class from transaction interface module
+
+   :param contract_mod: loaded transaction interface module
+   :param contract_name: contract name, only required if file contains multiple contracts
+   :return: Contract class
+
+
+.. function:: load_contract_transaction_interface_from_directory(contract_dir: str, contract_name: Optional[str] = None) -> Type
+
+   Load contract class from transaction interface stored in contract_dir
+
+   :param contract_dir: directory with contract compilation output
+   :param contract_name: contract name, only required if file contains multiple contracts
+   :return: Contract class
+
+
+.. function:: deploy_contract(contract_dir: str, account, *args, contract_name: Optional[str] = None)
+
+   Deploy zkay contract in contract_dir using the given account and with specified constructor arguments.
+
+   :param contract_dir: contract's compilation output directory
+   :param account: Account from which to deploy the contract
+   :param args: constructor arguments
+   :param contract_name: contract name, only required if file contains multiple contracts
+   :raise BlockChainError: if deployment fails
+   :return: contract instance
+
+
+.. function:: connect_to_contract_at(contract_dir: str, contract_address, account, contract_name: Optional[str] = None)
+
+   Connect with account to zkay contract at contract_address, with local files in contract_dir.
+
+   :param contract_dir: contract's compilation output directory
+   :param contract_address: blockchain address of the deployed contract
+   :param account: account from which to connect (will be used as msg.sender for transactions)
+   :param contract_name: contract name, only required if file contains multiple contracts
+   :raise BlockChainError: if connection fails
+   :raise IntegrityError: if integrity check fails
+   :return: contract instance
+
+
+.. function:: _collect_package_contents(contract_dir: str, check_all_files: bool) -> List[str]
+
+   Return list of relative paths of all files which should be part of the package for the contract in contract_dir.
+
+   Raises an exception if contract.zkay, manifest.json or any of the files required by contract.zkay is missing.
+
+   :param contract_dir: path to directory containing manifest and zkay file
+   :param check_all_files: if true, checks whether all expected files are present
+   :raise FileNotFoundError: if any of the expected files is not present
+   :return: list of relative paths (relative to contract_dir)
+
+
+.. function:: package_zkay_contract(zkay_output_dir: str, output_filename: str)
+
+   Package zkay contract for distribution.
+
+
+.. function:: extract_zkay_package(zkp_filename: str, output_dir: str)
+
+   Unpack and compile a zkay contract.
+
+   :param zkp_filename: path to the packaged contract
+   :param output_dir: directory where to unpack and compile the contract
+   :raise Exception: if import fails
+
+
+.. function:: _dump_to_output(content: str, output_dir: str, filename: str, dryrun_solc=False) -> str
+
+   Dump 'content' into file 'output_dir/filename' and optionally check if it compiles error-free with solc.
+
+   :raise SolcException: if dryrun_solc is True and there are compilation errors
+   :return: dumped content as string
+
+

@@ -1,0 +1,35 @@
+:mod:`zkay.transaction.crypto.dummy`
+====================================
+
+.. py:module:: zkay.transaction.crypto.dummy
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: DummyCrypto(keystore: ZkayKeystoreInterface)
+
+   Bases: :class:`zkay.transaction.interface.ZkayCryptoInterface`
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. method:: is_symmetric_cipher(cls)
+      :classmethod:
+
+
+
+   .. method:: _generate_or_load_key_pair(self, address: str)
+
+
+
+   .. method:: _enc(self, plain: int, _: int, target_pk: int)
+
+
+
+   .. method:: _dec(self, cipher: Tuple[int, ...], sk: int)
+
+
+
+

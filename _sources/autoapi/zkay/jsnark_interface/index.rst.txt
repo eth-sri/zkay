@@ -1,0 +1,29 @@
+:mod:`zkay.jsnark_interface`
+============================
+
+.. py:module:: zkay.jsnark_interface
+
+.. autoapi-nested-parse::
+
+   This package contains glue code to interact with the external jsnark and libsnark interfaces.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.jsnark_interface`: Jsnark circuit compilation and evaluation (preparation steps for key and proof generation).
+   * :py:mod:`.libsnark_interface`: Libsnark key and proof generation.
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   jsnark_interface/index.rst
+
+   libsnark_interface/index.rst
+
+
+
+
+

@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.compiler.privacy.transformation.zkay_contract_transformer &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../../" id="documentation_options" src="../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../tutorial.html">Tutorial</a></li>
@@ -94,76 +47,37 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.zkay_contract_transformer</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.compiler.privacy.transformation.zkay_contract_transformer">
-<span id="zkay-compiler-privacy-transformation-zkay-contract-transformer"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.transformation.zkay_contract_transformer" title="zkay.compiler.privacy.transformation.zkay_contract_transformer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.zkay_contract_transformer</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.transformation.zkay_contract_transformer" title="Permalink to this headline">¶</a></h1>
-<p><p>This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits</p>
-</p>
+<span id="zkay-compiler-privacy-transformation-zkay-contract-transformer"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.transformation.zkay_contract_transformer" title="zkay.compiler.privacy.transformation.zkay_contract_transformer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.transformation.zkay_contract_transformer</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.transformation.zkay_contract_transformer" title="Permalink to this headline"></a></h1>
+<p>This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits</p>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.transform_ast">
-<code class="sig-prename descclassname">zkay.compiler.privacy.transformation.zkay_contract_transformer.</code><code class="sig-name descname">transform_ast</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>AST<span class="p">, </span>Dict<span class="p">[</span>ConstructorOrFunctionDefinition<span class="p">, </span>CircuitHelper<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.transform_ast" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.transform_ast">
+<span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.transformation.zkay_contract_transformer.</span></span><span class="sig-name descname"><span class="pre">transform_ast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../../circuit_generation/circuit_helper/index.html#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.transform_ast" title="Permalink to this definition"></a></dt>
 <dd><p>Convert zkay to solidity AST + proof circuits</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -177,9 +91,9 @@ to the corresponding circuit helper instance.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.transformation.zkay_contract_transformer.</code><code class="sig-name descname">ZkayTransformer</code><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../../../zkay_ast/visitor/transformer_visitor/index.html#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.transformation.zkay_contract_transformer.</span></span><span class="sig-name descname"><span class="pre">ZkayTransformer</span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../../../zkay_ast/visitor/transformer_visitor/index.html#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor</span></code></a></p>
 <p>Transformer which transforms contract level AST elements (contract, function definitions, constructor definitions)</p>
 <p>Contract level transformations:</p>
 <ul>
@@ -285,20 +199,20 @@ If it requires verification, the newly allocated in array + the out array parame
 </li>
 </ul>
 <dl class="py attribute">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.circuits">
-<code class="sig-name descname">circuits</code><em class="property"> :Dict[ConstructorOrFunctionDefinition, CircuitHelper]</em><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.circuits" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.circuits">
+<span class="sig-name descname"><span class="pre">circuits</span></span><em class="property"><span class="w"> </span><span class="pre">:Dict[zkay.zkay_ast.ast.ConstructorOrFunctionDefinition,</span> <span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper]</span></em><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.circuits" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract circuits for all functions which require verification</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.var_decl_trafo">
-<code class="sig-name descname">var_decl_trafo</code><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.var_decl_trafo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.var_decl_trafo">
+<span class="sig-name descname"><span class="pre">var_decl_trafo</span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.var_decl_trafo" title="Permalink to this definition"></a></dt>
 <dd><p>Transformer for state variable declarations and parameters</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.import_contract">
-<em class="property">static </em><code class="sig-name descname">import_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">su</span><span class="p">:</span> <span class="n">SourceUnit</span></em>, <em class="sig-param"><span class="n">corresponding_circuit</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>CircuitHelper<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.import_contract" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.import_contract">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">import_contract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">su</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">corresponding_circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../circuit_generation/circuit_helper/index.html#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.import_contract" title="Permalink to this definition"></a></dt>
 <dd><p>Import contract ‘vname’ into the given source unit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -312,14 +226,14 @@ If it requires verification, the newly allocated in array + the out array parame
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_contract_variable">
-<em class="property">static </em><code class="sig-name descname">create_contract_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cname</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_contract_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_contract_variable">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_contract_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.StateVariableDeclaration" title="zkay.zkay_ast.ast.StateVariableDeclaration"><span class="pre">zkay.zkay_ast.ast.StateVariableDeclaration</span></a></span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_contract_variable" title="Permalink to this definition"></a></dt>
 <dd><p>Create a public constant state variable with which contract with name ‘cname’ can be accessed</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.include_verification_contracts">
-<code class="sig-name descname">include_verification_contracts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">su</span><span class="p">:</span> <span class="n">SourceUnit</span></em>, <em class="sig-param"><span class="n">c</span><span class="p">:</span> <span class="n">ContractDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.include_verification_contracts" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.include_verification_contracts">
+<span class="sig-name descname"><span class="pre">include_verification_contracts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">su</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ContractDefinition" title="zkay.zkay_ast.ast.ContractDefinition"><span class="pre">zkay.zkay_ast.ast.ContractDefinition</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.StateVariableDeclaration" title="zkay.zkay_ast.ast.StateVariableDeclaration"><span class="pre">zkay.zkay_ast.ast.StateVariableDeclaration</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.include_verification_contracts" title="Permalink to this definition"></a></dt>
 <dd><p>Import all verification contracts for ‘c’ into ‘su’ and create state variable declarations for all of them + the pki contract.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -335,8 +249,8 @@ If it requires verification, the newly allocated in array + the out array parame
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_circuit_helper">
-<em class="property">static </em><code class="sig-name descname">create_circuit_helper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fct</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">global_owners</span><span class="p">:</span> <span class="n">List<span class="p">[</span>PrivacyLabelExpr<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">internal_circ</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>CircuitHelper<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_circuit_helper" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_circuit_helper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_circuit_helper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fct</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_owners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">zkay.zkay_ast.ast.PrivacyLabelExpr</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_circ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../circuit_generation/circuit_helper/index.html#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_circuit_helper" title="Permalink to this definition"></a></dt>
 <dd><p>Create circuit helper for the given function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -354,13 +268,13 @@ If it requires verification, the newly allocated in array + the out array parame
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.visitSourceUnit">
-<code class="sig-name descname">visitSourceUnit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">SourceUnit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.visitSourceUnit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.visitSourceUnit">
+<span class="sig-name descname"><span class="pre">visitSourceUnit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.visitSourceUnit" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.transform_contract">
-<code class="sig-name descname">transform_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">su</span><span class="p">:</span> <span class="n">SourceUnit</span></em>, <em class="sig-param"><span class="n">c</span><span class="p">:</span> <span class="n">ContractDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.transform_contract" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.transform_contract">
+<span class="sig-name descname"><span class="pre">transform_contract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">su</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ContractDefinition" title="zkay.zkay_ast.ast.ContractDefinition"><span class="pre">zkay.zkay_ast.ast.ContractDefinition</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ContractDefinition" title="zkay.zkay_ast.ast.ContractDefinition"><span class="pre">zkay.zkay_ast.ast.ContractDefinition</span></a></span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.transform_contract" title="Permalink to this definition"></a></dt>
 <dd><p>Transform an entire zkay contract into a public solidity contract.</p>
 <p>This:</p>
 <ul class="simple">
@@ -384,8 +298,8 @@ If it requires verification, the newly allocated in array + the out array parame
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_internal_verification_wrapper">
-<code class="sig-name descname">create_internal_verification_wrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_internal_verification_wrapper" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_internal_verification_wrapper">
+<span class="sig-name descname"><span class="pre">create_internal_verification_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_internal_verification_wrapper" title="Permalink to this definition"></a></dt>
 <dd><p>Add the necessary additional parameters and boiler plate code for verification support to the given function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -395,8 +309,8 @@ If it requires verification, the newly allocated in array + the out array parame
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.split_into_external_and_internal_fct">
-<code class="sig-name descname">split_into_external_and_internal_fct</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">f</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">original_params</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Parameter<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">global_owners</span><span class="p">:</span> <span class="n">List<span class="p">[</span>PrivacyLabelExpr<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.split_into_external_and_internal_fct" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.split_into_external_and_internal_fct">
+<span class="sig-name descname"><span class="pre">split_into_external_and_internal_fct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Parameter" title="zkay.zkay_ast.ast.Parameter"><span class="pre">zkay.zkay_ast.ast.Parameter</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_owners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">zkay.zkay_ast.ast.PrivacyLabelExpr</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.split_into_external_and_internal_fct" title="Permalink to this definition"></a></dt>
 <dd><p>Take public function f and split it into an internal function and an external wrapper function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -413,8 +327,8 @@ If it requires verification, the newly allocated in array + the out array parame
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_external_wrapper_body">
-<em class="property">static </em><code class="sig-name descname">create_external_wrapper_body</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">int_fct</span><span class="p">:</span> <span class="n">ConstructorOrFunctionDefinition</span></em>, <em class="sig-param"><span class="n">ext_circuit</span><span class="p">:</span> <span class="n">CircuitHelper</span></em>, <em class="sig-param"><span class="n">original_params</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Parameter<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">requires_proof</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_external_wrapper_body" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_external_wrapper_body">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_external_wrapper_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">int_fct</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext_circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../circuit_generation/circuit_helper/index.html#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Parameter" title="zkay.zkay_ast.ast.Parameter"><span class="pre">zkay.zkay_ast.ast.Parameter</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires_proof</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../../../zkay_ast/ast/index.html#zkay.zkay_ast.ast.Block" title="zkay.zkay_ast.ast.Block"><span class="pre">zkay.zkay_ast.ast.Block</span></a></span></span><a class="headerlink" href="#zkay.compiler.privacy.transformation.zkay_contract_transformer.ZkayTransformer.create_external_wrapper_body" title="Permalink to this definition"></a></dt>
 <dd><p>Return Block with external wrapper function body.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -437,49 +351,30 @@ If it requires verification, the newly allocated in array + the out array parame
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

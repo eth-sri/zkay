@@ -1,0 +1,26 @@
+:mod:`zkay.errors`
+==================
+
+.. py:module:: zkay.errors
+
+.. autoapi-nested-parse::
+
+   This package contains definitions for publicly visible exceptions.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.exceptions`: Exceptions which may be raised by the public zkay interface.
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   exceptions/index.rst
+
+
+
+
+

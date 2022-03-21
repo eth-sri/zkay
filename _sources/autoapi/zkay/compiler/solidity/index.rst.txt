@@ -1,0 +1,29 @@
+:mod:`zkay.compiler.solidity`
+=============================
+
+.. py:module:: zkay.compiler.solidity
+
+.. autoapi-nested-parse::
+
+   This package deals with solidity/solc compilation.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.compiler`: Type-check or compile solidity code (uses standard_json interface internally).
+   * :py:mod:`.fake_solidity_generator`: Strip privacy features from zkay in a source-code location preserving way, so that type-checking/analysis can be performed with tools designed for solidity code.
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   compiler/index.rst
+
+   fake_solidity_generator/index.rst
+
+
+
+
+

@@ -1,0 +1,209 @@
+:mod:`zkay.zkay_ast.visitor.python_visitor`
+===========================================
+
+.. py:module:: zkay.zkay_ast.visitor.python_visitor
+
+
+
+
+Module Contents
+---------------
+
+.. data:: _kwords
+   
+
+   
+
+.. py:class:: PythonCodeVisitor(replace_with_corresponding_private=False)
+
+   Bases: :class:`zkay.zkay_ast.ast.CodeVisitor`
+
+   Visitor to convert a solidity AST 1:1 to python code.
+
+   This does not generate the additional code necessary for offchain simulation / transaction transformation
+   and it also does not support nested local scopes.
+   Such functionality is implemented in the PythonOffchainVisitor subclass.
+
+   .. method:: sanitized(self, name)
+
+
+
+   .. method:: _get_forbidden_words(self)
+      :property:
+
+
+
+   .. method:: visitSourceUnit(self, ast: SourceUnit)
+
+
+
+   .. method:: visitContractDefinition(self, ast: ContractDefinition)
+      :abstractmethod:
+
+
+
+   .. method:: handle_function_params(self, ast: ConstructorOrFunctionDefinition, params: List[Parameter])
+
+
+
+   .. method:: handle_function_body(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitBlock(self, ast: Block)
+
+
+
+   .. method:: visitEnumDefinition(self, ast: EnumDefinition)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+
+   .. method:: visitIndentBlock(self, ast: IndentBlock)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+   .. method:: visitDoWhileStatement(self, ast: DoWhileStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitBreakStatement(self, _: BreakStatement)
+
+
+
+   .. method:: visitContinueStatement(self, _: ContinueStatement)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: get_default_value(self, t: TypeName)
+
+
+      Return python expression corresponding to the default value of the given type.
+
+
+   .. method:: handle_var_decl_expr(self, ast: VariableDeclarationStatement)
+
+
+      Return python expression corresponding to the variable declaration statement's expression.
+
+      If the declaration has no expression (default initialization in solidity), an expression
+      corresponding to the declaration type's default value is returned
+      (-> explicit initialization necessary to preserve semantics since python default initializes to undefined).
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: visitExpressionStatement(self, ast: ExpressionStatement)
+
+
+
+   .. method:: visitRequireStatement(self, ast: RequireStatement)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitSliceExpr(self, ast: SliceExpr)
+
+
+
+   .. method:: visitNewExpr(self, ast: NewExpr)
+
+
+
+   .. method:: visitVariableDeclaration(self, ast: Union[VariableDeclaration, Parameter])
+
+
+
+   .. method:: visitParameter(self, ast: Parameter)
+
+
+
+   .. method:: visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitComment(self, ast: Comment)
+
+
+
+   .. method:: visitElementaryTypeName(self, ast: ElementaryTypeName)
+
+
+
+   .. method:: visitAddressTypeName(self, ast: AddressTypeName)
+
+
+
+   .. method:: visitAddressPayableTypeName(self, ast: AddressPayableTypeName)
+
+
+
+   .. method:: visitUserDefinedTypeName(self, ast: UserDefinedTypeName)
+
+
+
+   .. method:: visitEnumTypeName(self, ast: EnumTypeName)
+
+
+
+   .. method:: visitMapping(self, ast: Mapping)
+
+
+
+   .. method:: visitArray(self, ast: Array)
+
+
+
+   .. method:: visitIdentifier(self, ast: Identifier)
+
+
+
+   .. method:: visitAnnotatedTypeName(self, ast: AnnotatedTypeName)
+
+
+
+   .. method:: visitMeExpr(self, _: MeExpr)
+
+
+
+   .. method:: visitAllExpr(self, _: AllExpr)
+
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+
+

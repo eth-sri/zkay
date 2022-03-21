@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.zkay_ast.analysis.side_effects &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../_static/jquery.js"></script>
         <script src="../../../../../_static/underscore.js"></script>
         <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
@@ -94,191 +47,153 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.side_effects</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.zkay_ast.analysis.side_effects">
-<span id="zkay-zkay-ast-analysis-side-effects"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.analysis.side_effects" title="zkay.zkay_ast.analysis.side_effects"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.side_effects</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.analysis.side_effects" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-zkay-ast-analysis-side-effects"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.analysis.side_effects" title="zkay.zkay_ast.analysis.side_effects"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.side_effects</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.analysis.side_effects" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.zkay_ast.analysis.side_effects.has_side_effects">
-<code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">has_side_effects</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.has_side_effects" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.has_side_effects">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">has_side_effects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.has_side_effects" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt id="zkay.zkay_ast.analysis.side_effects.compute_modified_sets">
-<code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">compute_modified_sets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.compute_modified_sets" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.compute_modified_sets">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">compute_modified_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.compute_modified_sets" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt id="zkay.zkay_ast.analysis.side_effects.check_for_undefined_behavior_due_to_eval_order">
-<code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">check_for_undefined_behavior_due_to_eval_order</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.check_for_undefined_behavior_due_to_eval_order" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.check_for_undefined_behavior_due_to_eval_order">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">check_for_undefined_behavior_due_to_eval_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.check_for_undefined_behavior_due_to_eval_order" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">SideEffectsDetector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">traversal</span><span class="o">=</span><span class="default_value">'post'</span></em>, <em class="sig-param"><span class="n">log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">SideEffectsDetector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traversal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'post'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAssignmentStatement">
-<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAssignmentStatement">
+<span class="sig-name descname"><span class="pre">visitAssignmentStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AssignmentStatement" title="zkay.zkay_ast.ast.AssignmentStatement"><span class="pre">zkay.zkay_ast.ast.AssignmentStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAssignmentStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitExpression">
-<code class="sig-name descname">visitExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitExpression" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitExpression">
+<span class="sig-name descname"><span class="pre">visitExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitExpression" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitStatement">
-<code class="sig-name descname">visitStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Statement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitStatement">
+<span class="sig-name descname"><span class="pre">visitStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.Statement" title="zkay.zkay_ast.ast.Statement"><span class="pre">zkay.zkay_ast.ast.Statement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAST">
-<code class="sig-name descname">visitAST</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAST" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAST">
+<span class="sig-name descname"><span class="pre">visitAST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.SideEffectsDetector.visitAST" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">DirectModificationDetector</code><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">DirectModificationDetector</span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAssignmentStatement">
-<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAssignmentStatement">
+<span class="sig-name descname"><span class="pre">visitAssignmentStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AssignmentStatement" title="zkay.zkay_ast.ast.AssignmentStatement"><span class="pre">zkay.zkay_ast.ast.AssignmentStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAssignmentStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.collect_modified_values">
-<code class="sig-name descname">collect_modified_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">target</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Expression<span class="p">, </span>Statement<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>TupleExpr<span class="p">, </span>LocationExpr<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.collect_modified_values" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.collect_modified_values">
+<span class="sig-name descname"><span class="pre">collect_modified_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.Statement" title="zkay.zkay_ast.ast.Statement"><span class="pre">zkay.zkay_ast.ast.Statement</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.TupleExpr" title="zkay.zkay_ast.ast.TupleExpr"><span class="pre">zkay.zkay_ast.ast.TupleExpr</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.LocationExpr" title="zkay.zkay_ast.ast.LocationExpr"><span class="pre">zkay.zkay_ast.ast.LocationExpr</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.collect_modified_values" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitLocationExpr">
-<code class="sig-name descname">visitLocationExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">LocationExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitLocationExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitLocationExpr">
+<span class="sig-name descname"><span class="pre">visitLocationExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.LocationExpr" title="zkay.zkay_ast.ast.LocationExpr"><span class="pre">zkay.zkay_ast.ast.LocationExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitLocationExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitVariableDeclaration">
-<code class="sig-name descname">visitVariableDeclaration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">VariableDeclaration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitVariableDeclaration" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitVariableDeclaration">
+<span class="sig-name descname"><span class="pre">visitVariableDeclaration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.VariableDeclaration" title="zkay.zkay_ast.ast.VariableDeclaration"><span class="pre">zkay.zkay_ast.ast.VariableDeclaration</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitVariableDeclaration" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAST">
-<code class="sig-name descname">visitAST</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAST" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">IndirectModificationDetector</code><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
-<dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.iterate_until_fixed_point">
-<code class="sig-name descname">iterate_until_fixed_point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.iterate_until_fixed_point" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitAST">
-<code class="sig-name descname">visitAST</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitAST" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAST">
+<span class="sig-name descname"><span class="pre">visitAST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.DirectModificationDetector.visitAST" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.analysis.side_effects.</code><code class="sig-name descname">EvalOrderUBChecker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">traversal</span><span class="o">=</span><span class="default_value">'post'</span></em>, <em class="sig-param"><span class="n">log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">IndirectModificationDetector</span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/function_visitor/index.html#zkay.zkay_ast.visitor.function_visitor.FunctionVisitor" title="zkay.zkay_ast.visitor.function_visitor.FunctionVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.function_visitor.FunctionVisitor</span></code></a></p>
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visit_child_expressions">
-<em class="property">static </em><code class="sig-name descname">visit_child_expressions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span><span class="p">:</span> <span class="n">AST</span></em>, <em class="sig-param"><span class="n">exprs</span><span class="p">:</span> <span class="n">List<span class="p">[</span>AST<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visit_child_expressions" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.iterate_until_fixed_point">
+<span class="sig-name descname"><span class="pre">iterate_until_fixed_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.iterate_until_fixed_point" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitFunctionCallExpr">
-<code class="sig-name descname">visitFunctionCallExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">FunctionCallExpr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitFunctionCallExpr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitExpression">
-<code class="sig-name descname">visitExpression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">Expression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitExpression" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitAST">
+<span class="sig-name descname"><span class="pre">visitAST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.IndirectModificationDetector.visitAST" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.side_effects.</span></span><span class="sig-name descname"><span class="pre">EvalOrderUBChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traversal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'post'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visit_child_expressions">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">visit_child_expressions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">exprs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visit_child_expressions" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitAssignmentStatement">
-<code class="sig-name descname">visitAssignmentStatement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AssignmentStatement</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitAssignmentStatement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitFunctionCallExpr">
+<span class="sig-name descname"><span class="pre">visitFunctionCallExpr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.FunctionCallExpr" title="zkay.zkay_ast.ast.FunctionCallExpr"><span class="pre">zkay.zkay_ast.ast.FunctionCallExpr</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitFunctionCallExpr" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitExpression">
+<span class="sig-name descname"><span class="pre">visitExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitExpression" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitAssignmentStatement">
+<span class="sig-name descname"><span class="pre">visitAssignmentStatement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AssignmentStatement" title="zkay.zkay_ast.ast.AssignmentStatement"><span class="pre">zkay.zkay_ast.ast.AssignmentStatement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.side_effects.EvalOrderUBChecker.visitAssignmentStatement" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -288,49 +203,30 @@
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zkay.zkay_ast.analysis.used_homomorphisms &mdash; zkay  documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../index.html" class="icon icon-home"> zkay
+          </a>
+              <div class="version">
+                0.3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">zkay</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.used_homomorphisms</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-zkay.zkay_ast.analysis.used_homomorphisms">
+<span id="zkay-zkay-ast-analysis-used-homomorphisms"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.analysis.used_homomorphisms" title="zkay.zkay_ast.analysis.used_homomorphisms"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.analysis.used_homomorphisms</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.analysis.used_homomorphisms" title="Permalink to this headline"></a></h1>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.analysis.used_homomorphisms.</span></span><span class="sig-name descname"><span class="pre">UsedHomomorphismsVisitor</span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../visitor/visitor/index.html#zkay.zkay_ast.visitor.visitor.AstVisitor" title="zkay.zkay_ast.visitor.visitor.AstVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.visitor.AstVisitor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitChildren">
+<span class="sig-name descname"><span class="pre">visitChildren</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitChildren" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitAnnotatedTypeName">
+<span class="sig-name descname"><span class="pre">visitAnnotatedTypeName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AnnotatedTypeName" title="zkay.zkay_ast.ast.AnnotatedTypeName"><span class="pre">zkay.zkay_ast.ast.AnnotatedTypeName</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitAnnotatedTypeName" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitExpression">
+<span class="sig-name descname"><span class="pre">visitExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.Expression" title="zkay.zkay_ast.ast.Expression"><span class="pre">zkay.zkay_ast.ast.Expression</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitExpression" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitIdentifierDeclaration">
+<span class="sig-name descname"><span class="pre">visitIdentifierDeclaration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.IdentifierDeclaration" title="zkay.zkay_ast.ast.IdentifierDeclaration"><span class="pre">zkay.zkay_ast.ast.IdentifierDeclaration</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitIdentifierDeclaration" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitConstructorOrFunctionDefinition">
+<span class="sig-name descname"><span class="pre">visitConstructorOrFunctionDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitConstructorOrFunctionDefinition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitEnumDefinition">
+<span class="sig-name descname"><span class="pre">visitEnumDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.EnumDefinition" title="zkay.zkay_ast.ast.EnumDefinition"><span class="pre">zkay.zkay_ast.ast.EnumDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitEnumDefinition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitStructDefinition">
+<span class="sig-name descname"><span class="pre">visitStructDefinition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.StructDefinition" title="zkay.zkay_ast.ast.StructDefinition"><span class="pre">zkay.zkay_ast.ast.StructDefinition</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitStructDefinition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitSourceUnit">
+<span class="sig-name descname"><span class="pre">visitSourceUnit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.SourceUnit" title="zkay.zkay_ast.ast.SourceUnit"><span class="pre">zkay.zkay_ast.ast.SourceUnit</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitSourceUnit" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.compute_transitive_homomorphisms">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_transitive_homomorphisms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.ConstructorOrFunctionDefinition" title="zkay.zkay_ast.ast.ConstructorOrFunctionDefinition"><span class="pre">zkay.zkay_ast.ast.ConstructorOrFunctionDefinition</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.compute_transitive_homomorphisms" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitAST">
+<span class="sig-name descname"><span class="pre">visitAST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visitAST" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visit">
+<span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.visit" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.used_crypto_backends">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">used_crypto_backends</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">used_homs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../../transaction/crypto/params/index.html#zkay.transaction.crypto.params.CryptoParams" title="zkay.transaction.crypto.params.CryptoParams"><span class="pre">zkay.transaction.crypto.params.CryptoParams</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.zkay_ast.analysis.used_homomorphisms.UsedHomomorphismsVisitor.used_crypto_backends" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

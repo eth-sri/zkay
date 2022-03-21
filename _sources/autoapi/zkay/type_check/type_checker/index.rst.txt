@@ -1,0 +1,157 @@
+:mod:`zkay.type_check.type_checker`
+===================================
+
+.. py:module:: zkay.type_check.type_checker
+
+
+
+
+Module Contents
+---------------
+
+.. function:: type_check(ast)
+
+
+.. py:class:: TypeCheckVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: get_rhs(self, rhs: Expression, expected_type: AnnotatedTypeName)
+
+
+
+   .. method:: check_for_invalid_private_type(ast)
+      :staticmethod:
+
+
+
+   .. method:: check_final(self, fct: ConstructorOrFunctionDefinition, ast: Expression)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: make_private_if_not_already(self, ast: Expression)
+
+
+
+   .. method:: has_private_type(ast: Expression)
+      :staticmethod:
+
+
+
+   .. method:: has_literal_type(ast: Expression)
+      :staticmethod:
+
+
+
+   .. method:: handle_builtin_function_call(self, ast: FunctionCallExpr, func: BuiltinFunction)
+
+
+
+   .. method:: is_accessible_by_invoker(ast: Expression)
+      :staticmethod:
+
+
+
+   .. method:: make_private(expr: Expression, privacy: Expression)
+      :staticmethod:
+
+
+
+   .. method:: implicitly_converted_to(expr: Expression, t: TypeName)
+      :staticmethod:
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+
+   .. method:: handle_cast(self, expr: Expression, t: TypeName)
+
+
+
+   .. method:: visitNewExpr(self, ast: NewExpr)
+
+
+
+   .. method:: visitMemberAccessExpr(self, ast: MemberAccessExpr)
+
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: visitTupleExpr(self, ast: TupleExpr)
+
+
+
+   .. method:: visitMeExpr(self, ast: MeExpr)
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitEnumDefinition(self, ast: EnumDefinition)
+
+
+
+   .. method:: visitEnumValue(self, ast: EnumValue)
+
+
+
+   .. method:: visitStateVariableDeclaration(self, ast: StateVariableDeclaration)
+
+
+
+   .. method:: visitMapping(self, ast: Mapping)
+
+
+
+   .. method:: visitRequireStatement(self, ast: RequireStatement)
+
+
+
+   .. method:: visitAnnotatedTypeName(self, ast: AnnotatedTypeName)
+
+
+
+

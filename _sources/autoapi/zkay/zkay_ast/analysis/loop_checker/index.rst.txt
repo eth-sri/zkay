@@ -1,0 +1,33 @@
+:mod:`zkay.zkay_ast.analysis.loop_checker`
+==========================================
+
+.. py:module:: zkay.zkay_ast.analysis.loop_checker
+
+
+
+
+Module Contents
+---------------
+
+.. function:: check_loops(ast)
+
+   Checks if loops don't contain private expressions
+
+
+.. py:class:: LoopChecker
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+   .. method:: visitDoWhileStatement(self, ast: DoWhileStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+

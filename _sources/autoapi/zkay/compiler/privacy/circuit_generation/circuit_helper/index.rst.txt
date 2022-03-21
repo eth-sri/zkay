@@ -1,0 +1,474 @@
+:mod:`zkay.compiler.privacy.circuit_generation.circuit_helper`
+==============================================================
+
+.. py:module:: zkay.compiler.privacy.circuit_generation.circuit_helper
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: CircuitHelper(fct: ConstructorOrFunctionDefinition, static_owner_labels: List[PrivacyLabelExpr], expr_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor], circ_trafo_constructor: Callable[['CircuitHelper'], AstTransformerVisitor], internal_circuit: Optional['CircuitHelper'] = None)
+
+   This class is used to construct abstract proof circuits during contract transformation.
+
+   Typically there is one instance of this class for every function which requires verification.
+
+   .. attribute:: fct
+      
+
+      Function and verification contract corresponding to this circuit
+
+
+   .. attribute:: has_return_var
+      :annotation: = False
+
+      Metadata set later by ZkayContractTransformer
+
+
+   .. attribute:: _circ_trafo
+      :annotation: :AstTransformerVisitor
+
+      Transformer visitors
+
+
+   .. attribute:: _phi
+      :annotation: :List[CircuitStatement] = []
+
+      List of proof circuit statements (assertions and assignments)
+
+      WARNING: Never assign to self._phi, always access it using the phi property and only mutate it
+
+
+   .. attribute:: _secret_input_name_factory
+      
+
+      Name factory for private circuit inputs
+
+
+   .. attribute:: _circ_temp_name_factory
+      
+
+      Name factory for temporary internal circuit variables
+
+
+   .. attribute:: _in_name_factory
+      
+
+      Name factory for public circuit inputs
+
+
+   .. attribute:: _out_name_factory
+      
+
+      Name factory for public circuit outputs
+
+
+   .. attribute:: _static_owner_labels
+      
+
+      List of all statically known privacy labels for the contract of which this circuit is part of
+
+
+   .. attribute:: _need_secret_key
+      :annotation: :bool = False
+
+      Whether msg.sender's secret key must be added to the private circuit inputs
+
+
+   .. attribute:: _global_keys
+      :annotation: :OrderedDict[Union[MeExpr, Identifier], None]
+
+      Set of statically known privacy labels (OrderedDict is used to ensure deterministic iteration order)
+
+
+   .. attribute:: function_calls_with_verification
+      :annotation: :List[FunctionCallExpr] = []
+
+      List of all (non-transitive) calls in self.fct's body to functions which require verification, in AST visiting order
+      This is internally used to compute transitive in/out/privin sizes, but may also be useful when implementing a new
+      circuit generator backend.
+
+
+   .. attribute:: transitively_called_functions
+      :annotation: :OrderedDict[ConstructorOrFunctionDefinition, None]
+
+      Set (with deterministic order) of all functions which this circuit transitively calls.
+
+
+   .. attribute:: _remapper
+      
+
+      Remapper instance used for SSA simulation
+
+
+   .. method:: register_verification_contract_metadata(self, contract_type: TypeName, import_filename: str)
+
+
+
+   .. method:: get_verification_contract_name(self)
+
+
+
+   .. method:: requires_zk_data_struct(self)
+
+
+      Return true if a struct needs to be created in the solidity code to store public data (IO) associated with this circuit.
+
+      A struct is used instead of plain temporary variables to bypass solidity's stack limit.
+
+
+   .. method:: zk_data_struct_name(self)
+      :property:
+
+
+      Name of the data struct type
+
+
+   .. method:: priv_in_size_trans(self)
+      :property:
+
+
+      Total size of all private inputs for this circuit (in # uints)
+
+
+   .. method:: priv_in_size(self)
+      :property:
+
+
+      Size of all private inputs required for self.fct only (without called functions, in #uints)
+
+
+   .. method:: out_size_trans(self)
+      :property:
+
+
+      Total size of all public outputs for this circuit (in # uints)
+
+
+   .. method:: out_size(self)
+      :property:
+
+
+      Size of all public outputs required for self.fct only (without called functions, in #uints)
+
+
+   .. method:: in_size_trans(self)
+      :property:
+
+
+      Total size of all public inputs for this circuit (in # uints)
+
+
+   .. method:: in_size(self)
+      :property:
+
+
+      Size of all public inputs required for self.fct only (without called functions, in #uints)
+
+
+   .. method:: output_idfs(self)
+      :property:
+
+
+      All public output HybridArgumentIdfs (for self.fct only, w/o called functions)
+
+
+   .. method:: input_idfs(self)
+      :property:
+
+
+      All public input HybridArgumentIdfs (for self.fct only, w/o called functions)
+
+
+   .. method:: sec_idfs(self)
+      :property:
+
+
+      All private input HybridArgumentIdfs (for self.fct only, w/o called functions)
+
+
+   .. method:: phi(self)
+      :property:
+
+
+      List of abstract circuit statements which defines circuit semantics
+
+
+   .. method:: requested_global_keys(self)
+      :property:
+
+
+      Statically known keys required by this circuit
+
+
+   .. method:: public_arg_arrays(self)
+      :property:
+
+
+      Returns names and lengths of all public parameter uint256 arrays which go into the verifier
+
+
+   .. method:: circ_indent_block(self, name: str = '')
+
+
+      Return context manager which manages the lifetime of a CircIndentBlock.
+
+      All statements which are inserted into self.phi during the lifetime of this context manager are automatically wrapped inside
+      a CircIndentBlock statement with the supplied name.
+
+
+   .. method:: guarded(self, guard_idf: HybridArgumentIdf, is_true: bool)
+
+
+      Return a context manager which manages the lifetime of a guard variable.
+
+
+   .. method:: get_glob_key_name(label: PrivacyLabelExpr)
+      :staticmethod:
+
+
+      Return the name of the HybridArgumentIdf which holds the statically known public key for the given privacy label.
+
+
+   .. method:: get_own_secret_key_name()
+      :staticmethod:
+
+
+
+   .. method:: requires_verification(self)
+
+
+      Returns true if the function corresponding to this circuit requires a zk proof verification for correctness 
+
+
+   .. method:: ensure_parameter_encryption(self, insert_loc_stmt: Statement, param: Parameter)
+
+
+      Make circuit prove that the encryption of the specified parameter is correct.
+
+
+   .. method:: evaluate_expr_in_circuit(self, expr: Expression, new_privacy: PrivacyLabelExpr)
+
+
+      Evaluate private expression and return result as a fresh out variable.
+
+      Roughly corresponds to out() from paper
+
+      Note: This function has side effects on expr.statement (adds a pre_statement)
+
+      :param expr: [SIDE EFFECT] The expression which should be evaluated privately
+      :param new_privacy: The circuit output should be encrypted for this owner (or plain if 'all')
+      :return: Location expression which references the encrypted circuit result
+
+
+   .. method:: evaluate_stmt_in_circuit(self, ast: Statement)
+
+
+      Evaluate an entire statement privately.
+
+      This works by turning the statement into an assignment statement where the
+
+      * lhs is a tuple of all external locations (defined outside statement), which are modified inside the statement
+      * rhs is the return value of an inlined function call expression to a virtual function where body = the statement + return statement           which returns a tuple of the most recent SSA version of all modified locations
+
+      Note: Modifying external locations which are not owned by @me inside the statement is illegal (would leak information).
+      Note: At the moment, this is only used for if statements with a private condition.
+
+      :param ast: the statement to evaluate inside the circuit
+      :return: AssignmentStatement as described above
+
+
+   .. method:: invalidate_idf(self, target_idf: Identifier)
+
+
+
+   .. method:: call_function(self, ast: FunctionCallExpr)
+
+
+      Include public function call to a function which requires verification in this circuit.
+
+      :param ast: The function call to include, target function must require verification
+
+
+   .. method:: request_public_key(self, plabel: Union[MeExpr, Identifier], name)
+
+
+      Request key for the address corresponding to plabel from pki infrastructure and add it to the public circuit inputs.
+
+      :param plabel: privacy label for which to request key
+      :param name: name to use for the HybridArgumentIdf holding the key
+      :return: HybridArgumentIdf containing the requested key and an AssignmentStatement which assigns the key request to the idf location
+
+
+   .. method:: request_private_key(self)
+
+
+
+   .. method:: add_to_circuit_inputs(self, expr: Expression)
+
+
+      Add the provided expression to the public circuit inputs.
+
+      Roughly corresponds to in() from paper
+
+      If expr is encrypted (privacy != @all), this function also automatically ensures that the circuit has access to
+      the correctly decrypted expression value in the form of a new private circuit input.
+
+      If expr is an IdentifierExpr, its value will be cached
+      (i.e. when the same identifier is needed again as a circuit input, its value will be retrieved from cache rather          than adding an expensive redundant input. The cache is invalidated as soon as the identifier is overwritten in public code)
+
+      Note: This function has side effects on expr.statement (adds a pre_statement)
+
+      :param expr: [SIDE EFFECT] expression which should be made available inside the circuit as an argument
+      :return: HybridArgumentIdf which references the plaintext value of the newly added input
+
+
+   .. method:: get_remapped_idf_expr(self, idf: IdentifierExpr)
+
+
+      Get location expression for the most recently assigned value of idf according to the SSA simulation.
+
+      :param idf: Identifier expression to lookup
+      :return: Either idf itself (not currently remapped)
+               or a loc expr for the HybridArgumentIdf which references the most recent value of idf
+
+
+   .. method:: create_new_idf_version_from_value(self, orig_idf: Identifier, expr: Expression)
+
+
+      Store expr in a new version of orig_idf (for SSA).
+
+      :param orig_idf: the identifier which should be updated with a new value
+      :param expr: the updated value
+      :param is_local: whether orig_idf refers to a local variable (as opposed to a state variable)
+
+
+   .. method:: inline_function_call_into_circuit(self, fcall: FunctionCallExpr)
+
+
+      Inline an entire function call into the current circuit.
+
+      :param fcall: Function call to inline
+      :return: Expression (1 retval) / TupleExpr (multiple retvals) with return value(s)
+
+
+   .. method:: add_assignment_to_circuit(self, ast: AssignmentStatement)
+
+
+      Include private assignment statement in this circuit.
+
+
+   .. method:: add_var_decl_to_circuit(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: add_return_stmt_to_circuit(self, ast: ReturnStatement)
+
+
+
+   .. method:: add_if_statement_to_circuit(self, ast: IfStatement)
+
+
+      Include private if statement in this circuit.
+
+
+   .. method:: add_block_to_circuit(self, ast: Block, guard_cond: Optional[HybridArgumentIdf], guard_val: Optional[bool])
+
+
+
+   .. method:: _get_canonical_privacy_label(self, analysis, privacy: PrivacyLabelExpr)
+
+
+      If privacy is equivalent to a static privacy label -> Return the corresponding static label, otherwise itself.
+
+      :param analysis: analysis state at the statement where expression with the given privacy occurs
+      :param privacy: original privacy label
+
+
+   .. method:: _create_temp_var(self, tag: str, expr: Expression)
+
+
+      Assign expression to a fresh temporary circuit variable.
+
+
+   .. method:: _add_assign(self, lhs: Expression, rhs: Expression)
+
+
+      Simulate an assignment of rhs to lhs inside the circuit.
+
+      :param lhs: destination
+      :param rhs: source
+
+
+   .. method:: _get_circuit_output_for_private_expression(self, expr: Expression, new_privacy: PrivacyLabelExpr)
+
+
+      Add evaluation of expr to the circuit and return the output HybridArgumentIdf corresponding to the evaluation result.
+
+      Note: has side effects on expr.statement (adds pre_statement)
+
+      :param expr: [SIDE EFFECT] expression to evaluate
+      :param new_privacy: result owner (determines encryption key)
+      :return: HybridArgumentIdf which references the circuit output containing the result of expr
+
+
+   .. method:: _evaluate_private_expression(self, expr: Expression, tmp_idf_suffix='')
+
+
+      Evaluate expr in the circuit (if not already done) and store result in a new temporary circuit variable.
+
+      :param expr: expression to evaluate
+      :param tmp_idf_suffix: name suffix for the new temporary circuit variable
+      :return: temporary circuit variable HybridArgumentIdf which refers to the transformed circuit expression
+
+
+   .. method:: _ensure_encryption(self, stmt: Statement, plain: HybridArgumentIdf, new_privacy: PrivacyLabelExpr, cipher: HybridArgumentIdf, is_param: bool, is_dec: bool)
+
+
+      Make sure that cipher = enc(plain, getPk(new_privacy), priv_user_provided_rnd).
+
+      This automatically requests necessary keys and adds a circuit input for the randomness.
+
+      Note: This function adds pre-statements to stmt
+
+      :param stmt [SIDE EFFECT]: the statement which contains the expression which requires this encryption
+      :param plain: circuit variable referencing the plaintext value
+      :param new_privacy: privacy label corresponding to the destination key address
+      :param cipher: circuit variable referencing the encrypted value
+      :param is_param: whether cipher is a function parameter
+      :param is_dec: whether this is a decryption operation (user supplied plain) as opposed to an encryption operation (user supplied cipher)
+
+
+   .. method:: _require_secret_key(self)
+
+
+
+   .. method:: _require_public_key_for_label_at(self, stmt: Optional[Statement], privacy: PrivacyLabelExpr)
+
+
+      Make circuit helper aware, that the key corresponding to privacy is required at stmt.
+
+      If privacy is not a statically known label, the key is requested on spot.
+      Otherwise the label is added to the global key set.
+      The keys in that set are requested only once at the start of the external wrapper function, to improve efficiency.
+
+      Note: This function has side effects on stmt (adds a pre_statement)
+
+      :return: HybridArgumentIdf which references the key
+
+
+   .. method:: _get_public_key_in_sender_field(self, stmt: Statement, cipher: HybridArgumentIdf)
+
+
+      Ensure the circuit has access to the public key stored in cipher's sender field.
+
+      Note: This function has side effects on stmt [adds a pre-statement]
+
+      :param stmt [SIDE EFFECT]: statement in which this private expression occurs
+      :param cipher: HybridArgumentIdf which references the cipher value
+      :return: HybridArgumentIdf which references the key in cipher's sender field (or 0 if none)
+
+
+

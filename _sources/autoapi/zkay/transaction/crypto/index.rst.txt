@@ -1,0 +1,42 @@
+:mod:`zkay.transaction.crypto`
+==============================
+
+.. py:module:: zkay.transaction.crypto
+
+.. autoapi-nested-parse::
+
+   This package contains the cryptography backends.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.dummy`: Fast but insecure key generation (pk == sk == address) and encryption (enc = (+), dec = (-)) for debugging
+   * :py:mod:`.rsa_pkcs15`: Slow, secure rsa key generation and encryption using RSA PKCS1.5 padding
+   * :py:mod:`.rsa_oaep`: Very slow, secure rsa key generation and encryption using RSA OAEP padding
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   dummy/index.rst
+
+   ecdh_aes/index.rst
+
+   ecdh_base/index.rst
+
+   ecdh_chaskey/index.rst
+
+   meta/index.rst
+
+   rsa_base/index.rst
+
+   rsa_oaep/index.rst
+
+   rsa_pkcs15/index.rst
+
+
+
+
+

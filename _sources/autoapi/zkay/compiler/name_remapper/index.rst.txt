@@ -1,0 +1,151 @@
+:mod:`zkay.compiler.name_remapper`
+==================================
+
+.. py:module:: zkay.compiler.name_remapper
+
+
+
+
+Module Contents
+---------------
+
+.. data:: K
+   
+
+   
+
+.. data:: V
+   
+
+   
+
+.. py:class:: Remapper
+
+   Bases: :class:`Generic[K, V]`
+
+   Helper class to simulate static single assignment, mostly used by CircuitHelper
+   For a given name it keeps track which value the name currently refers to (e.g. current SSA identifier)
+
+   e.g. if we have::
+
+       x = 1
+       x = 2
+       x = x + 1
+
+   we can then simulate ssa by using the remapper whenever an identifier is read or written::
+
+       tmp1 = 1
+       remap(x, tmp1)
+       tmp2 = 2
+       remap(x, tmp2)
+       tmp3 = get_current(x) + 1
+       remap(x, tmp3)
+
+   :param K: name type
+   :param V: type of element to which key refers at a code location
+
+   .. attribute:: RemapMapType
+      
+
+      
+
+   .. method:: __bool__(self)
+
+
+      Check if any name is currently remapped.
+
+      :return: True if there exists at least one key which is currently remapped to a different value
+
+
+   .. method:: clear(self)
+
+
+      Discard the entire remap state.
+
+
+   .. method:: reset_key(self, key: K)
+
+
+      Invalidate remapping information for the given key (is_remapped returns false after this).
+
+
+   .. method:: remap(self, key: K, value: V)
+
+
+      Remap key to refer to new version element 'value'.
+
+      :param key: The key/identifier to update
+      :param value: latest version of the element to which key refers
+
+
+   .. method:: remap_scope(self, scope_stmt=None)
+
+
+      Return a context manager which will automatically rollback the remap state once the end of the with statement is reached.
+
+      :param scope_stmt: [OPTIONAL] last statement before the scope is entered. If this is not None, remappings for variables which were
+                                    already in scope at scope_stmt will not be reset during rollback
+      :return: context manager
+
+
+   .. method:: is_remapped(self, key: K)
+
+
+
+   .. method:: get_current(self, key: K, default=None)
+
+
+      Return the value to which key currently refers.
+
+      :param key: Name to lookup
+      :param default: If set, this will be returned if key is not currently remapped
+
+      :except KeyError: raised if key not currently mapped and default=None
+      :return: The current value
+
+
+   .. method:: get_state(self)
+
+
+      Return an opaque copy of the internal state. 
+
+
+   .. method:: set_state(self, state: Any)
+
+
+      Restore internal state from an opaque copy previously obtained using get_state. 
+
+
+   .. method:: join_branch(self, stmt, true_cond_for_other_branch: IdentifierExpr, other_branch_state: Any, create_val_for_name_and_expr_fct: Callable[[K, Expression], V])
+
+
+      Perform an SSA join for two branches.
+
+      | i.e. if key is not remapped in any branch -> keep previous remapping
+      |      if key is altered in at least one branch -> remap to conditional assignment of latest remapped version in either branch
+
+      :param stmt: the branch statement, variables which are not already in scope at that statement are not included in the joined state
+      :param true_cond_for_other_branch: IdentifierExpression which evaluates to true at runtime if other_branch is taken
+      :param other_branch_state: remap state at the end of other branch (obtained using get_state)
+      :param create_val_for_name_and_expr_fct: function to introduce a new temporary variable to which the given expression is assigned
+
+      :Example use:
+
+      ::
+
+          with remapper.remap_scope(persist_globals=False):
+              <process true branch>
+              true_state = remapper.get_state()
+          if <has false branch>:
+              <process false branch>
+          remapper.join_branch(cond_idf_expr, true_state, <create_tmp_var(idf, expr) function>)
+
+
+
+.. py:class:: CircVarRemapper
+
+   Bases: :class:`Remapper[Identifier, HybridArgumentIdf]`
+
+   Remapper class used by CircuitHelper
+
+

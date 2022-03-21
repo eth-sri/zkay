@@ -1,0 +1,1897 @@
+:mod:`zkay.zkay_ast.ast`
+========================
+
+.. py:module:: zkay.zkay_ast.ast
+
+
+
+
+Module Contents
+---------------
+
+.. data:: T
+   
+
+   
+
+.. py:class:: ChildListBuilder
+
+   .. method:: add_child(self, ast: AST)
+
+
+
+
+.. py:class:: AST
+
+   .. method:: children(self)
+
+
+
+   .. method:: is_parent_of(self, child: AST)
+
+
+
+   .. method:: override(self: T, **kwargs)
+
+
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: code(self)
+
+
+
+   .. method:: qualified_name(self)
+      :property:
+
+
+
+   .. method:: __str__(self)
+
+
+      Return str(self).
+
+
+
+.. py:class:: Identifier(name: str)
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: is_immutable(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: decl_var(self, t: Union[TypeName, AnnotatedTypeName], expr: Optional[Expression] = None)
+
+
+
+
+.. py:class:: Comment(text: str = '')
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: comment_list(text: str, block: List[AST])
+      :staticmethod:
+
+
+
+   .. method:: comment_wrap_block(text: str, block: List[AST])
+      :staticmethod:
+
+
+
+
+.. py:class:: BlankLine
+
+   Bases: :class:`zkay.zkay_ast.ast.Comment`
+
+
+.. py:class:: Expression
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: all_expr()
+      :staticmethod:
+
+
+
+   .. method:: me_expr(stmt: Optional[Statement] = None)
+      :staticmethod:
+
+
+
+   .. method:: explicitly_converted(self: T, expected: TypeName)
+
+
+
+   .. method:: is_all_expr(self)
+
+
+
+   .. method:: is_me_expr(self)
+
+
+
+   .. method:: privacy_annotation_label(self)
+
+
+
+   .. method:: instanceof_data_type(self, expected: TypeName)
+
+
+
+   .. method:: unop(self, op: str)
+
+
+
+   .. method:: binop(self, op: str, rhs: Expression)
+
+
+
+   .. method:: ite(self, e_true: Expression, e_false: Expression)
+
+
+
+   .. method:: instanceof(self, expected)
+
+
+      :param expected:
+      :return: True, False, or 'make-private'
+
+
+   .. method:: as_type(self: T, t: Union[TypeName, AnnotatedTypeName])
+
+
+
+   .. method:: analysis(self)
+      :property:
+
+
+
+
+.. data:: builtin_op_fct
+   
+
+   
+
+.. data:: builtin_functions
+   
+
+   
+
+.. data:: arithmetic
+   
+
+   
+
+.. data:: comp
+   
+
+   
+
+.. data:: eq
+   
+
+   
+
+.. data:: bop
+   
+
+   
+
+.. data:: bitop
+   
+
+   
+
+.. data:: shiftop
+   
+
+   
+
+.. py:class:: BuiltinFunction(op: str)
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. method:: format_string(self)
+
+
+
+   .. method:: op_func(self)
+      :property:
+
+
+
+   .. method:: is_arithmetic(self)
+
+
+
+   .. method:: is_neg_sign(self)
+
+
+
+   .. method:: is_comp(self)
+
+
+
+   .. method:: is_eq(self)
+
+
+
+   .. method:: is_bop(self)
+
+
+
+   .. method:: is_bitop(self)
+
+
+
+   .. method:: is_shiftop(self)
+
+
+
+   .. method:: is_parenthesis(self)
+
+
+
+   .. method:: is_ite(self)
+
+
+
+   .. method:: has_shortcircuiting(self)
+
+
+
+   .. method:: arity(self)
+
+
+
+   .. method:: input_types(self)
+
+
+      :return: None if the type is generic
+
+
+   .. method:: output_type(self)
+
+
+      :return: None if the type is generic
+
+
+   .. method:: can_be_private(self)
+
+
+      :return: true if operation itself can be run inside a circuit                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
+
+
+
+.. py:class:: FunctionCallExpr(func: Expression, args: List[Expression], sec_start_offset: Optional[int] = 0)
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. method:: is_cast(self)
+      :property:
+
+
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: NewExpr(annotated_type: AnnotatedTypeName, args: List[Expression])
+
+   Bases: :class:`zkay.zkay_ast.ast.FunctionCallExpr`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: PrimitiveCastExpr(elem_type: TypeName, expr: Expression, is_implicit=False)
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: LiteralExpr
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+
+.. py:class:: BooleanLiteralExpr(value: bool)
+
+   Bases: :class:`zkay.zkay_ast.ast.LiteralExpr`
+
+
+.. py:class:: NumberLiteralExpr(value: int, was_hex: bool = False)
+
+   Bases: :class:`zkay.zkay_ast.ast.LiteralExpr`
+
+
+.. py:class:: StringLiteralExpr(value: str)
+
+   Bases: :class:`zkay.zkay_ast.ast.LiteralExpr`
+
+
+.. py:class:: ArrayLiteralExpr(values: List[Expression])
+
+   Bases: :class:`zkay.zkay_ast.ast.LiteralExpr`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: KeyLiteralExpr(values: List[Expression])
+
+   Bases: :class:`zkay.zkay_ast.ast.ArrayLiteralExpr`
+
+
+.. py:class:: TupleOrLocationExpr
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. method:: is_lvalue(self)
+
+
+
+   .. method:: is_rvalue(self)
+
+
+
+
+.. py:class:: TupleExpr(elements: List[Expression])
+
+   Bases: :class:`zkay.zkay_ast.ast.TupleOrLocationExpr`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: assign(self, val: Expression)
+
+
+
+
+.. py:class:: LocationExpr
+
+   Bases: :class:`zkay.zkay_ast.ast.TupleOrLocationExpr`
+
+   .. method:: call(self, member: Union[None, str, Identifier], args: List[Expression])
+
+
+
+   .. method:: dot(self, member: Union[str, Identifier])
+
+
+
+   .. method:: index(self, item: Union[int, Expression])
+
+
+
+   .. method:: assign(self, val: Expression)
+
+
+
+
+.. py:class:: IdentifierExpr(idf: Union[str, Identifier], annotated_type: Optional[AnnotatedTypeName] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.LocationExpr`
+
+   .. method:: get_annotated_type(self)
+
+
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: slice(self, offset: int, size: int, base: Optional[Expression] = None)
+
+
+
+   .. method:: clone(self)
+
+
+
+
+.. py:class:: MemberAccessExpr(expr: LocationExpr, member: Identifier)
+
+   Bases: :class:`zkay.zkay_ast.ast.LocationExpr`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: IndexExpr(arr: LocationExpr, key: Expression)
+
+   Bases: :class:`zkay.zkay_ast.ast.LocationExpr`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: SliceExpr(arr: LocationExpr, base: Optional[Expression], start_offset: int, size: int)
+
+   Bases: :class:`zkay.zkay_ast.ast.LocationExpr`
+
+
+.. py:class:: MeExpr
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. attribute:: name
+      :annotation: = me
+
+      
+
+   .. method:: is_immutable(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+   .. method:: __hash__(self)
+
+
+      Return hash(self).
+
+
+
+.. py:class:: AllExpr
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. attribute:: name
+      :annotation: = all
+
+      
+
+   .. method:: is_immutable(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+   .. method:: __hash__(self)
+
+
+      Return hash(self).
+
+
+
+.. py:class:: ReclassifyExpr(expr: Expression, privacy: Expression)
+
+   Bases: :class:`zkay.zkay_ast.ast.Expression`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: HybridArgType
+
+   Bases: :class:`enum.IntEnum`
+
+   Enum where members are also (and must be) ints
+
+   .. attribute:: PRIV_CIRCUIT_VAL
+      :annotation: = 0
+
+      
+
+   .. attribute:: PUB_CIRCUIT_ARG
+      :annotation: = 1
+
+      
+
+   .. attribute:: PUB_CONTRACT_VAL
+      :annotation: = 2
+
+      
+
+   .. attribute:: TMP_CIRCUIT_VAL
+      :annotation: = 3
+
+      
+
+
+.. py:class:: HybridArgumentIdf(name: str, t: TypeName, arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.Identifier`
+
+   .. method:: get_loc_expr(self, parent=None)
+
+
+
+   .. method:: get_idf_expr(self, parent=None)
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: _set_serialized_loc(self, idf, base, start_offset)
+
+
+
+   .. method:: deserialize(self, source_idf: str, base: Optional[Expression], start_offset: int)
+
+
+
+   .. method:: serialize(self, target_idf: str, base: Optional[Expression], start_offset: int)
+
+
+
+
+.. py:class:: EncryptionExpression(expr: Expression, privacy: PrivacyLabelExpr)
+
+   Bases: :class:`zkay.zkay_ast.ast.ReclassifyExpr`
+
+
+.. py:class:: Statement
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+
+.. py:class:: CircuitDirectiveStatement
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   Invisible statement with instructions for offchain simulator
+
+
+.. py:class:: CircuitComputationStatement(var: HybridArgumentIdf)
+
+   Bases: :class:`zkay.zkay_ast.ast.CircuitDirectiveStatement`
+
+   Invisible statement with instructions for offchain simulator
+
+
+.. py:class:: EnterPrivateKeyStatement
+
+   Bases: :class:`zkay.zkay_ast.ast.CircuitDirectiveStatement`
+
+   Invisible statement with instructions for offchain simulator
+
+
+.. py:class:: IfStatement(condition: Expression, then_branch: Block, else_branch: Optional[Block])
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: WhileStatement(condition: Expression, body: Block)
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: DoWhileStatement(body: Block, condition: Expression)
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: ForStatement(init: Optional[SimpleStatement], condition: Expression, update: Optional[SimpleStatement], body: Block)
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: statements(self)
+      :property:
+
+
+
+
+.. py:class:: BreakStatement
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+
+.. py:class:: ContinueStatement
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+
+.. py:class:: ReturnStatement(expr: Expression)
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: SimpleStatement
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+
+.. py:class:: ExpressionStatement(expr: Expression)
+
+   Bases: :class:`zkay.zkay_ast.ast.SimpleStatement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: RequireStatement(condition: Expression, unmodified_code: Optional[str] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.SimpleStatement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: AssignmentStatement(lhs: Union[TupleExpr, LocationExpr], rhs: Expression, op: Optional[str] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.SimpleStatement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: CircuitInputStatement(lhs: Union[TupleExpr, LocationExpr], rhs: Expression, op: Optional[str] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.AssignmentStatement`
+
+
+.. py:class:: StatementList(statements: List[Statement], excluded_from_simulation: bool = False)
+
+   Bases: :class:`zkay.zkay_ast.ast.Statement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: __getitem__(self, key: int)
+
+
+
+   .. method:: __contains__(self, stmt: Statement)
+
+
+
+
+.. py:class:: Block(statements: List[Statement], was_single_statement=False)
+
+   Bases: :class:`zkay.zkay_ast.ast.StatementList`
+
+
+.. py:class:: IndentBlock(statements: List[Statement])
+
+   Bases: :class:`zkay.zkay_ast.ast.StatementList`
+
+
+.. py:class:: TypeName
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. attribute:: __metaclass__
+      
+
+      
+
+   .. method:: bool_type()
+      :staticmethod:
+
+
+
+   .. method:: uint_type()
+      :staticmethod:
+
+
+
+   .. method:: number_type()
+      :staticmethod:
+
+
+
+   .. method:: address_type()
+      :staticmethod:
+
+
+
+   .. method:: address_payable_type()
+      :staticmethod:
+
+
+
+   .. method:: cipher_type(plain_type: AnnotatedTypeName)
+      :staticmethod:
+
+
+
+   .. method:: rnd_type()
+      :staticmethod:
+
+
+
+   .. method:: key_type()
+      :staticmethod:
+
+
+
+   .. method:: proof_type()
+      :staticmethod:
+
+
+
+   .. method:: dyn_uint_array()
+      :staticmethod:
+
+
+
+   .. method:: size_in_uints(self)
+      :property:
+
+
+      How many uints this type occupies when serialized.
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: is_literal(self)
+      :property:
+
+
+
+   .. method:: is_address(self)
+
+
+
+   .. method:: is_primitive_type(self)
+
+
+
+   .. method:: is_cipher(self)
+
+
+
+   .. method:: is_numeric(self)
+      :property:
+
+
+
+   .. method:: is_boolean(self)
+      :property:
+
+
+
+   .. method:: is_signed_numeric(self)
+      :property:
+
+
+
+   .. method:: can_be_private(self)
+
+
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: compatible_with(self, other_type: TypeName)
+
+
+
+   .. method:: combined_type(self, other_type: TypeName, convert_literals: bool)
+
+
+
+   .. method:: annotate(self, privacy_annotation)
+
+
+
+   .. method:: clone(self)
+      :abstractmethod:
+
+
+
+   .. method:: __eq__(self, other)
+      :abstractmethod:
+
+
+      Return self==value.
+
+
+
+.. py:class:: ElementaryTypeName(name: str)
+
+   Bases: :class:`zkay.zkay_ast.ast.TypeName`
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: BoolTypeName(name='bool')
+
+   Bases: :class:`zkay.zkay_ast.ast.ElementaryTypeName`
+
+   .. method:: clone(self)
+
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: BooleanLiteralType(name: bool)
+
+   Bases: :class:`zkay.zkay_ast.ast.ElementaryTypeName`
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: combined_type(self, other_type: TypeName, convert_literals: bool)
+
+
+
+   .. method:: value(self)
+      :property:
+
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: to_abstract_type(self)
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: NumberTypeName(name: str, prefix: str, signed: bool, bitwidth=None)
+
+   Bases: :class:`zkay.zkay_ast.ast.ElementaryTypeName`
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: any()
+      :staticmethod:
+
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: can_represent(self, value: int)
+
+
+      Return true if value can be represented by this type
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: NumberLiteralType(name: Union[str, int])
+
+   Bases: :class:`zkay.zkay_ast.ast.NumberTypeName`
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: combined_type(self, other_type: TypeName, convert_literals: bool)
+
+
+
+   .. method:: to_abstract_type(self)
+
+
+
+   .. method:: value(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: IntTypeName(name: str = 'int')
+
+   Bases: :class:`zkay.zkay_ast.ast.NumberTypeName`
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: clone(self)
+
+
+
+
+.. py:class:: UintTypeName(name: str = 'uint')
+
+   Bases: :class:`zkay.zkay_ast.ast.NumberTypeName`
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: clone(self)
+
+
+
+
+.. py:class:: UserDefinedTypeName(names: List[Identifier], target: Optional[NamespaceDefinition] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.TypeName`
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: EnumTypeName(names: List[Identifier], target: Optional[NamespaceDefinition] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.UserDefinedTypeName`
+
+   .. method:: clone(self)
+
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+
+.. py:class:: EnumValueTypeName(names: List[Identifier], target: Optional[NamespaceDefinition] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.UserDefinedTypeName`
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: to_abstract_type(self)
+
+
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+
+.. py:class:: StructTypeName(names: List[Identifier], target: Optional[NamespaceDefinition] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.UserDefinedTypeName`
+
+   .. method:: clone(self)
+
+
+
+
+.. py:class:: ContractTypeName(names: List[Identifier], target: Optional[NamespaceDefinition] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.UserDefinedTypeName`
+
+   .. method:: clone(self)
+
+
+
+
+.. py:class:: AddressTypeName
+
+   Bases: :class:`zkay.zkay_ast.ast.UserDefinedTypeName`
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: AddressPayableTypeName
+
+   Bases: :class:`zkay.zkay_ast.ast.UserDefinedTypeName`
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: Mapping(key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: AnnotatedTypeName)
+
+   Bases: :class:`zkay.zkay_ast.ast.TypeName`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: has_key_label(self)
+      :property:
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: Array(value_type: AnnotatedTypeName, expr: Union[int, Expression] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.TypeName`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: size_in_uints(self)
+      :property:
+
+
+      How many uints this type occupies when serialized.
+
+
+   .. method:: elem_bitwidth(self)
+      :property:
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: CipherText(plain_type: AnnotatedTypeName)
+
+   Bases: :class:`zkay.zkay_ast.ast.Array`
+
+   .. method:: size_in_uints(self)
+      :property:
+
+
+      How many uints this type occupies when serialized.
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: Randomness
+
+   Bases: :class:`zkay.zkay_ast.ast.Array`
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: Key
+
+   Bases: :class:`zkay.zkay_ast.ast.Array`
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: Proof
+
+   Bases: :class:`zkay.zkay_ast.ast.Array`
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: DummyAnnotation
+
+
+.. py:class:: TupleType(types: List[AnnotatedTypeName])
+
+   Bases: :class:`zkay.zkay_ast.ast.TypeName`
+
+   Does not appear in the syntax, but is necessary for type checking
+
+   .. method:: ensure_tuple(t: AnnotatedTypeName)
+      :staticmethod:
+
+
+
+   .. method:: __len__(self)
+
+
+
+   .. method:: __iter__(self)
+
+
+      Make this class iterable, by iterating over its types.
+
+
+   .. method:: __getitem__(self, i: int)
+
+
+
+   .. method:: check_component_wise(self, other, f)
+
+
+
+   .. method:: implicitly_convertible_to(self, expected: TypeName)
+
+
+
+   .. method:: compatible_with(self, other_type: TypeName)
+
+
+
+   .. method:: combined_type(self, other_type: TupleType, convert_literals: bool)
+
+
+
+   .. method:: annotate(self, privacy_annotation)
+
+
+
+   .. method:: perfect_privacy_match(self, other)
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: empty()
+      :staticmethod:
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: FunctionTypeName(parameters: List[Parameter], modifiers: List[str], return_parameters: List[Parameter])
+
+   Bases: :class:`zkay.zkay_ast.ast.TypeName`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+
+.. py:class:: AnnotatedTypeName(type_name: TypeName, privacy_annotation: Optional[Expression] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: clone(self)
+
+
+
+   .. method:: zkay_type(self)
+      :property:
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+   .. method:: combined_privacy(self, analysis: PartitionState[PrivacyLabelExpr], other: AnnotatedTypeName)
+
+
+
+   .. method:: is_public(self)
+
+
+
+   .. method:: is_private(self)
+
+
+
+   .. method:: is_address(self)
+
+
+
+   .. method:: is_cipher(self)
+
+
+
+   .. method:: uint_all()
+      :staticmethod:
+
+
+
+   .. method:: bool_all()
+      :staticmethod:
+
+
+
+   .. method:: address_all()
+      :staticmethod:
+
+
+
+   .. method:: cipher_type(plain_type: AnnotatedTypeName)
+      :staticmethod:
+
+
+
+   .. method:: key_type()
+      :staticmethod:
+
+
+
+   .. method:: proof_type()
+      :staticmethod:
+
+
+
+   .. method:: all(type: TypeName)
+      :staticmethod:
+
+
+
+   .. method:: me(type: TypeName)
+      :staticmethod:
+
+
+
+   .. method:: array_all(value_type: AnnotatedTypeName, *length: int)
+      :staticmethod:
+
+
+
+
+.. py:class:: IdentifierDeclaration(keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: is_final(self)
+      :property:
+
+
+
+   .. method:: is_constant(self)
+      :property:
+
+
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: VariableDeclaration(keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.IdentifierDeclaration`
+
+
+.. py:class:: VariableDeclarationStatement(variable_declaration: VariableDeclaration, expr: Optional[Expression] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.SimpleStatement`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: Parameter(keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.IdentifierDeclaration`
+
+   .. method:: copy(self)
+
+
+
+   .. method:: with_changed_storage(self, match_storage: str, new_storage: str)
+
+
+
+
+.. py:class:: NamespaceDefinition(idf: Identifier)
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: ConstructorOrFunctionDefinition(idf: Optional[Identifier], parameters: List[Parameter], modifiers: List[str], return_parameters: Optional[List[Parameter]], body: Block)
+
+   Bases: :class:`zkay.zkay_ast.ast.NamespaceDefinition`
+
+   .. method:: has_side_effects(self)
+      :property:
+
+
+
+   .. method:: can_be_external(self)
+      :property:
+
+
+
+   .. method:: is_external(self)
+      :property:
+
+
+
+   .. method:: is_payable(self)
+      :property:
+
+
+
+   .. method:: name(self)
+      :property:
+
+
+
+   .. method:: return_type(self)
+      :property:
+
+
+
+   .. method:: parameter_types(self)
+      :property:
+
+
+
+   .. method:: is_constructor(self)
+      :property:
+
+
+
+   .. method:: is_function(self)
+      :property:
+
+
+
+   .. method:: _update_fct_type(self)
+
+
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier], ref_storage_loc: str = 'memory')
+
+
+
+
+.. py:class:: StateVariableDeclaration(annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression])
+
+   Bases: :class:`zkay.zkay_ast.ast.IdentifierDeclaration`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: EnumValue(idf: Identifier)
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: EnumDefinition(idf: Identifier, values: List[EnumValue])
+
+   Bases: :class:`zkay.zkay_ast.ast.NamespaceDefinition`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: StructDefinition(idf: Identifier, members: List[VariableDeclaration])
+
+   Bases: :class:`zkay.zkay_ast.ast.NamespaceDefinition`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+
+.. py:class:: ContractDefinition(idf: Identifier, state_variable_declarations: List[StateVariableDeclaration], constructor_definitions: List[ConstructorOrFunctionDefinition], function_definitions: List[ConstructorOrFunctionDefinition], enum_definitions: List[EnumDefinition], struct_definitions: Optional[List[StructDefinition]] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.NamespaceDefinition`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: __getitem__(self, key: str)
+
+
+
+
+.. py:class:: SourceUnit(pragma_directive: str, contracts: List[ContractDefinition], used_contracts: Optional[List[str]] = None)
+
+   Bases: :class:`zkay.zkay_ast.ast.AST`
+
+   .. method:: process_children(self, f: Callable[[T], T])
+
+
+
+   .. method:: __getitem__(self, key: str)
+
+
+
+
+.. data:: PrivacyLabelExpr
+   
+
+   
+
+.. data:: TargetDefinition
+   
+
+   
+
+.. function:: get_privacy_expr_from_label(plabel: PrivacyLabelExpr)
+
+   Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same).
+
+
+.. py:class:: InstanceTarget
+
+   Bases: :class:`tuple`
+
+   Built-in immutable sequence.
+
+   If no argument is given, the constructor returns an empty tuple.
+   If iterable is specified the tuple is initialized from iterable's items.
+
+   If the argument is a tuple, the return value is the same object.
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+   .. method:: __hash__(self)
+
+
+      Return hash(self).
+
+
+   .. method:: target(self)
+      :property:
+
+
+
+   .. method:: key(self)
+      :property:
+
+
+
+   .. method:: privacy(self)
+      :property:
+
+
+
+   .. method:: in_scope_at(self, ast: AST)
+
+
+
+
+.. function:: indent(s: str)
+
+
+.. function:: get_code_error_msg(line: int, column: int, code: List[str], ctr: Optional[ContractDefinition] = None, fct: Optional[ConstructorOrFunctionDefinition] = None, stmt: Optional[Statement] = None)
+
+
+.. function:: get_ast_exception_msg(ast: AST, msg: str)
+
+
+.. function:: issue_compiler_warning(ast: AST, warning_type: str, msg: str)
+
+
+.. py:exception:: AstException(msg, ast)
+
+   Bases: :class:`Exception`
+
+   Generic exception for errors in an AST
+
+
+.. py:class:: CodeVisitor(display_final=True)
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visit_list(self, l: List[Union[AST, str]], sep='\n')
+
+
+
+   .. method:: visit_single_or_list(self, v: Union[List[AST], AST, str], sep='\n')
+
+
+
+   .. method:: visitAST(self, ast: AST)
+      :abstractmethod:
+
+
+
+   .. method:: visitComment(self, ast: Comment)
+
+
+
+   .. method:: visitIdentifier(self, ast: Identifier)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+
+   .. method:: visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr)
+
+
+
+   .. method:: visitNumberLiteralExpr(self, ast: NumberLiteralExpr)
+
+
+
+   .. method:: visitStringLiteralExpr(self, ast: StringLiteralExpr)
+
+
+
+   .. method:: visitArrayLiteralExpr(self, ast: ArrayLiteralExpr)
+
+
+
+   .. method:: visitTupleExpr(self, ast: TupleExpr)
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+   .. method:: visitMemberAccessExpr(self, ast: MemberAccessExpr)
+
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+
+   .. method:: visitMeExpr(self, _: MeExpr)
+
+
+
+   .. method:: visitAllExpr(self, _: AllExpr)
+
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+   .. method:: visitDoWhileStatement(self, ast: DoWhileStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitBreakStatement(self, _: BreakStatement)
+
+
+
+   .. method:: visitContinueStatement(self, _: ContinueStatement)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: visitExpressionStatement(self, ast: ExpressionStatement)
+
+
+
+   .. method:: visitRequireStatement(self, ast: RequireStatement)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitCircuitDirectiveStatement(self, ast: CircuitDirectiveStatement)
+
+
+
+   .. method:: handle_block(self, ast: StatementList)
+
+
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+
+   .. method:: visitBlock(self, ast: Block)
+
+
+
+   .. method:: visitIndentBlock(self, ast: IndentBlock)
+
+
+
+   .. method:: visitElementaryTypeName(self, ast: ElementaryTypeName)
+
+
+
+   .. method:: visitUserDefinedTypeName(self, ast: UserDefinedTypeName)
+
+
+
+   .. method:: visitAddressTypeName(self, ast: AddressTypeName)
+
+
+
+   .. method:: visitAddressPayableTypeName(self, ast: AddressPayableTypeName)
+
+
+
+   .. method:: visitAnnotatedTypeName(self, ast: AnnotatedTypeName)
+
+
+
+   .. method:: visitMapping(self, ast: Mapping)
+
+
+
+   .. method:: visitArray(self, ast: Array)
+
+
+
+   .. method:: visitCipherText(self, ast: CipherText)
+
+
+
+   .. method:: visitTupleType(self, ast: TupleType)
+
+
+
+   .. method:: visitVariableDeclaration(self, ast: VariableDeclaration)
+
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: visitParameter(self, ast: Parameter)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: function_definition_to_str(self, idf: Identifier, parameters: List[Union[Parameter, str]], modifiers: List[str], return_parameters: List[Parameter], body: str)
+
+
+
+   .. method:: visitEnumValue(self, ast: EnumValue)
+
+
+
+   .. method:: visitEnumDefinition(self, ast: EnumDefinition)
+
+
+
+   .. method:: __cmp_type_size(v1: VariableDeclaration, v2: VariableDeclaration)
+      :staticmethod:
+
+
+
+   .. method:: visitStructDefinition(self, ast: StructDefinition)
+
+
+
+   .. method:: visitStateVariableDeclaration(self, ast: StateVariableDeclaration)
+
+
+
+   .. method:: contract_definition_to_str(idf: Identifier, state_vars: List[str], constructors: List[str], functions: List[str], enums: List[str], structs: List[str])
+      :staticmethod:
+
+
+
+   .. method:: visitContractDefinition(self, ast: ContractDefinition)
+
+
+
+   .. method:: handle_pragma(self, pragma: str)
+
+
+
+   .. method:: visitSourceUnit(self, ast: SourceUnit)
+
+
+
+

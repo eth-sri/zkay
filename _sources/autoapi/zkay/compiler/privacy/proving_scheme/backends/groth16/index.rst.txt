@@ -1,0 +1,59 @@
+:mod:`zkay.compiler.privacy.proving_scheme.backends.groth16`
+============================================================
+
+.. py:module:: zkay.compiler.privacy.proving_scheme.backends.groth16
+
+.. autoapi-nested-parse::
+
+   This module defines the verification key, proof and verification contract format for the Groth16 proving scheme
+
+   See "On the Size of Pairing-based Non-interactive Arguments", Jens Groth, IACR-EUROCRYPT-2016
+   https://eprint.iacr.org/2016/260
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: ProvingSchemeGroth16
+
+   Bases: :class:`zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme`
+
+   Abstract base class for proving schemes
+
+   A proving scheme provides functionality to generate a verification contract from a proving-scheme dependent verification-key
+   and an abstract circuit representation
+
+   .. py:class:: VerifyingKey(a: G1Point, b: G2Point, gamma: G2Point, delta: G2Point, gamma_abc: List[G1Point])
+
+      Bases: :class:`zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey`
+
+      Abstract base data class for verification keys
+
+      .. method:: create_dummy_key(cls)
+         :classmethod:
+
+
+         Generate a dummy key.
+
+
+
+   .. attribute:: name
+      :annotation: = groth16
+
+      
+
+   .. method:: generate_verification_contract(self, verification_key: VerifyingKey, circuit: CircuitHelper, primary_inputs: List[str], prover_key_hash: bytes)
+
+
+      Generate a verification contract for the zk-snark corresponding to circuit.
+
+      :param verification_key: parsed verification key which was previously generated for circuit
+      :param circuit: the circuit for which to generate the verification contract
+      :param primary_inputs: list of all public input locations (strings which represent either identifiers or array index expressions)
+      :param prover_key_hash: sha3 hash of the prover key
+      :return: verification contract text
+
+
+

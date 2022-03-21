@@ -1,0 +1,70 @@
+:mod:`zkay.utils.dict_wrapper`
+==============================
+
+.. py:module:: zkay.utils.dict_wrapper
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: DictWrapper(default_value=None)
+
+   .. method:: items(self)
+
+
+
+   .. method:: get_key(self, key)
+
+
+
+   .. method:: keys(self)
+
+
+
+   .. method:: values(self)
+
+
+
+   .. method:: print_items(self)
+
+
+
+   .. method:: __getitem__(self, item)
+
+
+
+   .. method:: __setitem__(self, key, value)
+
+
+
+   .. method:: __eq__(self, other)
+
+
+      Return self==value.
+
+
+   .. method:: __copy__(self)
+
+
+
+   .. method:: __repr__(self)
+
+
+      Return repr(self).
+
+
+   .. method:: __contains__(self, item)
+
+
+
+   .. method:: __add__(self, other)
+
+
+
+   .. method:: __iadd__(self, other)
+
+
+
+

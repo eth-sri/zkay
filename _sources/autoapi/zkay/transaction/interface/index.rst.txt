@@ -1,0 +1,531 @@
+:mod:`zkay.transaction.interface`
+=================================
+
+.. py:module:: zkay.transaction.interface
+
+.. autoapi-nested-parse::
+
+   This module defines the Runtime API, an abstraction layer which is used by the generated PythonOffchainSimulator classes.
+
+   It provides high level functions for
+
+   * blockchain interaction (deployment, state variable retrieval, transaction issuing, ...),
+   * cryptographic operations (encryption, decryption, key generation) and key management (local keystore)
+   * NIZK-proof generation
+
+
+
+
+Module Contents
+---------------
+
+.. py:exception:: IntegrityError
+
+   Bases: :class:`Exception`
+
+   Exception which is raised when any part of a deployed zkay contract does not match the local contract file.
+
+
+.. py:exception:: BlockChainError
+
+   Bases: :class:`Exception`
+
+   Exception which is raised when a blockchain interaction fails for any reason.
+
+
+.. py:exception:: TransactionFailedException
+
+   Bases: :class:`zkay.transaction.interface.BlockChainError`
+
+   Exception which is raised when a transaction fails.
+
+
+.. py:exception:: ProofGenerationError
+
+   Bases: :class:`Exception`
+
+   Exception which is raised when proof generation fails.
+
+
+.. py:class:: ZkayBlockchainInterface
+
+   API to interact with the blockchain.
+
+   It automatically ensures that all needed library contracts are accessible.
+   For most backends (except eth-tester), the necessary library contracts must be deployed in advance and     cfg.blockchain_pki_address or cfg.blockchain_crypto_lib_address must be specified.
+
+   For safety reasons, zkay always verifies the integrity of remote contracts by comparing the evm bytecode     from the blockchain with the output obtained via local compilation of the corresponding source files.
+
+   (Zkay ensures reproducibility via hard-coded solc versions/settings for global library contracts and by     using the version/settings stored in the manifest file for the main and verification contracts)
+
+   See documentation of :py:meth:`connect` for more information.
+
+   .. method:: pki_contract(self)
+      :property:
+
+
+
+   .. method:: lib_addresses(self)
+      :property:
+
+
+
+   .. method:: _connect_libraries(self)
+      :abstractmethod:
+
+
+
+   .. method:: default_address(self)
+      :property:
+
+
+      Return wallet address to use as from address when no address is explicitly specified.
+
+
+   .. method:: create_test_accounts(self, count: int)
+      :abstractmethod:
+
+
+      Return addresses of pre-funded accounts (only implemented for w3-eth-tester and w3-ganache, for debugging).
+
+      :param count: how many accounts
+      :raise NotImplementedError: if the backend does not support dummy accounts
+      :raise ValueError: if not enough unused pre-funded accounts are available
+      :return: the account addresses (either a single value if count = 1 or a tuple otherwise)
+
+
+   .. method:: get_special_variables(self, sender: AddressValue, wei_amount: int = 0)
+      :abstractmethod:
+
+
+      Return message, block and transaction objects, populated according to the current chain state.
+
+      :param sender: transaction sender address
+      :param wei_amount: transaction value (if payable)
+      :return: populated builtin objects
+
+
+   .. method:: get_balance(self, address: AddressValue)
+
+
+      Return the balance of the wallet with the designated address (in wei).
+
+
+   .. method:: req_public_key(self, address: AddressValue)
+
+
+      Request the public key for the designated address from the PKI contract.
+
+      :param address: Address for which to request public key
+      :raise BlockChainError: if request fails
+      :return: the public key
+
+
+   .. method:: announce_public_key(self, sender: AddressValue, pk: PublicKeyValue)
+
+
+      Announce a public key to the PKI
+
+      **WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)**
+
+      :param sender: public key owner, its eth private key must be hosted in the eth node to which the backend connects.
+      :param pk: the public key to announce
+      :raise BlockChainError: if there is an error in the backend
+      :raise TransactionFailedException: if the announcement transaction failed
+      :return: backend-specific transaction receipt
+
+
+   .. method:: req_state_var(self, contract_handle, name: str, *indices)
+
+
+      Request the contract state variable value name[indices[0]][indices[1]][...] from the chain.
+
+      :param contract_handle: contract from which to read state
+      :param name: name of the state variable
+      :param indices: if the request is for an (nested) array/map index value, the values of all index keys.
+      :raise BlockChainError: if request fails
+      :return: The value
+
+
+   .. method:: call(self, contract_handle, sender: AddressValue, name: str, *args)
+
+
+      Call the specified pure/view function in the given contract with the provided arguments.
+
+      :param contract_handle: the contract in which the function resides
+      :param sender: sender address, its eth private key must be hosted in the eth node to which the backend connects.
+      :param name: name of the function to call
+      :param args: argument values
+      :raise BlockChainError: if request fails
+      :return: function return value (single value if one return value, list if multiple return values)
+
+
+   .. method:: transact(self, contract_handle, sender: AddressValue, function: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None)
+
+
+      Issue a transaction for the specified function in the given contract with the provided arguments
+
+      **WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)**
+
+      :param contract_handle: the contract in which the function resides
+      :param sender: sender address, its eth private key must be hosted in the eth node to which the backend connects.
+      :param function: name of the function
+      :param actual_args: the function argument values
+      :param should_encrypt: a list which contains a boolean value for each argument, which should be true if the corresponding
+                             parameter expects an encrypted/private value (this is only used for a last sanity-check)
+      :param wei_amount: how much money to send along with the transaction (only for payable functions)
+      :raise BlockChainError: if there is an error in the backend
+      :raise TransactionFailedException: if the transaction failed
+      :return: backend-specific transaction receipt
+
+
+   .. method:: deploy(self, project_dir: str, sender: AddressValue, contract: str, actual_args: List, should_encrypt: List[bool], wei_amount: Optional[int] = None)
+
+
+      Issue a deployment transaction which constructs the specified contract with the provided constructor arguments on the chain.
+
+      **WARNING: THIS ISSUES A CRYPTO CURRENCY TRANSACTION (GAS COST)**
+
+      :param project_dir: directory where the zkay file, manifest and snark keys reside
+      :param sender: creator address, its eth private key must be hosted in the eth node to which the backend connects.
+      :param contract: name of the contract to instantiate
+      :param actual_args: the constructor argument values
+      :param should_encrypt: a list which contains a boolean value for each argument, which should be true if the corresponding
+                             parameter expects an encrypted/private value (this is only used for a last sanity-check)
+      :param wei_amount: how much money to send along with the constructor transaction (only for payable constructors)
+      :raise BlockChainError: if there is an error in the backend
+      :raise TransactionFailedException: if the deployment transaction failed
+      :return: handle for the newly created contract
+
+
+   .. method:: connect(self, project_dir: str, contract: str, contract_address: AddressValue, user_address: AddressValue)
+
+
+      Create a handle which can be used to interact with an existing contract on the chain after verifying its integrity.
+
+      Project dir must contain a .zkay file, a manifest.json file as well as a         subdirectory *verification_contract_name*\ _out containing 'proving.key' and 'verification.key' for each verification contract.
+      These files are referred to as 'local' files in the following explanation.
+
+      If this function succeeds, it is guaranteed, that:
+
+      * the remote main contract at contract_address, matches the solidity contract obtained by running zkay on the local zkay file
+        using the configuration stored in the local manifest
+      * the pki contract referenced in the remote main contract matches the correct zkay pki contract
+      * the verification contracts referenced in the remote solidity contract were generated by running zkay on a zkay file
+        equivalent to local zkay file, with zk-snark keys which match the local keys.
+      * the library contract referenced in the verification contracts matches the correct zkay library contract
+
+      This reduces the required trust to the zk-snark setup phase (i.e. you must trust that prover/verification keys
+      were generated for the correct circuit), since you can inspect the source code of the local zkay file and check it
+      for malicious behavior yourself (and the zkay implementation, which performs the transformation, is open source as well).
+
+      Example Scenarios:
+
+      a) the remote zkay contract is benign (generated by and deployed using zkay):
+         -> you will only be able to connect if the local files are equivalent -> correctness is guaranteed
+      b) the remote zkay contract was tampered with (any of the .sol files was modified was modified before deployment)
+         -> connection will fail, because local zkay compilation will not produce matching evm bytecode
+      c) the prover/verification keys were tampered with (they were generated for a different circuit than the one produced by zkay)
+
+         * local keys are genuine -> connection will be refused because the keys don't match what is baked into the remote verification contract
+         * same tampered keys locally -> NO GUARANTEES, since the trust assumption is violated
+
+      :param project_dir: directory where the zkay file, manifest and snark keys reside
+      :param contract: name of the contract to connect to
+      :param contract_address: address of the deployed contract
+      :param user_address: account which connects to the contract
+      :raise IntegrityError: if the integrity check fails (mismatch between local code and remote contract)
+      :return: contract handle for the specified contract
+
+
+   .. method:: deploy_solidity_contract(self, sol_filename: str, contract_name: Optional[str], sender: Union[bytes, str])
+      :abstractmethod:
+
+
+      Compile and deploy the specified solidity contract.
+
+      :param sol_filename: solidity file
+      :param contract_name: specifies which contract from the .sol file to compile (None -> take first contract in file)
+      :param sender: account address from which to issue the deployment transaction (keys must be hosted in node)
+      :raise BlockChainError: if there is an error in the backend
+      :raise TransactionFailedException: if the deployment transaction failed
+      :return: Address of the deployed contract
+
+
+   .. method:: is_debug_backend(cls)
+      :classmethod:
+
+
+
+   .. method:: _verify_contract_integrity(self, address: str, sol_filename: str, *, libraries: Dict = None, contract_name: str = None, is_library: bool = False)
+      :abstractmethod:
+
+
+      Check if the bytecode of the contract at address matches the bytecode obtained by locally compiling sol_filename.
+
+      :param address: address of the remote contract
+      :param sol_filename: path to the local contract code file
+      :param libraries: library dict which should be passed during compilation (for linking)
+      :param contract_name: contract name, if not specified, the first contract in the file is used
+      :param is_library: set to true if this a library instead of a contract
+      :raise IntegrityError: if there is a mismatch
+      :return: a contract handle for the remote contract
+
+
+   .. method:: _verify_library_integrity(self, libraries: List[Tuple[str, str]], contract_with_libs_addr: str, sol_with_libs_filename: str)
+      :abstractmethod:
+
+
+      Check if the libraries linked in contract_with_libs match library_sol and return the addresses of the library contracts.
+
+      :param libraries: = List of (library name, library.sol) tuples
+      :raise IntegrityError: if there is a mismatch
+      :return: Dict of library name -> address for all libs from libraries which occurred in contract@contract_with_libs_addr
+
+
+   .. method:: _verify_zkay_contract_integrity(self, address: str, project_dir: str, pki_verifier_addresses: dict)
+      :abstractmethod:
+
+
+      Check if the zkay main contract at address matches the local file
+
+      :param address: address of the remote main contract
+      :param project_dir: path to the zkay contract directory
+      :param pki_verifier_addresses: dictionary which maps pki and verification contract names to the corresponding remote addresses
+      :raise IntegrityError: if there is a mismatch
+
+
+   .. method:: _default_address(self)
+      :abstractmethod:
+
+
+
+   .. method:: _get_balance(self, address: Union[bytes, str])
+      :abstractmethod:
+
+
+
+   .. method:: _deploy_dependencies(self, sender: Union[bytes, str], project_dir: str, verifier_names: List[str])
+      :abstractmethod:
+
+
+
+   .. method:: _req_public_key(self, address: Union[bytes, str])
+      :abstractmethod:
+
+
+
+   .. method:: _announce_public_key(self, address: Union[bytes, str], pk: Tuple[int, ...])
+      :abstractmethod:
+
+
+
+   .. method:: _call(self, contract_handle, sender: Union[bytes, str], name: str, *args)
+      :abstractmethod:
+
+
+
+   .. method:: _req_state_var(self, contract_handle, name: str, *indices)
+      :abstractmethod:
+
+
+
+   .. method:: _transact(self, contract_handle, sender: Union[bytes, str], function: str, *actual_args, wei_amount: Optional[int] = None)
+      :abstractmethod:
+
+
+
+   .. method:: _deploy(self, project_dir: str, sender: Union[bytes, str], contract: str, *actual_args, wei_amount: Optional[int] = None)
+      :abstractmethod:
+
+
+
+   .. method:: _connect(self, project_dir: str, contract: str, address: Union[bytes, str])
+      :abstractmethod:
+
+
+
+   .. method:: __check_args(actual_args: List, should_encrypt: List[bool])
+      :staticmethod:
+
+
+
+
+.. py:class:: ZkayKeystoreInterface(conn: ZkayBlockchainInterface)
+
+   API to add and retrieve local key pairs, and to request public keys.
+
+   .. method:: add_keypair(self, address: AddressValue, key_pair: KeyPair)
+
+
+      Import cryptographic keys for address into this keystore and announce the public key to the pki if necessary.
+
+      :param address: Address to which the keys belong
+      :param key_pair: cryptographic keys
+      :raise TransactionFailedException: if announcement transaction fails
+
+
+   .. method:: has_initialized_keys_for(self, address: AddressValue)
+
+
+      Return true if keys for address are already in the store.
+
+
+   .. method:: getPk(self, address: AddressValue)
+
+
+      Return public key for address.
+
+      If the key is cached locally, returned the cached copy, otherwise request from pki contract.
+
+      NOTE: At the moment, the name of this function must match the name in the pki contract.
+
+      :param address: address to which the public key belongs
+      :raise BlockChainError: if key request fails
+      :return: the public key
+
+
+   .. method:: sk(self, address: AddressValue)
+
+
+      Return secret key for address from the local key store.
+
+      Only works for keys which were previously added through add_keypair
+
+      :param address: address to which the private key belongs
+      :raise KeyError: if key not in local store
+      :return: private key
+
+
+   .. method:: pk(self, address: AddressValue)
+
+
+      Return public key for address from the local key store.
+
+      Only works for keys which were previously added through add_keypair
+
+      :param address: address to which the public key belongs
+      :raise KeyError: if key not in local store
+      :return: public key
+
+
+
+.. py:class:: ZkayCryptoInterface(keystore: ZkayKeystoreInterface)
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. method:: is_symmetric_cipher(cls)
+      :classmethod:
+      :abstractmethod:
+
+
+
+   .. method:: generate_or_load_key_pair(self, address: AddressValue)
+
+
+      Store cryptographic keys for the account with the specified address in the keystore.
+
+      If the pre-existing keys are found for this address, they are loaded from the filesystem,         otherwise new keys are generated.
+
+      :param address: the address for which to generate keys
+
+
+   .. method:: enc(self, plain: Union[int, AddressValue], my_addr: AddressValue, target_addr: AddressValue)
+
+
+      Encrypt plain for receiver with target_addr.
+
+      :param plain: plain text to encrypt
+      :param my_addr: address of the sender who encrypts
+      :param target_addr: address of the receiver for whom to encrypt
+      :return: if symmetric -> (iv_cipher, None), if asymmetric (cipher, randomness which was used to encrypt plain)
+
+
+   .. method:: dec(self, cipher: CipherValue, my_addr: AddressValue)
+
+
+      Decrypt cipher encrypted for my_addr.
+
+      :param cipher: encrypted value
+      :param my_addr: cipher is encrypted for this address
+      :return: if symmetric -> (plain, None), if asymmetric (plain, randomness which was used to encrypt plain)
+
+
+   .. method:: serialize_pk(key: int, total_bytes: int)
+      :staticmethod:
+
+
+      Serialize a large integer into an array of {cfg.cipher_chunk_size}-byte ints.
+
+
+   .. method:: deserialize_pk(arr: Collection[int])
+      :staticmethod:
+
+
+      Deserialize an array of {cfg.cipher_chunk_size}-byte ints into a single large int
+
+
+   .. method:: pack_byte_array(bin: bytes, chunk_size)
+      :staticmethod:
+
+
+      Pack byte array into an array of {chunk_size}-byte ints
+
+
+   .. method:: unpack_to_byte_array(arr: Collection[int], chunk_size: int, desired_length: int)
+      :staticmethod:
+
+
+      Unpack an array of {cfg.pack_chunk_size}-byte ints into a byte array
+
+
+   .. method:: _generate_or_load_key_pair(self, address: str)
+      :abstractmethod:
+
+
+
+   .. method:: _enc(self, plain: int, my_sk: int, target_pk: int)
+      :abstractmethod:
+
+
+
+   .. method:: _dec(self, cipher: Tuple[int, ...], sk: Any)
+      :abstractmethod:
+
+
+
+
+.. py:class:: ZkayProverInterface(proving_scheme: str = None)
+
+   API to generate zero knowledge proofs for a particular circuit and arguments.
+
+   .. method:: generate_proof(self, project_dir: str, contract: str, function: str, priv_values: List, in_vals: List, out_vals: List[Union[int, CipherValue]])
+
+
+      Generate a NIZK-proof using the provided circuit for the given arguments.
+
+      Note: circuit arguments must be in the same order as they are declared inside the circuit. (i.e. in execution order)
+
+      :param project_dir: directory where the manifest and the prover keys are located
+      :param contract: contract of which the function which requires verification is part of
+      :param function: the contract member function for which a proof needs to be generated
+      :param priv_values: private/auxiliary circuit inputs in correct order
+      :param in_vals: public circuit inputs in correct order
+      :param out_vals: public circuit outputs in correct order
+      :raise ProofGenerationError: if proof generation fails
+      :return: the proof, serialized into an uint256 array
+
+
+   .. method:: _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int])
+      :abstractmethod:
+
+
+
+   .. method:: get_prover_key_hash(self, verifier_directory: str)
+      :abstractmethod:
+
+
+      Return the hash of the prover key stored in the given verification contract output directory.
+
+
+

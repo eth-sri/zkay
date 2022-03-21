@@ -1,0 +1,46 @@
+:mod:`zkay.my_logging`
+======================
+
+.. py:module:: zkay.my_logging
+
+.. autoapi-nested-parse::
+
+   This package contains logging functionality.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.log_context`: Context manager for managing log contexts.
+   * :py:mod:`.logger`: Log writer
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   log_context/index.rst
+
+   logger/index.rst
+
+
+
+
+
+Package Contents
+----------------
+
+.. function:: data(key, value)
+
+   Log (key, value) to log-level DATA
+
+
+.. function:: shutdown(handler_list=None)
+
+
+.. function:: prepare_logger(log_file=None, silent=True)
+
+
+.. function:: get_log_file(label='default', parent_dir=None, filename='log', include_timestamp=True)
+
+

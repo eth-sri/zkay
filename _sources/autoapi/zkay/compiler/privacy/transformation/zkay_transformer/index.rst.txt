@@ -1,0 +1,284 @@
+:mod:`zkay.compiler.privacy.transformation.zkay_transformer`
+============================================================
+
+.. py:module:: zkay.compiler.privacy.transformation.zkay_transformer
+
+.. autoapi-nested-parse::
+
+   This module defines zkay->solidity transformers for the smaller contract elements (statements, expressions, state variables).
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: ZkayVarDeclTransformer
+
+   Bases: :class:`zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor`
+
+   Transformer for types, which was left out in the paper.
+
+   This removes all privacy labels and converts the types of non-public variables (not @all)
+   to cipher_type.
+
+   .. method:: visitAnnotatedTypeName(self, ast: AnnotatedTypeName)
+
+
+
+   .. method:: visitVariableDeclaration(self, ast: VariableDeclaration)
+
+
+
+   .. method:: visitParameter(self, ast: Parameter)
+
+
+
+   .. method:: visitStateVariableDeclaration(self, ast: StateVariableDeclaration)
+
+
+
+   .. method:: visitMapping(self, ast: Mapping)
+
+
+
+
+.. py:class:: ZkayStatementTransformer(current_gen: CircuitHelper)
+
+   Bases: :class:`zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor`
+
+   Corresponds to T from paper, (with additional handling of return statement and loops).
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+      Rule (1)
+
+      All statements are transformed individually.
+      Whenever the transformation of a statement requires the introduction of additional statements
+      (the CircuitHelper indicates this by storing them in the statement's pre_statements list), they are prepended to the transformed
+      statement in the list.
+
+      If transformation changes the appearance of a statement (apart from type changes),
+      the statement is wrapped in a comment block which displays the original statement's code.
+
+
+   .. method:: process_statement_child(self, child: AST)
+
+
+      Default statement child handling. Expressions and declarations are visited by the corresponding transformers.
+
+
+   .. method:: visitStatement(self, ast: Statement)
+
+
+      Rules (3), (4)
+
+      This is for all the statements where the statements themselves remain untouched and only the children are altered.
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+      Rule (2)
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+      Rule (6) + additional support for private conditions
+
+      If the condition is public, guard conditions are introduced for both branches if any of the branches contains private expressions.
+
+      If the condition is private, the whole if statement is inlined into the circuit. The only side-effects which are allowed
+      inside the branch bodies are assignment statements with an lhs@me. (anything else would leak private information).
+      The if statement will be replaced by an assignment statement where the lhs is a tuple of all locations which are written
+      in either branch and rhs is a tuple of the corresponding circuit outputs.
+
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+   .. method:: visitDoWhileStatement(self, ast: DoWhileStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitContinueStatement(self, ast: ContinueStatement)
+
+
+
+   .. method:: visitBreakStatement(self, ast: BreakStatement)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+      Handle return statement.
+
+      If the function requires verification, the return statement is replaced by an assignment to a return variable.
+      (which will be returned at the very end of the function body, after any verification wrapper code).
+      Otherwise only the expression is transformed.
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+      Fail if there are any untransformed expressions left.
+
+
+
+.. py:class:: ZkayExpressionTransformer(current_generator: Optional[CircuitHelper])
+
+   Bases: :class:`zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor`
+
+   Roughly corresponds to T_L / T_e from paper.
+
+   T_L and T_e are equivalent here, because parameter encryption checks are handled in the verification wrapper of the function body.
+   In addition to the features described in the paper, this transformer also supports primitive type casting,
+   tuples (multiple return values), operations with short-circuiting and function calls.
+
+   .. method:: visitMeExpr(ast: MeExpr)
+      :staticmethod:
+
+
+      Replace me with msg.sender.
+
+
+   .. method:: visitLiteralExpr(self, ast: LiteralExpr)
+
+
+      Rule (7), don't modify constants.
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+      Rule (8), don't modify identifiers.
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+      Rule (9), transform location and index expressions separately.
+
+
+   .. method:: visitMemberAccessExpr(self, ast: MemberAccessExpr)
+
+
+
+   .. method:: visitTupleExpr(self, ast: TupleExpr)
+
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+      Rule (11), trigger a boundary crossing.
+
+      The reclassified expression is evaluated in the circuit and its result is made available in solidity.
+
+
+   .. method:: visitBuiltinFunction(self, ast: BuiltinFunction)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visit_guarded_expression(self, guard_var: HybridArgumentIdf, if_true: bool, expr: Expression)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+      Casts are handled either in public or inside the circuit depending on the privacy of the casted expression.
+
+
+   .. method:: visitExpression(self, ast: Expression)
+      :abstractmethod:
+
+
+
+
+.. py:class:: ZkayCircuitTransformer(current_generator: CircuitHelper)
+
+   Bases: :class:`zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor`
+
+   Corresponds to T_phi from paper.
+
+   This extends the abstract circuit representation while transforming private expressions and statements.
+   Private expressions can never have side effects.
+   Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
+
+   .. method:: visitLiteralExpr(self, ast: LiteralExpr)
+
+
+      Rule (13), don't modify constants.
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+   .. method:: transform_location(self, loc: LocationExpr)
+
+
+      Rule (14), move location into the circuit.
+
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+      Rule (15), boundary crossing if analysis determined that it is 
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+      Rule (16), other expressions don't need special treatment.
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitBlock(self, ast: Block, guard_cond: Optional[HybridArgumentIdf] = None, guard_val: Optional[bool] = None)
+
+
+
+   .. method:: visitStatement(self, ast: Statement)
+      :abstractmethod:
+
+
+      Fail if statement type was not handled.
+
+
+

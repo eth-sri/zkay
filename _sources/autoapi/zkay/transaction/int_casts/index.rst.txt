@@ -1,0 +1,14 @@
+:mod:`zkay.transaction.int_casts`
+=================================
+
+.. py:module:: zkay.transaction.int_casts
+
+
+
+
+Module Contents
+---------------
+
+.. function:: __convert(val: Any, nbits: Optional[int], signed: bool) -> int
+
+

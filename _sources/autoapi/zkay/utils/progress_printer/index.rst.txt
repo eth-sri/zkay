@@ -1,0 +1,75 @@
+:mod:`zkay.utils.progress_printer`
+==================================
+
+.. py:module:: zkay.utils.progress_printer
+
+
+
+
+Module Contents
+---------------
+
+.. function:: print_step(name)
+
+
+.. py:class:: TermColor
+
+   Bases: :class:`enum.Enum`
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+   .. attribute:: HEADER
+      :annotation: = [95m
+
+      
+
+   .. attribute:: OKBLUE
+      :annotation: = [94m
+
+      
+
+   .. attribute:: OKGREEN
+      :annotation: = [92m
+
+      
+
+   .. attribute:: WARNING
+      :annotation: = [93m
+
+      
+
+   .. attribute:: FAIL
+      :annotation: = [91m
+
+      
+
+   .. attribute:: ENDC
+      :annotation: = [0m
+
+      
+
+   .. attribute:: BOLD
+      :annotation: = [1m
+
+      
+
+   .. attribute:: UNDERLINE
+      :annotation: = [4m
+
+      
+
+
+.. function:: colored_print(color: TermColor) -> ContextManager
+
+
+.. function:: fail_print() -> ContextManager
+
+
+.. function:: warn_print() -> ContextManager
+
+
+.. function:: success_print() -> ContextManager
+
+

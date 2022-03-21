@@ -1,0 +1,43 @@
+:mod:`zkay.compiler.privacy.proving_scheme`
+===========================================
+
+.. py:module:: zkay.compiler.privacy.proving_scheme
+
+.. autoapi-nested-parse::
+
+   This package contains modules which enable the generation of verification contracts for different proving schemes.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.meta`: Contains meta data about the different proving schemes (used by config.py)
+   * :py:mod:`.proving_scheme`: Abstract baseclass for verification contract generators
+
+   ===========
+   Subpackages
+   ===========
+   * :py:mod:`.backends`: Package with concrete ProvingScheme implementations
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+   :hidden:
+
+   backends/index.rst
+
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   meta/index.rst
+
+   proving_scheme/index.rst
+
+
+
+
+

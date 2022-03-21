@@ -1,0 +1,18 @@
+:mod:`zkay.zkay_ast.pointers.pointer_exceptions`
+================================================
+
+.. py:module:: zkay.zkay_ast.pointers.pointer_exceptions
+
+
+
+
+Module Contents
+---------------
+
+.. py:exception:: UnknownIdentifierException(msg, ast)
+
+   Bases: :class:`zkay.zkay_ast.ast.AstException`
+
+   Exception when an unknown identifier is used
+
+

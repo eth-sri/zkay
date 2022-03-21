@@ -1,0 +1,50 @@
+:mod:`zkay.transaction.crypto.rsa_base`
+=======================================
+
+.. py:module:: zkay.transaction.crypto.rsa_base
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: PersistentLocals(func)
+
+   Bases: :class:`object`
+
+   .. method:: __call__(self, *args, **kwargs)
+
+
+
+   .. method:: clear_locals(self)
+
+
+
+   .. method:: locals(self)
+      :property:
+
+
+
+
+.. py:class:: RSACrypto(keystore: ZkayKeystoreInterface)
+
+   Bases: :class:`zkay.transaction.interface.ZkayCryptoInterface`
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. attribute:: default_exponent
+      :annotation: = 65537
+
+      
+
+   .. method:: is_symmetric_cipher(cls)
+      :classmethod:
+
+
+
+   .. method:: _generate_or_load_key_pair(self, address: str)
+
+
+
+

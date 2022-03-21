@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.zkay_ast.visitor.transformer_visitor &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../_static/jquery.js"></script>
         <script src="../../../../../_static/underscore.js"></script>
         <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
@@ -94,111 +47,73 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.zkay_ast.visitor.transformer_visitor">
-<span id="zkay-zkay-ast-visitor-transformer-visitor"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.visitor.transformer_visitor" title="zkay.zkay_ast.visitor.transformer_visitor"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.visitor.transformer_visitor" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-zkay-ast-visitor-transformer-visitor"></span><h1><a class="reference internal" href="#module-zkay.zkay_ast.visitor.transformer_visitor" title="zkay.zkay_ast.visitor.transformer_visitor"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor</span></code></a><a class="headerlink" href="#module-zkay.zkay_ast.visitor.transformer_visitor" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py data">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.T">
-<code class="sig-prename descclassname">zkay.zkay_ast.visitor.transformer_visitor.</code><code class="sig-name descname">T</code><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.T" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.T">
+<span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.</span></span><span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.T" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.zkay_ast.visitor.transformer_visitor.</code><code class="sig-name descname">AstTransformerVisitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.zkay_ast.visitor.transformer_visitor.</span></span><span class="sig-name descname"><span class="pre">AstTransformerVisitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor" title="Permalink to this definition"></a></dt>
 <dd><p>Visitor which replaces visited AST elements by the corresponding visit functions return value</p>
 <p>The default action when no matching visit function is defined, is to replace the node with itself and to visit
 the children. If a matching visit function is defined, children are not automatically visited.
 (Corresponds to node-or-children traversal order from AstVisitor)</p>
 <dl class="py method">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit">
-<code class="sig-name descname">visit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit">
+<span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_list">
-<code class="sig-name descname">visit_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>AST<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_list" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_list">
+<span class="sig-name descname"><span class="pre">visit_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_list" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_children">
-<code class="sig-name descname">visit_children</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.zkay_ast.visitor.transformer_visitor.T" title="zkay.zkay_ast.visitor.transformer_visitor.T">T</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_children" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_children">
+<span class="sig-name descname"><span class="pre">visit_children</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visit_children" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor._visit_internal">
-<code class="sig-name descname">_visit_internal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor._visit_internal" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor._visit_internal">
+<span class="sig-name descname"><span class="pre">_visit_internal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor._visit_internal" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.get_visit_function">
-<code class="sig-name descname">get_visit_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.get_visit_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.get_visit_function">
+<span class="sig-name descname"><span class="pre">get_visit_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.get_visit_function" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visitAST">
-<code class="sig-name descname">visitAST</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visitAST" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visitAST">
+<span class="sig-name descname"><span class="pre">visitAST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ast/index.html#zkay.zkay_ast.ast.AST" title="zkay.zkay_ast.ast.AST"><span class="pre">zkay.zkay_ast.ast.AST</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.zkay_ast.visitor.transformer_visitor.AstTransformerVisitor.visitAST" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -208,49 +123,30 @@ the children. If a matching visit function is defined, children are not automati
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

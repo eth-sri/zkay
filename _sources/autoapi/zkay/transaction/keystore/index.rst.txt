@@ -1,0 +1,36 @@
+:mod:`zkay.transaction.keystore`
+================================
+
+.. py:module:: zkay.transaction.keystore
+
+.. autoapi-nested-parse::
+
+   This package contains the keystore backends.
+
+   ==========
+   Submodules
+   ==========
+   * :py:mod:`.simple`: Basic key store implementation
+
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+   :hidden:
+
+   simple/index.rst
+
+
+
+
+
+Package Contents
+----------------
+
+.. py:class:: SimpleKeystore(conn: ZkayBlockchainInterface)
+
+   Bases: :class:`zkay.transaction.interface.ZkayKeystoreInterface`
+
+   API to add and retrieve local key pairs, and to request public keys.
+
+

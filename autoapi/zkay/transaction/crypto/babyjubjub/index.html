@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zkay.transaction.crypto.babyjubjub &mdash; zkay  documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../index.html" class="icon icon-home"> zkay
+          </a>
+              <div class="version">
+                0.3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../language.html">Language Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">zkay</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.crypto.babyjubjub</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-zkay.transaction.crypto.babyjubjub">
+<span id="zkay-transaction-crypto-babyjubjub"></span><h1><a class="reference internal" href="#module-zkay.transaction.crypto.babyjubjub" title="zkay.transaction.crypto.babyjubjub"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.transaction.crypto.babyjubjub</span></code></a><a class="headerlink" href="#module-zkay.transaction.crypto.babyjubjub" title="Permalink to this headline"></a></h1>
+<p>The MIT License (MIT)</p>
+<p>Copyright (c) 2018-2019 Electric Coin Company</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.BASE_ORDER">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">BASE_ORDER</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">21888242871839275222246405745257275088548364400416034343698204186575808495617</span></em><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.BASE_ORDER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.CURVE_ORDER">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">CURVE_ORDER</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">2736030358979909402780800718157159386076813972158567259200215660948447373041</span></em><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.CURVE_ORDER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">FieldElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.__neg__">
+<span class="sig-name descname"><span class="pre">__neg__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.__neg__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.__add__">
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.__add__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.__sub__">
+<span class="sig-name descname"><span class="pre">__sub__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.__sub__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.__mul__">
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.__mul__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.__truediv__">
+<span class="sig-name descname"><span class="pre">__truediv__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.__truediv__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.exp">
+<span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.exp" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.inv">
+<span class="sig-name descname"><span class="pre">inv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.inv" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.FieldElement.__eq__">
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.FieldElement.__eq__" title="Permalink to this definition"></a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Fq">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">Fq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Fq" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.crypto.babyjubjub.FieldElement" title="zkay.transaction.crypto.babyjubjub.FieldElement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FieldElement</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Fq.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Fq.__str__" title="Permalink to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Fr">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">Fr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Fr" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.transaction.crypto.babyjubjub.FieldElement" title="zkay.transaction.crypto.babyjubjub.FieldElement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FieldElement</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Fr.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Fr.__str__" title="Permalink to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.ZERO">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">ZERO</span></span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.ZERO" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.ONE">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">ONE</span></span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.ONE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.MINUS_ONE">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">MINUS_ONE</span></span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.MINUS_ONE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.BABYJUBJUB_A">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">BABYJUBJUB_A</span></span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.BABYJUBJUB_A" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.BABYJUBJUB_D">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">BABYJUBJUB_D</span></span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.BABYJUBJUB_D" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.BABYJUBJUB_GENERATOR_X">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">BABYJUBJUB_GENERATOR_X</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">11904062828411472290643689191857696496057424932476499415469791423656658550213</span></em><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.BABYJUBJUB_GENERATOR_X" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.BABYJUBJUB_GENERATOR_Y">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">BABYJUBJUB_GENERATOR_Y</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">9356450144216313082194365820021861619676443907964402770398322487858544118183</span></em><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.BABYJUBJUB_GENERATOR_Y" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point.__add__">
+<span class="sig-name descname"><span class="pre">__add__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point.__add__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point.double">
+<span class="sig-name descname"><span class="pre">double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point.double" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point.negate">
+<span class="sig-name descname"><span class="pre">negate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point.negate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point.__mul__">
+<span class="sig-name descname"><span class="pre">__mul__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point.__mul__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point.__eq__">
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point.__eq__" title="Permalink to this definition"></a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.Point.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.Point.__str__" title="Permalink to this definition"></a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">ZERO</span></span><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="zkay.transaction.crypto.babyjubjub.GENERATOR">
+<span class="sig-prename descclassname"><span class="pre">zkay.transaction.crypto.babyjubjub.</span></span><span class="sig-name descname"><span class="pre">GENERATOR</span></span><a class="headerlink" href="#zkay.transaction.crypto.babyjubjub.GENERATOR" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

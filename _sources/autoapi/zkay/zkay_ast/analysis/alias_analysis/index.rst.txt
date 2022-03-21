@@ -1,0 +1,110 @@
+:mod:`zkay.zkay_ast.analysis.alias_analysis`
+============================================
+
+.. py:module:: zkay.zkay_ast.analysis.alias_analysis
+
+
+
+
+Module Contents
+---------------
+
+.. function:: alias_analysis(ast)
+
+
+.. py:class:: AliasAnalysisVisitor(log=False)
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: propagate(self, statements, before_analysis: PartitionState[PrivacyLabelExpr])
+
+
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+
+   .. method:: visitBlock(self, ast: Block)
+
+
+
+   .. method:: visitIfStatement(self, ast: IfStatement)
+
+
+
+   .. method:: visitWhileStatement(self, ast: WhileStatement)
+
+
+
+   .. method:: visitDoWhileStatement(self, ast: DoWhileStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
+
+
+
+   .. method:: visitRequireStatement(self, ast: RequireStatement)
+
+
+
+   .. method:: visitAssignmentStatement(self, ast: AssignmentStatement)
+
+
+
+   .. method:: visitExpressionStatement(self, ast: ExpressionStatement)
+
+
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+   .. method:: visitContinueStatement(self, ast: ContinueStatement)
+
+
+
+   .. method:: visitBreakStatement(self, ast: BreakStatement)
+
+
+
+   .. method:: visitStatement(self, _)
+      :abstractmethod:
+
+
+
+
+.. py:class:: GuardConditionAnalyzer(log=False)
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: analyze(self, cond, before_analysis: PartitionState)
+
+
+
+   .. method:: _negated(self)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+
+.. function:: _recursive_update(lhs, rhs, analysis: PartitionState, merge: bool)
+
+
+.. function:: recursive_merge(lhs, rhs, analysis: PartitionState)
+
+
+.. function:: recursive_assign(lhs, rhs, analysis: PartitionState)
+
+

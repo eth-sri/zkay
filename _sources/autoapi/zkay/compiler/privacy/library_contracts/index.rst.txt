@@ -1,0 +1,56 @@
+:mod:`zkay.compiler.privacy.library_contracts`
+==============================================
+
+.. py:module:: zkay.compiler.privacy.library_contracts
+
+.. autoapi-nested-parse::
+
+   This module stores the solidity library contracts used by zkay contracts
+
+
+
+
+Module Contents
+---------------
+
+.. function:: get_verify_libs_code() -> str
+
+   Return all verification contract libraries combined into single string
+
+
+.. data:: bn128_scalar_field
+   :annotation: = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+
+   The field prime used by the zk-snark elliptic curve
+
+
+.. data:: bn128_scalar_field_bits
+   
+
+   Integers of at most this many bits can be represented using field values
+
+
+.. function:: get_pki_contract() -> str
+
+   Contract of the public key infrastructure used for asymmetric cryptography
+
+
+.. data:: alt_bn128_pairing_lib_simple
+   
+
+   Solidity library for alt_bn128 without twist point addition
+
+   :Source: https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L397
+    - (g2 addition removed)
+   :License: MIT
+
+
+.. data:: alt_bn128_pairing_lib
+   
+
+   Solidity library for alt_bn128 with twist point addition
+
+   :Source: https://github.com/Zokrates/ZoKrates/blob/bb98ab1c0426ceeaa2d181fbfbfdc616b8365c6b/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L397
+   :License: MIT
+
+

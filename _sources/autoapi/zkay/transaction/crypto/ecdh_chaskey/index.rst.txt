@@ -1,0 +1,26 @@
+:mod:`zkay.transaction.crypto.ecdh_chaskey`
+===========================================
+
+.. py:module:: zkay.transaction.crypto.ecdh_chaskey
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: EcdhChaskeyCrypto(keystore: ZkayKeystoreInterface)
+
+   Bases: :class:`zkay.transaction.crypto.ecdh_base.EcdhBase`
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. method:: _enc(self, plain: int, my_sk: int, target_pk: int)
+
+
+
+   .. method:: _dec(self, cipher: Tuple[int, ...], my_sk: Any)
+
+
+
+

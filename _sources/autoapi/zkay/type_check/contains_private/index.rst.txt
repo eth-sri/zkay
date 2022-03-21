@@ -1,0 +1,23 @@
+:mod:`zkay.type_check.contains_private`
+=======================================
+
+.. py:module:: zkay.type_check.contains_private
+
+
+
+
+Module Contents
+---------------
+
+.. function:: contains_private(ast)
+
+
+.. py:class:: ContainsPrivateVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitAST(self, ast: AST)
+
+
+
+

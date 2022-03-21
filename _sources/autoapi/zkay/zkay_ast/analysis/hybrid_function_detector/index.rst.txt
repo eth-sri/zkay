@@ -1,0 +1,60 @@
+:mod:`zkay.zkay_ast.analysis.hybrid_function_detector`
+======================================================
+
+.. py:module:: zkay.zkay_ast.analysis.hybrid_function_detector
+
+
+
+
+Module Contents
+---------------
+
+.. function:: detect_hybrid_functions(ast)
+
+   :param ast:
+   :return: marks all functions which will require verification
+
+
+.. py:class:: DirectHybridFunctionDetectionVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitReclassifyExpr(self, ast: ReclassifyExpr)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+
+   .. method:: visitAllExpr(self, ast: AllExpr)
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+
+.. py:class:: IndirectHybridFunctionDetectionVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+
+.. py:class:: NonInlineableCallDetector
+
+   Bases: :class:`zkay.zkay_ast.visitor.function_visitor.FunctionVisitor`
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+

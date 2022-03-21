@@ -1,0 +1,30 @@
+:mod:`zkay.zkay_ast.analysis.return_checker`
+============================================
+
+.. py:module:: zkay.zkay_ast.analysis.return_checker
+
+
+
+
+Module Contents
+---------------
+
+.. function:: check_return(ast)
+
+
+.. py:exception:: ReturnPositionException(ast: ReturnStatement)
+
+   Bases: :class:`zkay.zkay_ast.ast.AstException`
+
+   Generic exception for errors in an AST
+
+
+.. py:class:: ReturnCheckVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitReturnStatement(self, ast: ReturnStatement)
+
+
+
+

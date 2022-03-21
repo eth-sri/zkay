@@ -1,0 +1,158 @@
+:mod:`zkay.compiler.privacy.circuit_generation.backends.jsnark_generator`
+=========================================================================
+
+.. py:module:: zkay.compiler.privacy.circuit_generation.backends.jsnark_generator
+
+.. autoapi-nested-parse::
+
+   Circuit Generator implementation for the jsnark backend
+
+
+
+
+Module Contents
+---------------
+
+.. function:: _get_t(t: Union[TypeName, Expression])
+
+   Return the corresponding jsnark type name for a given type or expression.
+
+
+.. py:class:: JsnarkVisitor(phi: List[CircuitStatement])
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   Visitor which compiles CircuitStatements and Expressions down to java code compatible with a custom jsnark wrapper.
+
+   .. method:: visitCircuit(self)
+
+
+
+   .. method:: visitCircComment(self, stmt: CircComment)
+
+
+
+   .. method:: visitCircIndentBlock(self, stmt: CircIndentBlock)
+
+
+
+   .. method:: visitCircCall(self, stmt: CircCall)
+
+
+
+   .. method:: visitCircVarDecl(self, stmt: CircVarDecl)
+
+
+
+   .. method:: visitCircEqConstraint(self, stmt: CircEqConstraint)
+
+
+
+   .. method:: visitCircEncConstraint(self, stmt: CircEncConstraint)
+
+
+
+   .. method:: visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint)
+
+
+
+   .. method:: visitCircGuardModification(self, stmt: CircGuardModification)
+
+
+
+   .. method:: visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr)
+
+
+
+   .. method:: visitNumberLiteralExpr(self, ast: NumberLiteralExpr)
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+   .. method:: visitMemberAccessExpr(self, ast: MemberAccessExpr)
+
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+      :abstractmethod:
+
+
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+
+
+
+   .. method:: handle_cast(self, wire, t: TypeName)
+
+
+
+
+.. function:: add_function_circuit_arguments(circuit: CircuitHelper)
+
+   Generate java code which adds circuit IO as described by circuit
+
+
+.. py:class:: JsnarkGenerator(circuits: List[CircuitHelper], proving_scheme: ProvingScheme, output_dir: str)
+
+   Bases: :class:`zkay.compiler.privacy.circuit_generation.circuit_generator.CircuitGenerator`
+
+   A circuit generator takes an abstract circuit representation and turns it into a concrete zk-snark circuit.
+
+   It also handles prover/verification key generation and parsing, and generates the verification contracts using the supplied
+   proving scheme.
+
+   .. method:: _generate_zkcircuit(self, import_keys: bool, circuit: CircuitHelper)
+
+
+      Generate code and compile a single circuit.
+
+      When implementing a new backend, this function should generate a concrete circuit representation, which has:
+      a) circuit IO corresponding to circuit.sec_idfs/output_idfs/input_idfs
+      b) logic corresponding to the non-CircCall statements in circuit.phi
+      c) a), b) and c) for the circuit associated with the target function for every CircCall statement in circuit.phi
+
+      The output of this function should be in a state where key generation can be invoked immediately without further transformations
+      (i.e. any intermediary compilation steps should also happen here).
+
+      It should be stored in self._get_circuit_output_dir(circuit)
+
+      :return: True if the circuit was modified since last generation (need to generate new keys)
+
+
+   .. method:: _generate_keys(self, circuit: CircuitHelper)
+
+
+      Generate prover and verification keys for the circuit stored in self._get_circuit_output_dir(circuit).
+
+
+   .. method:: get_vk_and_pk_filenames(cls)
+      :classmethod:
+
+
+
+   .. method:: _parse_verification_key(self, circuit: CircuitHelper)
+
+
+      Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme
+
+
+   .. method:: _get_prover_key_hash(self, circuit: CircuitHelper)
+
+
+
+   .. method:: _get_primary_inputs(self, circuit: CircuitHelper)
+
+
+      Return list of all public input locations
+      :param circuit: abstract circuit representation
+      :return: list of location strings, a location is either an identifier name or an array index
+
+
+

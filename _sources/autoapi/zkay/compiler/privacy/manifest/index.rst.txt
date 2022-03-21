@@ -1,0 +1,48 @@
+:mod:`zkay.compiler.privacy.manifest`
+=====================================
+
+.. py:module:: zkay.compiler.privacy.manifest
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: Manifest
+
+   Static class, which holds the string keys of all supported zkay manifest keys 
+
+   .. attribute:: zkay_version
+      :annotation: = zkay-version
+
+      
+
+   .. attribute:: solc_version
+      :annotation: = solc-version
+
+      
+
+   .. attribute:: zkay_options
+      :annotation: = zkay-options
+
+      
+
+   .. method:: load(project_dir)
+      :staticmethod:
+
+
+      Returned parsed manifest json file located in project dir.
+
+
+   .. method:: import_manifest_config(manifest)
+      :staticmethod:
+
+
+
+   .. method:: with_manifest_config(manifest)
+      :staticmethod:
+
+
+
+

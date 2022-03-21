@@ -1,0 +1,131 @@
+:mod:`zkay.zkay_ast.pointers.symbol_table`
+==========================================
+
+.. py:module:: zkay.zkay_ast.pointers.symbol_table
+
+
+
+
+Module Contents
+---------------
+
+.. function:: fill_symbol_table(ast)
+
+
+.. function:: link_symbol_table(ast)
+
+
+.. function:: link_identifiers(ast)
+
+
+.. function:: merge_dicts(*dict_args)
+
+   Given any number of dicts, shallow copy and merge into a new dict.
+   Report error on conflicting keys.
+
+
+.. function:: collect_children_names(ast: AST) -> Dict[str, Identifier]
+
+
+.. function:: get_builtin_globals()
+
+
+.. py:class:: SymbolTableFiller
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: get_builtin_globals(self)
+
+
+
+   .. method:: visitSourceUnit(self, ast: SourceUnit)
+
+
+
+   .. method:: visitContractDefinition(self, ast: ContractDefinition)
+
+
+
+   .. method:: visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition)
+
+
+
+   .. method:: visitStructDefinition(self, ast: StructDefinition)
+
+
+
+   .. method:: visitEnumDefinition(self, ast: EnumDefinition)
+
+
+
+   .. method:: visitEnumValue(self, ast: EnumValue)
+
+
+
+   .. method:: visitVariableDeclaration(self, ast: VariableDeclaration)
+
+
+
+   .. method:: visitStatementList(self, ast: StatementList)
+
+
+
+   .. method:: visitSimpleStatement(self, ast: SimpleStatement)
+
+
+
+   .. method:: visitForStatement(self, ast: ForStatement)
+
+
+
+   .. method:: visitMapping(self, ast: Mapping)
+
+
+
+
+.. py:class:: SymbolTableLinker
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: _find_next_decl(ast: AST, name: str)
+      :staticmethod:
+
+
+
+   .. method:: _find_lca(ast1: AST, ast2: AST, root: AST)
+      :staticmethod:
+
+
+
+   .. method:: find_type_declaration(t: UserDefinedTypeName)
+      :staticmethod:
+
+
+
+   .. method:: find_identifier_declaration(ast: IdentifierExpr)
+      :staticmethod:
+
+
+
+   .. method:: in_scope_at(target_idf: Identifier, ast: AST)
+      :staticmethod:
+
+
+
+   .. method:: visitIdentifierExpr(self, ast: IdentifierExpr)
+
+
+
+   .. method:: visitUserDefinedTypeName(self, ast: UserDefinedTypeName)
+
+
+
+   .. method:: visitMemberAccessExpr(self, ast: MemberAccessExpr)
+
+
+
+   .. method:: visitIndexExpr(self, ast: IndexExpr)
+
+
+
+

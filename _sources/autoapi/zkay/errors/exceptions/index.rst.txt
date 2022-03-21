@@ -1,0 +1,50 @@
+:mod:`zkay.errors.exceptions`
+=============================
+
+.. py:module:: zkay.errors.exceptions
+
+.. autoapi-nested-parse::
+
+   This module contains the definitions of all exceptions which may be publicly raised by zkay
+
+
+
+
+Module Contents
+---------------
+
+.. py:exception:: ZkayCompilerError
+
+   Bases: :class:`Exception`
+
+   Error during compilation
+
+
+.. py:exception:: ZkaySyntaxError
+
+   Bases: :class:`zkay.errors.exceptions.ZkayCompilerError`
+
+   Error during parsing / AST construction"
+
+
+.. py:exception:: PreprocessAstException
+
+   Bases: :class:`zkay.errors.exceptions.ZkayCompilerError`
+
+   Error during ast pre-processing"
+
+
+.. py:exception:: AnalysisException
+
+   Bases: :class:`zkay.errors.exceptions.ZkayCompilerError`
+
+   Error during ast analysis"
+
+
+.. py:exception:: TypeCheckException
+
+   Bases: :class:`zkay.errors.exceptions.ZkayCompilerError`
+
+   Error during type checking"
+
+

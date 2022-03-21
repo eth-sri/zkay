@@ -1,0 +1,37 @@
+:mod:`zkay.transaction.crypto.ecdh_base`
+========================================
+
+.. py:module:: zkay.transaction.crypto.ecdh_base
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: EcdhBase(keystore: ZkayKeystoreInterface)
+
+   Bases: :class:`zkay.transaction.interface.ZkayCryptoInterface`
+
+   API to generate cryptographic keys and perform encryption/decryption operations.
+
+   .. method:: is_symmetric_cipher(cls)
+      :classmethod:
+
+
+
+   .. method:: _gen_keypair(rnd: bytes)
+      :staticmethod:
+
+
+
+   .. method:: _ecdh_sha256(other_pk: int, my_sk: int)
+      :staticmethod:
+
+
+
+   .. method:: _generate_or_load_key_pair(self, address: str)
+
+
+
+

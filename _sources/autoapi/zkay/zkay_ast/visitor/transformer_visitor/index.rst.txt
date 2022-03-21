@@ -1,0 +1,49 @@
+:mod:`zkay.zkay_ast.visitor.transformer_visitor`
+================================================
+
+.. py:module:: zkay.zkay_ast.visitor.transformer_visitor
+
+
+
+
+Module Contents
+---------------
+
+.. data:: T
+   
+
+   
+
+.. py:class:: AstTransformerVisitor(log=False)
+
+   Visitor which replaces visited AST elements by the corresponding visit functions return value
+
+   The default action when no matching visit function is defined, is to replace the node with itself and to visit
+   the children. If a matching visit function is defined, children are not automatically visited.
+   (Corresponds to node-or-children traversal order from AstVisitor)
+
+   .. method:: visit(self, ast)
+
+
+
+   .. method:: visit_list(self, ast_list: List[AST])
+
+
+
+   .. method:: visit_children(self, ast: T)
+
+
+
+   .. method:: _visit_internal(self, ast)
+
+
+
+   .. method:: get_visit_function(self, c)
+
+
+
+   .. method:: visitAST(self, ast: AST)
+
+
+
+

@@ -1,0 +1,30 @@
+:mod:`zkay.zkay_ast.visitor.visitor`
+====================================
+
+.. py:module:: zkay.zkay_ast.visitor.visitor
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: AstVisitor(traversal='post', log=False)
+
+   .. method:: visit(self, ast)
+
+
+
+   .. method:: _visit_internal(self, ast)
+
+
+
+   .. method:: get_visit_function(self, c)
+
+
+
+   .. method:: visitChildren(self, ast)
+
+
+
+

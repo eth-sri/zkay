@@ -1,0 +1,31 @@
+:mod:`zkay.zkay_ast.analysis.contains_private_checker`
+======================================================
+
+.. py:module:: zkay.zkay_ast.analysis.contains_private_checker
+
+
+
+
+Module Contents
+---------------
+
+.. function:: contains_private_expr(ast: Optional[AST])
+
+
+.. py:class:: ContainsPrivVisitor
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitFunctionCallExpr(self, ast: FunctionCallExpr)
+
+
+
+   .. method:: visitExpression(self, ast: Expression)
+
+
+
+   .. method:: visitAST(self, ast)
+
+
+
+

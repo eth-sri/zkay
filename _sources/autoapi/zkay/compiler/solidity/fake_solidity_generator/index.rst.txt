@@ -1,0 +1,155 @@
+:mod:`zkay.compiler.solidity.fake_solidity_generator`
+=====================================================
+
+.. py:module:: zkay.compiler.solidity.fake_solidity_generator
+
+
+
+
+Module Contents
+---------------
+
+.. data:: ME_DECL
+   :annotation: =  address private me = msg.sender;
+
+   
+
+.. data:: WS_PATTERN
+   :annotation: = [ \t\r\n\u000C]
+
+   
+
+.. data:: ID_PATTERN
+   :annotation: = [a-zA-Z\$_][a-zA-Z0-9\$_]*
+
+   
+
+.. data:: UINT_PATTERN
+   :annotation: = uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uint72|uint80|uint88|uint96|uint104|uint112|uint120|uint128|uint136|uint144|uint152|uint160|uint168|uint176|uint184|uint192|uint200|uint208|uint216|uint224|uint232|uint240|uint248|uint256
+
+   
+
+.. data:: INT_PATTERN
+   :annotation: = int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256
+
+   
+
+.. data:: USER_TYPE_PATTERN
+   
+
+   
+
+.. data:: ELEM_TYPE_PATTERN
+   
+
+   
+
+.. data:: NONID_START
+   :annotation: = (?:[^a-zA-Z0-9\$_]|^)
+
+   
+
+.. data:: NONID_END
+   :annotation: = (?:[^a-zA-Z0-9\$_]|$)
+
+   
+
+.. data:: PARENS_PATTERN
+   
+
+   
+
+.. data:: BRACE_PATTERN
+   
+
+   
+
+.. data:: STRING_OR_COMMENT_PATTERN
+   
+
+   
+
+.. data:: CONTRACT_START_PATTERN
+   
+
+   
+
+.. data:: ATYPE_PATTERN
+   
+
+   
+
+.. data:: MATCH_WORD_FSTR
+   
+
+   
+
+.. data:: FINAL_PATTERN
+   
+
+   
+
+.. data:: ALL_PATTERN
+   
+
+   
+
+.. data:: PRAGMA_PATTERN
+   
+
+   
+
+.. data:: MAP_PATTERN
+   
+
+   
+
+.. data:: REVEAL_START_PATTERN
+   
+
+   
+
+.. function:: create_surrogate_string(instr: str)
+
+   Preserve newlines and replace all other characters with spaces
+
+   :return whitespace string with same length as instr and with the same line breaks
+
+
+.. function:: find_matching_parenthesis(code: str, open_parens_loc: int) -> int
+
+   Get index of matching parenthesis/bracket/brace.
+
+   :param code: code in which to search
+   :param open_parens_loc: index of the opening parenthesis within code
+   :return: index of the matching closing parenthesis
+
+
+.. function:: strip_reveals(code: str)
+
+   Replace reveal expressions by their inner expression, with whitespace padding.
+
+
+.. function:: inject_me_decls(code: str)
+
+   Add an additional address me = msg.sender state variable declaration right before the closing brace of each contract definition.
+
+
+.. function:: replace_with_surrogate(code: str, search_pattern: Pattern, replacement_fstr: str = '{}')
+
+   Replace all occurrences of search_pattern with capture group <keep> (if any) + replacement.
+
+   Replacement is either
+       a) replacement_fstr (if replacement_fstr does not contain '{}')
+       b) replacement_fstr with {} replaced by whitespace corresponding to content of capture group <repl>
+          (such that replacement length == <repl> length with line breaks preserved)
+
+   The <repl> capture group must be the last thing that is matched in search pattern
+
+
+.. function:: fake_solidity_code(code: str)
+
+   Returns the solidity code to which the given zkay_code corresponds when dropping all privacy features,
+   while preserving original formatting
+
+

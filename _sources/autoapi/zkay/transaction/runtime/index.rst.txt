@@ -1,0 +1,91 @@
+:mod:`zkay.transaction.runtime`
+===============================
+
+.. py:module:: zkay.transaction.runtime
+
+
+
+
+Module Contents
+---------------
+
+.. data:: _crypto_classes
+   
+
+   
+
+.. data:: _prover_classes
+   
+
+   
+
+.. data:: _blockchain_classes
+   
+
+   
+
+.. py:class:: Runtime
+
+   Provides global access to singleton runtime API backend instances.
+   See interface.py for more information.
+
+   The global configuration in config.py determines which backends are made available via the Runtime class.
+
+   .. attribute:: __blockchain
+      
+
+      
+
+   .. attribute:: __crypto
+      
+
+      
+
+   .. attribute:: __keystore
+      
+
+      
+
+   .. attribute:: __prover
+      
+
+      
+
+   .. method:: reset()
+      :staticmethod:
+
+
+      Reboot the runtime.
+
+      When a new backend is selected in the configuration, it will only be loaded after a runtime reset.
+
+
+   .. method:: blockchain()
+      :staticmethod:
+
+
+      Return singleton object which implements ZkayBlockchainInterface.
+
+
+   .. method:: keystore()
+      :staticmethod:
+
+
+      Return singleton object which implements ZkayKeystoreInterface.
+
+
+   .. method:: crypto()
+      :staticmethod:
+
+
+      Return singleton object which implements ZkayCryptoInterface.
+
+
+   .. method:: prover()
+      :staticmethod:
+
+
+      Return singleton object which implements ZkayProverInterface.
+
+
+

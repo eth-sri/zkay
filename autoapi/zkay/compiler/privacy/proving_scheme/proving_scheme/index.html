@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.compiler.privacy.proving_scheme.proving_scheme &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../../" id="documentation_options" src="../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../tutorial.html">Tutorial</a></li>
@@ -94,174 +47,136 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.compiler.privacy.proving_scheme.proving_scheme">
-<span id="zkay-compiler-privacy-proving-scheme-proving-scheme"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.proving_scheme.proving_scheme" title="zkay.compiler.privacy.proving_scheme.proving_scheme"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.proving_scheme.proving_scheme" title="Permalink to this headline">¶</a></h1>
+<span id="zkay-compiler-privacy-proving-scheme-proving-scheme"></span><h1><a class="reference internal" href="#module-zkay.compiler.privacy.proving_scheme.proving_scheme" title="zkay.compiler.privacy.proving_scheme.proving_scheme"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme</span></code></a><a class="headerlink" href="#module-zkay.compiler.privacy.proving_scheme.proving_scheme" title="Permalink to this headline"></a></h1>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py class">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.proving_scheme.proving_scheme.</code><code class="sig-name descname">G1Point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme.</span></span><span class="sig-name descname"><span class="pre">G1Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point" title="Permalink to this definition"></a></dt>
 <dd><p>Data class to represent curve points</p>
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.negated">
-<code class="sig-name descname">negated</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.negated" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.negated">
+<span class="sig-name descname"><span class="pre">negated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.negated" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_seq">
-<em class="property">static </em><code class="sig-name descname">from_seq</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_seq" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_seq">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_seq" title="Permalink to this definition"></a></dt>
 <dd><p>Construct G1Point from a sequence of length 2 of integer literal strings
 First entry makes up the X coordinate, second entry makes up the Y coordinate</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_it">
-<em class="property">static </em><code class="sig-name descname">from_it</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">it</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_it" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_it">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_it</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.from_it" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.__str__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G1Point.__str__" title="Permalink to this definition"></a></dt>
 <dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.proving_scheme.proving_scheme.</code><code class="sig-name descname">G2Point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x1</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">x2</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">y1</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">y2</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme.</span></span><span class="sig-name descname"><span class="pre">G2Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point" title="Permalink to this definition"></a></dt>
 <dd><p>Data class to represent curve points which are encoded using two field elements</p>
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_seq">
-<em class="property">static </em><code class="sig-name descname">from_seq</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_seq" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_seq">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_seq" title="Permalink to this definition"></a></dt>
 <dd><p>Construct G1Point from a sequence of length 4 of integer literal strings
 First two entries make up the X coordinate, last two entries make up the Y coordinate</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_it">
-<em class="property">static </em><code class="sig-name descname">from_it</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">it</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_it" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_it">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_it</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.from_it" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.__str__">
-<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.__str__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.G2Point.__str__" title="Permalink to this definition"></a></dt>
 <dd><p>Return str(self).</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.proving_scheme.proving_scheme.</code><code class="sig-name descname">VerifyingKey</code><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme.</span></span><span class="sig-name descname"><span class="pre">VerifyingKey</span></span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract base data class for verification keys</p>
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey.create_dummy_key">
-<em class="property">abstract classmethod </em><code class="sig-name descname">create_dummy_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey.create_dummy_key" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey.create_dummy_key">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_dummy_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey.create_dummy_key" title="Permalink to this definition"></a></dt>
 <dd><p>Generate a dummy key.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.compiler.privacy.proving_scheme.proving_scheme.</code><code class="sig-name descname">ProvingScheme</code><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme.</span></span><span class="sig-name descname"><span class="pre">ProvingScheme</span></span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract base class for proving schemes</p>
 <p>A proving scheme provides functionality to generate a verification contract from a proving-scheme dependent verification-key
 and an abstract circuit representation</p>
 <dl class="py class">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.VerifyingKey">
-<em class="property">class </em><code class="sig-name descname">VerifyingKey</code><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.VerifyingKey" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey" title="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey</span></code></a></p>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.VerifyingKey">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">VerifyingKey</span></span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.VerifyingKey" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey" title="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VerifyingKey</span></code></a></p>
 <p>Abstract base data class for verification keys</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.verify_libs_contract_filename">
-<code class="sig-name descname">verify_libs_contract_filename</code><em class="property"> = ./verify_libs.sol</em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.verify_libs_contract_filename" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.verify_libs_contract_filename">
+<span class="sig-name descname"><span class="pre">verify_libs_contract_filename</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">./verify_libs.sol</span></em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.verify_libs_contract_filename" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.snark_scalar_field_var_name">
-<code class="sig-name descname">snark_scalar_field_var_name</code><em class="property"> = snark_scalar_field</em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.snark_scalar_field_var_name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.snark_scalar_field_var_name">
+<span class="sig-name descname"><span class="pre">snark_scalar_field_var_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">snark_scalar_field</span></em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.snark_scalar_field_var_name" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.hash_var_name">
-<code class="sig-name descname">hash_var_name</code><em class="property"> = hash</em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.hash_var_name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.hash_var_name">
+<span class="sig-name descname"><span class="pre">hash_var_name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">hash</span></em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.hash_var_name" title="Permalink to this definition"></a></dt>
 <dd><p>Special variable names usable by the verification contract</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.name">
-<code class="sig-name descname">name</code><em class="property"> = none</em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="pre">=</span> <span class="pre">none</span></em><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.name" title="Permalink to this definition"></a></dt>
 <dd><p>Proving scheme name, overridden by child classes</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.generate_verification_contract">
-<em class="property">abstract </em><code class="sig-name descname">generate_verification_contract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">verification_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey" title="zkay.compiler.privacy.proving_scheme.proving_scheme.VerifyingKey">VerifyingKey</a></span></em>, <em class="sig-param"><span class="n">circuit</span><span class="p">:</span> <span class="n">CircuitHelper</span></em>, <em class="sig-param"><span class="n">primary_inputs</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">prover_key_hash</span><span class="p">:</span> <span class="n">bytes</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.generate_verification_contract" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.generate_verification_contract">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_verification_contract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verification_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.VerifyingKey" title="zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.VerifyingKey"><span class="pre">VerifyingKey</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../circuit_generation/circuit_helper/index.html#zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper" title="zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper"><span class="pre">zkay.compiler.privacy.circuit_generation.circuit_helper.CircuitHelper</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">primary_inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prover_key_hash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.compiler.privacy.proving_scheme.proving_scheme.ProvingScheme.generate_verification_contract" title="Permalink to this definition"></a></dt>
 <dd><p>Generate a verification contract for the zk-snark corresponding to circuit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -285,49 +200,30 @@ and an abstract circuit representation</p>
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

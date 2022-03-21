@@ -1,0 +1,68 @@
+:mod:`zkay.compiler.solidity.compiler`
+======================================
+
+.. py:module:: zkay.compiler.solidity.compiler
+
+
+
+
+Module Contents
+---------------
+
+.. py:exception:: SolcException
+
+   Bases: :class:`Exception`
+
+   Solc reported error 
+
+
+.. function:: compile_solidity_json(sol_filename: str, libs: Optional[Dict[str, str]] = None, optimizer_runs: int = -1, output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode'), cwd: str = None) -> Dict
+
+   Compile the given solidity file using solc json interface with the provided options.
+
+   :param sol_filename: path to solidity file
+   :param libs: [OPTIONAL] dictionary containing <LibraryContractName, LibraryContractAddress> pairs, used for linking
+   :param optimizer_runs: controls the optimize-runs flag, negative values disable the optimizer
+   :param output_selection: determines which fields are included in the compiler output dict
+   :param cwd: working directory
+   :return: dictionary with the compilation results according to output_selection
+
+
+.. function:: _get_line_col(code: str, idx: int)
+
+   Get line and column (1-based) from character index 
+
+
+.. function:: get_error_order_key(error)
+
+
+.. function:: check_compilation(filename: str, show_errors: bool = False, display_code: str = None)
+
+   Run the given file through solc without output to check for compiler errors.
+
+   :param filename: file to dry-compile
+   :param show_errors: if true, errors and warnings are printed
+   :param display_code: code to use when displaying the compiler errors
+   :raise SolcException: raised if solc reports a compiler error
+
+
+.. function:: check_for_zkay_solc_errors(zkay_code: str, fake_solidity_code: str)
+
+   Run fake solidity code (stripped privacy features) through solc and report errors in the context of the original zkay code.
+
+   Fake solidity code = zkay code with privacy features removed in a source-location preserving way (whitespace padding)
+
+   :param zkay_code: Original zkay code
+   :param fake_solidity_code: Corresponding "fake solidity code"
+
+
+.. function:: compile_solidity_code(code: str, working_directory: Optional[str] = None, optimizer_runs=cfg.opt_solc_optimizer_runs) -> Dict
+
+   Compile the given solidity code with default settings.
+
+   :param code: code to compile
+   :param working_directory: (Optional) compiler working directory
+   :param optimizer_runs: solc optimizer argument "runs", a negative value disables the optimizer
+   :return: json compilation output
+
+

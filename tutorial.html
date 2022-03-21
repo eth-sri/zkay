@@ -1,73 +1,37 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tutorial &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Language Overview" href="language.html" />
     <link rel="prev" title="Getting Started" href="getting_started.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -75,23 +39,12 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#example-problem">Example Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-contract">Example Contract</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#compilation">Compilation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#local-transaction-testing">Local Transaction Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a></li>
@@ -109,107 +62,63 @@
 <li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Tutorial</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="tutorial">
-<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="example-problem">
-<h2>Example Problem<a class="headerlink" href="#example-problem" title="Permalink to this headline">¶</a></h2>
-<p>Let’s assume we want to conduct a survey where users can pick between the 3 options a, b, and c.
-With zkay it is possible to do this on-chain such that:</p>
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline"></a></h1>
+<div class="section" id="example-contract">
+<h2>Example Contract<a class="headerlink" href="#example-contract" title="Permalink to this headline"></a></h2>
+<p>Assume we want to conduct a survey where users can pick between three options a, b, and c. It is possible to express such a survey in zkay such that:</p>
 <ol class="arabic simple">
-<li><p>Only the voter and the survey organizer get to see the value of a vote</p></li>
+<li><p>Only the voter and the survey organizer can see the value of a vote</p></li>
 <li><p>Everyone can verify that all votes were counted correctly</p></li>
 </ol>
-<p>The following example contract shows, how such an implementation could look like:</p>
-<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kr">pragma</span> <span class="n">zkay</span> <span class="o">^</span><span class="mf">0.2</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+<p>The contract below contains a zkay implementation of this survey system. See the <a class="reference internal" href="language.html#language-overview-label"><span class="std std-ref">Language Overview</span></a> for details on the individual language constructs. We assume that this contract is stored in the file <cite>survey.zkay</cite> in the current directory.</p>
+<div class="highlight-zkay notranslate"><div class="highlight"><pre><span></span><span class="kr">pragma</span> <span class="n">zkay</span> <span class="o">^</span><span class="mf">0.3</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
 
 <span class="kd">contract</span> <span class="n">Survey</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">Choice</span> <span class="p">{</span>
-        <span class="n">None</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+        <span class="n">none</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
     <span class="p">}</span>
 
     <span class="kr">final</span> <span class="kt">address</span> <span class="n">organizer</span><span class="p">;</span>
 
-    <span class="c1">// Votes of the individual users (only readable by the respective user)</span>
+    <span class="c1">// Votes of the individual users (current_votes[a] is only visible to a)</span>
     <span class="kd">mapping</span><span class="p">(</span><span class="kt">address</span><span class="o">!</span><span class="n">x</span> <span class="o">=&gt;</span> <span class="n">Choice</span><span class="kt">@</span><span class="n">x</span><span class="p">)</span> <span class="n">current_votes</span><span class="p">;</span>
 
-    <span class="c1">// Current vote to be processed by organizer</span>
-    <span class="kt">bool</span> <span class="n">pending_vote</span><span class="p">;</span>
-    <span class="n">Choice</span><span class="kt">@</span><span class="n">organizer</span> <span class="n">new_vote</span><span class="p">;</span>
+    <span class="c1">// Private vote counts allowing homomorphic operations (only visible to the organizer)</span>
+    <span class="kt">uint32@</span><span class="n">organizer</span><span class="o">&lt;+&gt;</span> <span class="n">a_count</span><span class="p">;</span>
+    <span class="kt">uint32@</span><span class="n">organizer</span><span class="o">&lt;+&gt;</span> <span class="n">b_count</span><span class="p">;</span>
+    <span class="kt">uint32@</span><span class="n">organizer</span><span class="o">&lt;+&gt;</span> <span class="n">c_count</span><span class="p">;</span>
 
-    <span class="c1">// Encrypted counts</span>
-    <span class="kt">uint64@</span><span class="n">organizer</span> <span class="n">a_count</span><span class="p">;</span>
-    <span class="kt">uint64@</span><span class="n">organizer</span> <span class="n">b_count</span><span class="p">;</span>
-    <span class="kt">uint64@</span><span class="n">organizer</span> <span class="n">c_count</span><span class="p">;</span>
-
-    <span class="c1">// The minimum number of paticipants before the vote can be closed</span>
+    <span class="c1">// The minimum number of participants before the vote can be closed</span>
     <span class="kt">uint</span> <span class="n">min_votes</span><span class="p">;</span>
 
     <span class="c1">// Total number of votes</span>
     <span class="kt">uint</span> <span class="n">vote_count</span><span class="p">;</span>
 
-    <span class="c1">// Published results (after vote is closed and result published by organizer),</span>
-    <span class="c1">// packed into a single uint</span>
+    <span class="c1">// Published results (after vote is closed and result published by organizer)</span>
     <span class="kt">uint</span> <span class="n">packed_results</span><span class="p">;</span>
 
     <span class="kd">constructor</span><span class="p">(</span><span class="kt">uint</span> <span class="n">_min_votes</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
@@ -221,35 +130,20 @@ With zkay it is possible to do this on-chain such that:</p>
     <span class="c1">// State altering functions</span>
 
     <span class="kd">function</span> <span class="n">vote</span><span class="p">(</span><span class="n">Choice</span><span class="kt">@</span><span class="nb">me</span> <span class="n">votum</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
-        <span class="nf">require</span><span class="p">(</span><span class="o">!</span><span class="n">pending_vote</span><span class="p">);</span>
-        <span class="nf">require</span><span class="p">(</span><span class="nf">reveal</span><span class="p">(</span><span class="n">votum</span> <span class="o">!=</span> <span class="n">Choice</span><span class="p">.</span><span class="n">None</span> <span class="o">&amp;&amp;</span> <span class="n">current_votes</span><span class="p">[</span><span class="nb">me</span><span class="p">]</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">None</span><span class="p">,</span> <span class="nb">all</span><span class="p">));</span>
+        <span class="nf">require</span><span class="p">(</span><span class="nf">reveal</span><span class="p">(</span><span class="n">votum</span> <span class="o">!=</span> <span class="n">Choice</span><span class="p">.</span><span class="n">none</span> <span class="o">&amp;&amp;</span> <span class="n">current_votes</span><span class="p">[</span><span class="nb">me</span><span class="p">]</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">none</span><span class="p">,</span> <span class="nb">all</span><span class="p">));</span>
         <span class="nf">require</span><span class="p">(</span><span class="o">!</span><span class="n">is_result_published</span><span class="p">());</span>
-
         <span class="n">current_votes</span><span class="p">[</span><span class="nb">me</span><span class="p">]</span> <span class="o">=</span> <span class="n">votum</span><span class="p">;</span>
-        <span class="n">new_vote</span> <span class="o">=</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">votum</span><span class="p">,</span> <span class="n">organizer</span><span class="p">);</span>
-        <span class="n">pending_vote</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="kd">function</span> <span class="n">count_vote</span><span class="p">()</span> <span class="kr">public</span> <span class="p">{</span>
-        <span class="nf">require</span><span class="p">(</span><span class="nb">me</span> <span class="o">==</span> <span class="n">organizer</span><span class="p">);</span>
-        <span class="nf">require</span><span class="p">(</span><span class="n">pending_vote</span><span class="p">);</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="n">new_vote</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">a</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">a_count</span><span class="o">++</span><span class="p">;</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">new_vote</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">b</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">b_count</span><span class="o">++</span><span class="p">;</span>
-        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="n">c_count</span><span class="o">++</span><span class="p">;</span>
-        <span class="p">}</span>
-
-        <span class="n">pending_vote</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="n">vote_count</span><span class="o">++</span><span class="p">;</span>
+        <span class="n">vote_count</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">a_count</span> <span class="o">=</span> <span class="n">a_count</span> <span class="o">+</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">votum</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">a</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">organizer</span><span class="p">);</span>
+        <span class="n">b_count</span> <span class="o">=</span> <span class="n">b_count</span> <span class="o">+</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">votum</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">b</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">organizer</span><span class="p">);</span>
+        <span class="n">c_count</span> <span class="o">=</span> <span class="n">c_count</span> <span class="o">+</span> <span class="nf">reveal</span><span class="p">(</span><span class="n">votum</span> <span class="o">==</span> <span class="n">Choice</span><span class="p">.</span><span class="n">c</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">organizer</span><span class="p">);</span>
     <span class="p">}</span>
 
     <span class="kd">function</span> <span class="n">publish_results</span><span class="p">()</span> <span class="kr">public</span> <span class="p">{</span>
         <span class="nf">require</span><span class="p">(</span><span class="nb">me</span> <span class="o">==</span> <span class="n">organizer</span><span class="p">);</span>
-        <span class="nf">require</span><span class="p">(</span><span class="o">!</span><span class="n">pending_vote</span> <span class="o">&amp;&amp;</span> <span class="n">min_votes_reached</span><span class="p">());</span>
-        <span class="n">packed_results</span> <span class="o">=</span> <span class="nf">reveal</span><span class="p">((</span><span class="kt">uint192</span><span class="p">(</span><span class="n">c_count</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">128</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="kt">uint192</span><span class="p">(</span><span class="n">b_count</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">64</span><span class="p">)</span> <span class="o">|</span> <span class="kt">uint192</span><span class="p">(</span><span class="n">a_count</span><span class="p">),</span> <span class="nb">all</span><span class="p">);</span>
+        <span class="nf">require</span><span class="p">(</span><span class="n">min_votes_reached</span><span class="p">());</span>
+        <span class="nf">require</span><span class="p">(</span><span class="o">!</span><span class="n">is_result_published</span><span class="p">());</span>
+        <span class="n">packed_results</span> <span class="o">=</span> <span class="nf">reveal</span><span class="p">((</span><span class="kt">uint192</span><span class="p">(</span><span class="n">unhom</span><span class="p">(</span><span class="n">c_count</span><span class="p">))</span> <span class="o">&lt;&lt;</span> <span class="mi">128</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="kt">uint192</span><span class="p">(</span><span class="n">unhom</span><span class="p">(</span><span class="n">b_count</span><span class="p">))</span> <span class="o">&lt;&lt;</span> <span class="mi">64</span><span class="p">)</span> <span class="o">|</span> <span class="kt">uint192</span><span class="p">(</span><span class="n">unhom</span><span class="p">(</span><span class="n">a_count</span><span class="p">)),</span> <span class="nb">all</span><span class="p">);</span>
     <span class="p">}</span>
 
     <span class="c1">// Queries</span>
@@ -257,14 +151,14 @@ With zkay it is possible to do this on-chain such that:</p>
     <span class="kd">function</span> <span class="n">get_result_for</span><span class="p">(</span><span class="n">Choice</span> <span class="n">option</span><span class="p">)</span> <span class="kr">public</span> <span class="kr">view</span> <span class="k">returns</span><span class="p">(</span><span class="kt">uint64</span><span class="p">)</span> <span class="p">{</span>
         <span class="nf">require</span><span class="p">(</span><span class="n">is_result_published</span><span class="p">());</span>
         <span class="kt">uint64</span> <span class="n">res</span><span class="p">;</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">option</span> <span class="o">!=</span> <span class="n">Choice</span><span class="p">.</span><span class="n">None</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">option</span> <span class="o">!=</span> <span class="n">Choice</span><span class="p">.</span><span class="n">none</span><span class="p">)</span> <span class="p">{</span>
             <span class="n">res</span> <span class="o">=</span> <span class="kt">uint64</span><span class="p">(</span><span class="n">packed_results</span> <span class="o">&gt;&gt;</span> <span class="mi">64</span><span class="o">*</span><span class="p">(</span><span class="kt">uint</span><span class="p">(</span><span class="n">option</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">));</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
     <span class="p">}</span>
 
     <span class="kd">function</span> <span class="n">get_winning_choice</span><span class="p">()</span> <span class="kr">public</span> <span class="kr">view</span> <span class="k">returns</span><span class="p">(</span><span class="n">Choice</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">Choice</span> <span class="n">c</span> <span class="o">=</span> <span class="n">Choice</span><span class="p">.</span><span class="n">None</span><span class="p">;</span>
+        <span class="n">Choice</span> <span class="n">c</span> <span class="o">=</span> <span class="n">Choice</span><span class="p">.</span><span class="n">none</span><span class="p">;</span>
         <span class="kt">uint</span> <span class="n">votes</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="k">for</span> <span class="p">(</span><span class="kt">uint</span> <span class="n">i</span> <span class="o">=</span> <span class="kt">uint</span><span class="p">(</span><span class="n">Choice</span><span class="p">.</span><span class="n">a</span><span class="p">);</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="kt">uint</span><span class="p">(</span><span class="n">Choice</span><span class="p">.</span><span class="n">c</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
             <span class="kt">uint</span> <span class="n">res</span> <span class="o">=</span> <span class="n">get_result_for</span><span class="p">(</span><span class="n">Choice</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
@@ -292,11 +186,10 @@ With zkay it is possible to do this on-chain such that:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>From now on, we assume that this contract is stored in the file <cite>survey.zkay</cite> in the current directory.</p>
 </div>
 <div class="section" id="compilation">
-<h2>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline">¶</a></h2>
-<p>To compile the contract with the default encryption algorithm (ecdh-aes) and with output directory <cite>survey_compiled</cite>, you can simply use:</p>
+<h2>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline"></a></h2>
+<p>To compile the contract with default encryption algorithms to the output directory <cite>survey_compiled</cite>, you can use:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay compile ./survey.zkay -o ./survey_compiled/
 </pre></div>
 </div>
@@ -306,7 +199,7 @@ With zkay it is possible to do this on-chain such that:</p>
 </div>
 </div>
 <div class="section" id="local-transaction-testing">
-<h2>Local Transaction Testing<a class="headerlink" href="#local-transaction-testing" title="Permalink to this headline">¶</a></h2>
+<h2>Local Transaction Testing<a class="headerlink" href="#local-transaction-testing" title="Permalink to this headline"></a></h2>
 <p>To run test transactions on the contract, you can use the included <a class="reference external" href="https://github.com/ethereum/eth-tester">eth-tester</a> blockchain backend.</p>
 <p>The following command starts an interactive transaction shell with the eth-tester backend (local blockchain simulation):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay run --blockchain-backend w3-eth-tester ./survey_compiled
@@ -328,9 +221,7 @@ With zkay it is possible to do this on-chain such that:</p>
 <p>The deploy and the connect commands both return a contract interface object, which should be stored in a variable.</p>
 <p>You can now issue some zkay transactions by calling the corresponding member functions on those interface objects:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">user_a</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">Survey</span><span class="o">.</span><span class="n">Choice</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">survey_organizer</span><span class="o">.</span><span class="n">count_vote</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">user_b</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">Survey</span><span class="o">.</span><span class="n">Choice</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">survey_organizer</span><span class="o">.</span><span class="n">count_vote</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">survey_organizer</span><span class="o">.</span><span class="n">publish_results</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -351,18 +242,20 @@ If the return value is private (&#64;me), it is automatically decrypted:</p>
 <p>It is also possible to manually retrieve the value of any state variable:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">user_a</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get_plain</span><span class="p">(</span><span class="s1">&#39;current_votes&#39;</span><span class="p">,</span> <span class="n">user_a</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">user_address</span><span class="p">)</span>
 <span class="go">    Choice.a</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">user_a</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get_plain</span><span class="p">(</span><span class="s1">&#39;pending_vote&#39;</span><span class="p">)</span>
-<span class="go">    False</span>
 </pre></div>
 </div>
-<p>While <cite>state.get_plain</cite> automatically decrypts the value, it is also possible to use <cite>state.get_raw</cite>, to retrieve the unmodified cipher text instead.</p>
-<p>If an exception occurs during transaction simulation (e.g. require assertion fails), an appropriate error will be displayed.
-If you are unsure which functions are available in a given contract, you can type <cite>help()</cite> to get a list of all available commands.</p>
+<p>While <cite>state.get_plain</cite> automatically decrypts any private values, you can use <cite>state.get_raw</cite> to retrieve the original ciphertext.</p>
+<p>If an exception occurs during transaction simulation (e.g. require assertion fails), an appropriate error will be displayed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">user_a</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">Survey</span><span class="o">.</span><span class="n">Choice</span><span class="o">.</span><span class="n">none</span><span class="p">)</span>
+<span class="go">    ERROR: require(reveal(votum != Choice.none &amp;&amp; current_votes[me] == Choice.none, all)) failed</span>
+</pre></div>
+</div>
+<p>If you are unsure which functions are available in a given contract, you can type <cite>help()</cite> to get a list of all available commands.</p>
 </div>
 <div class="section" id="deployment">
-<h2>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h2>
-<p>While the eth-tester backend is nice for quick testing, at some point you might want to use a zkay contract in conjunction with a standalone Ethereum client.</p>
-<p>You can test this scenario using zkay’s <cite>w3-ganache</cite> backend and <a class="reference external" href="https://www.trufflesuite.com/ganache">ganache</a>, which simulates an Ethereum client for a local test blockchain.</p>
+<h2>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline"></a></h2>
+<p>You can also use a zkay contract in conjunction with a standalone Ethereum client.</p>
+<p>For example, you can test this scenario using zkay’s <cite>w3-ganache</cite> backend and <a class="reference external" href="https://www.trufflesuite.com/ganache">ganache</a>, which simulates an Ethereum client for a local test blockchain.</p>
 <p>Once you have ganache set up and running, you need to tell zkay to use it. You can either do this via command line flags, or by creating a configuration file ‘~/.config/zkay/config.json’ (global) or ‘./config.json’ (local) with the following contents:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="nt">&quot;blockchain_backend&quot;</span><span class="p">:</span><span class="s2">&quot;w3-ganache&quot;</span><span class="p">,</span>
@@ -370,13 +263,11 @@ If you are unsure which functions are available in a given contract, you can typ
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Before you can deploy a zkay contract, you need to know the blockchain addresses of the deployed PKI and zkay library contracts which should be used by your contract.
-PKI contracts are crypto-backend specific, if there is no PKI contract on your chain yet, you can deploy it using:</p>
+<p>Before you can deploy a zkay contract, you need to know the blockchain addresses of the deployed PKI and zkay library contracts which should be used by your contract. PKI contracts are crypto-backend specific. If there is no PKI contract on your chain yet, you can deploy it using:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay deploy-pki &lt;account_address_to_deploy_from&gt;
 </pre></div>
 </div>
-<p>Similarly, if the proving-scheme which you selected requires library contracts which are not yet deployed (the default groth16 scheme has no library dependencies),
-you can deploy them using:</p>
+<p>Similarly, if the proving-scheme which you selected requires library contracts which are not yet deployed (the default groth16 scheme has no library dependencies), you can deploy them using:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay deploy-crypto-libs &lt;account_address_to_deploy_from&gt;
 </pre></div>
 </div>
@@ -389,61 +280,55 @@ you can deploy them using:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Once this is done, you can then deploy the above Survey contract using (space separated constructor args at the end):</p>
+<p>Once this is done, you can then deploy the above Survey contract using (space-separated constructor args at the end):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay deploy --account &lt;account_address_to_deploy_from&gt; ./survey_compiled <span class="m">4</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="test-deployed-contract">
-<h2>Test Deployed Contract<a class="headerlink" href="#test-deployed-contract" title="Permalink to this headline">¶</a></h2>
+<h2>Test Deployed Contract<a class="headerlink" href="#test-deployed-contract" title="Permalink to this headline"></a></h2>
 <p>For contracts deployed in this way, you can open an interactive transaction shell via:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay connect --account &lt;sender_account_to_use&gt; ./survey_compiled &lt;deployed_contract_address&gt;
 </pre></div>
 </div>
-<p>In contrast to <cite>zkay run</cite>, the shell directly starts in the context of a contract interface object,
-i.e. all contract functions are directly available in the global scope (see help()).
-The address specified via the –account flag is used to send transactions. It can be accessed in the shell via the global ‘me’ variable.</p>
+<p>In contrast to <cite>zkay run</cite>, the shell directly starts in the context of a contract interface object, i.e. all contract functions are directly available in the global scope (see help()). The address specified via the –account flag is used to send transactions. It can be accessed in the shell via the global ‘me’ variable.</p>
 <p>Example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vote</span><span class="p">(</span><span class="n">Choice</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">is_result_published</span><span class="p">()</span>
 <span class="go">    False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span><span class="o">.</span><span class="n">get_plain</span><span class="p">(</span><span class="s1">&#39;pending_vote&#39;</span><span class="p">)</span>
-<span class="go">    True</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="contract-distribution">
-<h2>Contract Distribution<a class="headerlink" href="#contract-distribution" title="Permalink to this headline">¶</a></h2>
-<p>Each user which should be able to connect to and use a deployed zkay contract needs access to the corresponding compilation output. (For integrity verification and because the output contains the proving keys required to generate zero-knowledge proofs)</p>
+<h2>Contract Distribution<a class="headerlink" href="#contract-distribution" title="Permalink to this headline"></a></h2>
+<p>Users who want to interact with a deployed zkay contract need access to the corresponding compilation output, because the output contains the proving keys required to generate zero-knowledge proofs.</p>
 <p>To simplify the distribution process, zkay can automatically pack a compiled contract into a standardized archive format which other users can import on their machine.</p>
 <div class="section" id="export">
-<h3>Export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h3>
+<h3>Export<a class="headerlink" href="#export" title="Permalink to this headline"></a></h3>
 <p>To export a contract package into a file <cite>contract.zkp</cite>, use:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay <span class="nb">export</span> ./survey_compiled -o contract.zkp
 </pre></div>
 </div>
-<p>The file <cite>contract.zkp</cite> can then be hosted somewhere where other users can download it.</p>
+<p>The file <cite>contract.zkp</cite> can then be distributed to users.</p>
 </div>
 <div class="section" id="import">
-<h3>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h3>
-<p>Each user needs to download <cite>contract.zkp</cite> and then unpack and compile it to a location &lt;path/to/my_survey_compiled&gt; using:</p>
+<h3>Import<a class="headerlink" href="#import" title="Permalink to this headline"></a></h3>
+<p>Users can unpack <cite>contract.zkp</cite> to a location &lt;path/to/my_survey_compiled&gt; as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay import contract.zkp -o &lt;path/to/my_survey_compiled&gt;
 </pre></div>
 </div>
-<p>The contract should then be usable just like on your local machine (assuming the other user’s zkay configuration points to the same blockchain) via:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay connect --account &lt;other_users_sender_account_to_use&gt; &lt;path/to/my_survey_compiled&gt; &lt;deployed_contract_address&gt;
+<p>A deployed contract at &lt;deployed_contract_address&gt; can then be accessed via:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>zkay connect --account &lt;sender_account_to_use&gt; &lt;path/to/my_survey_compiled&gt; &lt;deployed_contract_address&gt;
 </pre></div>
 </div>
-<p>The correct zkay configuration (compiler settings, crypto-backend, etc.) is loaded automatically from the manifest file which was also included with the contract package.
-It is also not necessary to specify the PKI contract address, as it will be automatically read from the contract on-chain.</p>
+<p>The correct zkay configuration (compiler settings, crypto-backend, etc.) is loaded automatically from the manifest file included with the contract package. It is also not necessary to specify the PKI contract address.</p>
 <p><strong>Note</strong>:
-The connect command will automatically verify whether the contract at &lt;deployed_contract_address&gt; matches the imported contract sources.
-If there is a mismatch, zkay automatically terminates with an error message.</p>
+The <cite>connect</cite> command automatically verifies whether the contract at &lt;deployed_contract_address&gt; matches the imported contract sources.</p>
 </div>
 </div>
 <div class="section" id="programmatic-use">
-<h2>Programmatic Use<a class="headerlink" href="#programmatic-use" title="Permalink to this headline">¶</a></h2>
-<p>Most command line features which were described in this tutorial are also available via an API.</p>
+<h2>Programmatic Use<a class="headerlink" href="#programmatic-use" title="Permalink to this headline"></a></h2>
+<p>Most command line features described in this tutorial are also available via an API.</p>
 <p>See <a class="reference internal" href="autoapi/zkay/zkay_frontend/index.html#module-zkay.zkay_frontend" title="zkay.zkay_frontend"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay_frontend</span></code></a></p>
 <ul class="simple">
 <li><p>Compilation: <a class="reference internal" href="autoapi/zkay/zkay_frontend/index.html#zkay.zkay_frontend.compile_zkay_file" title="zkay.zkay_frontend.compile_zkay_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile_zkay_file()</span></code></a>, <a class="reference internal" href="autoapi/zkay/zkay_frontend/index.html#zkay.zkay_frontend.compile_zkay" title="zkay.zkay_frontend.compile_zkay"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile_zkay()</span></code></a></p></li>
@@ -456,58 +341,33 @@ If there is a mismatch, zkay automatically terminates with an error message.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="language.html" class="btn btn-neutral float-right" title="Language Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="language.html" class="btn btn-neutral float-right" title="Language Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -1,0 +1,27 @@
+:mod:`zkay.zkay_ast.visitor.statement_counter`
+==============================================
+
+.. py:module:: zkay.zkay_ast.visitor.statement_counter
+
+
+
+
+Module Contents
+---------------
+
+.. function:: count_statements(ast: AST, log_found=False)
+
+
+.. py:class:: StatementCounter(log_found=False)
+
+   Bases: :class:`zkay.zkay_ast.visitor.visitor.AstVisitor`
+
+   .. method:: visitStatement(self, ast: Statement)
+
+
+
+   .. method:: visitBlock(self, ast: Statement)
+
+
+
+

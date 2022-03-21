@@ -1,0 +1,45 @@
+:mod:`zkay.compiler.privacy.transformation.internal_call_transformer`
+=====================================================================
+
+.. py:module:: zkay.compiler.privacy.transformation.internal_call_transformer
+
+
+
+
+Module Contents
+---------------
+
+.. function:: compute_transitive_circuit_io_sizes(fcts_with_verification: List[ConstructorOrFunctionDefinition], cgens: Dict[ConstructorOrFunctionDefinition, CircuitHelper])
+
+   Compute transitive circuit IO sizes (account for called circuits).
+
+   This is only possible if the IO sizes of called circuits no longer change, which means, that this function has to be called in
+   a second pass, after all function bodies are already fully transformed.
+
+   IO sizes include public circuit inputs and outputs as well as the private inputs.
+
+   :param fcts_with_verification: All functions which have a circuit associated with them
+   :param cgens: [SIDE EFFECT] A map from function to circuit
+   :return:
+
+
+.. function:: _compute_transitive_circuit_io_sizes(cgens: Dict[ConstructorOrFunctionDefinition, CircuitHelper], fct, gkeys, called_fcts)
+
+
+.. function:: transform_internal_calls(fcts_with_verification: List[ConstructorOrFunctionDefinition], cgens: Dict[ConstructorOrFunctionDefinition, CircuitHelper])
+
+   Add required additional args for public calls to functions which require verification.
+
+   This must be called after compute_transitive_circuit_io_sizes.
+
+   Whenever a function which requires verification is called, the caller needs to pass along the circuit input and output arrays,
+   as well as the correct start indices for them, such that the callee deserializes/serializes from/into the correct segment of the
+   output/input array. This function thus transforms function calls to functions requiring verification, by adding these additional
+   arguments. This must be done in a second pass, after all function bodies in the contract are fully transformed,
+   since the correct start indices depend on the circuit IO sizes of the caller function
+   (see ZkayTransformer documentation for more information).
+
+   :param fcts_with_verification: [SIDE EFFECT] All functions which have a circuit associated with them
+   :param cgens: A map from function to circuit
+
+

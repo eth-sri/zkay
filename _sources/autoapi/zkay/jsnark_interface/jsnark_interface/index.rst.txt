@@ -1,0 +1,56 @@
+:mod:`zkay.jsnark_interface.jsnark_interface`
+=============================================
+
+.. py:module:: zkay.jsnark_interface.jsnark_interface
+
+
+
+
+Module Contents
+---------------
+
+.. data:: circuit_builder_jar
+   
+
+   
+
+.. data:: circuit_builder_jar_hash
+   
+
+   
+
+.. function:: compile_circuit(circuit_dir: str, javacode: str)
+
+   Compile the given circuit java code and then compile the circuit which it describes using jsnark.
+
+   :param circuit_dir: output directory
+   :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
+   :raise SubprocessError: if compilation fails
+
+
+.. function:: prepare_proof(circuit_dir: str, output_dir: str, serialized_args: List[int])
+
+   Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
+
+   :param circuit_dir: directory where the compiled circuit is located
+   :param output_dir: directory, where to store the jsnark output files
+   :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
+   :raise SubprocessError: if circuit evaluation fails
+
+
+.. data:: _class_template_str
+   
+
+   Java circuit code template
+
+
+.. function:: get_jsnark_circuit_class_str(circuit: CircuitHelper, fdefs: List[str], circuit_statements: List[str]) -> str
+
+   Inject circuit and input code into jsnark-wrapper skeleton.
+
+   :param circuit: the abstract circuit to which this java code corresponds
+   :param fdefs: java function definition with circuit code for each transitively called function (public calls in this circuit's function)
+   :param circuit_statements: the java code corresponding to this circuit
+   :return: complete java file as string
+
+

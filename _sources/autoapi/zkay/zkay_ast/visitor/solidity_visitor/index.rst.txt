@@ -1,0 +1,31 @@
+:mod:`zkay.zkay_ast.visitor.solidity_visitor`
+=============================================
+
+.. py:module:: zkay.zkay_ast.visitor.solidity_visitor
+
+
+
+
+Module Contents
+---------------
+
+.. function:: to_solidity(ast: AST)
+
+
+.. py:class:: SolidityVisitor
+
+   Bases: :class:`zkay.zkay_ast.ast.CodeVisitor`
+
+   .. method:: visitAnnotatedTypeName(self, ast: AnnotatedTypeName)
+
+
+
+   .. method:: visitMeExpr(self, _: MeExpr)
+
+
+
+   .. method:: handle_pragma(self, pragma: str)
+
+
+
+

@@ -1,71 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>zkay.config_user &mdash; zkay  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> zkay
-          
-
-          
+            <a href="../../../index.html" class="icon icon-home"> zkay
           </a>
-
-          
-            
-            
               <div class="version">
-                0.2.0
+                0.3.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,19 +37,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
@@ -94,115 +47,103 @@
 <li class="toctree-l1"><a class="reference internal" href="../../index.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">zkay</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.config_user</span></code></li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-zkay.config_user">
-<span id="zkay-config-user"></span><h1><a class="reference internal" href="#module-zkay.config_user" title="zkay.config_user"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.config_user</span></code></a><a class="headerlink" href="#module-zkay.config_user" title="Permalink to this headline">¶</a></h1>
-<p><p>This module defines the zkay options which are configurable by the user via command line arguments.</p>
+<span id="zkay-config-user"></span><h1><a class="reference internal" href="#module-zkay.config_user" title="zkay.config_user"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zkay.config_user</span></code></a><a class="headerlink" href="#module-zkay.config_user" title="Permalink to this headline"></a></h1>
+<p>This module defines the zkay options which are configurable by the user via command line arguments.</p>
 <dl class="simple">
 <dt>The argument parser in <a class="reference internal" href="../__main__/index.html#module-zkay.__main__" title="zkay.__main__"><code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code></a> uses the docstrings, type hints and _values for the help</dt><dd><p>strings and the _values fields for autocompletion</p>
 </dd>
 </dl>
 <p>WARNING: This is one of the only zkay modules that is imported before argcomplete.autocomplete is called. For performance reasons it should thus not have any import side-effects or perform any expensive operations during import.</p>
-</p>
 <div class="section" id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 <dl class="py function">
-<dt id="zkay.config_user._check_is_one_of">
-<code class="sig-prename descclassname">zkay.config_user.</code><code class="sig-name descname">_check_is_one_of</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">legal_vals</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user._check_is_one_of" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user._check_is_one_of">
+<span class="sig-prename descclassname"><span class="pre">zkay.config_user.</span></span><span class="sig-name descname"><span class="pre">_check_is_one_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legal_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user._check_is_one_of" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt id="zkay.config_user._type_check">
-<code class="sig-prename descclassname">zkay.config_user.</code><code class="sig-name descname">_type_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">val</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">t</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user._type_check" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user._type_check">
+<span class="sig-prename descclassname"><span class="pre">zkay.config_user.</span></span><span class="sig-name descname"><span class="pre">_type_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user._type_check" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="zkay.config_user.UserConfig">
-<em class="property">class </em><code class="sig-prename descclassname">zkay.config_user.</code><code class="sig-name descname">UserConfig</code><a class="headerlink" href="#zkay.config_user.UserConfig" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zkay.config_user.</span></span><span class="sig-name descname"><span class="pre">UserConfig</span></span><a class="headerlink" href="#zkay.config_user.UserConfig" title="Permalink to this definition"></a></dt>
 <dd><dl class="py method">
-<dt id="zkay.config_user.UserConfig.proving_scheme">
-<em class="property">property </em><code class="sig-name descname">proving_scheme</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.proving_scheme" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.proving_scheme">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">proving_scheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.proving_scheme" title="Permalink to this definition"></a></dt>
 <dd><p>NIZK proving scheme to use.</p>
 <p>Available Options: [gm17]</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.snark_backend">
-<em class="property">property </em><code class="sig-name descname">snark_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.snark_backend" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.snark_backend">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">snark_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.snark_backend" title="Permalink to this definition"></a></dt>
 <dd><p>Snark backend to use.</p>
 <p>Available Options: [jsnark]</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.crypto_backend">
-<em class="property">property </em><code class="sig-name descname">crypto_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.crypto_backend" title="Permalink to this definition">¶</a></dt>
-<dd><p>Encryption backend to use.</p>
-<p>Available Options: [dummy, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey]</p>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.main_crypto_backend">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">main_crypto_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.main_crypto_backend" title="Permalink to this definition"></a></dt>
+<dd><p>Main encryption backend to use.</p>
+<p>Available Options: [dummy, dummy-hom, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.blockchain_backend">
-<em class="property">property </em><code class="sig-name descname">blockchain_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_backend" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.addhom_crypto_backend">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">addhom_crypto_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.addhom_crypto_backend" title="Permalink to this definition"></a></dt>
+<dd><p>Additively homomorphic encryption backend to use.</p>
+<p>Available Options: [dummy-hom, paillier, elgamal]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig._get_crypto_backend">
+<span class="sig-name descname"><span class="pre">_get_crypto_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../zkay_ast/homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig._get_crypto_backend" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.set_crypto_backend">
+<span class="sig-name descname"><span class="pre">set_crypto_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../zkay_ast/homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.set_crypto_backend" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.get_crypto_params">
+<span class="sig-name descname"><span class="pre">get_crypto_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../zkay_ast/homomorphism/index.html#zkay.zkay_ast.homomorphism.Homomorphism" title="zkay.zkay_ast.homomorphism.Homomorphism"><span class="pre">zkay.zkay_ast.homomorphism.Homomorphism</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../transaction/crypto/params/index.html#zkay.transaction.crypto.params.CryptoParams" title="zkay.transaction.crypto.params.CryptoParams"><span class="pre">zkay.transaction.crypto.params.CryptoParams</span></a></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.get_crypto_params" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.all_crypto_params">
+<span class="sig-name descname"><span class="pre">all_crypto_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../transaction/crypto/params/index.html#zkay.transaction.crypto.params.CryptoParams" title="zkay.transaction.crypto.params.CryptoParams"><span class="pre">zkay.transaction.crypto.params.CryptoParams</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.all_crypto_params" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.blockchain_backend">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">blockchain_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_backend" title="Permalink to this definition"></a></dt>
 <dd><p>Backend to use when interacting with the blockchain.</p>
 <p>Running unit tests is only supported with w3-eth-tester and w3-ganache at the moment (because they need pre-funded dummy accounts).
 See <a class="reference external" href="https://web3py.readthedocs.io/en/stable/providers.html">https://web3py.readthedocs.io/en/stable/providers.html</a> for more information.</p>
@@ -210,8 +151,8 @@ See <a class="reference external" href="https://web3py.readthedocs.io/en/stable/
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.blockchain_node_uri">
-<em class="property">property </em><code class="sig-name descname">blockchain_node_uri</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_node_uri" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.blockchain_node_uri">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">blockchain_node_uri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_node_uri" title="Permalink to this definition"></a></dt>
 <dd><p>Backend specific location of the ethereum node
 w3-eth-tester : unused
 w3-ganache    : url
@@ -222,16 +163,16 @@ w3-custom     : web3 instance, must not be None</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.blockchain_pki_address">
-<em class="property">property </em><code class="sig-name descname">blockchain_pki_address</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_pki_address" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.blockchain_pki_address">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">blockchain_pki_address</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_pki_address" title="Permalink to this definition"></a></dt>
 <dd><p>Address of the deployed pki contract.</p>
 <p>Must be specified for backends other than w3-eth-tester.
 This library can be deployed using <code class="docutils literal notranslate"><span class="pre">zkay</span> <span class="pre">deploy-pki</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.blockchain_crypto_lib_addresses">
-<em class="property">property </em><code class="sig-name descname">blockchain_crypto_lib_addresses</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_crypto_lib_addresses" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.blockchain_crypto_lib_addresses">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">blockchain_crypto_lib_addresses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_crypto_lib_addresses" title="Permalink to this definition"></a></dt>
 <dd><p>Comma separated list of the addresses of the deployed crypto library contracts required for the current proving_scheme.
 e.g. “0xAb31…,0xec32C…”</p>
 <p>Must be specified for backends other than w3-eth-tester.
@@ -241,8 +182,8 @@ libraries were deployed by that command.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.blockchain_default_account">
-<em class="property">property </em><code class="sig-name descname">blockchain_default_account</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_default_account" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.blockchain_default_account">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">blockchain_default_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.blockchain_default_account" title="Permalink to this definition"></a></dt>
 <dd><p>Address of the wallet which should be made available under the name ‘me’ in contract.py.</p>
 <p>If None -&gt; must always specify a sender, empty blockchain_pki_address is invalid
 If int -&gt; use eth.accounts[int]
@@ -250,26 +191,26 @@ If str -&gt; use address str</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.indentation">
-<em class="property">property </em><code class="sig-name descname">indentation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.indentation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.indentation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">indentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.indentation" title="Permalink to this definition"></a></dt>
 <dd><p>Specifies the identation which should be used for the generated code output.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.libsnark_check_verify_locally_during_proof_generation">
-<em class="property">property </em><code class="sig-name descname">libsnark_check_verify_locally_during_proof_generation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.libsnark_check_verify_locally_during_proof_generation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.libsnark_check_verify_locally_during_proof_generation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">libsnark_check_verify_locally_during_proof_generation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.libsnark_check_verify_locally_during_proof_generation" title="Permalink to this definition"></a></dt>
 <dd><p>If true, the libsnark interface verifies locally whether the proof can be verified during proof generation.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.opt_solc_optimizer_runs">
-<em class="property">property </em><code class="sig-name descname">opt_solc_optimizer_runs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_solc_optimizer_runs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.opt_solc_optimizer_runs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">opt_solc_optimizer_runs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_solc_optimizer_runs" title="Permalink to this definition"></a></dt>
 <dd><p>SOLC: optimize for how many times to run the code</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.opt_hash_threshold">
-<em class="property">property </em><code class="sig-name descname">opt_hash_threshold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_hash_threshold" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.opt_hash_threshold">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">opt_hash_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_hash_threshold" title="Permalink to this definition"></a></dt>
 <dd><p>If there are more than this many public circuit inputs (in uints), the hashing optimization will be enabled.</p>
 <p>This means that only the hash of all public inputs will be passed as public input,
 public inputs are passed as private circuit inputs and the circuit verifies
@@ -279,15 +220,15 @@ but much higher off-chain costs (key and proof generation time, memory consumpti
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.opt_eval_constexpr_in_circuit">
-<em class="property">property </em><code class="sig-name descname">opt_eval_constexpr_in_circuit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_eval_constexpr_in_circuit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.opt_eval_constexpr_in_circuit">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">opt_eval_constexpr_in_circuit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_eval_constexpr_in_circuit" title="Permalink to this definition"></a></dt>
 <dd><p>If true, literal expressions are folded and the result is baked into the circuit as a constant
 (as opposed to being evaluated outside the circuit and the result being moved in as an additional circuit input)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.opt_cache_circuit_inputs">
-<em class="property">property </em><code class="sig-name descname">opt_cache_circuit_inputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_cache_circuit_inputs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.opt_cache_circuit_inputs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">opt_cache_circuit_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_cache_circuit_inputs" title="Permalink to this definition"></a></dt>
 <dd><p>If true, identifier circuit inputs will be cached
 (i.e. if an identifier is referenced multiple times within a private expression,
 or multiple times in different private expressions without being publicly written to in between,
@@ -296,8 +237,8 @@ uses will share the same input variable.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.opt_cache_circuit_outputs">
-<em class="property">property </em><code class="sig-name descname">opt_cache_circuit_outputs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_cache_circuit_outputs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.opt_cache_circuit_outputs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">opt_cache_circuit_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.opt_cache_circuit_outputs" title="Permalink to this definition"></a></dt>
 <dd><p>Normally, the value cached in the circuit for a particular identifier must be invalidated whenever the
 identifier is assigned to in public code.</p>
 <p>If this optimization is enabled, assignments where the lhs is an Identifier and the rhs is a private expression
@@ -307,32 +248,38 @@ available in the circuit)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.data_dir">
-<em class="property">property </em><code class="sig-name descname">data_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.data_dir" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.data_dir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.data_dir" title="Permalink to this definition"></a></dt>
 <dd><p>Path to directory where to store user data (e.g. generated encryption keys).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.log_dir">
-<em class="property">property </em><code class="sig-name descname">log_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.log_dir" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.log_dir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.log_dir" title="Permalink to this definition"></a></dt>
 <dd><p>Path to default log directory.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.use_circuit_cache_during_testing_with_encryption">
-<em class="property">property </em><code class="sig-name descname">use_circuit_cache_during_testing_with_encryption</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.use_circuit_cache_during_testing_with_encryption" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.use_circuit_cache_during_testing_with_encryption">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">use_circuit_cache_during_testing_with_encryption</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.use_circuit_cache_during_testing_with_encryption" title="Permalink to this definition"></a></dt>
 <dd><p>If true, snark keys for the test cases are cached
 (i.e. they are not regenerated on every run unless the circuit was modified)</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zkay.config_user.UserConfig.verbosity">
-<em class="property">property </em><code class="sig-name descname">verbosity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em><span class="sig-paren">)</span><a class="headerlink" href="#zkay.config_user.UserConfig.verbosity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.verbosity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.verbosity" title="Permalink to this definition"></a></dt>
 <dd><p>If 0, no output
 If 1, normal output
 If 2, verbose output</p>
 <p>This includes for example snark key- and proof generation output and
 information about intermediate transaction simulation steps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zkay.config_user.UserConfig.disable_verification">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disable_verification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#zkay.config_user.UserConfig.disable_verification" title="Permalink to this definition"></a></dt>
+<dd><p>If true, proof verification in output contract is disabled (only for benchmarks)</p>
 </dd></dl>
 
 </dd></dl>
@@ -342,49 +289,30 @@ information about intermediate transaction simulation steps.</p>
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        
-        &copy; Copyright 2020, Nick Baumann, SRI Lab ETH Zurich
-
-    </p>
+    <p>&#169; Copyright 2019-2021, Nick Baumann, Roger Baumgartner, Benjamin Bichsel, Samuel Steffen, SRI Lab ETH Zurich.</p>
   </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

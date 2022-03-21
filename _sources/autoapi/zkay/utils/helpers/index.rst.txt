@@ -1,0 +1,35 @@
+:mod:`zkay.utils.helpers`
+=========================
+
+.. py:module:: zkay.utils.helpers
+
+
+
+
+Module Contents
+---------------
+
+.. function:: save_to_file(output_directory: Optional[str], filename: str, code: str)
+
+
+.. function:: read_file(filename: str)
+
+
+.. function:: hash_string(data: str) -> bytes
+
+
+.. function:: hash_file(filename: str, chunk_size: int = 1 << 27) -> bytes
+
+
+.. function:: without_extension(filename: str) -> str
+
+
+.. function:: get_contract_names(sol_filename: str) -> List[str]
+
+
+.. function:: prepend_to_lines(text: str, pre: str)
+
+
+.. function:: lines_of_code(code: str)
+
+
