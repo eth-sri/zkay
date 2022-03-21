@@ -1,7 +1,7 @@
 Release Notes
 ================================
 
-v0.3.0 (xxxx-xx-xx)
+v0.3.0 (2022-03-21)
 --------------------
 
 - Introduced homomorphic encryption schemes (Paillier, ElGamal)
