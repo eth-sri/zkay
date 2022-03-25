@@ -241,7 +241,7 @@ The following [technical report][zkay-techreport] describes version 0.2 of zkay,
 ```
 
 
-[zkay-sp]: #TODO
+[zkay-sp]: https://www.sri.inf.ethz.ch/publications/steffen2022zeestar
 [zkay-ccs]: https://www.sri.inf.ethz.ch/publications/steffen2019zkay
 [zkay-docs]: https://eth-sri.github.io/zkay/
 [zkay-techreport]: https://arxiv.org/abs/2009.01020
