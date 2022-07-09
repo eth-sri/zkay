@@ -683,7 +683,7 @@ class ZkayProverInterface(metaclass=ABCMeta):
 
         with time_measure(f'generate_proof', True):
             verify_dir = cfg.get_circuit_output_dir_name(cfg.get_verification_contract_name(contract, function))
-            return self._generate_proof(os.path.join(project_dir, verify_dir), priv_values, in_vals, out_vals)
+            return self._generate_proof(os.path.abspath(os.path.join(project_dir, verify_dir)), priv_values, in_vals, out_vals)
 
     @abstractmethod
     def _generate_proof(self, verifier_dir: str, priv_values: List[int], in_vals: List[int], out_vals: List[int]) -> List[int]:
