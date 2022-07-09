@@ -170,7 +170,7 @@ class Web3Blockchain(ZkayBlockchainInterface):
         with cfg.library_compilation_environment():
             with tempfile.TemporaryDirectory() as tmpdir:
                 for crypto_params in cfg.all_crypto_params():
-                    contract_name = cfg.get_pki_contract_name(crypto_params.crypto_name)
+                    contract_name = cfg.get_pki_contract_name(crypto_params)
                     pki_sol = save_to_file(tmpdir, f'{contract_name}.sol', library_contracts.get_pki_contract(crypto_params))
                     self._pki_contract = self._verify_contract_integrity(cfg.blockchain_pki_address, pki_sol, contract_name=contract_name)
 
