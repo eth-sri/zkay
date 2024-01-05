@@ -3,7 +3,7 @@ web3[tester]==5.12.0
 antlr4-python3-runtime==4.8
 parameterized==0.7.4
 py-solc-x==1.0.0
-pycryptodome==3.9.8
+pycryptodome==3.19.1
 appdirs==1.4.4
 argcomplete==1.12.0
 semantic-version==2.8.5
